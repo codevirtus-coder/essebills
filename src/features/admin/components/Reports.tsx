@@ -39,7 +39,7 @@ const Reports: React.FC = () => {
     <div className="p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-extrabold text-dark-text">Reporting Center</h2>
+          <h2 className="text-2xl font-extrabold text-dark-text dark:text-white">Reporting Center</h2>
           <p className="text-sm text-neutral-text">Generate, schedule, and manage your system reports.</p>
         </div>
         <button 
@@ -68,11 +68,11 @@ const Reports: React.FC = () => {
           { title: 'Biller Settlement', icon: 'account_balance', color: 'bg-accent-green/10 text-accent-green', desc: 'Verification of successful payouts and pending settlements.' },
           { title: 'Audit Logs', icon: 'security', color: 'bg-orange-100 text-orange-600', desc: 'Complete history of administrative actions and security events.' }
         ].map((template) => (
-          <div key={template.title} className="bg-white p-6 rounded-3xl border border-neutral-light hover:shadow-xl hover:shadow-primary/5 transition-all group cursor-pointer">
+          <div key={template.title} className="bg-white  p-6 rounded-3xl border border-neutral-light dark:border-white/5 hover:shadow-xl hover:shadow-primary/5 transition-all group cursor-pointer">
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110 ${template.color}`}>
               <span className="material-symbols-outlined">{template.icon}</span>
             </div>
-            <h3 className="text-lg font-bold text-dark-text mb-2">{template.title}</h3>
+            <h3 className="text-lg font-bold text-dark-text dark:text-white mb-2">{template.title}</h3>
             <p className="text-xs text-neutral-text leading-relaxed mb-6">{template.desc}</p>
             <button className="text-primary text-xs font-black uppercase tracking-widest flex items-center gap-2 group-hover:translate-x-1 transition-transform">
               Use Template <span className="material-symbols-outlined text-sm">arrow_forward</span>
@@ -82,14 +82,14 @@ const Reports: React.FC = () => {
       </div>
 
       {/* Recent Reports Table */}
-      <div className="bg-white rounded-3xl shadow-sm border border-neutral-light overflow-hidden">
-        <div className="p-8 border-b border-neutral-light flex items-center justify-between">
-          <h4 className="text-lg font-bold text-dark-text">Generated Reports Archive</h4>
+      <div className="bg-white  rounded-3xl shadow-sm border border-neutral-light dark:border-white/5 overflow-hidden">
+        <div className="p-8 border-b border-neutral-light dark:border-white/5 flex items-center justify-between">
+          <h4 className="text-lg font-bold text-dark-text dark:text-white">Generated Reports Archive</h4>
           <div className="flex gap-2">
-             <button className="p-2 hover:bg-neutral-light rounded-lg transition-colors text-neutral-text">
+             <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/5 rounded-lg transition-colors text-neutral-text">
                 <span className="material-symbols-outlined">filter_list</span>
              </button>
-             <button className="p-2 hover:bg-neutral-light rounded-lg transition-colors text-neutral-text">
+             <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/5 rounded-lg transition-colors text-neutral-text">
                 <span className="material-symbols-outlined">refresh</span>
              </button>
           </div>
@@ -97,7 +97,7 @@ const Reports: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-neutral-light/20">
+              <tr className="bg-neutral-light/20 dark:bg-white/5">
                 <th className="px-8 py-4 text-[10px] font-black text-neutral-text uppercase tracking-widest">Report Name</th>
                 <th className="px-8 py-4 text-[10px] font-black text-neutral-text uppercase tracking-widest">Type</th>
                 <th className="px-8 py-4 text-[10px] font-black text-neutral-text uppercase tracking-widest">Created Date</th>
@@ -106,17 +106,17 @@ const Reports: React.FC = () => {
                 <th className="px-8 py-4 text-[10px] font-black text-neutral-text uppercase tracking-widest text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-light">
+            <tbody className="divide-y divide-neutral-light dark:divide-white/5">
               {reports.map((report) => (
-                <tr key={report.id} className="hover:bg-neutral-light/10 transition-colors group">
+                <tr key={report.id} className="hover:bg-neutral-light/10 dark:hover:bg-white/5 transition-colors group">
                   <td className="px-8 py-5">
                     <div className="flex items-center gap-3">
                       <span className="material-symbols-outlined text-primary">description</span>
-                      <p className="text-sm font-bold text-dark-text">{report.name}</p>
+                      <p className="text-sm font-bold text-dark-text dark:text-gray-200">{report.name}</p>
                     </div>
                   </td>
                   <td className="px-8 py-5">
-                    <span className="px-2 py-1 bg-neutral-light/50 text-[10px] font-bold text-neutral-text rounded uppercase">{report.type}</span>
+                    <span className="px-2 py-1 bg-neutral-light/50 dark:bg-white/5 text-[10px] font-bold text-neutral-text rounded uppercase">{report.type}</span>
                   </td>
                   <td className="px-8 py-5 text-sm text-neutral-text">{report.date}</td>
                   <td className="px-8 py-5">
@@ -150,3 +150,4 @@ const Reports: React.FC = () => {
 };
 
 export default Reports;
+

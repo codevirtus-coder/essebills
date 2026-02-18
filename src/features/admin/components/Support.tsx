@@ -39,7 +39,7 @@ const Support: React.FC = () => {
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
       <div className="text-center space-y-4 mb-12">
-        <h2 className="text-4xl font-black text-dark-text tracking-tight">Support Center</h2>
+        <h2 className="text-4xl font-black text-dark-text dark:text-white tracking-tight">Support Center</h2>
         <p className="text-neutral-text max-w-xl mx-auto">Find answers to common questions or reach out to our dedicated support team for personalized assistance.</p>
         
         <div className="relative max-w-2xl mx-auto pt-4">
@@ -49,13 +49,13 @@ const Support: React.FC = () => {
             placeholder="Search for help topics, guides, or ticket IDs..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white border-none rounded-2xl py-4 pl-12 pr-6 text-sm font-bold shadow-xl shadow-neutral-light/50 focus:ring-2 focus:ring-primary/20 text-dark-text"
+            className="w-full bg-white  border-none rounded-2xl py-4 pl-12 pr-6 text-sm font-bold shadow-xl shadow-neutral-light/50 dark:shadow-none focus:ring-2 focus:ring-primary/20 text-dark-text dark:text-white"
           />
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex justify-center gap-2 border-b border-neutral-light pb-px">
+      <div className="flex justify-center gap-2 border-b border-neutral-light dark:border-white/5 pb-px">
         {[
           { id: 'faqs', label: 'Frequently Asked Questions', icon: 'quiz' },
           { id: 'tickets', label: 'My Support Tickets', icon: 'confirmation_number' },
@@ -67,7 +67,7 @@ const Support: React.FC = () => {
             className={`flex items-center gap-2 px-8 py-4 text-xs font-black uppercase tracking-widest transition-all relative ${
               activeView === tab.id 
                 ? 'text-primary' 
-                : 'text-neutral-text hover:text-dark-text'
+                : 'text-neutral-text hover:text-dark-text dark:hover:text-white'
             }`}
           >
             <span className="material-symbols-outlined text-lg">{tab.icon}</span>
@@ -82,11 +82,11 @@ const Support: React.FC = () => {
         {activeView === 'faqs' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-300">
             {faqs.map((faq, i) => (
-              <div key={i} className="bg-white p-8 rounded-3xl border border-neutral-light hover:border-primary/30 transition-all group">
+              <div key={i} className="bg-white  p-8 rounded-3xl border border-neutral-light dark:border-white/5 hover:border-primary/30 transition-all group">
                 <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                   <span className="material-symbols-outlined">help</span>
                 </div>
-                <h3 className="text-lg font-bold text-dark-text mb-3">{faq.q}</h3>
+                <h3 className="text-lg font-bold text-dark-text dark:text-white mb-3">{faq.q}</h3>
                 <p className="text-sm text-neutral-text leading-relaxed">{faq.a}</p>
               </div>
             ))}
@@ -96,7 +96,7 @@ const Support: React.FC = () => {
         {activeView === 'tickets' && (
           <div className="space-y-6 animate-in fade-in duration-300">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-dark-text">Recent Tickets</h3>
+              <h3 className="text-lg font-bold text-dark-text dark:text-white">Recent Tickets</h3>
               <button 
                 onClick={handleOpenTicket}
                 disabled={isOpeningTicket}
@@ -111,10 +111,10 @@ const Support: React.FC = () => {
               </button>
             </div>
             
-            <div className="bg-white rounded-3xl border border-neutral-light overflow-hidden shadow-sm">
+            <div className="bg-white  rounded-3xl border border-neutral-light dark:border-white/5 overflow-hidden shadow-sm">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="bg-neutral-light/20">
+                  <tr className="bg-neutral-light/20 dark:bg-white/5">
                     <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">Ticket ID</th>
                     <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">Subject</th>
                     <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest text-center">Priority</th>
@@ -122,12 +122,12 @@ const Support: React.FC = () => {
                     <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest text-right">Last Update</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-neutral-light">
+                <tbody className="divide-y divide-neutral-light dark:divide-white/5">
                   {tickets.map((ticket) => (
-                    <tr key={ticket.id} className="hover:bg-neutral-light/10 transition-colors cursor-pointer group">
+                    <tr key={ticket.id} className="hover:bg-neutral-light/10 dark:hover:bg-white/5 transition-colors cursor-pointer group">
                       <td className="px-8 py-5 font-mono text-xs font-bold text-primary">{ticket.id}</td>
                       <td className="px-8 py-5">
-                        <p className="text-sm font-bold text-dark-text">{ticket.subject}</p>
+                        <p className="text-sm font-bold text-dark-text dark:text-white">{ticket.subject}</p>
                         <p className="text-[10px] text-neutral-text uppercase font-black">{ticket.category}</p>
                       </td>
                       <td className="px-8 py-5 text-center">
@@ -163,21 +163,21 @@ const Support: React.FC = () => {
 
         {activeView === 'contact' && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-in fade-in duration-300">
-            <div className="bg-white p-10 rounded-[2.5rem] border border-neutral-light flex flex-col items-center text-center group hover:shadow-2xl hover:shadow-primary/5 transition-all">
+            <div className="bg-white  p-10 rounded-[2.5rem] border border-neutral-light dark:border-white/5 flex flex-col items-center text-center group hover:shadow-2xl hover:shadow-primary/5 transition-all">
               <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-3xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
                 <span className="material-symbols-outlined text-3xl">mail</span>
               </div>
-              <h4 className="text-xl font-black text-dark-text mb-2">Email Support</h4>
+              <h4 className="text-xl font-black text-dark-text dark:text-white mb-2">Email Support</h4>
               <p className="text-sm text-neutral-text mb-6">Send us a detailed message. We aim to reply within 4 business hours.</p>
               <a href="mailto:support@esebills.com" className="text-primary font-black uppercase text-xs tracking-widest hover:underline">support@esebills.com</a>
             </div>
 
-            <div className="bg-white p-10 rounded-[2.5rem] border border-primary/20 flex flex-col items-center text-center group hover:shadow-2xl hover:shadow-primary/5 transition-all relative">
+            <div className="bg-white  p-10 rounded-[2.5rem] border border-primary/20 dark:border-white/5 flex flex-col items-center text-center group hover:shadow-2xl hover:shadow-primary/5 transition-all relative">
               <div className="absolute top-6 right-6 px-3 py-1 bg-accent-green text-dark-text text-[9px] font-black rounded uppercase tracking-widest">Active Now</div>
               <div className="w-16 h-16 bg-primary/10 text-primary rounded-3xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
                 <span className="material-symbols-outlined text-3xl">chat</span>
               </div>
-              <h4 className="text-xl font-black text-dark-text mb-2">Live Chat</h4>
+              <h4 className="text-xl font-black text-dark-text dark:text-white mb-2">Live Chat</h4>
               <p className="text-sm text-neutral-text mb-6">Chat with one of our support agents in real-time for quick resolutions.</p>
               <button 
                 onClick={handleOpenTicket}
@@ -187,11 +187,11 @@ const Support: React.FC = () => {
               </button>
             </div>
 
-            <div className="bg-white p-10 rounded-[2.5rem] border border-neutral-light flex flex-col items-center text-center group hover:shadow-2xl hover:shadow-primary/5 transition-all">
+            <div className="bg-white  p-10 rounded-[2.5rem] border border-neutral-light dark:border-white/5 flex flex-col items-center text-center group hover:shadow-2xl hover:shadow-primary/5 transition-all">
               <div className="w-16 h-16 bg-accent-green/10 text-accent-green rounded-3xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
                 <span className="material-symbols-outlined text-3xl">call</span>
               </div>
-              <h4 className="text-xl font-black text-dark-text mb-2">Phone Support</h4>
+              <h4 className="text-xl font-black text-dark-text dark:text-white mb-2">Phone Support</h4>
               <p className="text-sm text-neutral-text mb-6">Available Mon-Fri, 8AM - 5PM CAT for urgent corporate inquiries.</p>
               <a href="tel:+263123456789" className="text-accent-green font-black uppercase text-xs tracking-widest hover:underline">+263 123 456 789</a>
             </div>
@@ -215,3 +215,4 @@ const Support: React.FC = () => {
 };
 
 export default Support;
+

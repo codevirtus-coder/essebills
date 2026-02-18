@@ -68,7 +68,7 @@ const NotificationMenu: React.FC<NotificationMenuProps> = ({ onReplenishFloat })
       </button>
 
       {isOpen && (
-        <div className="absolute top-14 right-0 w-96 bg-white dark:bg-[#211d29] rounded-[2rem] shadow-2xl border border-neutral-light/50 dark:border-white/5 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-200 z-[100]">
+        <div className="absolute top-14 right-0 w-96 bg-white  rounded-[2rem] shadow-2xl border border-neutral-light/50 dark:border-white/5 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-200 z-[100]">
           {/* Header */}
           <div className="p-6 border-b border-neutral-light/30 dark:border-white/5 flex items-center justify-between">
             <h4 className="text-xs font-black uppercase tracking-widest text-dark-text/40 dark:text-white/40">INBOX</h4>
@@ -151,3 +151,4 @@ const NotificationMenu: React.FC<NotificationMenuProps> = ({ onReplenishFloat })
 };
 
 export default NotificationMenu;
+

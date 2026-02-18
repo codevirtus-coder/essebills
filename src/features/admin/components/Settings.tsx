@@ -14,7 +14,7 @@ const Settings: React.FC<SettingsProps> = ({ faqs = [], setFaqs, initialTab }) =
   const [config, setConfig] = useState<SystemConfig>(DEFAULT_SYSTEM_CONFIG);
   const [categories, setCategories] = useState<ServiceCategory[]>(INITIAL_CATEGORIES);
   const [isSaving, setIsSaving] = useState(false);
-
+  
   // Local state for FAQ editing
   const [editingFaq, setEditingFaq] = useState<Partial<FAQItem> | null>(null);
   

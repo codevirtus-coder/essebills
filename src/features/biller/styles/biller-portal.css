@@ -1,3 +1,92 @@
+.font-display {
+  font-family: var(--font-family-base);
+}
+
+.bg-background-light {
+  background-color: #ececf2;
+}
+
+.bg-background-light\/80 {
+  background-color: rgb(236 236 242 / 80%);
+}
+
+.bg-dark-text {
+  background-color: #10122b;
+}
+
+.text-dark-text {
+  color: #10122b;
+}
+
+.text-neutral-text {
+  color: #726b94;
+}
+
+.text-neutral-text\/50 {
+  color: rgb(114 107 148 / 50%);
+}
+
+.border-neutral-light {
+  border-color: #dedce8;
+}
+
+.divide-neutral-light > :not([hidden]) ~ :not([hidden]) {
+  border-color: #dedce8;
+}
+
+.bg-neutral-light {
+  background-color: #eceaf3;
+}
+
+.bg-neutral-light\/10 {
+  background-color: rgb(236 234 243 / 10%);
+}
+
+.bg-primary {
+  background-color: #7e57c2;
+}
+
+.bg-primary\/5 {
+  background-color: rgb(126 87 194 / 5%);
+}
+
+.bg-primary\/10 {
+  background-color: rgb(126 87 194 / 10%);
+}
+
+.text-primary {
+  color: #7e57c2;
+}
+
+.text-accent-green {
+  color: #86d825;
+}
+
+.bg-accent-green\/10 {
+  background-color: rgb(163 230 53 / 10%);
+}
+
+.shadow-primary\/20 {
+  box-shadow: 0 18px 36px rgb(126 87 194 / 20%);
+}
+
+.animate-in,
+.fade-in {
+  animation: billerFadeIn 0.25s ease;
+}
+
+@keyframes billerFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .biller-portal {
   min-height: 100vh;
   display: grid;

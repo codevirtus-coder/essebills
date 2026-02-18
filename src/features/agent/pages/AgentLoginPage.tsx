@@ -15,6 +15,7 @@ export function AgentLoginPage() {
       secondaryPrompt="Need an agent account?"
       secondaryCta="Apply as Agent"
       redirectTo={ROUTE_PATHS.agent}
+      mockLogin
     />
   );
 }

@@ -77,7 +77,7 @@ const Users: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h2 className="text-2xl font-extrabold text-dark-text">User Management</h2>
+          <h2 className="text-2xl font-extrabold text-dark-text dark:text-white">User Management</h2>
           <p className="text-sm text-neutral-text">Manage end-users, view their transaction history, and control account access.</p>
         </div>
         <button 
@@ -97,20 +97,20 @@ const Users: React.FC = () => {
           { label: 'Pending Verif.', value: users.filter(u => u.status === 'Pending').length.toString(), icon: 'how_to_reg', color: 'text-orange-500', bg: 'bg-orange-100' },
           { label: 'Avg LTV', value: '$84.20', icon: 'monetization_on', color: 'text-blue-500', bg: 'bg-blue-100' },
         ].map((stat, i) => (
-          <div key={i} className="bg-white p-6 rounded-3xl border border-neutral-light flex items-center gap-4">
+          <div key={i} className="bg-white  p-6 rounded-3xl border border-neutral-light dark:border-white/5 flex items-center gap-4">
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${stat.bg} ${stat.color}`}>
               <span className="material-symbols-outlined">{stat.icon}</span>
             </div>
             <div>
               <p className="text-[10px] font-black text-neutral-text uppercase tracking-widest">{stat.label}</p>
-              <h4 className="text-xl font-extrabold text-dark-text">{stat.value}</h4>
+              <h4 className="text-xl font-extrabold text-dark-text dark:text-white">{stat.value}</h4>
             </div>
           </div>
         ))}
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white p-4 rounded-3xl border border-neutral-light flex flex-col md:flex-row gap-4 items-center">
+      <div className="bg-white  p-4 rounded-3xl border border-neutral-light dark:border-white/5 flex flex-col md:flex-row gap-4 items-center">
         <div className="relative flex-1 w-full">
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-neutral-text text-xl">search</span>
           <input 
@@ -118,26 +118,26 @@ const Users: React.FC = () => {
             placeholder="Search by name, email, or phone number..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-neutral-light/30 border-none rounded-xl pl-10 pr-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 text-dark-text font-bold"
+            className="w-full bg-neutral-light/30 dark:bg-white/5 border-none rounded-xl pl-10 pr-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 text-dark-text dark:text-white font-bold"
           />
         </div>
         <div className="flex gap-2">
-          <button className="px-4 py-3 bg-neutral-light/30 text-neutral-text rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 hover:bg-neutral-light/50 transition-all">
+          <button className="px-4 py-3 bg-neutral-light/30 dark:bg-white/5 text-neutral-text rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 hover:bg-neutral-light/50 transition-all">
             <span className="material-symbols-outlined text-lg">filter_alt</span>
             Status
           </button>
-          <button className="p-3 bg-neutral-light/30 text-neutral-text rounded-xl hover:bg-neutral-light/50 transition-all">
+          <button className="p-3 bg-neutral-light/30 dark:bg-white/5 text-neutral-text rounded-xl hover:bg-neutral-light/50 transition-all">
             <span className="material-symbols-outlined">tune</span>
           </button>
         </div>
       </div>
 
       {/* Users Table */}
-      <div className="bg-white rounded-[3rem] shadow-sm border border-neutral-light overflow-hidden">
+      <div className="bg-white  rounded-[3rem] shadow-sm border border-neutral-light dark:border-white/5 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-neutral-light/20 border-b border-neutral-light">
+              <tr className="bg-neutral-light/20 dark:bg-white/5 border-b border-neutral-light dark:border-white/5">
                 <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">User Profile</th>
                 <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">Access Level</th>
                 <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">Join Date</th>
@@ -146,16 +146,16 @@ const Users: React.FC = () => {
                 <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-light">
+            <tbody className="divide-y divide-neutral-light dark:divide-white/5">
               {filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-neutral-light/10 transition-colors group">
+                <tr key={user.id} className="hover:bg-neutral-light/10 dark:hover:bg-white/5 transition-colors group">
                   <td className="px-8 py-5">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center font-black">
                         {user.initials}
                       </div>
                       <div>
-                        <p className="text-sm font-black text-dark-text">{user.name}</p>
+                        <p className="text-sm font-black text-dark-text dark:text-gray-200">{user.name}</p>
                         <p className="text-xs text-neutral-text font-medium">{user.email}</p>
                       </div>
                     </div>
@@ -176,7 +176,7 @@ const Users: React.FC = () => {
                     </span>
                   </td>
                   <td className="px-8 py-5 text-right">
-                    <p className="text-sm font-black text-dark-text">${user.totalSpent.toFixed(2)}</p>
+                    <p className="text-sm font-black text-dark-text dark:text-white">${user.totalSpent.toFixed(2)}</p>
                   </td>
                   <td className="px-8 py-5 text-right">
                     <div className="flex items-center justify-end gap-2">
@@ -195,7 +195,7 @@ const Users: React.FC = () => {
         </div>
         
         {/* Simple Pagination */}
-        <div className="p-8 bg-neutral-light/5 border-t border-neutral-light flex items-center justify-between">
+        <div className="p-8 bg-neutral-light/5 border-t border-neutral-light dark:border-white/5 flex items-center justify-between">
           <p className="text-[10px] font-black text-neutral-text uppercase tracking-widest">Showing {filteredUsers.length} of 12,450 users</p>
           <div className="flex gap-4">
             <button className="text-[10px] font-black uppercase text-neutral-text hover:text-primary disabled:opacity-30" disabled>Previous Page</button>
@@ -342,3 +342,4 @@ const Users: React.FC = () => {
 };
 
 export default Users;
+

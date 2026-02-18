@@ -6,6 +6,10 @@
   background-color: #ececf2;
 }
 
+.bg-background-dark {
+  background-color: #131118;
+}
+
 .bg-background-light\/80 {
   background-color: rgb(236 236 242 / 80%);
 }
@@ -162,19 +166,39 @@
   box-shadow: 0 10px 24px rgb(222 220 232 / 50%);
 }
 
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
 .animate-in {
-  animation: agentFadeIn 0.25s ease;
+  animation: adminFadeIn 0.25s ease;
 }
 
 .fade-in {
-  animation: agentFadeIn 0.25s ease;
+  animation: adminFadeIn 0.25s ease;
 }
 
-.slide-in-from-right-10 {
-  animation: agentSlideRight 0.25s ease;
+.slide-in-from-top-4 {
+  animation: adminSlideTop 0.25s ease;
 }
 
-@keyframes agentFadeIn {
+.slide-in-from-bottom-4 {
+  animation: adminSlideBottom 0.25s ease;
+}
+
+@keyframes adminFadeIn {
   from {
     opacity: 0;
     transform: translateY(4px);
@@ -186,14 +210,26 @@
   }
 }
 
-@keyframes agentSlideRight {
+@keyframes adminSlideTop {
   from {
     opacity: 0;
-    transform: translateX(12px);
+    transform: translateY(-8px);
   }
 
   to {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateY(0);
+  }
+}
+
+@keyframes adminSlideBottom {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

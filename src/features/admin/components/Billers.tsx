@@ -22,7 +22,11 @@ interface Biller {
   allowBulk: boolean;
 }
 
-const Billers: React.FC = () => {
+interface BillersProps {
+  onOnboard?: () => void;
+}
+
+const Billers: React.FC<BillersProps> = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isAddingNew, setIsAddingNew] = useState(false);
@@ -172,7 +176,7 @@ const Billers: React.FC = () => {
     <div className="p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20 relative">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h2 className="text-2xl font-extrabold text-dark-text">Biller Administration</h2>
+          <h2 className="text-2xl font-extrabold text-dark-text dark:text-white">Biller Administration</h2>
           <p className="text-sm text-neutral-text">Configure settlement rules and customer provisions for all providers.</p>
         </div>
         <button 
@@ -191,19 +195,19 @@ const Billers: React.FC = () => {
           { label: 'Review Required', value: billers.filter(b => b.status === 'Pending').length.toString(), icon: 'fact_check', color: 'text-orange-500', bg: 'bg-orange-100' },
           { label: 'Platform Cut', value: '2.4%', icon: 'percent', color: 'text-blue-500', bg: 'bg-blue-100' },
         ].map((stat, i) => (
-          <div key={i} className="bg-white p-8 rounded-[2rem] border border-neutral-light flex items-center gap-5 shadow-sm">
+          <div key={i} className="bg-white  p-8 rounded-[2rem] border border-neutral-light dark:border-white/5 flex items-center gap-5 shadow-sm">
             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${stat.bg} ${stat.color}`}>
               <span className="material-symbols-outlined text-2xl">{stat.icon}</span>
             </div>
             <div>
               <p className="text-[10px] font-black text-neutral-text uppercase tracking-widest">{stat.label}</p>
-              <h4 className="text-2xl font-black text-dark-text">{stat.value}</h4>
+              <h4 className="text-2xl font-black text-dark-text dark:text-white">{stat.value}</h4>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="bg-white p-4 rounded-[2rem] border border-neutral-light flex flex-col md:flex-row gap-4 items-center shadow-sm">
+      <div className="bg-white  p-4 rounded-[2rem] border border-neutral-light dark:border-white/5 flex flex-col md:flex-row gap-4 items-center shadow-sm">
         <div className="relative flex-1 w-full">
           <span className="material-symbols-outlined absolute left-5 top-1/2 -translate-y-1/2 text-neutral-text text-xl">search</span>
           <input 
@@ -211,21 +215,21 @@ const Billers: React.FC = () => {
             placeholder="Master search billers..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-[#f8fafc] border-none rounded-2xl pl-12 pr-6 py-4 text-sm font-bold focus:ring-2 focus:ring-primary/20"
+            className="w-full bg-[#f8fafc] dark:bg-white/5 border-none rounded-2xl pl-12 pr-6 py-4 text-sm font-bold focus:ring-2 focus:ring-primary/20"
           />
         </div>
         <div className="flex gap-2">
-          <button className="p-4 bg-[#f8fafc] text-neutral-text rounded-2xl hover:bg-neutral-light transition-all">
+          <button className="p-4 bg-[#f8fafc] dark:bg-white/5 text-neutral-text rounded-2xl hover:bg-neutral-light transition-all">
             <span className="material-symbols-outlined">tune</span>
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-[3rem] shadow-sm border border-neutral-light overflow-hidden">
+      <div className="bg-white  rounded-[3rem] shadow-sm border border-neutral-light dark:border-white/5 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-separate border-spacing-0">
             <thead>
-              <tr className="bg-neutral-light/20">
+              <tr className="bg-neutral-light/20 dark:bg-white/5">
                 <th className="px-10 py-6 text-[10px] font-black text-neutral-text uppercase tracking-widest">Biller Entity</th>
                 <th className="px-10 py-6 text-[10px] font-black text-neutral-text uppercase tracking-widest">Bulk Ops</th>
                 <th className="px-10 py-6 text-[10px] font-black text-neutral-text uppercase tracking-widest">Status</th>
@@ -234,16 +238,16 @@ const Billers: React.FC = () => {
                 <th className="px-10 py-6 text-[10px] font-black text-neutral-text uppercase tracking-widest text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-light">
+            <tbody className="divide-y divide-neutral-light dark:divide-white/5">
               {filteredBillers.map((biller) => (
-                <tr key={biller.id} className="group hover:bg-neutral-light/10 transition-colors">
+                <tr key={biller.id} className="group hover:bg-neutral-light/10 dark:hover:bg-white/5 transition-colors">
                   <td className="px-10 py-6">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center">
                         <span className="material-symbols-outlined text-2xl">{biller.icon}</span>
                       </div>
                       <div>
-                        <p className="text-sm font-black text-dark-text">{biller.name || 'Unnamed Entity'}</p>
+                        <p className="text-sm font-black text-dark-text dark:text-gray-200">{biller.name || 'Unnamed Entity'}</p>
                         <p className="text-[10px] text-neutral-text font-bold">Joined {biller.onboardedDate}</p>
                       </div>
                     </div>
@@ -266,7 +270,7 @@ const Billers: React.FC = () => {
                     <span className="text-xs font-black text-neutral-text">{biller.settlement}</span>
                   </td>
                   <td className="px-10 py-6">
-                    <p className="text-sm font-black text-dark-text">{biller.revenueShare}</p>
+                    <p className="text-sm font-black text-dark-text dark:text-white">{biller.revenueShare}</p>
                   </td>
                   <td className="px-10 py-6 text-right">
                     <div className="flex items-center justify-end gap-2">
@@ -474,3 +478,4 @@ const Billers: React.FC = () => {
 };
 
 export default Billers;
+

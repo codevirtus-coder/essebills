@@ -18,7 +18,7 @@ const UserProfile: React.FC = () => {
     <div className="p-8 max-w-4xl mx-auto space-y-8 animate-in slide-in-from-bottom-4 duration-500 pb-20">
       <div className="flex flex-col md:flex-row gap-8 items-start">
         {/* Avatar Card */}
-        <div className="bg-white p-8 rounded-3xl shadow-sm border border-neutral-light flex flex-col items-center w-full md:w-80 shrink-0">
+        <div className="bg-white  p-8 rounded-3xl shadow-sm border border-neutral-light dark:border-white/5 flex flex-col items-center w-full md:w-80 shrink-0">
           <div className="relative group">
             <div 
               className="w-32 h-32 rounded-full border-4 border-primary/20 bg-cover bg-center" 
@@ -28,7 +28,7 @@ const UserProfile: React.FC = () => {
               <span className="material-symbols-outlined text-sm">edit</span>
             </button>
           </div>
-          <h2 className="mt-6 text-xl font-extrabold text-dark-text">Alex Mukunda</h2>
+          <h2 className="mt-6 text-xl font-extrabold text-dark-text dark:text-white">Alex Mukunda</h2>
           <p className="text-sm font-bold text-primary uppercase tracking-widest mt-1 text-center">System Administrator</p>
           <div className="mt-8 w-full space-y-4">
             <div className="flex items-center gap-3 text-sm text-neutral-text">
@@ -45,24 +45,24 @@ const UserProfile: React.FC = () => {
         {/* Info Tabs & Forms */}
         <div className="flex-1 space-y-6 w-full">
           {/* Personal Information */}
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-neutral-light">
-            <h3 className="text-lg font-bold text-dark-text mb-6">Personal Information</h3>
+          <div className="bg-white  p-8 rounded-3xl shadow-sm border border-neutral-light dark:border-white/5">
+            <h3 className="text-lg font-bold text-dark-text dark:text-white mb-6">Personal Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-neutral-text uppercase tracking-widest">Full Name</label>
-                <input type="text" defaultValue="Alex Mukunda" className="w-full bg-neutral-light/30 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-primary/20 text-dark-text" />
+                <input type="text" defaultValue="Alex Mukunda" className="w-full bg-neutral-light/30 dark:bg-white/5 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-primary/20 text-dark-text dark:text-white" />
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-neutral-text uppercase tracking-widest">Email Address</label>
-                <input type="email" defaultValue="alex.m@esebills.com" className="w-full bg-neutral-light/30 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-primary/20 text-dark-text" />
+                <input type="email" defaultValue="alex.m@esebills.com" className="w-full bg-neutral-light/30 dark:bg-white/5 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-primary/20 text-dark-text dark:text-white" />
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-neutral-text uppercase tracking-widest">Phone Number</label>
-                <input type="text" defaultValue="+263 771 234 567" className="w-full bg-neutral-light/30 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-primary/20 text-dark-text" />
+                <input type="text" defaultValue="+263 771 234 567" className="w-full bg-neutral-light/30 dark:bg-white/5 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-primary/20 text-dark-text dark:text-white" />
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-neutral-text uppercase tracking-widest">Department</label>
-                <input type="text" defaultValue="Operations" className="w-full bg-neutral-light/30 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-primary/20 text-dark-text" />
+                <input type="text" defaultValue="Operations" className="w-full bg-neutral-light/30 dark:bg-white/5 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-primary/20 text-dark-text dark:text-white" />
               </div>
             </div>
             <div className="mt-8 flex justify-end">
@@ -73,9 +73,9 @@ const UserProfile: React.FC = () => {
           </div>
 
           {/* Roles & Permissions Management Section */}
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-neutral-light">
+          <div className="bg-white  p-8 rounded-3xl shadow-sm border border-neutral-light dark:border-white/5">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-dark-text">Roles & Permissions</h3>
+              <h3 className="text-lg font-bold text-dark-text dark:text-white">Roles & Permissions</h3>
               <span className="px-2 py-1 bg-primary/10 text-primary text-[10px] font-black rounded uppercase tracking-tighter">Admin View</span>
             </div>
             <p className="text-sm text-neutral-text mb-8">Manage the specific access levels and administrative privileges assigned to this profile.</p>
@@ -88,13 +88,13 @@ const UserProfile: React.FC = () => {
                 { id: 'editor', label: 'Content Editor', desc: 'Can update biller profiles, service categories, and FAQ sections.', icon: 'edit_note' },
                 { id: 'viewer', label: 'Global Viewer', desc: 'Read-only access to all dashboards, analytics, and transaction lists.', icon: 'visibility' },
               ].map((role) => (
-                <div key={role.id} className="group flex items-start gap-4 p-4 rounded-2xl border border-neutral-light hover:bg-neutral-light/20 transition-all">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${roles[role.id as keyof typeof roles] ? 'bg-primary text-white' : 'bg-neutral-light text-neutral-text'}`}>
+                <div key={role.id} className="group flex items-start gap-4 p-4 rounded-2xl border border-neutral-light dark:border-white/5 hover:bg-neutral-light/20 dark:hover:bg-white/5 transition-all">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${roles[role.id as keyof typeof roles] ? 'bg-primary text-white' : 'bg-neutral-light dark:bg-white/5 text-neutral-text'}`}>
                     <span className="material-symbols-outlined">{role.icon}</span>
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
-                      <p className="text-sm font-bold text-dark-text">{role.label}</p>
+                      <p className="text-sm font-bold text-dark-text dark:text-white">{role.label}</p>
                       <button 
                         onClick={() => toggleRole(role.id as keyof typeof roles)}
                         className={`w-10 h-5 rounded-full transition-colors relative ${roles[role.id as keyof typeof roles] ? 'bg-accent-green' : 'bg-neutral-text/30'}`}
@@ -108,7 +108,7 @@ const UserProfile: React.FC = () => {
               ))}
             </div>
             
-            <div className="mt-8 pt-8 border-t border-neutral-light">
+            <div className="mt-8 pt-8 border-t border-neutral-light dark:border-white/5">
               <div className="flex items-center gap-3 text-sm font-bold text-accent-green">
                 <span className="material-symbols-outlined text-lg">info</span>
                 <span>Role changes will take effect upon the next session login.</span>
@@ -117,16 +117,16 @@ const UserProfile: React.FC = () => {
           </div>
 
           {/* Security Settings */}
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-neutral-light">
-            <h3 className="text-lg font-bold text-dark-text mb-6">Security Settings</h3>
+          <div className="bg-white  p-8 rounded-3xl shadow-sm border border-neutral-light dark:border-white/5">
+            <h3 className="text-lg font-bold text-dark-text dark:text-white mb-6">Security Settings</h3>
             <div className="space-y-6">
-              <div className="flex items-center justify-between p-4 bg-neutral-light/20 rounded-2xl">
+              <div className="flex items-center justify-between p-4 bg-neutral-light/20 dark:bg-white/5 rounded-2xl">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 bg-accent-green/10 text-accent-green rounded-xl flex items-center justify-center">
                     <span className="material-symbols-outlined">verified_user</span>
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-dark-text">Two-Factor Authentication</p>
+                    <p className="text-sm font-bold text-dark-text dark:text-white">Two-Factor Authentication</p>
                     <p className="text-xs text-neutral-text">Add an extra layer of security to your account.</p>
                   </div>
                 </div>
@@ -135,13 +135,13 @@ const UserProfile: React.FC = () => {
                 </button>
               </div>
               
-              <div className="flex items-center justify-between p-4 bg-neutral-light/20 rounded-2xl">
+              <div className="flex items-center justify-between p-4 bg-neutral-light/20 dark:bg-white/5 rounded-2xl">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
                     <span className="material-symbols-outlined">lock_reset</span>
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-dark-text">Change Password</p>
+                    <p className="text-sm font-bold text-dark-text dark:text-white">Change Password</p>
                     <p className="text-xs text-neutral-text">Last changed 3 months ago.</p>
                   </div>
                 </div>
@@ -156,3 +156,4 @@ const UserProfile: React.FC = () => {
 };
 
 export default UserProfile;
+

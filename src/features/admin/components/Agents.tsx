@@ -18,7 +18,7 @@ const Agents: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h2 className="text-2xl font-extrabold text-dark-text">Agents Administration</h2>
+          <h2 className="text-2xl font-extrabold text-dark-text dark:text-white">Agents Administration</h2>
           <p className="text-sm text-neutral-text">Manage retail partners, track float liquidity, and review agent earnings.</p>
         </div>
         <button className="bg-primary text-white px-8 py-4 rounded-[2rem] font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-opacity-90 transition-all shadow-xl shadow-primary/20">
@@ -35,20 +35,20 @@ const Agents: React.FC = () => {
           { label: 'Unpaid Comm.', value: '$2,140', icon: 'payments', color: 'text-orange-500', bg: 'bg-orange-100' },
           { label: 'Avg Earnings', value: '$124.50', icon: 'analytics', color: 'text-blue-500', bg: 'bg-blue-100' },
         ].map((stat, i) => (
-          <div key={i} className="bg-white p-8 rounded-[2rem] border border-neutral-light flex items-center gap-5 shadow-sm">
+          <div key={i} className="bg-white  p-8 rounded-[2rem] border border-neutral-light dark:border-white/5 flex items-center gap-5 shadow-sm">
             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${stat.bg} ${stat.color}`}>
               <span className="material-symbols-outlined text-2xl">{stat.icon}</span>
             </div>
             <div>
               <p className="text-[10px] font-black text-neutral-text uppercase tracking-widest">{stat.label}</p>
-              <h4 className="text-2xl font-black text-dark-text">{stat.value}</h4>
+              <h4 className="text-2xl font-black text-dark-text dark:text-white">{stat.value}</h4>
             </div>
           </div>
         ))}
       </div>
 
       {/* Filter Bar */}
-      <div className="bg-white p-4 rounded-[2rem] border border-neutral-light flex flex-col md:flex-row gap-4 items-center shadow-sm">
+      <div className="bg-white  p-4 rounded-[2rem] border border-neutral-light dark:border-white/5 flex flex-col md:flex-row gap-4 items-center shadow-sm">
         <div className="relative flex-1 w-full">
           <span className="material-symbols-outlined absolute left-5 top-1/2 -translate-y-1/2 text-neutral-text text-xl">search</span>
           <input 
@@ -56,26 +56,26 @@ const Agents: React.FC = () => {
             placeholder="Search agents by name, ID or shop..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-[#f8fafc] border-none rounded-2xl pl-12 pr-6 py-4 text-sm font-bold focus:ring-2 focus:ring-primary/20 text-dark-text"
+            className="w-full bg-[#f8fafc] dark:bg-white/5 border-none rounded-2xl pl-12 pr-6 py-4 text-sm font-bold focus:ring-2 focus:ring-primary/20 text-dark-text dark:text-white"
           />
         </div>
         <div className="flex gap-2">
-          <button className="px-5 py-4 bg-[#f8fafc] text-neutral-text rounded-2xl font-bold text-xs flex items-center gap-2 hover:bg-neutral-light transition-all">
+          <button className="px-5 py-4 bg-[#f8fafc] dark:bg-white/5 text-neutral-text rounded-2xl font-bold text-xs flex items-center gap-2 hover:bg-neutral-light transition-all">
             <span className="material-symbols-outlined text-lg">filter_list</span>
             Status
           </button>
-          <button className="p-4 bg-[#f8fafc] text-neutral-text rounded-2xl hover:bg-neutral-light transition-all">
+          <button className="p-4 bg-[#f8fafc] dark:bg-white/5 text-neutral-text rounded-2xl hover:bg-neutral-light transition-all">
             <span className="material-symbols-outlined">tune</span>
           </button>
         </div>
       </div>
 
       {/* Main Table */}
-      <div className="bg-white rounded-[3rem] shadow-sm border border-neutral-light overflow-hidden">
+      <div className="bg-white  rounded-[3rem] shadow-sm border border-neutral-light dark:border-white/5 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-neutral-light/20 border-b border-neutral-light">
+              <tr className="bg-neutral-light/20 dark:bg-white/5 border-b border-neutral-light dark:border-white/5">
                 <th className="px-10 py-6 text-[10px] font-black text-neutral-text uppercase tracking-widest">Agent Partner</th>
                 <th className="px-10 py-6 text-[10px] font-black text-neutral-text uppercase tracking-widest">Location</th>
                 <th className="px-10 py-6 text-[10px] font-black text-neutral-text uppercase tracking-widest text-right">Float Balance</th>
@@ -84,16 +84,16 @@ const Agents: React.FC = () => {
                 <th className="px-10 py-6 text-[10px] font-black text-neutral-text uppercase tracking-widest text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-light">
+            <tbody className="divide-y divide-neutral-light dark:divide-white/5">
               {filteredAgents.map((agent) => (
-                <tr key={agent.id} className="group hover:bg-neutral-light/10 transition-colors">
+                <tr key={agent.id} className="group hover:bg-neutral-light/10 dark:hover:bg-white/5 transition-colors">
                   <td className="px-10 py-6">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center font-black text-xs">
                         {agent.initials}
                       </div>
                       <div>
-                        <p className="text-sm font-black text-dark-text">{agent.name}</p>
+                        <p className="text-sm font-black text-dark-text dark:text-gray-200">{agent.name}</p>
                         <p className="text-[10px] text-neutral-text font-bold uppercase tracking-tight">{agent.shopName} &bull; {agent.id}</p>
                       </div>
                     </div>
@@ -102,7 +102,7 @@ const Agents: React.FC = () => {
                     <span className="text-xs font-bold text-neutral-text">{agent.location}</span>
                   </td>
                   <td className="px-10 py-6 text-right">
-                    <p className={`text-sm font-black ${agent.floatBalance < 50 ? 'text-red-500' : 'text-dark-text'}`}>
+                    <p className={`text-sm font-black ${agent.floatBalance < 50 ? 'text-red-500' : 'text-dark-text dark:text-white'}`}>
                       ${agent.floatBalance.toFixed(2)}
                     </p>
                   </td>
@@ -126,7 +126,7 @@ const Agents: React.FC = () => {
                       <button className="w-10 h-10 flex items-center justify-center hover:bg-primary/10 hover:text-primary rounded-xl text-neutral-text transition-all" title="Edit Agent">
                         <span className="material-symbols-outlined text-lg">edit</span>
                       </button>
-                      <button className="w-10 h-10 flex items-center justify-center hover:bg-neutral-light rounded-xl text-neutral-text transition-all">
+                      <button className="w-10 h-10 flex items-center justify-center hover:bg-neutral-light dark:hover:bg-white/10 rounded-xl text-neutral-text transition-all">
                         <span className="material-symbols-outlined text-lg">more_vert</span>
                       </button>
                     </div>
@@ -138,7 +138,7 @@ const Agents: React.FC = () => {
         </div>
 
         {/* Footer info */}
-        <div className="p-8 border-t border-neutral-light flex items-center justify-between bg-neutral-light/5">
+        <div className="p-8 border-t border-neutral-light dark:border-white/5 flex items-center justify-between bg-neutral-light/5">
            <p className="text-[10px] font-black text-neutral-text uppercase tracking-widest">
              Showing {filteredAgents.length} out of {agents.length} onboarded agents
            </p>
@@ -150,3 +150,4 @@ const Agents: React.FC = () => {
 };
 
 export default Agents;
+
