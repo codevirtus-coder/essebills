@@ -1,0 +1,112 @@
+.font-display {
+  font-family: var(--font-family-base);
+}
+
+.bg-background-light {
+  background-color: #ececf2;
+}
+
+.bg-background-light\/80 {
+  background-color: rgb(236 236 242 / 80%);
+}
+
+.text-dark-text {
+  color: #10122b;
+}
+
+.text-dark-text\/40 {
+  color: rgb(16 18 43 / 40%);
+}
+
+.text-neutral-text {
+  color: #726b94;
+}
+
+.text-neutral-text\/50 {
+  color: rgb(114 107 148 / 50%);
+}
+
+.border-neutral-light {
+  border-color: #dedce8;
+}
+
+.bg-neutral-light {
+  background-color: #eceaf3;
+}
+
+.bg-neutral-light\/10 {
+  background-color: rgb(236 234 243 / 10%);
+}
+
+.bg-neutral-light\/5 {
+  background-color: rgb(236 234 243 / 5%);
+}
+
+.text-primary {
+  color: #7e57c2;
+}
+
+.bg-primary {
+  background-color: #7e57c2;
+}
+
+.bg-primary\/10 {
+  background-color: rgb(126 87 194 / 10%);
+}
+
+.border-primary\/30 {
+  border-color: rgb(126 87 194 / 30%);
+}
+
+.text-accent-green {
+  color: #86d825;
+}
+
+.bg-accent-green {
+  background-color: #a3e635;
+}
+
+.bg-accent-green\/10 {
+  background-color: rgb(163 230 53 / 10%);
+}
+
+.border-accent-green\/20 {
+  border-color: rgb(163 230 53 / 20%);
+}
+
+.animate-in {
+  animation: agentFadeIn 0.25s ease;
+}
+
+.fade-in {
+  animation: agentFadeIn 0.25s ease;
+}
+
+.slide-in-from-right-10 {
+  animation: agentSlideRight 0.25s ease;
+}
+
+@keyframes agentFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes agentSlideRight {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+

@@ -1,0 +1,690 @@
+.biller-portal {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 204px 1fr;
+  background: #ececf2;
+  font-size: 0.92rem;
+}
+
+.biller-portal-sidebar {
+  background: #fdfdff;
+  border-right: 1px solid #dedee8;
+  padding: 1.6rem 0.5rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+.biller-portal-brand {
+  margin: 0;
+  padding-left: 0.7rem;
+  font-size: 1.15rem;
+  font-style: italic;
+  font-weight: var(--fw-extrabold);
+  letter-spacing: -0.01em;
+  color: #7a5ac5;
+  position: relative;
+  width: fit-content;
+}
+
+.biller-portal-brand::after {
+  content: "";
+  display: block;
+  width: 66px;
+  height: 2px;
+  margin-top: 0.12rem;
+  background: #9fe23d;
+  border-radius: 999px;
+}
+
+.biller-portal-nav {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.biller-portal-nav-item {
+  border: 0;
+  border-radius: 0.95rem;
+  background: transparent;
+  color: #585382;
+  font-size: 0.84rem;
+  font-weight: var(--fw-semibold);
+  letter-spacing: -0.01em;
+  height: 2.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.biller-portal-nav-item.active {
+  background: #7e57c2;
+  color: #fff;
+}
+
+.biller-portal-exit {
+  margin-top: auto;
+  border: 0;
+  background: transparent;
+  color: #ff4444;
+  font-size: 0.82rem;
+  font-weight: var(--fw-semibold);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.8rem;
+  cursor: pointer;
+}
+
+.biller-portal-main {
+  padding: 1.85rem 1.55rem 2rem;
+}
+
+.biller-portal-topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.95rem;
+}
+
+.biller-portal-kicker {
+  color: #7a729a;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+}
+
+.biller-portal-topbar h1 {
+  margin-top: 0.12rem;
+  font-size: clamp(1.2rem, 1.8vw, 1.7rem);
+  line-height: 1.05;
+}
+
+.biller-portal-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.biller-portal-bell,
+.biller-portal-apps {
+  width: 2.15rem;
+  height: 2.15rem;
+  border: 0;
+  border-radius: 0.7rem;
+  background: #e8e5ef;
+  color: #6f6690;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  position: relative;
+}
+
+.biller-portal-bell span {
+  position: absolute;
+  top: -0.35rem;
+  right: -0.35rem;
+  min-width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  background: #ff4d4f;
+  color: #fff;
+  font-size: 0.65rem;
+  display: grid;
+  place-items: center;
+}
+
+.biller-portal-admin {
+  padding: 0 0.7rem;
+  border-left: 1px solid #d9d6e3;
+}
+
+.biller-portal-admin p {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: var(--fw-bold);
+}
+
+.biller-portal-admin small {
+  color: #7f789b;
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.biller-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.biller-stat-card {
+  border-radius: 1rem;
+  border: 1px solid #dfdeea;
+  background: #f8f8fc;
+  padding: 0.9rem 1.15rem 0.65rem;
+  display: grid;
+  row-gap: 0.15rem;
+}
+
+.biller-stat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.biller-stat-icon {
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 0.72rem;
+  display: grid;
+  place-items: center;
+}
+
+.biller-stat-icon .material-symbols-outlined {
+  font-size: 1.25rem;
+}
+
+.biller-stat-icon.purple {
+  color: #7d57c4;
+  background: #e8e3f3;
+}
+
+.biller-stat-icon.red {
+  color: #ff4a4c;
+  background: #f4e9ec;
+}
+
+.biller-stat-icon.green {
+  color: #86c929;
+  background: #e5eed9;
+}
+
+.biller-stat-icon.blue {
+  color: #2f71e8;
+  background: #dfe8f7;
+}
+
+.biller-stat-card p {
+  margin: 0;
+  color: #746f96;
+  font-size: 0.78rem;
+  letter-spacing: 0;
+}
+
+.biller-stat-card h3 {
+  margin: 0.12rem 0 0.05rem;
+  font-size: 1.58rem;
+  font-weight: var(--fw-bold);
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  color: #10122b;
+}
+
+.biller-stat-card span {
+  font-size: 0.66rem;
+  color: #84cd31;
+  font-weight: var(--fw-semibold);
+}
+
+.biller-mini-line {
+  margin-top: 0.22rem;
+  justify-self: end;
+  width: 45%;
+  height: 1.65rem;
+}
+
+.biller-mini-line path {
+  fill: none;
+  stroke: #7f5ac2;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.biller-mini-line.red path {
+  stroke: #ff4446;
+}
+
+.biller-mini-line.green path {
+  stroke: #7bc91f;
+}
+
+.biller-mini-line.blue path {
+  stroke: #3a73ee;
+}
+
+.biller-overview-grid {
+  margin-top: 0.9rem;
+  display: grid;
+  grid-template-columns: 1.95fr 0.95fr;
+  gap: 0.9rem;
+}
+
+.biller-panel {
+  background: #f7f7fc;
+  border: 1px solid #dddbe7;
+  border-radius: 2rem;
+  padding: 1.5rem;
+}
+
+.biller-config-grid .biller-panel > .type-label {
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  color: #6f688f;
+  padding-bottom: 0.58rem;
+  border-bottom: 1px solid #e0dde9;
+  display: block;
+}
+
+.biller-panel .type-title-md {
+  font-size: 0.98rem;
+  letter-spacing: -0.01em;
+}
+
+.biller-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.biller-panel-head p {
+  margin: 0.2rem 0 0;
+  color: #7e7897;
+}
+
+.biller-legend {
+  display: inline-flex;
+  gap: 0.8rem;
+}
+
+.biller-legend span {
+  border-radius: 999px;
+  background: #ece9f6;
+  color: #746b9b;
+  font-size: 0.58rem;
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.23rem 0.58rem;
+}
+
+.biller-legend span.collections {
+  color: #6f58b3;
+  background: #e7e3f3;
+}
+
+.biller-legend span.collections::before {
+  content: "";
+  display: inline-block;
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 999px;
+  margin-right: 0.35rem;
+  background: #7b59c6;
+  vertical-align: middle;
+}
+
+.biller-legend span.profit {
+  color: #6c778f;
+  background: #edf3e2;
+}
+
+.biller-legend span.profit::before {
+  content: "";
+  display: inline-block;
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 999px;
+  margin-right: 0.35rem;
+  background: #9fd626;
+  vertical-align: middle;
+}
+
+.biller-chart {
+  height: 320px;
+  position: relative;
+  border-radius: 1.3rem;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 59px,
+      #e5e1ef 59px,
+      #e5e1ef 60px
+    ),
+    linear-gradient(to bottom, #f3f2f8, #f8f8fc);
+  border: 1px dashed #dfdbea;
+  padding: 0.7rem;
+}
+
+.biller-chart svg {
+  width: 100%;
+  height: 100%;
+}
+
+.biller-chart path {
+  stroke: #7853be;
+  stroke-width: 3.2;
+}
+
+.biller-chart .area {
+  stroke: none;
+  fill: rgb(120 83 190 / 8%);
+}
+
+.biller-chart-days {
+  position: absolute;
+  left: 1.45rem;
+  right: 1.45rem;
+  bottom: 0.9rem;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  color: #706693;
+  font-size: 0.72rem;
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.01em;
+}
+
+.biller-chart-days span {
+  text-align: center;
+}
+
+.biller-fee-panel h2 {
+  margin-bottom: 0.9rem;
+  color: #736c93;
+  font-size: 0.8rem;
+}
+
+.biller-fee-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.7rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e1dfea;
+}
+
+.biller-fee-row p {
+  margin: 0;
+  font-weight: var(--fw-semibold);
+  font-size: 0.88rem;
+}
+
+.biller-fee-row small {
+  color: #7d7798;
+  font-size: 0.74rem;
+}
+
+.biller-fee-row strong {
+  color: #7d56c4;
+  font-size: 0.98rem;
+}
+
+.biller-fee-row strong.green {
+  color: #83d422;
+}
+
+.biller-fee-row strong.underline {
+  color: #111427;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.biller-inline-button {
+  margin-top: 1rem;
+  width: 100%;
+  background: #eceaf3;
+  color: #19172a;
+  border-radius: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.62rem;
+}
+
+.biller-table-panel {
+  margin-top: 0.8rem;
+  padding: 0;
+  overflow: hidden;
+}
+
+.biller-table-panel .biller-panel-head {
+  padding: 1.35rem 1.35rem 1rem;
+  margin-bottom: 0;
+  border-bottom: 1px solid #dddbe7;
+}
+
+.biller-table-panel .biller-panel-head .type-title-md {
+  font-size: 1.18rem;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+.biller-table-panel .biller-panel-head .type-label {
+  margin-top: 0.35rem;
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  color: #726b94;
+}
+
+.biller-report-button {
+  width: auto;
+  min-width: 152px;
+  height: 2.35rem;
+  border-radius: 0.85rem;
+  padding: 0 1.25rem;
+  background: #7e57c2;
+  color: #fff;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.86rem;
+  font-weight: var(--fw-bold);
+  box-shadow: 0 8px 16px rgb(126 87 194 / 26%);
+}
+
+.biller-report-button:hover {
+  background: #744cb8;
+  transform: translateY(-1px);
+}
+
+.biller-table-wrap {
+  overflow-x: auto;
+}
+
+.biller-table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.biller-table-wrap th {
+  text-align: left;
+  font-size: 0.7rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #7a7399;
+  padding: 0.85rem 1.35rem;
+  border-top: 1px solid #e2dfeb;
+  border-bottom: 1px solid #e2dfeb;
+}
+
+.biller-table-wrap td {
+  padding: 1rem 1.35rem;
+  border-bottom: 1px solid #e8e5ef;
+  font-weight: var(--fw-semibold);
+  color: #201d35;
+  white-space: nowrap;
+  font-size: 0.84rem;
+}
+
+.biller-table-wrap tr:last-child td {
+  border-bottom: 0;
+}
+
+.biller-table-wrap td strong,
+.biller-table-wrap td small {
+  display: block;
+}
+
+.biller-table-wrap td small {
+  color: #7d7797;
+  font-size: 0.72rem;
+}
+
+.biller-table-wrap td.neg {
+  color: #ff3c3f;
+}
+
+.biller-table-wrap td.pos {
+  color: #86d825;
+}
+
+.status-chip {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: var(--fw-bold);
+  color: #86cd29;
+  background: #e8eddc;
+}
+
+.biller-config-grid {
+  margin-top: 0.35rem;
+  display: grid;
+  gap: 0.82rem;
+  max-width: 760px;
+}
+
+.biller-form-grid {
+  margin-top: 0.62rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.82rem;
+}
+
+.biller-form-grid label {
+  color: #726b93;
+  margin-bottom: 0.36rem;
+  display: block;
+  font-size: 0.72rem;
+  letter-spacing: 0.07em;
+}
+
+.biller-form-grid input {
+  height: 2.68rem;
+  background: #efedf6;
+  border-color: transparent;
+  font-weight: var(--fw-bold);
+  font-size: 0.94rem;
+  border-radius: 0.72rem;
+  color: #121733;
+  padding: 0 1rem;
+}
+
+.biller-pref-list {
+  margin-top: 0.62rem;
+  display: grid;
+  gap: 0.72rem;
+}
+
+.biller-pref-row {
+  border-radius: 0.8rem;
+  background: #efedf6;
+  padding: 0.95rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+}
+
+.biller-pref-row p {
+  margin: 0;
+  font-weight: var(--fw-semibold);
+  font-size: 0.98rem;
+  color: #0f1533;
+}
+
+.biller-pref-row small {
+  color: #7d7599;
+  font-size: 0.82rem;
+}
+
+.biller-toggle {
+  border: 0;
+  width: 2.45rem;
+  height: 1.34rem;
+  border-radius: 999px;
+  background: #d7d4df;
+  position: relative;
+  cursor: pointer;
+}
+
+.biller-toggle::after {
+  content: "";
+  position: absolute;
+  top: 0.17rem;
+  left: 0.16rem;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  background: #fff;
+  transition: transform 0.2s ease;
+}
+
+.biller-toggle.on {
+  background: #7e57c2;
+}
+
+.biller-toggle.on::after {
+  transform: translateX(1.08rem);
+}
+
+.biller-save-button {
+  justify-self: center;
+  background: #7e57c2;
+  color: #fff;
+  border-radius: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.74rem;
+  font-weight: var(--fw-bold);
+  width: min(240px, 100%);
+  min-height: 2.55rem;
+  line-height: 1.1;
+  white-space: normal;
+  box-shadow: 0 10px 18px rgb(126 87 194 / 24%);
+}
+
+@media (max-width: 767px) {
+  .biller-portal {
+    grid-template-columns: 1fr;
+  }
+
+  .biller-portal-sidebar {
+    border-right: 0;
+    border-bottom: 1px solid #dedee8;
+  }
+
+  .biller-stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .biller-overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .biller-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .biller-portal-topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
