@@ -3,6 +3,7 @@
 export const ROUTE_PATHS = {
   home: '/',
   services: '/services',
+  checkout: '/checkout',
   biller: '/biller',
   agent: '/agent',
   admin: '/admin',

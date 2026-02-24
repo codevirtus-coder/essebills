@@ -672,6 +672,32 @@ html.dark .category-pill {
   margin-bottom: 2.65rem;
 }
 
+.billers-empty-state {
+  grid-column: 1 / -1;
+  min-height: 180px;
+  border: 1px dashed var(--border-light);
+  border-radius: 1rem;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: var(--muted-light);
+  background: rgb(107 78 150 / 3%);
+  padding: 1.25rem;
+}
+
+.billers-empty-state .material-symbols-outlined {
+  font-size: 2rem;
+  color: var(--primary);
+  opacity: 0.7;
+  margin-bottom: 0.35rem;
+}
+
+.billers-empty-state p {
+  margin: 0;
+  font-size: var(--fs-body);
+  font-weight: var(--fw-medium);
+}
+
 .biller-card {
   position: relative;
   overflow: hidden;
@@ -715,6 +741,7 @@ html.dark .biller-card {
   box-shadow: 0 10px 24px rgb(15 23 42 / 8%);
 }
 
+.biller-card.selected,
 .biller-card.featured {
   border-width: 2px;
   border-color: var(--primary);
@@ -723,6 +750,7 @@ html.dark .biller-card {
   transform: translateY(-1px);
 }
 
+.biller-card.selected::before,
 .biller-card.featured::before,
 .biller-card:hover::before {
   opacity: 1;
@@ -752,6 +780,7 @@ html.dark .biller-card {
     transform 0.22s ease;
 }
 
+.biller-card.selected .biller-icon-wrap,
 .biller-card.featured .biller-icon-wrap,
 .biller-card:hover .biller-icon-wrap {
   color: var(--primary);

@@ -10,6 +10,7 @@ import { AgentLoginPage } from '../features/agent/pages/AgentLoginPage'
 import { AdminLoginPage } from '../features/admin/pages/AdminLoginPage'
 import { LoginPage } from '../pages/LoginPage'
 import { RegisterPage } from '../pages/RegisterPage'
+import { PaymentCheckoutPage } from '../pages/PaymentCheckoutPage'
 import { AgentRegisterPage } from '../pages/AgentRegisterPage'
 import { BillerRegisterPage } from '../pages/BillerRegisterPage'
 import { AdminAccessRequestPage } from '../pages/AdminAccessRequestPage'
@@ -19,6 +20,10 @@ import { ROUTE_PATHS } from './paths'
 import { UnauthorizedPage } from '../pages/UnauthorizedPage'
 
 const routes: RouteObject[] = [
+  {
+    path: '/checkout',
+    element: <PaymentCheckoutPage />,
+  },
   {
     path: '/',
     element: <MainLayout />,

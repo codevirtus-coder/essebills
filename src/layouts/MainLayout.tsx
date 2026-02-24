@@ -15,6 +15,7 @@ export function MainLayout() {
     pathname.startsWith("/biller") ||
     pathname.startsWith("/agent") ||
     pathname.startsWith("/admin") ||
+    pathname.startsWith("/checkout") ||
     pathname.startsWith("/login/biller") ||
     pathname.startsWith("/login/agent") ||
     pathname.startsWith("/login/admin");
