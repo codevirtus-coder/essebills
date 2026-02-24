@@ -1,4 +1,6 @@
-export type AuthProvider = 'FACEBOOK' | 'GOOGLE' | 'LOCAL'
+﻿export type AuthProvider = 'FACEBOOK' | 'GOOGLE' | 'LOCAL'
+
+export type UserRole = 'BILLER' | 'AGENT' | 'ADMIN' | 'BUYER'
 
 export type LoginRequestDto = {
   username: string
@@ -26,4 +28,12 @@ export type RegisterResponseDto = {
   username: string
   email: string
   phoneNumber?: string
+}
+
+export type AuthSession = {
+  accessToken: string
+  role: UserRole
+  authProvider: AuthProvider
+  issuedAt: number
+  expiresAt: number
 }

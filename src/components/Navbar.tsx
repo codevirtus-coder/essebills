@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { Icon } from './Icon'
 import BrandLogo from './BrandLogo'
 import { ROUTE_PATHS } from '../router/paths'
-import { clearAuthToken, isAuthenticated, subscribeToAuthChanges } from '../features/auth/auth.storage'
+import { clearAuthSession, isAuthenticated, subscribeToAuthChanges } from '../features/auth/auth.storage'
 
 const navLinks = [
   { label: 'Services', to: ROUTE_PATHS.services, icon: 'widgets' },
@@ -23,7 +23,7 @@ export function Navbar() {
   }, [])
 
   const handleLogout = () => {
-    clearAuthToken()
+    clearAuthSession()
   }
 
   return (

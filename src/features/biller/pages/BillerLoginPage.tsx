@@ -1,5 +1,5 @@
-import { PortalLogin } from "../../auth/components/PortalLogin";
-import { ROUTE_PATHS } from "../../../router/paths";
+﻿import { PortalLogin } from '../../auth/components/PortalLogin'
+import { ROUTE_PATHS } from '../../../router/paths'
 
 export function BillerLoginPage() {
   return (
@@ -14,8 +14,9 @@ export function BillerLoginPage() {
       submitLabel="Access Dashboard"
       secondaryPrompt="Interested in digitizing your payments?"
       secondaryCta="Apply as Biller"
+      registerTo={ROUTE_PATHS.registerBiller}
       redirectTo={ROUTE_PATHS.biller}
-      mockLogin
+      role="BILLER"
     />
-  );
+  )
 }

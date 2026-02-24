@@ -41,6 +41,19 @@ export interface NavItem {
   icon: string;
 }
 
+export interface AdminMenuItem {
+  id: string;
+  label: string;
+  icon: string;
+  children?: AdminMenuItem[];
+}
+
+export interface AdminMenuSection {
+  id: string;
+  title?: string;
+  items: AdminMenuItem[];
+}
+
 export interface Agent {
   id: string;
   name: string;

@@ -6,12 +6,33 @@ interface HeaderProps {
   onBack?: () => void;
   onProfileClick?: () => void;
   showBack?: boolean;
+  onToggleMobileNav?: () => void;
+  isMobileNavOpen?: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ onBack, onProfileClick, showBack = true }) => {
+const Header: React.FC<HeaderProps> = ({
+  onBack,
+  onProfileClick,
+  showBack = true,
+  onToggleMobileNav,
+  isMobileNavOpen = false,
+}) => {
   return (
-    <header className="h-16 bg-white  border-b border-neutral-light dark:border-white/5 shadow-sm flex items-center justify-between px-8 sticky top-0 z-[60]">
+    <header
+      className="min-h-[5.25rem] md:min-h-16 bg-white border-b border-neutral-light dark:border-white/5 shadow-sm flex items-center justify-between px-4 md:px-8 sticky top-0 z-[60] py-2 md:py-0"
+      style={{ paddingTop: "max(env(safe-area-inset-top), 0.5rem)" }}
+    >
       <div className="flex items-center gap-4 flex-1">
+        <button
+          type="button"
+          onClick={onToggleMobileNav}
+          className="md:hidden w-10 h-10 rounded-xl bg-neutral-light text-neutral-text flex items-center justify-center"
+          aria-label={isMobileNavOpen ? "Close navigation" : "Open navigation"}
+        >
+          <span className="material-symbols-outlined text-lg">
+            {isMobileNavOpen ? "close" : "menu"}
+          </span>
+        </button>
         {showBack && (
           <button 
             onClick={onBack}
@@ -21,11 +42,22 @@ const Header: React.FC<HeaderProps> = ({ onBack, onProfileClick, showBack = true
             <span className="material-symbols-outlined">arrow_back</span>
           </button>
         )}
-        <div className="flex-1 max-w-xl">
-          <div className="relative">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-neutral-text/50 text-xl">search</span>
+        <div className="hidden sm:block flex-1 max-w-xl">
+          <div className="h-12 bg-white dark:bg-white/5 border border-neutral-light dark:border-white/10 rounded-2xl shadow-sm shadow-neutral-light/40 px-4 flex items-center gap-3 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/40">
+            <span className="text-neutral-text/55 inline-flex items-center justify-center shrink-0">
+              <svg
+                className="w-[18px] h-[18px]"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
+                <path d="M20 20L16.8 16.8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </span>
             <input 
-              className="w-full bg-neutral-light/50 dark:bg-white/5 border-none rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary/20 text-dark-text dark:text-white placeholder:text-neutral-text/50" 
+              className="w-full h-full bg-transparent border-none p-0 text-[15px] leading-5 text-dark-text dark:text-white placeholder:text-neutral-text/55 focus:ring-0 focus:outline-none" 
               placeholder="Search transactions, users, or billers..." 
               type="text"
             />

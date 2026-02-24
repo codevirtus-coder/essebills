@@ -1,10 +1,10 @@
-import type {
+﻿import type {
   LoginRequestDto,
   LoginResponseDto,
   RegisterRequestDto,
   RegisterResponseDto,
 } from './dto/auth.dto'
-import { getAuthToken } from './auth.storage'
+import { getAccessToken } from './auth.storage'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'https://api.test.rongeka.com'
 
@@ -35,7 +35,7 @@ async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise
   }
 
   if (requiresAuth) {
-    const token = getAuthToken()
+    const token = getAccessToken()
 
     if (token) {
       headers.Authorization = `Bearer ${token}`

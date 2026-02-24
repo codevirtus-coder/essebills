@@ -103,6 +103,13 @@
   border-color: #e5e7eb;
 }
 
+.login-form textarea {
+  background: #f1f5f9;
+  border-color: #e5e7eb;
+  resize: vertical;
+  min-height: 6.25rem;
+}
+
 .login-input-with-icon {
   position: relative;
 }
@@ -231,6 +238,11 @@ html.dark .login-forgot {
 }
 
 html.dark .login-form input {
+  background: #0d1728;
+  border-color: #34455d;
+}
+
+html.dark .login-form textarea {
   background: #0d1728;
   border-color: #34455d;
 }

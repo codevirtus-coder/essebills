@@ -1,5 +1,5 @@
-import { PortalLogin } from "../../auth/components/PortalLogin";
-import { ROUTE_PATHS } from "../../../router/paths";
+﻿import { PortalLogin } from '../../auth/components/PortalLogin'
+import { ROUTE_PATHS } from '../../../router/paths'
 
 export function AgentLoginPage() {
   return (
@@ -14,8 +14,9 @@ export function AgentLoginPage() {
       submitLabel="Access Dashboard"
       secondaryPrompt="Need an agent account?"
       secondaryCta="Apply as Agent"
+      registerTo={ROUTE_PATHS.registerAgent}
       redirectTo={ROUTE_PATHS.agent}
-      mockLogin
+      role="AGENT"
     />
-  );
+  )
 }

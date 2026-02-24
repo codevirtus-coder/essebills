@@ -1,4 +1,4 @@
-import { createBrowserRouter, type RouteObject } from 'react-router-dom'
+﻿import { createBrowserRouter, type RouteObject } from 'react-router-dom'
 import { MainLayout } from '../layouts/MainLayout'
 import { HomePage } from '../pages/HomePage'
 import { EmptyPage } from '../pages/EmptyPage'
@@ -10,9 +10,13 @@ import { AgentLoginPage } from '../features/agent/pages/AgentLoginPage'
 import { AdminLoginPage } from '../features/admin/pages/AdminLoginPage'
 import { LoginPage } from '../pages/LoginPage'
 import { RegisterPage } from '../pages/RegisterPage'
+import { AgentRegisterPage } from '../pages/AgentRegisterPage'
+import { BillerRegisterPage } from '../pages/BillerRegisterPage'
+import { AdminAccessRequestPage } from '../pages/AdminAccessRequestPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { RequireAuth } from './RequireAuth'
 import { ROUTE_PATHS } from './paths'
+import { UnauthorizedPage } from '../pages/UnauthorizedPage'
 
 const routes: RouteObject[] = [
   {
@@ -29,7 +33,7 @@ const routes: RouteObject[] = [
       },
       {
         path: 'biller',
-        element: <RequireAuth redirectTo={ROUTE_PATHS.loginBiller} />,
+        element: <RequireAuth redirectTo={ROUTE_PATHS.loginBiller} allowedRoles={['BILLER']} />,
         children: [
           {
             index: true,
@@ -39,7 +43,7 @@ const routes: RouteObject[] = [
       },
       {
         path: 'agent',
-        element: <RequireAuth redirectTo={ROUTE_PATHS.loginAgent} />,
+        element: <RequireAuth redirectTo={ROUTE_PATHS.loginAgent} allowedRoles={['AGENT']} />,
         children: [
           {
             index: true,
@@ -49,7 +53,13 @@ const routes: RouteObject[] = [
       },
       {
         path: 'admin',
-        element: <AdminDashboardPage />,
+        element: <RequireAuth redirectTo={ROUTE_PATHS.loginAdmin} allowedRoles={['ADMIN']} />,
+        children: [
+          {
+            index: true,
+            element: <AdminDashboardPage />,
+          },
+        ],
       },
       {
         path: 'buyer',
@@ -74,6 +84,22 @@ const routes: RouteObject[] = [
       {
         path: 'register',
         element: <RegisterPage />,
+      },
+      {
+        path: 'register/agent',
+        element: <AgentRegisterPage />,
+      },
+      {
+        path: 'register/biller',
+        element: <BillerRegisterPage />,
+      },
+      {
+        path: 'register/admin',
+        element: <AdminAccessRequestPage />,
+      },
+      {
+        path: 'unauthorized',
+        element: <UnauthorizedPage />,
       },
       {
         path: '*',

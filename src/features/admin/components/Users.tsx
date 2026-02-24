@@ -1,5 +1,6 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { getPaginatedUsers } from '../services';
 
 interface User {
   id: string;
@@ -37,6 +38,52 @@ const Users: React.FC = () => {
     { id: '5', name: 'Farai Gumbo', email: 'farai.gumbo@live.com', phone: '+263 777 222 111', joinDate: 'May 01, 2024', status: 'Inactive', totalSpent: 25.00, initials: 'FG', role: 'Customer' },
     { id: '6', name: 'Rutendo Mpofu', email: 'rutendo.m@gmail.com', phone: '+263 782 000 999', joinDate: 'May 15, 2024', status: 'Active', totalSpent: 155.75, initials: 'RM', role: 'Support' },
   ]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [dataSource, setDataSource] = useState<'api' | 'mock'>('mock');
+
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        setIsLoadingUsers(true);
+        const page = await getPaginatedUsers({ page: 0, size: 50 });
+        const apiUsers = (page.content ?? []).map((user, index) => {
+          const first = String(user.firstName ?? '').trim();
+          const last = String(user.lastName ?? '').trim();
+          const username = String(user.username ?? '').trim();
+          const displayName =
+            [first, last].filter(Boolean).join(' ') || username || `User ${index + 1}`;
+          const initials = displayName
+            .split(' ')
+            .filter(Boolean)
+            .slice(0, 2)
+            .map((part) => part[0]?.toUpperCase() ?? '')
+            .join('');
+          return {
+            id: String(user.id ?? `U-${index}`),
+            name: displayName,
+            email: String(user.email ?? '-'),
+            phone: String(user.phoneNumber ?? '-'),
+            joinDate: 'N/A',
+            status: user.active === false ? 'Inactive' : 'Active',
+            totalSpent: 0,
+            initials: initials || 'U',
+            role: 'User',
+          } as User;
+        });
+
+        if (apiUsers.length > 0) {
+          setUsers(apiUsers);
+          setDataSource('api');
+        }
+      } catch {
+        setDataSource('mock');
+      } finally {
+        setIsLoadingUsers(false);
+      }
+    };
+
+    void loadUsers();
+  }, []);
 
   const filteredUsers = users.filter(user => 
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -79,6 +126,9 @@ const Users: React.FC = () => {
         <div>
           <h2 className="text-2xl font-extrabold text-dark-text dark:text-white">User Management</h2>
           <p className="text-sm text-neutral-text">Manage end-users, view their transaction history, and control account access.</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-neutral-text mt-2">
+            Source: {isLoadingUsers ? 'Loading...' : dataSource === 'api' ? 'Live API' : 'Fallback Mock'}
+          </p>
         </div>
         <button 
           onClick={() => setIsInviteDrawerOpen(true)}

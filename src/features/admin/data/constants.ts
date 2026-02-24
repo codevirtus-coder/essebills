@@ -1,5 +1,17 @@
 
-import { Transaction, TransactionStatus, BillerPerformance, DashboardStats, NavItem, ServiceCategory, SystemConfig, Agent, FAQItem } from './types';
+import {
+  Transaction,
+  TransactionStatus,
+  BillerPerformance,
+  DashboardStats,
+  NavItem,
+  ServiceCategory,
+  SystemConfig,
+  Agent,
+  FAQItem,
+  AdminMenuSection,
+  AdminMenuItem,
+} from './types';
 
 export const MOCK_STATS: DashboardStats = {
   totalRevenue: 240500,
@@ -71,14 +83,137 @@ export const NAV_ITEMS: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
   { id: 'transactions', label: 'Transactions', icon: 'receipt_long' },
   { id: 'billers', label: 'Billers', icon: 'corporate_fare' },
+  { id: 'products', label: 'Products', icon: 'inventory_2' },
   { id: 'agents', label: 'Agents', icon: 'storefront' },
   { id: 'commissions', label: 'Commissions', icon: 'payments' },
   { id: 'users', label: 'Users', icon: 'group' },
   { id: 'messaging', label: 'SMS & Email', icon: 'chat_bubble' },
+  { id: 'whatsapp', label: 'WhatsApp Center', icon: 'mark_chat_read' },
   { id: 'reports', label: 'Reports', icon: 'analytics' },
 ];
 
 export const PREFERENCE_ITEMS: NavItem[] = [
+  { id: 'profile', label: 'Profile', icon: 'account_circle' },
+  { id: 'settings', label: 'Settings', icon: 'settings' },
+  { id: 'support', label: 'Support', icon: 'help' },
+];
+
+export const ADMIN_MENU_SECTIONS: AdminMenuSection[] = [
+  {
+    id: 'payments',
+    title: 'Payments',
+    items: [
+      { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+      {
+        id: 'transactions',
+        label: 'Transactions',
+        icon: 'sync_alt',
+        children: [
+          { id: 'transactionsZambiaProducts', label: 'Zambia Products', icon: 'subdirectory_arrow_right' },
+          { id: 'transactionsZimProducts', label: 'Zim Products', icon: 'subdirectory_arrow_right' },
+        ],
+      },
+      {
+        id: 'vouchers',
+        label: 'Vouchers',
+        icon: 'confirmation_number',
+        children: [
+          { id: 'vouchersZambiaProducts', label: 'Zambia Products', icon: 'subdirectory_arrow_right' },
+          { id: 'vouchersZimProducts', label: 'Zim Products', icon: 'subdirectory_arrow_right' },
+        ],
+      },
+      { id: 'rongekaAccounts', label: 'Rongeka Accounts', icon: 'account_balance_wallet' },
+      { id: 'products', label: 'Products', icon: 'inventory_2' },
+    ],
+  },
+  {
+    id: 'platform',
+    title: 'Platform',
+    items: [
+      {
+        id: 'parameters',
+        label: 'Parameters',
+        icon: 'tune',
+        children: [
+          { id: 'parametersCurrencies', label: 'Currencies', icon: 'paid' },
+          { id: 'parametersCountries', label: 'Countries', icon: 'public' },
+          { id: 'parametersHolidays', label: 'Holidays', icon: 'event' },
+          { id: 'parametersBanks', label: 'Banks', icon: 'account_balance' },
+        ],
+      },
+      {
+        id: 'sms',
+        label: 'SMS',
+        icon: 'sms',
+        children: [
+          { id: 'smsMessages', label: 'SMSes', icon: 'chat_bubble' },
+          { id: 'smsCharges', label: 'SMS Charges', icon: 'price_change' },
+        ],
+      },
+      {
+        id: 'userSettings',
+        label: 'User Settings',
+        icon: 'manage_accounts',
+        children: [
+          { id: 'userSettingsUsers', label: 'Users', icon: 'group' },
+          { id: 'userSettingsGroups', label: 'Groups', icon: 'groups' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'integrations',
+    title: 'Integrations',
+    items: [
+      {
+        id: 'econet',
+        label: 'Econet',
+        icon: 'network_cell',
+        children: [
+          { id: 'econetBundlePlanTypes', label: 'Bundle Plan Types', icon: 'category' },
+          { id: 'econetDataBundleTypes', label: 'Data Bundle Types', icon: 'data_usage' },
+        ],
+      },
+      {
+        id: 'netone',
+        label: 'Netone',
+        icon: 'network_cell',
+        children: [
+          { id: 'netoneBundlePlanTypes', label: 'Bundle Plan Types', icon: 'category' },
+          { id: 'netoneDataBundleTypes', label: 'Data Bundle Types', icon: 'data_usage' },
+        ],
+      },
+      {
+        id: 'credentials',
+        label: 'Credentials',
+        icon: 'vpn_key',
+        children: [
+          { id: 'credentialsPesepay', label: 'Pesepay', icon: 'key' },
+          { id: 'credentialsCgrate', label: 'Cgrate', icon: 'key' },
+          { id: 'credentialsZesa', label: 'Zesa', icon: 'key' },
+          { id: 'credentialsEconet', label: 'Econet', icon: 'key' },
+          { id: 'credentialsEsolutionsSms', label: 'Esolutions SMS', icon: 'key' },
+          { id: 'credentialsNetoneEvd', label: 'Netone EVD', icon: 'key' },
+          { id: 'credentialsEsolutionsAirtime', label: 'Esolutions Airtime', icon: 'key' },
+        ],
+      },
+      { id: 'tuition', label: 'Tuition', icon: 'school' },
+    ],
+  },
+  {
+    id: 'ops',
+    title: 'Operations',
+    items: [
+      { id: 'billers', label: 'Billers', icon: 'corporate_fare' },
+      { id: 'agents', label: 'Agents', icon: 'storefront' },
+      { id: 'commissions', label: 'Commissions', icon: 'payments' },
+      { id: 'whatsapp', label: 'WhatsApp Center', icon: 'mark_chat_read' },
+      { id: 'reports', label: 'Reports', icon: 'analytics' },
+    ],
+  },
+];
+
+export const ADMIN_PREFERENCE_ITEMS: AdminMenuItem[] = [
   { id: 'profile', label: 'Profile', icon: 'account_circle' },
   { id: 'settings', label: 'Settings', icon: 'settings' },
   { id: 'support', label: 'Support', icon: 'help' },

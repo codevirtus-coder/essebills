@@ -1,5 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
+import { createProduct, deleteProduct, getAllProducts, updateProduct } from '../services';
 
 interface BillerField {
   id: string;
@@ -30,6 +32,7 @@ const Billers: React.FC<BillersProps> = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [isPersisting, setIsPersisting] = useState(false);
   const [selectedBiller, setSelectedBiller] = useState<Biller | null>(null);
   
   const [billers, setBillers] = useState<Biller[]>([
@@ -94,6 +97,57 @@ const Billers: React.FC<BillersProps> = () => {
       allowBulk: true
     },
   ]);
+  const [isLoadingBillers, setIsLoadingBillers] = useState(false);
+  const [billerSource, setBillerSource] = useState<'api' | 'mock'>('mock');
+
+  const mapProductToBiller = (product: Record<string, unknown>, index: number): Biller => ({
+    id: String(product.id ?? `P-${index}`),
+    name: String(product.name ?? `Product ${index + 1}`),
+    category: 'Utilities',
+    icon: 'corporate_fare',
+    onboardedDate: 'N/A',
+    status:
+      String(product.status ?? '').toUpperCase() === 'ACTIVE'
+        ? 'Active'
+        : 'Pending',
+    settlement: 'Daily',
+    revenueShare: '2.0%',
+    fields: [
+      {
+        id: 'account',
+        label: 'Account Number',
+        placeholder: 'Enter account...',
+        type: 'text',
+      },
+      { id: 'amount', label: 'Amount', placeholder: '0.00', type: 'text', prefix: '$' },
+    ],
+    allowBulk: true,
+  });
+
+  const loadProductsAsBillers = async () => {
+    try {
+      setIsLoadingBillers(true);
+      const products = await getAllProducts();
+      const mapped: Biller[] = products.map((product, index) =>
+        mapProductToBiller(product as Record<string, unknown>, index),
+      );
+
+      if (mapped.length > 0) {
+        setBillers(mapped);
+        setBillerSource('api');
+      } else {
+        setBillerSource('mock');
+      }
+    } catch {
+      setBillerSource('mock');
+    } finally {
+      setIsLoadingBillers(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadProductsAsBillers();
+  }, []);
 
   const handleEditClick = (biller: Biller) => {
     setSelectedBiller({ ...biller });
@@ -122,15 +176,57 @@ const Billers: React.FC<BillersProps> = () => {
     setIsDrawerOpen(true);
   };
 
-  const handleSaveBiller = () => {
-    if (selectedBiller) {
+  const buildProductPayload = (biller: Biller) => {
+    const normalizedCode = biller.name
+      .trim()
+      .toUpperCase()
+      .replace(/[^A-Z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .slice(0, 32);
+
+    return {
+      name: biller.name.trim(),
+      code: normalizedCode || `PRODUCT_${Date.now()}`,
+      status: biller.status === 'Active' ? 'ACTIVE' : 'INACTIVE',
+      description: `${biller.category} - ${biller.settlement}`,
+    };
+  };
+
+  const handleSaveBiller = async () => {
+    if (!selectedBiller) return;
+
+    try {
+      setIsPersisting(true);
+      const payload = buildProductPayload(selectedBiller);
+
       if (isAddingNew) {
-        setBillers([selectedBiller, ...billers]);
+        await createProduct(payload);
+        toast.success('Product created successfully');
       } else {
-        setBillers(billers.map(b => b.id === selectedBiller.id ? selectedBiller : b));
+        await updateProduct({
+          id: selectedBiller.id,
+          ...payload,
+        });
+        toast.success('Product updated successfully');
       }
+
+      await loadProductsAsBillers();
       setIsDrawerOpen(false);
       setSelectedBiller(null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to save product');
+    } finally {
+      setIsPersisting(false);
+    }
+  };
+
+  const handleDeleteBiller = async (billerId: string) => {
+    try {
+      await deleteProduct(billerId);
+      toast.success('Product deleted');
+      await loadProductsAsBillers();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete product');
     }
   };
 
@@ -178,6 +274,9 @@ const Billers: React.FC<BillersProps> = () => {
         <div>
           <h2 className="text-2xl font-extrabold text-dark-text dark:text-white">Biller Administration</h2>
           <p className="text-sm text-neutral-text">Configure settlement rules and customer provisions for all providers.</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-neutral-text mt-2">
+            Source: {isLoadingBillers ? 'Loading...' : billerSource === 'api' ? 'Live API' : 'Fallback Mock'}
+          </p>
         </div>
         <button 
           onClick={handleCreateClick}
@@ -279,6 +378,13 @@ const Billers: React.FC<BillersProps> = () => {
                         className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-primary/10 hover:text-primary text-neutral-text transition-all"
                       >
                         <span className="material-symbols-outlined text-lg">settings</span>
+                      </button>
+                      <button
+                        onClick={() => void handleDeleteBiller(biller.id)}
+                        className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-red-50 hover:text-red-600 text-neutral-text transition-all"
+                        title="Delete Product"
+                      >
+                        <span className="material-symbols-outlined text-lg">delete</span>
                       </button>
                     </div>
                   </td>
@@ -463,11 +569,15 @@ const Billers: React.FC<BillersProps> = () => {
                 Discard Changes
               </button>
               <button 
-                onClick={handleSaveBiller}
-                disabled={!selectedBiller.name}
+                onClick={() => void handleSaveBiller()}
+                disabled={!selectedBiller.name || isPersisting}
                 className="flex-1 py-4 bg-primary text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
               >
-                {isAddingNew ? 'Complete Onboarding' : 'Synchronize Policy'}
+                {isPersisting
+                  ? 'Saving...'
+                  : isAddingNew
+                    ? 'Complete Onboarding'
+                    : 'Synchronize Policy'}
               </button>
             </div>
           </div>

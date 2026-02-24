@@ -28,9 +28,7 @@ const StatCard: React.FC<StatCardProps> = ({
           <p className="text-sm font-semibold text-neutral-text mb-1">
             {label}
           </p>
-          <h3 className="text-2xl font-extrabold text-dark-text">
-            {value}
-          </h3>
+          <h3 className="text-2xl font-extrabold text-dark-text">{value}</h3>
         </div>
         <span
           className={`p-2 ${iconBg} rounded-lg ${iconColor} material-symbols-outlined`}
@@ -56,4 +54,3 @@ const StatCard: React.FC<StatCardProps> = ({
 };
 
 export default StatCard;
-

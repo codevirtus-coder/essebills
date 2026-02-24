@@ -1,38 +1,41 @@
-import { useEffect, useState, type FormEvent } from "react";
-import toast from "react-hot-toast";
-import { Link, useNavigate } from "react-router-dom";
-import { useLoginMutation } from "../features/auth/auth.hooks";
-import { isAuthenticated } from "../features/auth/auth.storage";
-import { ROUTE_PATHS } from "../router/paths";
-import "../features/auth/styles/portal-login.css";
+﻿import { useEffect, useState, type FormEvent } from 'react'
+import toast from 'react-hot-toast'
+import { Link, useNavigate } from 'react-router-dom'
+import { useLoginMutation } from '../features/auth/auth.hooks'
+import { buildAuthSession, getAuthSession, saveAuthSession } from '../features/auth/auth.storage'
+import { getDashboardRouteByRole, ROUTE_PATHS } from '../router/paths'
+import '../features/auth/styles/portal-login.css'
 
 export function LoginPage() {
-  const navigate = useNavigate();
-  const loginMutation = useLoginMutation();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate()
+  const loginMutation = useLoginMutation()
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
   useEffect(() => {
-    if (isAuthenticated()) {
-      navigate(ROUTE_PATHS.home, { replace: true });
+    const existingSession = getAuthSession()
+
+    if (existingSession) {
+      navigate(getDashboardRouteByRole(existingSession.role), { replace: true })
     }
-  }, [navigate]);
+  }, [navigate])
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+    event.preventDefault()
 
     try {
-      await loginMutation.mutateAsync({ username, password });
-      navigate(ROUTE_PATHS.home);
+      const data = await loginMutation.mutateAsync({ username, password })
+      saveAuthSession(buildAuthSession(data.jwtToken, 'BUYER', data.authProvider))
+      navigate(ROUTE_PATHS.home, { replace: true })
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Login failed. Check your username/password.",
-      );
+          : 'Login failed. Check your username/password.',
+      )
     }
-  };
+  }
 
   return (
     <section className="login-shell mt-[2rem]">
@@ -79,7 +82,7 @@ export function LoginPage() {
               </div>
               <div className="login-password-field">
                 <input
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="********"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
@@ -89,11 +92,11 @@ export function LoginPage() {
                   type="button"
                   className="login-password-toggle"
                   onClick={() => setShowPassword((prev) => !prev)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                   aria-pressed={showPassword}
                 >
                   <span className="material-symbols-outlined icon-sm">
-                    {showPassword ? "visibility_off" : "visibility"}
+                    {showPassword ? 'visibility_off' : 'visibility'}
                   </span>
                 </button>
               </div>
@@ -104,8 +107,8 @@ export function LoginPage() {
                 disabled={loginMutation.isPending}
               >
                 {loginMutation.isPending
-                  ? "Signing in to wallet..."
-                  : "Sign in to wallet"}
+                  ? 'Signing in to wallet...'
+                  : 'Sign in to wallet'}
               </button>
             </form>
             <div className="login-register-wrap">
@@ -123,5 +126,5 @@ export function LoginPage() {
         </div>
       </div>
     </section>
-  );
+  )
 }

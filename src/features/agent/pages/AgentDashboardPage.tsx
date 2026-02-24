@@ -1,11 +1,11 @@
-
+﻿
 import React, { useState } from 'react';
 import StatCard from '../components/StatCard';
 import Logo from '../components/Logo';
 import NotificationMenu from '../components/NotificationMenu';
 import { INITIAL_CATEGORIES } from '../constants';
 import { useNavigate } from 'react-router-dom';
-import { clearAuthToken } from '../../auth/auth.storage';
+import { clearAuthSession } from '../../auth/auth.storage';
 import { ROUTE_PATHS } from '../../../router/paths';
 import '../styles/agent-dashboard.css';
 
@@ -45,7 +45,7 @@ export function AgentDashboardPage() {
   const navigate = useNavigate();
   const agentName = 'Tinashe Chando';
   const onLogout = () => {
-    clearAuthToken();
+    clearAuthSession();
     navigate(ROUTE_PATHS.loginAgent, { replace: true });
   };
   const onAddFloat = () => setActiveTab('float');
@@ -54,6 +54,7 @@ export function AgentDashboardPage() {
     setSellStep('select');
   };
   const [activeTab, setActiveTab] = useState<'overview' | 'sell' | 'commissions' | 'schedule' | 'float' | 'settings'>('overview');
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [floatBalance, setFloatBalance] = useState(452.10);
   const [commissionBalance, setCommissionBalance] = useState(24.40);
   const [recentSales, setRecentSales] = useState<Sale[]>(INITIAL_SALES);
@@ -78,6 +79,23 @@ export function AgentDashboardPage() {
 
   // Fulfillment Interaction Logic
   const [fulfillmentStatus, setFulfillmentStatus] = useState<string | null>(null);
+
+  const navItems = [
+    { id: 'overview', label: 'Dashboard', icon: 'home' },
+    { id: 'sell', label: 'Make a Sale', icon: 'point_of_sale' },
+    { id: 'commissions', label: 'Earnings Analysis', icon: 'payments' },
+    { id: 'schedule', label: 'Commission Schedule', icon: 'table_chart' },
+    { id: 'float', label: 'Float Wallet', icon: 'account_balance_wallet' },
+    { id: 'settings', label: 'Shop Profile', icon: 'settings' },
+  ] as const;
+
+  const handleAgentTabChange = (
+    tab: 'overview' | 'sell' | 'commissions' | 'schedule' | 'float' | 'settings',
+  ) => {
+    setActiveTab(tab);
+    setSellStep('select');
+    setIsMobileNavOpen(false);
+  };
 
   const billers = [
     { id: 'zesa', name: 'ZESA Electricity', icon: 'bolt', color: 'bg-orange-50 text-orange-600', catId: 'util' },
@@ -426,20 +444,13 @@ export function AgentDashboardPage() {
 
   return (
     <div className="min-h-screen bg-background-light font-display text-dark-text flex">
-      <aside className="w-64 bg-white border-r border-neutral-light flex flex-col h-screen shrink-0 sticky top-0">
+      <aside className="hidden md:flex w-64 bg-white border-r border-neutral-light flex-col h-screen shrink-0 sticky top-0">
         <div className="p-8"><Logo className="h-9" /></div>
         <nav className="flex-1 px-4 space-y-1">
-          {[
-            { id: 'overview', label: 'Dashboard', icon: 'home' },
-            { id: 'sell', label: 'Make a Sale', icon: 'point_of_sale' },
-            { id: 'commissions', label: 'Earnings Analysis', icon: 'payments' },
-            { id: 'schedule', label: 'Commission Schedule', icon: 'table_chart' },
-            { id: 'float', label: 'Float Wallet', icon: 'account_balance_wallet' },
-            { id: 'settings', label: 'Shop Profile', icon: 'settings' },
-          ].map(item => (
+          {navItems.map(item => (
             <button
               key={item.id}
-              onClick={() => { setActiveTab(item.id as any); setSellStep('select'); }}
+              onClick={() => handleAgentTabChange(item.id)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${
                 activeTab === item.id ? 'bg-primary/10 text-primary' : 'text-neutral-text hover:bg-neutral-light'
               }`}
@@ -452,9 +463,66 @@ export function AgentDashboardPage() {
         <div className="p-6 mt-auto"><button onClick={onLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold text-red-500 hover:bg-red-50"><span className="material-symbols-outlined">logout</span>Exit</button></div>
       </aside>
 
+      {isMobileNavOpen ? (
+        <div className="fixed inset-0 z-[120] md:hidden">
+          <button
+            type="button"
+            className="absolute inset-0 bg-slate-900/35"
+            onClick={() => setIsMobileNavOpen(false)}
+            aria-label="Close navigation"
+          />
+          <div className="absolute top-0 left-0 right-0 bg-white border-b border-neutral-light rounded-b-[2rem] shadow-2xl p-5 pt-6">
+            <div className="flex items-center justify-between pb-4 border-b border-neutral-light">
+              <Logo className="h-8" />
+              <button
+                type="button"
+                onClick={() => setIsMobileNavOpen(false)}
+                className="w-9 h-9 rounded-xl bg-neutral-light text-neutral-text flex items-center justify-center"
+                aria-label="Close menu"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+            <nav className="pt-4 space-y-2">
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => handleAgentTabChange(item.id)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${
+                    activeTab === item.id
+                      ? 'bg-primary text-white shadow-lg'
+                      : 'text-neutral-text hover:bg-neutral-light'
+                  }`}
+                >
+                  <span className="material-symbols-outlined">{item.icon}</span>
+                  {item.label}
+                </button>
+              ))}
+              <button
+                onClick={onLogout}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold text-red-500 hover:bg-red-50 mt-2"
+              >
+                <span className="material-symbols-outlined">logout</span>
+                Exit
+              </button>
+            </nav>
+          </div>
+        </div>
+      ) : null}
+
       <main className="flex-1 p-8 space-y-8 overflow-y-auto">
         <div className="flex items-center justify-between sticky top-0 bg-background-light/80 backdrop-blur-md z-10 py-2">
            <div>
+              <button
+                type="button"
+                onClick={() => setIsMobileNavOpen((prev) => !prev)}
+                className="md:hidden mb-3 w-10 h-10 rounded-xl bg-white border border-neutral-light text-neutral-text flex items-center justify-center shadow-sm"
+                aria-label={isMobileNavOpen ? 'Close navigation' : 'Open navigation'}
+              >
+                <span className="material-symbols-outlined">
+                  {isMobileNavOpen ? 'close' : 'menu'}
+                </span>
+              </button>
               <h2 className="text-3xl font-black tracking-tight">
                 {activeTab === 'overview' ? 'Agent Overview' : 
                  activeTab === 'sell' ? 'Sales Console' : 
@@ -687,4 +755,5 @@ export function AgentDashboardPage() {
     </div>
   );
 }
+
 

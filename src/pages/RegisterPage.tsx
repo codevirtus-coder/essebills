@@ -1,28 +1,30 @@
-import { useEffect, useState, type FormEvent } from "react";
-import toast from "react-hot-toast";
-import { Link, useNavigate } from "react-router-dom";
-import { useRegisterMutation } from "../features/auth/auth.hooks";
-import { isAuthenticated } from "../features/auth/auth.storage";
-import { ROUTE_PATHS } from "../router/paths";
-import "../features/auth/styles/portal-login.css";
+﻿import { useEffect, useState, type FormEvent } from 'react'
+import toast from 'react-hot-toast'
+import { Link, useNavigate } from 'react-router-dom'
+import { useRegisterMutation } from '../features/auth/auth.hooks'
+import { getAuthSession } from '../features/auth/auth.storage'
+import { getDashboardRouteByRole, ROUTE_PATHS } from '../router/paths'
+import '../features/auth/styles/portal-login.css'
 
 export function RegisterPage() {
-  const navigate = useNavigate();
-  const registerMutation = useRegisterMutation();
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const navigate = useNavigate()
+  const registerMutation = useRegisterMutation()
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
+  const [phoneNumber, setPhoneNumber] = useState('')
 
   useEffect(() => {
-    if (isAuthenticated()) {
-      navigate(ROUTE_PATHS.home, { replace: true });
+    const existingSession = getAuthSession()
+
+    if (existingSession) {
+      navigate(getDashboardRouteByRole(existingSession.role), { replace: true })
     }
-  }, [navigate]);
+  }, [navigate])
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+    event.preventDefault()
 
     try {
       await registerMutation.mutateAsync({
@@ -32,16 +34,16 @@ export function RegisterPage() {
         email,
         groupId: 2,
         phoneNumber: phoneNumber || undefined,
-      });
-      navigate(ROUTE_PATHS.login);
+      })
+      navigate(ROUTE_PATHS.login)
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Registration failed. Check your details and try again."
-      );
+          : 'Registration failed. Check your details and try again.',
+      )
     }
-  };
+  }
 
   return (
     <section className="login-shell mt-[2rem]">
@@ -113,9 +115,7 @@ export function RegisterPage() {
                 className="button button-primary login-submit"
                 disabled={registerMutation.isPending}
               >
-                {registerMutation.isPending
-                  ? "Creating account..."
-                  : "Create account"}
+                {registerMutation.isPending ? 'Creating account...' : 'Create account'}
               </button>
             </form>
 
@@ -129,5 +129,5 @@ export function RegisterPage() {
         </div>
       </div>
     </section>
-  );
+  )
 }

@@ -1,25 +1,28 @@
-import { useEffect, useState, type FormEvent } from "react";
-import toast from "react-hot-toast";
-import { Link, useNavigate } from "react-router-dom";
-import { useLoginMutation } from "../auth.hooks";
-import { isAuthenticated, saveAuthToken } from "../auth.storage";
-import { ROUTE_PATHS } from "../../../router/paths";
-import "../styles/portal-login.css";
+﻿import { useEffect, useState, type FormEvent } from 'react'
+import toast from 'react-hot-toast'
+import { Link, useNavigate } from 'react-router-dom'
+import { useLoginMutation } from '../auth.hooks'
+import { buildAuthSession, getAuthSession, saveAuthSession } from '../auth.storage'
+import { getDashboardRouteByRole, ROUTE_PATHS } from '../../../router/paths'
+import type { UserRole } from '../dto/auth.dto'
+import '../styles/portal-login.css'
 
 type PortalLoginProps = {
-  portalName: string;
-  subtitle: string;
-  asideTitle: string;
-  asideAccent: string;
-  asideDescription: string;
-  usernameLabel: string;
-  usernamePlaceholder: string;
-  submitLabel: string;
-  secondaryPrompt: string;
-  secondaryCta: string;
-  redirectTo: string;
-  mockLogin?: boolean;
-};
+  portalName: string
+  subtitle: string
+  asideTitle: string
+  asideAccent: string
+  asideDescription: string
+  usernameLabel: string
+  usernamePlaceholder: string
+  submitLabel: string
+  secondaryPrompt: string
+  secondaryCta: string
+  registerTo?: string
+  redirectTo: string
+  role: UserRole
+  mockLogin?: boolean
+}
 
 export function PortalLogin({
   portalName,
@@ -32,41 +35,46 @@ export function PortalLogin({
   submitLabel,
   secondaryPrompt,
   secondaryCta,
+  registerTo = ROUTE_PATHS.register,
   redirectTo,
+  role,
   mockLogin = false,
 }: PortalLoginProps) {
-  const navigate = useNavigate();
-  const loginMutation = useLoginMutation();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate()
+  const loginMutation = useLoginMutation()
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
   useEffect(() => {
-    if (isAuthenticated()) {
-      navigate(redirectTo, { replace: true });
+    const existingSession = getAuthSession()
+
+    if (existingSession) {
+      navigate(getDashboardRouteByRole(existingSession.role), { replace: true })
     }
-  }, [navigate, redirectTo]);
+  }, [navigate])
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+    event.preventDefault()
 
     if (mockLogin) {
-      saveAuthToken(`mock-${portalName.toLowerCase().replace(/\s+/g, "-")}`);
-      navigate(redirectTo, { replace: true });
-      return;
+      saveAuthSession(buildAuthSession(`mock-${role}-${Date.now()}`, role))
+      navigate(redirectTo, { replace: true })
+      return
     }
 
     try {
-      await loginMutation.mutateAsync({ username, password });
-      navigate(redirectTo, { replace: true });
+      const data = await loginMutation.mutateAsync({ username, password })
+      saveAuthSession(buildAuthSession(data.jwtToken, role, data.authProvider))
+      navigate(redirectTo, { replace: true })
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Login failed. Check your username/password.",
-      );
+          : 'Login failed. Check your username/password.',
+      )
     }
-  };
+  }
 
   return (
     <section className="login-shell mt-[2rem]">
@@ -111,7 +119,7 @@ export function PortalLogin({
               </div>
               <div className="login-password-field">
                 <input
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="********"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
@@ -121,11 +129,11 @@ export function PortalLogin({
                   type="button"
                   className="login-password-toggle"
                   onClick={() => setShowPassword((prev) => !prev)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                   aria-pressed={showPassword}
                 >
                   <span className="material-symbols-outlined icon-sm">
-                    {showPassword ? "visibility_off" : "visibility"}
+                    {showPassword ? 'visibility_off' : 'visibility'}
                   </span>
                 </button>
               </div>
@@ -135,15 +143,13 @@ export function PortalLogin({
                 className="button button-primary login-submit"
                 disabled={!mockLogin && loginMutation.isPending}
               >
-                {!mockLogin && loginMutation.isPending
-                  ? "Signing in..."
-                  : submitLabel}
+                {!mockLogin && loginMutation.isPending ? 'Signing in...' : submitLabel}
               </button>
             </form>
             <div className="login-register-wrap">
               <p className="type-body text-muted">{secondaryPrompt}</p>
               <Link
-                to={ROUTE_PATHS.register}
+                to={registerTo}
                 className="button button-outline login-register-button"
               >
                 {secondaryCta}
@@ -153,5 +159,5 @@ export function PortalLogin({
         </div>
       </div>
     </section>
-  );
+  )
 }

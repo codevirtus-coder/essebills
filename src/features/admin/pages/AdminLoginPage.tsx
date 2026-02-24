@@ -1,5 +1,5 @@
-import { PortalLogin } from "../../auth/components/PortalLogin";
-import { ROUTE_PATHS } from "../../../router/paths";
+﻿import { PortalLogin } from '../../auth/components/PortalLogin'
+import { ROUTE_PATHS } from '../../../router/paths'
 
 export function AdminLoginPage() {
   return (
@@ -14,7 +14,9 @@ export function AdminLoginPage() {
       submitLabel="Access Dashboard"
       secondaryPrompt="Need platform access approval?"
       secondaryCta="Request Admin Access"
+      registerTo={ROUTE_PATHS.registerAdmin}
       redirectTo={ROUTE_PATHS.admin}
+      role="ADMIN"
     />
-  );
+  )
 }

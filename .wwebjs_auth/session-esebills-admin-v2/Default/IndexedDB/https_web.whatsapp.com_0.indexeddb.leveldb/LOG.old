@@ -1,0 +1,23 @@
+2026/02/20-11:26:09.427 52a4 Creating DB C:\Users\USER\Desktop\essebills\esseBills\.wwebjs_auth\session-esebills-admin-v2\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb since it was missing.
+2026/02/20-11:26:09.463 52a4 Reusing MANIFEST C:\Users\USER\Desktop\essebills\esseBills\.wwebjs_auth\session-esebills-admin-v2\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2026/02/20-11:28:46.935 52a4 Level-0 table #5: started
+2026/02/20-11:28:47.005 52a4 Level-0 table #5: 1015186 bytes OK
+2026/02/20-11:28:47.008 52a4 Delete type=0 #3
+2026/02/20-11:28:52.946 52a4 Level-0 table #7: started
+2026/02/20-11:28:53.040 52a4 Level-0 table #7: 1000620 bytes OK
+2026/02/20-11:28:53.046 52a4 Delete type=0 #4
+2026/02/20-11:28:53.211 2b98 Compacting 1@1 + 1@2 files
+2026/02/20-11:28:53.387 2b98 Generated table #8@1: 21437 keys, 861286 bytes
+2026/02/20-11:28:53.387 2b98 Compacted 1@1 + 1@2 files => 861286 bytes
+2026/02/20-11:28:53.396 2b98 compacted to: files[ 0 0 1 0 0 0 0 ]
+2026/02/20-11:35:07.745 52a4 Level-0 table #10: started
+2026/02/20-11:35:07.809 52a4 Level-0 table #10: 1122471 bytes OK
+2026/02/20-11:35:07.812 52a4 Delete type=2 #5
+2026/02/20-11:35:07.813 52a4 Delete type=0 #6
+2026/02/20-11:35:07.813 52a4 Delete type=2 #7
+2026/02/20-11:36:39.977 52a4 Compacting 1@1 + 1@2 files
+2026/02/20-11:36:40.110 52a4 Generated table #11@1: 28210 keys, 1236757 bytes
+2026/02/20-11:36:40.110 52a4 Compacted 1@1 + 1@2 files => 1236757 bytes
+2026/02/20-11:36:40.112 52a4 compacted to: files[ 0 0 1 0 0 0 0 ]
+2026/02/20-11:36:40.113 52a4 Delete type=2 #8
+2026/02/20-11:36:40.113 52a4 Delete type=2 #10

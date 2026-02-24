@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { clearAuthToken } from "../../auth/auth.storage";
+import { clearAuthSession } from "../../auth/auth.storage";
 import { ROUTE_PATHS } from "../../../router/paths";
 import BillerStatCard from "../components/BillerStatCard";
 import BillerLogo from "../components/BillerLogo";
@@ -95,6 +95,7 @@ const MOCK_SETTLEMENTS = [
 export function BillerDashboardPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<BillerTab>("overview");
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [notifConfig, setNotifConfig] = useState({
     dailySummary: true,
     lowFloatAlerts: false,
@@ -107,8 +108,13 @@ export function BillerDashboardPage() {
   };
 
   const onLogout = () => {
-    clearAuthToken();
+    clearAuthSession();
     navigate(ROUTE_PATHS.loginBiller, { replace: true });
+  };
+
+  const handleTabChange = (tab: BillerTab) => {
+    setActiveTab(tab);
+    setIsMobileNavOpen(false);
   };
 
   const renderOverview = () => (
@@ -311,7 +317,7 @@ export function BillerDashboardPage() {
                 <td className="px-10 py-6">
                   <p className="text-xs font-bold text-dark-text">{c.date}</p>
                   <p className="text-[9px] font-black text-neutral-text uppercase">
-                    {c.time} • {c.id}
+                    {c.time} â€¢ {c.id}
                   </p>
                 </td>
                 <td className="px-10 py-6 text-sm font-bold text-neutral-text">
@@ -544,7 +550,7 @@ export function BillerDashboardPage() {
   return (
     <div className="min-h-screen bg-background-light font-display text-dark-text">
       <div className="flex h-screen overflow-hidden">
-        <aside className="w-64 bg-white border-r border-neutral-light flex flex-col h-full shrink-0">
+        <aside className="hidden md:flex w-64 bg-white border-r border-neutral-light flex-col h-full shrink-0">
           <div className="p-8">
             <BillerLogo className="h-9" />
           </div>
@@ -561,7 +567,7 @@ export function BillerDashboardPage() {
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as BillerTab)}
+                onClick={() => handleTabChange(tab.id as BillerTab)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${
                   activeTab === tab.id
                     ? "bg-primary text-white shadow-lg"
@@ -584,9 +590,71 @@ export function BillerDashboardPage() {
           </div>
         </aside>
 
+        {isMobileNavOpen ? (
+          <div className="fixed inset-0 z-[120] md:hidden">
+            <button
+              type="button"
+              className="absolute inset-0 bg-slate-900/35"
+              onClick={() => setIsMobileNavOpen(false)}
+              aria-label="Close navigation"
+            />
+            <div className="absolute top-0 left-0 right-0 bg-white border-b border-neutral-light rounded-b-[2rem] shadow-2xl p-5 pt-6">
+              <div className="flex items-center justify-between pb-4 border-b border-neutral-light">
+                <BillerLogo className="h-8" />
+                <button
+                  type="button"
+                  onClick={() => setIsMobileNavOpen(false)}
+                  className="w-9 h-9 rounded-xl bg-neutral-light text-neutral-text flex items-center justify-center"
+                  aria-label="Close menu"
+                >
+                  <span className="material-symbols-outlined text-lg">close</span>
+                </button>
+              </div>
+              <nav className="pt-4 space-y-2">
+                {[
+                  { id: "overview", label: "Overview", icon: "dashboard" },
+                  { id: "collections", label: "Collections", icon: "receipt_long" },
+                  { id: "settlements", label: "Settlements", icon: "account_balance" },
+                  { id: "settings", label: "Portal Config", icon: "settings" },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleTabChange(tab.id as BillerTab)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${
+                      activeTab === tab.id
+                        ? "bg-primary text-white shadow-lg"
+                        : "text-neutral-text hover:bg-neutral-light"
+                    }`}
+                  >
+                    <span className="material-symbols-outlined">{tab.icon}</span>
+                    {tab.label}
+                  </button>
+                ))}
+                <button
+                  onClick={onLogout}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold text-red-500 hover:bg-red-50 mt-2"
+                >
+                  <span className="material-symbols-outlined">logout</span>
+                  Exit
+                </button>
+              </nav>
+            </div>
+          </div>
+        ) : null}
+
         <main className="flex-1 overflow-y-auto p-8 space-y-8">
           <div className="flex items-center justify-between sticky top-0 bg-background-light/80 backdrop-blur-md z-20 py-4 -mx-8 px-8">
             <div>
+              <button
+                type="button"
+                onClick={() => setIsMobileNavOpen((prev) => !prev)}
+                className="md:hidden mb-3 w-10 h-10 rounded-xl bg-white border border-neutral-light text-neutral-text flex items-center justify-center shadow-sm"
+                aria-label={isMobileNavOpen ? "Close navigation" : "Open navigation"}
+              >
+                <span className="material-symbols-outlined">
+                  {isMobileNavOpen ? "close" : "menu"}
+                </span>
+              </button>
               <p className="text-[10px] font-black text-neutral-text uppercase tracking-widest mb-1">
                 Biller Enterprise Dashboard
               </p>
@@ -624,3 +692,4 @@ export function BillerDashboardPage() {
     </div>
   );
 }
+
