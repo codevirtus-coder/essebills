@@ -223,3 +223,40 @@ export async function createEsolutionsAirtimeCredentials(payload: UnknownRecord)
     body: payload,
   })
 }
+
+export async function getAllTuitionTransactions() {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.tuition.transactions.all)
+}
+
+export async function getAllTuitionInstitutions() {
+  return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.tuition.institutions.all)
+}
+
+export async function createTuitionInstitution(payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.tuition.institutions.root, {
+    method: 'POST',
+    body: payload,
+  })
+}
+
+export async function getAllTuitionFeeTypes() {
+  return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.tuition.feeTypes.all)
+}
+
+export async function createTuitionFeeType(payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.tuition.feeTypes.root, {
+    method: 'POST',
+    body: payload,
+  })
+}
+
+export async function getAllTuitionProcessingFees() {
+  return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.tuition.processingFees.all)
+}
+
+export async function createTuitionProcessingFee(payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.tuition.processingFees.root, {
+    method: 'POST',
+    body: payload,
+  })
+}

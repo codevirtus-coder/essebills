@@ -103,6 +103,24 @@ export const ADMIN_ENDPOINTS = {
       all: '/v1/esolution-airtime-integration-credentials/all',
     },
   },
+  tuition: {
+    transactions: {
+      root: '/v1/institution-transactions',
+      all: '/v1/institution-transactions',
+    },
+    institutions: {
+      root: '/v1/institutions',
+      all: '/v1/institutions/all',
+    },
+    feeTypes: {
+      root: '/v1/fee-types',
+      all: '/v1/fee-types/all',
+    },
+    processingFees: {
+      root: '/v1/tuition-processing-fees',
+      all: '/v1/tuition-processing-fees/all',
+    },
+  },
   reports: {
     econetAirtime: '/v1/econet-airtime/reports',
     netoneAirtime: '/v1/netone-airtime/reports',

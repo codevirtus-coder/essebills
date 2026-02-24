@@ -8,8 +8,12 @@ interface AdminStyledApiModulePageProps {
   description: string
   endpoint: string
   loadData: () => Promise<unknown>
+  icon?: string
   createEndpoint?: string
   createData?: (payload: UnknownRecord) => Promise<unknown>
+  showCreateButton?: boolean
+  showRefreshButton?: boolean
+  showEndpointLabel?: boolean
   tableMode?: 'credentials' | 'auto'
   createMode?: 'credentials' | 'json' | 'fields'
   createJsonTemplate?: UnknownRecord
@@ -41,8 +45,12 @@ const AdminStyledApiModulePage: React.FC<AdminStyledApiModulePageProps> = ({
   description,
   endpoint,
   loadData,
+  icon = 'vpn_key',
   createEndpoint,
   createData,
+  showCreateButton = true,
+  showRefreshButton = true,
+  showEndpointLabel = true,
   tableMode = 'credentials',
   createMode = 'credentials',
   createJsonTemplate = {},
@@ -222,37 +230,43 @@ const AdminStyledApiModulePage: React.FC<AdminStyledApiModulePageProps> = ({
     <div className="p-8 space-y-6 animate-in fade-in duration-300">
       <section className="bg-white rounded-xl border border-neutral-light p-6 min-h-[112px]">
         <h2 className="text-4 leading-none font-medium text-dark-text dark:text-white flex items-center gap-3">
-          <span className="material-symbols-outlined text-[28px]">vpn_key</span>
+          <span className="material-symbols-outlined text-[28px]">{icon}</span>
           {title}
         </h2>
-        <p className="text-sm text-neutral-text mt-8">{description}</p>
+        {description.trim() ? <p className="text-sm text-neutral-text mt-8">{description}</p> : null}
       </section>
 
       <section className="bg-white rounded-xl border border-neutral-light p-5">
         <div className="flex flex-wrap items-center gap-2 mb-4">
-          <button
-            type="button"
-            onClick={() => {
-              if (!createData) {
-                toast('Create endpoint is not configured for this credentials module yet.')
-                return
-              }
-              setIsCreateOpen(true)
-            }}
-            className="px-4 py-2 rounded border border-[#7E57C2] text-[#7E57C2] text-lg font-medium uppercase tracking-wide hover:bg-[#7E57C2]/5 transition-colors"
-          >
-            + Create
-          </button>
-          <button
-            type="button"
-            onClick={() => void loadRows()}
-            className="px-4 py-2 rounded border border-[#7E57C2] text-[#7E57C2] text-lg font-medium uppercase tracking-wide hover:bg-[#7E57C2]/5 transition-colors"
-          >
-            Refresh
-          </button>
-          <span className="ml-auto text-xs text-neutral-text">
-            List: <code>{endpoint}</code>
-          </span>
+          {showCreateButton ? (
+            <button
+              type="button"
+              onClick={() => {
+                if (!createData) {
+                  toast('Create endpoint is not configured for this credentials module yet.')
+                  return
+                }
+                setIsCreateOpen(true)
+              }}
+              className="px-4 py-2 rounded border border-[#7E57C2] text-[#7E57C2] text-lg font-medium uppercase tracking-wide hover:bg-[#7E57C2]/5 transition-colors"
+            >
+              + Create
+            </button>
+          ) : null}
+          {showRefreshButton ? (
+            <button
+              type="button"
+              onClick={() => void loadRows()}
+              className="px-4 py-2 rounded border border-[#7E57C2] text-[#7E57C2] text-lg font-medium uppercase tracking-wide hover:bg-[#7E57C2]/5 transition-colors"
+            >
+              Refresh
+            </button>
+          ) : null}
+          {showEndpointLabel ? (
+            <span className="ml-auto text-xs text-neutral-text">
+              List: <code>{endpoint}</code>
+            </span>
+          ) : null}
         </div>
 
         <div className="border border-neutral-light rounded overflow-hidden bg-white">
@@ -291,11 +305,11 @@ const AdminStyledApiModulePage: React.FC<AdminStyledApiModulePageProps> = ({
                   {columns?.length ? (
                     columns.map((column) => (
                       <div key={`${rowIndex}-${column.key}`} className="px-4 py-3 text-sm text-dark-text break-words">
-                        {row[column.key] === null || row[column.key] === undefined
+                        {getValueByPath(row, column.key) === null || getValueByPath(row, column.key) === undefined
                           ? '-'
-                          : typeof row[column.key] === 'object'
-                            ? JSON.stringify(row[column.key])
-                            : String(row[column.key])}
+                          : typeof getValueByPath(row, column.key) === 'object'
+                            ? JSON.stringify(getValueByPath(row, column.key))
+                            : String(getValueByPath(row, column.key))}
                       </div>
                     ))
                   ) : tableMode === 'credentials' ? (
@@ -434,3 +448,11 @@ const AdminStyledApiModulePage: React.FC<AdminStyledApiModulePageProps> = ({
 }
 
 export default AdminStyledApiModulePage
+  const getValueByPath = (row: UnknownRecord, path: string): unknown => {
+    return path.split('.').reduce<unknown>((current, key) => {
+      if (current && typeof current === 'object' && key in (current as UnknownRecord)) {
+        return (current as UnknownRecord)[key]
+      }
+      return undefined
+    }, row)
+  }

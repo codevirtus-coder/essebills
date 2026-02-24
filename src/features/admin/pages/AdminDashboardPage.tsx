@@ -13,7 +13,6 @@ import AdminEconetPage from "../components/AdminEconetPage";
 import AdminStyledApiModulePage from "../components/AdminStyledApiModulePage";
 import AdminVouchersPage from "../components/AdminVouchersPage";
 import AdminTransactionsPage from "../components/AdminTransactionsPage";
-import AdminFeaturePlaceholder from "../components/AdminFeaturePlaceholder";
 import AdminParametersPage from "../components/AdminParametersPage";
 import AdminUserGroupsPage from "../components/AdminUserGroupsPage";
 import Settings from "../components/Settings";
@@ -42,6 +41,13 @@ import {
   getAllSmsMessages,
   getAllZesaCredentials,
   getAllEsolutionsSmsCredentials,
+  getAllTuitionTransactions,
+  getAllTuitionInstitutions,
+  createTuitionInstitution,
+  getAllTuitionFeeTypes,
+  createTuitionFeeType,
+  getAllTuitionProcessingFees,
+  createTuitionProcessingFee,
 } from "../services";
 import { ADMIN_MENU_SECTIONS, ADMIN_PREFERENCE_ITEMS, INITIAL_FAQS } from "../data/constants";
 import type { FAQItem } from "../data/types";
@@ -311,10 +317,90 @@ export function AdminDashboardPage() {
           />
         );
       case "tuition":
+      case "tuitionTransactions":
         return (
-          <AdminFeaturePlaceholder
+          <AdminStyledApiModulePage
+            key="tuitionTransactions"
             title="Tuition"
-            description="Tuition-specific products, settlement flows, and reports can be added in this section."
+            icon="shopping_bag"
+            description="Tuition Transaction"
+            endpoint="/v1/institution-transactions"
+            showCreateButton={false}
+            columns={[
+              { key: "amount", label: "Name" },
+              { key: "institution.name", label: "InstitutionName" },
+              { key: "beneficiaryName", label: "BeneficiaryName" },
+              { key: "paymentTransaction.paymentStatus", label: "Status" },
+              { key: "createdDate", label: "Created on" },
+            ]}
+            emptyLabel="TuitionTransactions"
+            loadData={getAllTuitionTransactions}
+          />
+        );
+      case "tuitionInstitutions":
+        return (
+          <AdminStyledApiModulePage
+            key="tuitionInstitutions"
+            title="Institutions"
+            icon="account_balance"
+            description=""
+            endpoint="/v1/institutions/all"
+            createEndpoint="/v1/institutions"
+            createData={createTuitionInstitution}
+            tableMode="auto"
+            createMode="json"
+            columns={[
+              { key: "name", label: "Name" },
+              { key: "institutionCode", label: "Code" },
+              { key: "institutionType", label: "Type" },
+              { key: "location", label: "Location" },
+              { key: "percentageSettlementDiscount", label: "% Settlement Discount" },
+            ]}
+            loadData={getAllTuitionInstitutions}
+          />
+        );
+      case "tuitionFeeTypes":
+        return (
+          <AdminStyledApiModulePage
+            key="tuitionFeeTypes"
+            title="Fee Types"
+            icon="shopping_bag"
+            description="Fee Types"
+            endpoint="/v1/fee-types/all"
+            createEndpoint="/v1/fee-types"
+            createData={createTuitionFeeType}
+            tableMode="auto"
+            createMode="json"
+            columns={[
+              { key: "name", label: "Name" },
+              { key: "createdBy", label: "CreatedBy" },
+              { key: "createdDate", label: "CreatedOn" },
+            ]}
+            emptyLabel="feeTypes"
+            loadData={getAllTuitionFeeTypes}
+          />
+        );
+      case "tuitionProcessingFees":
+        return (
+          <AdminStyledApiModulePage
+            key="tuitionProcessingFees"
+            title="Tuition Processing Fees"
+            icon="account_balance"
+            description=""
+            endpoint="/v1/tuition-processing-fees/all"
+            createEndpoint="/v1/tuition-processing-fees"
+            createData={createTuitionProcessingFee}
+            tableMode="auto"
+            createMode="json"
+            columns={[
+              { key: "name", label: "Name" },
+              { key: "currencyCode", label: "Currency Code" },
+              { key: "effectiveRangeMinimum", label: "Effective Range Minimum" },
+              { key: "effectiveRangeMaximum", label: "Effective Range Maximum" },
+              { key: "fixedChargeAmount", label: "Fixed Charge Amount" },
+              { key: "percentageIncrement", label: "Percentage Increment" },
+            ]}
+            loadData={getAllTuitionProcessingFees}
           />
         );
       case "commissions":

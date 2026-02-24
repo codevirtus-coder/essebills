@@ -197,7 +197,17 @@ export const ADMIN_MENU_SECTIONS: AdminMenuSection[] = [
           { id: 'credentialsEsolutionsAirtime', label: 'Esolutions Airtime', icon: 'key' },
         ],
       },
-      { id: 'tuition', label: 'Tuition', icon: 'school' },
+      {
+        id: 'tuition',
+        label: 'Tuition',
+        icon: 'school',
+        children: [
+          { id: 'tuitionTransactions', label: 'Transactions', icon: 'subdirectory_arrow_right' },
+          { id: 'tuitionInstitutions', label: 'Institutions', icon: 'subdirectory_arrow_right' },
+          { id: 'tuitionFeeTypes', label: 'Fee Types', icon: 'subdirectory_arrow_right' },
+          { id: 'tuitionProcessingFees', label: 'Processing Fees', icon: 'subdirectory_arrow_right' },
+        ],
+      },
     ],
   },
   {
