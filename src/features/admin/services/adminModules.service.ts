@@ -7,6 +7,35 @@ export async function getAllRongekaAccounts() {
   return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.rongekaAccounts.all)
 }
 
+export async function createRongekaAccount(payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.rongekaAccounts.root, {
+    method: 'POST',
+    body: payload,
+  })
+}
+
+export async function getAllZambiaVouchers() {
+  return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.vouchers.zambiaProducts.all)
+}
+
+export async function createZambiaVoucher(payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.vouchers.zambiaProducts.root, {
+    method: 'POST',
+    body: payload,
+  })
+}
+
+export async function getAllZimVouchers() {
+  return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.vouchers.zimProducts.all)
+}
+
+export async function createZimVoucher(payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.vouchers.zimProducts.root, {
+    method: 'POST',
+    body: payload,
+  })
+}
+
 export async function getAllBanks() {
   return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.banks.all)
 }
@@ -56,8 +85,22 @@ export async function getAllSmsMessages() {
   return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.sms.root)
 }
 
+export async function createSmsMessage(payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.sms.root, {
+    method: 'POST',
+    body: payload,
+  })
+}
+
 export async function getAllSmsCharges() {
   return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.sms.charges)
+}
+
+export async function createSmsCharge(payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.sms.charges, {
+    method: 'POST',
+    body: payload,
+  })
 }
 
 export async function getAllEconetBundlePlanTypes() {
@@ -86,34 +129,97 @@ export async function getAllNetoneBundlePlans() {
   return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.netone.bundlePlans.all)
 }
 
+export async function createNetoneBundlePlan(payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.netone.bundlePlans.root, {
+    method: 'POST',
+    body: payload,
+  })
+}
+
 export async function getAllNetoneDataBundleTypes() {
   return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.netone.dataBundleTypes.all)
+}
+
+export async function createNetoneDataBundleType(payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.netone.dataBundleTypes.root, {
+    method: 'POST',
+    body: payload,
+  })
 }
 
 export async function getAllPesepayCredentials() {
   return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.credentials.pesepay.all)
 }
 
+export async function createPesepayCredentials(payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.credentials.pesepay.root, {
+    method: 'POST',
+    body: payload,
+  })
+}
+
 export async function getAllCgrateCredentials() {
   return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.credentials.cgrate.root)
+}
+
+export async function createCgrateCredentials(payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.credentials.cgrate.root, {
+    method: 'POST',
+    body: payload,
+  })
 }
 
 export async function getAllZesaCredentials() {
   return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.credentials.zesa.root)
 }
 
+export async function createZesaCredentials(payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.credentials.zesa.root, {
+    method: 'POST',
+    body: payload,
+  })
+}
+
 export async function getAllEconetCredentials() {
   return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.econet.credentials.all)
+}
+
+export async function createEconetCredentials(payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.econet.credentials.root, {
+    method: 'POST',
+    body: payload,
+  })
 }
 
 export async function getAllEsolutionsSmsCredentials() {
   return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.credentials.esolutionsSms.root)
 }
 
+export async function createEsolutionsSmsCredentials(payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.credentials.esolutionsSms.root, {
+    method: 'POST',
+    body: payload,
+  })
+}
+
 export async function getAllNetoneEvdCredentials() {
   return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.netone.credentials.all)
 }
 
+export async function createNetoneEvdCredentials(payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.netone.credentials.root, {
+    method: 'POST',
+    body: payload,
+  })
+}
+
 export async function getAllEsolutionsAirtimeCredentials() {
   return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.credentials.esolutionsAirtime.all)
+}
+
+export async function createEsolutionsAirtimeCredentials(payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.credentials.esolutionsAirtime.root, {
+    method: 'POST',
+    body: payload,
+  })
 }

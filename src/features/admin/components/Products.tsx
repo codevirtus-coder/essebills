@@ -217,7 +217,7 @@ const Products: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
         <form
           onSubmit={(event) => void handleCreateProduct(event)}
           className="xl:col-span-1 bg-white p-6 rounded-[2rem] border border-neutral-light shadow-sm space-y-4"

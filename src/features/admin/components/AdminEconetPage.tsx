@@ -3,14 +3,19 @@ import toast from 'react-hot-toast'
 import {
   createEconetBundlePlanType,
   createEconetDataBundleType,
+  createNetoneBundlePlan,
+  createNetoneDataBundleType,
   getAllEconetBundlePlanTypes,
   getAllEconetDataBundleTypes,
+  getAllNetoneBundlePlans,
+  getAllNetoneDataBundleTypes,
 } from '../services'
 
-type EconetModule = 'bundlePlanTypes' | 'dataBundleTypes'
+type Provider = 'econet' | 'netone'
+type Module = 'bundlePlanTypes' | 'dataBundleTypes'
 type UnknownRecord = Record<string, unknown>
 
-type EconetConfig = {
+type ModuleConfig = {
   title: string
   subtitle: string
   listEndpoint: string
@@ -19,31 +24,55 @@ type EconetConfig = {
   create: (payload: UnknownRecord) => Promise<unknown>
 }
 
-const ECONET_CONFIG: Record<EconetModule, EconetConfig> = {
-  bundlePlanTypes: {
-    title: 'Bundle Plan Types',
-    subtitle: 'Econet Bundle Plan Types List',
-    listEndpoint: '/v1/bundle-plan-types/all',
-    createEndpoint: '/v1/bundle-plan-types',
-    list: getAllEconetBundlePlanTypes,
-    create: createEconetBundlePlanType,
+const TELECOM_CONFIG: Record<Provider, Record<Module, ModuleConfig>> = {
+  econet: {
+    bundlePlanTypes: {
+      title: 'Bundle Plan Types',
+      subtitle: 'Econet Bundle Plan Types List',
+      listEndpoint: '/v1/bundle-plan-types/all',
+      createEndpoint: '/v1/bundle-plan-types',
+      list: getAllEconetBundlePlanTypes,
+      create: createEconetBundlePlanType,
+    },
+    dataBundleTypes: {
+      title: 'Data Bundle Types',
+      subtitle: 'Econet Data Bundle Types List',
+      listEndpoint: '/v1/data-bundle-types/all',
+      createEndpoint: '/v1/data-bundle-types',
+      list: getAllEconetDataBundleTypes,
+      create: createEconetDataBundleType,
+    },
   },
-  dataBundleTypes: {
-    title: 'Data Bundle Types',
-    subtitle: 'Econet Data Bundle Types List',
-    listEndpoint: '/v1/data-bundle-types/all',
-    createEndpoint: '/v1/data-bundle-types',
-    list: getAllEconetDataBundleTypes,
-    create: createEconetDataBundleType,
+  netone: {
+    bundlePlanTypes: {
+      title: 'Bundle Plan Types',
+      subtitle: 'Netone Bundle Plan Types List',
+      listEndpoint: '/v1/netone-bundle-plans/all',
+      createEndpoint: '/v1/netone-bundle-plans',
+      list: getAllNetoneBundlePlans,
+      create: createNetoneBundlePlan,
+    },
+    dataBundleTypes: {
+      title: 'Data Bundle Types',
+      subtitle: 'Netone Data Bundle Types List',
+      listEndpoint: '/v1/netone-data-bundle-types/all',
+      createEndpoint: '/v1/netone-data-bundle-types',
+      list: getAllNetoneDataBundleTypes,
+      create: createNetoneDataBundleType,
+    },
   },
 }
 
 interface AdminEconetPageProps {
-  module: EconetModule
+  provider?: Provider
+  module: Module
 }
 
-const AdminEconetPage: React.FC<AdminEconetPageProps> = ({ module }) => {
-  const config = ECONET_CONFIG[module]
+const AdminEconetPage: React.FC<AdminEconetPageProps> = ({
+  provider = 'econet',
+  module,
+}) => {
+  const config = TELECOM_CONFIG[provider][module]
   const [rows, setRows] = useState<UnknownRecord[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isCreateOpen, setIsCreateOpen] = useState(false)

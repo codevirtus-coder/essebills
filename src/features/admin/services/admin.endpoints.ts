@@ -42,6 +42,16 @@ export const ADMIN_ENDPOINTS = {
     root: '/v1/rongeka-accounts',
     all: '/v1/rongeka-accounts/all',
   },
+  vouchers: {
+    zambiaProducts: {
+      root: '/v1/zesco/vouchers',
+      all: '/v1/zesco/vouchers/all',
+    },
+    zimProducts: {
+      root: '/v1/zesa/vouchers',
+      all: '/v1/zesa/vouchers/all',
+    },
+  },
   sms: {
     root: '/v1/sms',
     charges: '/v1/sms-charges',

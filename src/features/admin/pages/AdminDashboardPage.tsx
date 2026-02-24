@@ -5,14 +5,15 @@ import Header from "../components/Header";
 import Dashboard from "../components/Dashboard";
 import UserProfile from "../components/UserProfile";
 import Reports from "../components/Reports";
-import Transactions from "../components/Transactions";
 import Billers from "../components/Billers";
 import Products from "../components/Products";
 import Agents from "../components/Agents";
 import AdminUsersPage from "../components/AdminUsersPage";
 import AdminEconetPage from "../components/AdminEconetPage";
+import AdminStyledApiModulePage from "../components/AdminStyledApiModulePage";
+import AdminVouchersPage from "../components/AdminVouchersPage";
+import AdminTransactionsPage from "../components/AdminTransactionsPage";
 import AdminFeaturePlaceholder from "../components/AdminFeaturePlaceholder";
-import AdminApiModulePage from "../components/AdminApiModulePage";
 import AdminParametersPage from "../components/AdminParametersPage";
 import AdminUserGroupsPage from "../components/AdminUserGroupsPage";
 import Settings from "../components/Settings";
@@ -20,12 +21,20 @@ import Support from "../components/Support";
 import Messaging from "../components/Messaging";
 import WhatsAppCenter from "../components/WhatsAppCenter";
 import {
+  createSmsCharge,
+  createSmsMessage,
+  createRongekaAccount,
+  createCgrateCredentials,
+  createEconetCredentials,
+  createEsolutionsAirtimeCredentials,
+  createEsolutionsSmsCredentials,
+  createNetoneEvdCredentials,
+  createPesepayCredentials,
+  createZesaCredentials,
   getAllCgrateCredentials,
   getAllEconetCredentials,
   getAllEsolutionsAirtimeCredentials,
   getAllHolidays,
-  getAllNetoneBundlePlans,
-  getAllNetoneDataBundleTypes,
   getAllNetoneEvdCredentials,
   getAllPesepayCredentials,
   getAllRongekaAccounts,
@@ -95,30 +104,38 @@ export function AdminDashboardPage() {
       case "reports":
         return <Reports />;
       case "transactions":
+        return <AdminTransactionsPage region="zambia" />;
       case "transactionsZambiaProducts":
+        return <AdminTransactionsPage region="zambia" />;
       case "transactionsZimProducts":
-        return <Transactions />;
+        return <AdminTransactionsPage region="zim" />;
       case "vouchersZambiaProducts":
-        return (
-          <AdminFeaturePlaceholder
-            title="Vouchers - Zambia Products"
-            description="Voucher settlement, retries, and reconciliation for Zambia products will be managed here."
-          />
-        );
+        return <AdminVouchersPage region="zambia" />;
       case "vouchersZimProducts":
-        return (
-          <AdminFeaturePlaceholder
-            title="Vouchers - Zim Products"
-            description="Voucher operations for Zimbabwe products will be managed from this module."
-          />
-        );
+        return <AdminVouchersPage region="zim" />;
       case "rongekaAccounts":
         return (
-          <AdminApiModulePage
+          <AdminStyledApiModulePage
             key="rongekaAccounts"
             title="Rongeka Accounts"
             description="Live Rongeka accounts from the migrated Angular endpoint."
             endpoint="/v1/rongeka-accounts/all"
+            createEndpoint="/v1/rongeka-accounts"
+            createData={createRongekaAccount}
+            tableMode="auto"
+            createMode="fields"
+            columns={[
+              { key: "accountName", label: "Account Name" },
+              { key: "bank", label: "Bank" },
+              { key: "accountNumber", label: "Account Number" },
+              { key: "createdDate", label: "Created on" },
+            ]}
+            createFields={[
+              { key: "accountName", label: "Account Name", type: "text" },
+              { key: "bank", label: "Bank", type: "text" },
+              { key: "accountNumber", label: "Account Number", type: "text" },
+            ]}
+            emptyLabel="RongekaAccounts"
             loadData={getAllRongekaAccounts}
           />
         );
@@ -144,11 +161,26 @@ export function AdminDashboardPage() {
         return <Messaging />;
       case "smsCharges":
         return (
-          <AdminApiModulePage
+          <AdminStyledApiModulePage
             key="smsCharges"
             title="SMS Charges"
             description="SMS charge configuration pulled from the backend."
             endpoint="/v1/sms-charges"
+            createEndpoint="/v1/sms-charges"
+            createData={createSmsCharge}
+            tableMode="auto"
+            createMode="fields"
+            columns={[
+              { key: "name", label: "Name" },
+              { key: "amount", label: "Amount" },
+              { key: "createdDate", label: "Created on" },
+            ]}
+            createFields={[
+              { key: "name", label: "Name", type: "text" },
+              { key: "amount", label: "Amount", type: "number" },
+              { key: "active", label: "Active", type: "checkbox" },
+            ]}
+            emptyLabel="SmsCharges"
             loadData={getAllSmsCharges}
           />
         );
@@ -163,106 +195,118 @@ export function AdminDashboardPage() {
       case "parametersBanks":
         return <AdminParametersPage module="banks" />;
       case "econetBundlePlanTypes":
-        return <AdminEconetPage module="bundlePlanTypes" />;
+        return <AdminEconetPage provider="econet" module="bundlePlanTypes" />;
       case "econetDataBundleTypes":
-        return <AdminEconetPage module="dataBundleTypes" />;
+        return <AdminEconetPage provider="econet" module="dataBundleTypes" />;
       case "netoneBundlePlanTypes":
-        return (
-          <AdminApiModulePage
-            key="netoneBundlePlanTypes"
-            title="Netone Bundle Plan Types"
-            description="Live Netone bundle plan records from backend."
-            endpoint="/v1/netone-bundle-plans/all"
-            loadData={getAllNetoneBundlePlans}
-          />
-        );
+        return <AdminEconetPage provider="netone" module="bundlePlanTypes" />;
       case "netoneDataBundleTypes":
-        return (
-          <AdminApiModulePage
-            key="netoneDataBundleTypes"
-            title="Netone Data Bundle Types"
-            description="Live Netone data bundle type records."
-            endpoint="/v1/netone-data-bundle-types/all"
-            loadData={getAllNetoneDataBundleTypes}
-          />
-        );
+        return <AdminEconetPage provider="netone" module="dataBundleTypes" />;
       case "credentialsPesepay":
         return (
-          <AdminApiModulePage
+          <AdminStyledApiModulePage
             key="credentialsPesepay"
             title="Pesepay Credentials"
             description="Live Pesepay integration credential records."
             endpoint="/v1/pesepay-integration-credentials/all"
+            createEndpoint="/v1/pesepay-integration-credentials"
+            createData={createPesepayCredentials}
             loadData={getAllPesepayCredentials}
           />
         );
       case "credentialsCgrate":
         return (
-          <AdminApiModulePage
+          <AdminStyledApiModulePage
             key="credentialsCgrate"
             title="Cgrate Credentials"
             description="Live Cgrate credentials endpoint."
             endpoint="/v1/cgrate/credentials"
+            createEndpoint="/v1/cgrate/credentials"
+            createData={createCgrateCredentials}
             loadData={getAllCgrateCredentials}
           />
         );
       case "credentialsZesa":
         return (
-          <AdminApiModulePage
+          <AdminStyledApiModulePage
             key="credentialsZesa"
             title="Zesa Credentials"
             description="Live Zesa Esolutions credentials endpoint."
             endpoint="/v1/zesa-esolutions"
+            createEndpoint="/v1/zesa-esolutions"
+            createData={createZesaCredentials}
             loadData={getAllZesaCredentials}
           />
         );
       case "credentialsEconet":
         return (
-          <AdminApiModulePage
+          <AdminStyledApiModulePage
             key="credentialsEconet"
             title="Econet Credentials"
             description="Live Econet EVD credentials endpoint."
             endpoint="/v1/econet-evd-integration-credentials/all"
+            createEndpoint="/v1/econet-evd-integration-credentials"
+            createData={createEconetCredentials}
             loadData={getAllEconetCredentials}
           />
         );
       case "credentialsEsolutionsSms":
         return (
-          <AdminApiModulePage
+          <AdminStyledApiModulePage
             key="credentialsEsolutionsSms"
             title="Esolutions SMS Credentials"
             description="Live Esolutions SMS account credentials endpoint."
             endpoint="/v1/esolutions-sms-account"
+            createEndpoint="/v1/esolutions-sms-account"
+            createData={createEsolutionsSmsCredentials}
             loadData={getAllEsolutionsSmsCredentials}
           />
         );
       case "credentialsNetoneEvd":
         return (
-          <AdminApiModulePage
+          <AdminStyledApiModulePage
             key="credentialsNetoneEvd"
             title="Netone EVD Credentials"
             description="Live Netone EVD credentials endpoint."
             endpoint="/v1/netone-evd-integration-credentials/all"
+            createEndpoint="/v1/netone-evd-integration-credentials"
+            createData={createNetoneEvdCredentials}
             loadData={getAllNetoneEvdCredentials}
           />
         );
       case "credentialsEsolutionsAirtime":
         return (
-          <AdminApiModulePage
+          <AdminStyledApiModulePage
             key="credentialsEsolutionsAirtime"
             title="Esolutions Airtime Credentials"
             description="Live Esolutions airtime integration credentials endpoint."
             endpoint="/v1/esolution-airtime-integration-credentials/all"
+            createEndpoint="/v1/esolution-airtime-integration-credentials"
+            createData={createEsolutionsAirtimeCredentials}
             loadData={getAllEsolutionsAirtimeCredentials}
           />
         );
       case "smsMessages":
         return (
-          <AdminApiModulePage
+          <AdminStyledApiModulePage
             key="smsMessages"
             title="SMSes"
             description="Live outbound SMS records endpoint."
             endpoint="/v1/sms"
+            createEndpoint="/v1/sms"
+            createData={createSmsMessage}
+            tableMode="auto"
+            createMode="fields"
+            columns={[
+              { key: "phoneNumber", label: "Phone Number" },
+              { key: "message", label: "Message" },
+              { key: "createdDate", label: "Created on" },
+            ]}
+            createFields={[
+              { key: "phoneNumber", label: "Phone Number", type: "text" },
+              { key: "message", label: "Message", type: "text" },
+            ]}
+            emptyLabel="Smses"
             loadData={getAllSmsMessages}
           />
         );
