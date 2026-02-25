@@ -7,9 +7,9 @@ import { clearAuthSession, isAuthenticated, subscribeToAuthChanges } from '../fe
 
 const navLinks = [
   { label: 'Services', to: ROUTE_PATHS.services, icon: 'widgets' },
-  { label: 'Biller', to: ROUTE_PATHS.loginBiller, icon: 'storefront' },
-  { label: 'Agent', to: ROUTE_PATHS.loginAgent, icon: 'badge' },
-  { label: 'Admin', to: ROUTE_PATHS.loginAdmin, icon: 'admin_panel_settings' },
+  { label: 'Biller', to: ROUTE_PATHS.biller, icon: 'storefront' },
+  { label: 'Agent', to: ROUTE_PATHS.agent, icon: 'badge' },
+  { label: 'Admin', to: ROUTE_PATHS.admin, icon: 'admin_panel_settings' },
   { label: 'Buyer', to: ROUTE_PATHS.buyer, icon: 'person' },
 ]
 
