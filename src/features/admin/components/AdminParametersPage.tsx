@@ -5,10 +5,17 @@ import {
   createCountry,
   createCurrency,
   createHoliday,
+  deleteBank,
+  deleteCountry,
+  deleteCurrency,
+  deleteHoliday,
   getAllBanks,
   getAllHolidays,
   getAllParameterCountries,
   getAllParameterCurrencies,
+  updateBank,
+  updateCountry,
+  updateCurrency,
 } from '../services'
 
 type ParameterModule = 'currencies' | 'countries' | 'holidays' | 'banks'
@@ -164,7 +171,22 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [form, setForm] = useState<Record<string, string>>({})
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [editForm, setEditForm] = useState<Record<string, string>>({})
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null)
+  const canEdit = module === 'currencies' || module === 'countries' || module === 'banks'
+  const canDelete =
+    module === 'currencies' || module === 'countries' || module === 'banks' || module === 'holidays'
+  const recordLabel =
+    module === 'currencies'
+      ? 'Currency'
+      : module === 'countries'
+        ? 'Country'
+        : module === 'holidays'
+          ? 'Holiday'
+          : 'Bank'
 
   const getRowId = React.useCallback(
     (row: UnknownRecord, index: number) => String(row.id ?? row.code ?? row.name ?? index),
@@ -222,6 +244,181 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
       setIsSubmitting(false)
     }
   }
+
+  const openEditModal = () => {
+    if (!selectedRow) return
+    const nextForm: Record<string, string> = {}
+    config.fields.forEach((field) => {
+      nextForm[field.key] = String(selectedRow[field.key] ?? '')
+    })
+    setEditForm(nextForm)
+    setIsEditOpen(true)
+  }
+
+  const handleCurrencyUpdate = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!selectedRow || module !== 'currencies') return
+
+    for (const field of config.fields) {
+      if (!String(editForm[field.key] ?? '').trim()) {
+        toast.error(`${field.label} is required`)
+        return
+      }
+    }
+
+    const currencyId = Number(selectedRow.id)
+    if (!Number.isFinite(currencyId)) {
+      toast.error('Currency ID is missing')
+      return
+    }
+
+    const rateToDefault = Number(editForm.rateToDefault)
+    if (!Number.isFinite(rateToDefault)) {
+      toast.error('Rate To Default must be a valid number')
+      return
+    }
+
+    try {
+      setIsUpdating(true)
+      await updateCurrency(currencyId, {
+        id: currencyId,
+        name: String(editForm.name ?? ''),
+        code: String(editForm.code ?? ''),
+        description: String(editForm.description ?? ''),
+        rateToDefault,
+        ...(typeof selectedRow.active === 'boolean' ? { active: selectedRow.active } : {}),
+        ...(typeof selectedRow.defaultCurrency === 'boolean'
+          ? { defaultCurrency: selectedRow.defaultCurrency }
+          : {}),
+      })
+      toast.success('Currency updated')
+      setIsEditOpen(false)
+      await load()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update currency')
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleUpdate = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!selectedRow || !canEdit) return
+
+    if (module === 'currencies') {
+      await handleCurrencyUpdate(event)
+      return
+    }
+
+    for (const field of config.fields) {
+      if (!String(editForm[field.key] ?? '').trim()) {
+        toast.error(`${field.label} is required`)
+        return
+      }
+    }
+
+    const id = Number(selectedRow.id)
+    if (!Number.isFinite(id)) {
+      toast.error('Record ID is missing')
+      return
+    }
+
+    try {
+      setIsUpdating(true)
+
+      if (module === 'countries') {
+        await updateCountry(id, {
+          id,
+          name: String(editForm.name ?? ''),
+          code: String(editForm.code ?? ''),
+        })
+      } else if (module === 'banks') {
+        await updateBank(id, {
+          name: String(editForm.name ?? ''),
+          code: String(editForm.code ?? ''),
+        })
+      }
+
+      toast.success(`${recordLabel} updated`)
+      setIsEditOpen(false)
+      await load()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update')
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleCurrencyDelete = async () => {
+    if (!selectedRow || module !== 'currencies') return
+
+    const currencyId = Number(selectedRow.id)
+    if (!Number.isFinite(currencyId)) {
+      toast.error('Currency ID is missing')
+      return
+    }
+
+    const currencyName = String(selectedRow.name ?? selectedRow.code ?? `#${currencyId}`)
+    const shouldDelete = window.confirm(`Delete currency "${currencyName}"?`)
+    if (!shouldDelete) return
+
+    try {
+      setIsDeleting(true)
+      await deleteCurrency(currencyId)
+      toast.success('Currency deleted')
+      setSelectedRowId(null)
+      await load()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete currency')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!selectedRow || !canDelete) return
+
+    if (module === 'currencies') {
+      await handleCurrencyDelete()
+      return
+    }
+
+    const id = Number(selectedRow.id)
+    if (!Number.isFinite(id)) {
+      toast.error('Record ID is missing')
+      return
+    }
+
+    const recordName = String(selectedRow.name ?? selectedRow.code ?? selectedRow.date ?? `#${id}`)
+    const shouldDelete = window.confirm(`Delete ${recordLabel.toLowerCase()} "${recordName}"?`)
+    if (!shouldDelete) return
+
+    try {
+      setIsDeleting(true)
+      if (module === 'countries') {
+        await deleteCountry(id)
+      } else if (module === 'banks') {
+        await deleteBank(id)
+      } else if (module === 'holidays') {
+        await deleteHoliday(id)
+      }
+      toast.success(`${recordLabel} deleted`)
+      setSelectedRowId(null)
+      await load()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const editEndpointLabel = (() => {
+    if (!selectedRow) return ''
+    if (module === 'currencies') return `/v1/currencies/${String(selectedRow.id ?? '')}`
+    if (module === 'countries') return `/v1/countries/${String(selectedRow.id ?? '')}`
+    if (module === 'banks') return `/v1/banks/${String(selectedRow.id ?? '')}`
+    return ''
+  })()
 
   return (
     <div className="p-8 space-y-6 animate-in fade-in duration-300">
@@ -309,15 +506,42 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
           <div className="border border-neutral-light rounded overflow-hidden bg-white">
             <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-light bg-[#7E57C2] text-white">
               <h3 className="text-lg font-semibold text-white">{config.detailsTitle}</h3>
-              <button
-                type="button"
-                onClick={() => setSelectedRowId(null)}
-                className="w-9 h-9 rounded-lg border border-white/30 text-white hover:bg-white/10 transition-colors flex items-center justify-center"
-                title="Back to table"
-                aria-label="Back to table"
-              >
-                <span className="material-symbols-outlined text-lg">table_rows</span>
-              </button>
+              <div className="flex items-center gap-2">
+                {canEdit || canDelete ? (
+                  <>
+                    {canEdit ? (
+                      <button
+                        type="button"
+                        onClick={openEditModal}
+                        className="h-9 px-3 rounded-lg border border-white/30 text-white hover:bg-white/10 transition-colors flex items-center justify-center text-sm font-semibold"
+                        title={`Edit ${recordLabel.toLowerCase()}`}
+                      >
+                        Edit
+                      </button>
+                    ) : null}
+                    {canDelete ? (
+                      <button
+                        type="button"
+                        onClick={() => void handleDelete()}
+                        disabled={isDeleting}
+                        className="h-9 px-3 rounded-lg border border-red-200/60 text-white hover:bg-red-500/20 transition-colors flex items-center justify-center text-sm font-semibold disabled:opacity-60"
+                        title={`Delete ${recordLabel.toLowerCase()}`}
+                      >
+                        {isDeleting ? 'Deleting...' : 'Delete'}
+                      </button>
+                    ) : null}
+                  </>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => setSelectedRowId(null)}
+                  className="w-9 h-9 rounded-lg border border-white/30 text-white hover:bg-white/10 transition-colors flex items-center justify-center"
+                  title="Back to table"
+                  aria-label="Back to table"
+                >
+                  <span className="material-symbols-outlined text-lg">table_rows</span>
+                </button>
+              </div>
             </div>
             <div className="divide-y divide-neutral-light bg-white">
               {config.detailFields.map((field) => (
@@ -376,6 +600,56 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
                   className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold disabled:opacity-60"
                 >
                   {isSubmitting ? 'Submitting...' : 'Submit'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
+      {isEditOpen && canEdit && selectedRow ? (
+        <div className="fixed inset-0 z-[140] flex items-center justify-center p-4">
+          <button
+            type="button"
+            onClick={() => setIsEditOpen(false)}
+            className="absolute inset-0 bg-slate-900/45"
+            aria-label="Close edit modal"
+          />
+          <div className="relative w-full max-w-lg bg-white rounded-2xl border border-neutral-light shadow-2xl p-6">
+            <h3 className="text-lg font-bold text-dark-text">
+              Edit {recordLabel}
+            </h3>
+            <p className="text-xs text-neutral-text mt-1">
+              Endpoint: <code>{editEndpointLabel}</code>
+            </p>
+            <form className="mt-5 space-y-4" onSubmit={(event) => void handleUpdate(event)}>
+              {config.fields.map((field) => (
+                <label key={`edit-${field.key}`} className="block">
+                  <span className="text-xs font-semibold text-neutral-text">{field.label}</span>
+                  <input
+                    type={field.type ?? 'text'}
+                    value={editForm[field.key] ?? ''}
+                    onChange={(event) =>
+                      setEditForm((prev) => ({ ...prev, [field.key]: event.target.value }))
+                    }
+                    className="mt-1 w-full h-11 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </label>
+              ))}
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsEditOpen(false)}
+                  className="px-4 py-2 rounded-lg border border-neutral-light text-sm font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isUpdating}
+                  className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold disabled:opacity-60"
+                >
+                  {isUpdating ? 'Saving...' : 'Save'}
                 </button>
               </div>
             </form>

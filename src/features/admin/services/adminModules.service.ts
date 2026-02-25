@@ -1,4 +1,4 @@
-import { adminJsonFetch } from './adminApi.client'
+import { adminJsonFetch, adminVoidFetch } from './adminApi.client'
 import { ADMIN_ENDPOINTS } from './admin.endpoints'
 
 type UnknownRecord = Record<string, unknown>
@@ -59,6 +59,12 @@ export async function createHoliday(date: string) {
   })
 }
 
+export async function deleteHoliday(id: string | number) {
+  return adminVoidFetch(ADMIN_ENDPOINTS.holidays.byId(id), {
+    method: 'DELETE',
+  })
+}
+
 export async function getAllParameterCurrencies() {
   return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.currencies.all)
 }
@@ -70,6 +76,19 @@ export async function createCurrency(payload: UnknownRecord) {
   })
 }
 
+export async function updateCurrency(currencyId: string | number, payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.currencies.byId(currencyId), {
+    method: 'PUT',
+    body: payload,
+  })
+}
+
+export async function deleteCurrency(currencyId: string | number) {
+  return adminVoidFetch(ADMIN_ENDPOINTS.currencies.byId(currencyId), {
+    method: 'DELETE',
+  })
+}
+
 export async function getAllParameterCountries() {
   return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.countries.all)
 }
@@ -78,6 +97,32 @@ export async function createCountry(payload: UnknownRecord) {
   return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.countries.root, {
     method: 'POST',
     body: payload,
+  })
+}
+
+export async function updateCountry(id: string | number, payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.countries.byId(id), {
+    method: 'PUT',
+    body: payload,
+  })
+}
+
+export async function deleteCountry(id: string | number) {
+  return adminVoidFetch(ADMIN_ENDPOINTS.countries.byId(id), {
+    method: 'DELETE',
+  })
+}
+
+export async function updateBank(bankId: string | number, payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.banks.byId(bankId), {
+    method: 'PUT',
+    body: payload,
+  })
+}
+
+export async function deleteBank(bankId: string | number) {
+  return adminVoidFetch(ADMIN_ENDPOINTS.banks.byId(bankId), {
+    method: 'DELETE',
   })
 }
 

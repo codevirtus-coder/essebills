@@ -26,17 +26,21 @@ export const ADMIN_ENDPOINTS = {
   countries: {
     root: '/v1/countries',
     all: '/v1/countries/all',
+    byId: (id: string | number) => `/v1/countries/${id}`,
   },
   currencies: {
     root: '/v1/currencies',
     all: '/v1/currencies/all',
+    byId: (currencyId: string | number) => `/v1/currencies/${currencyId}`,
   },
   banks: {
     root: '/v1/banks',
     all: '/v1/banks/all',
+    byId: (bankId: string | number) => `/v1/banks/${bankId}`,
   },
   holidays: {
     root: '/v1/holidays',
+    byId: (id: string | number) => `/v1/holidays/${id}`,
   },
   rongekaAccounts: {
     root: '/v1/rongeka-accounts',

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Icon } from "./Icon";
-import { billerCategories, billers } from "../data/siteData";
+import { billerCategories } from "../data/siteData";
 import { ROUTE_PATHS } from "../router/paths";
 
 type CategoryPillProps = {
@@ -126,7 +126,9 @@ function fieldsByProduct(name: string, category: string): BillerCardProps["field
   return DEFAULT_FIELDS;
 }
 
-const PRODUCTS_ENDPOINT = "https://api.test.rongeka.com/v1/products/all";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ?? "https://api.test.rongeka.com";
+const PRODUCTS_ENDPOINT = `${API_BASE_URL}/v1/products/all`;
 
 async function fetchProducts(): Promise<ApiProduct[]> {
   const response = await fetch(PRODUCTS_ENDPOINT);
@@ -196,32 +198,19 @@ export function PaymentSection() {
     queryFn: fetchProducts,
   });
 
-  const displayBillers: BillerCardProps[] =
-    data && data.length > 0
-      ? data
-          .filter((product) => product.status === "ACTIVE" && !product.deleted)
-          .map((product) => {
-            const category = inferCategory(product.name, product.code);
-            return {
-            id: `api-${product.id}`,
-            icon: iconByCategory(category),
-            name: product.name,
-            category,
-            fields: fieldsByProduct(product.name, category),
-            minimumPurchaseAmount: Number(product.minimumPurchaseAmount ?? 0),
-            };
-          })
-      : (billers as Array<{ icon: string; name: string; isDashed?: boolean }>).map((item, index) => {
-          const category = inferCategory(item.name, item.name);
-          return {
-            id: `fallback-${index}`,
-            icon: item.icon,
-            name: item.name,
-            category,
-            fields: fieldsByProduct(item.name, category),
-            isDashed: item.isDashed,
-          };
-        });
+  const displayBillers: BillerCardProps[] = (data ?? [])
+    .filter((product) => product.status === "ACTIVE" && !product.deleted)
+    .map((product) => {
+      const category = inferCategory(product.name, product.code);
+      return {
+        id: `api-${product.id}`,
+        icon: iconByCategory(category),
+        name: product.name,
+        category,
+        fields: fieldsByProduct(product.name, category),
+        minimumPurchaseAmount: Number(product.minimumPurchaseAmount ?? 0),
+      };
+    });
 
   const filteredBillers = useMemo(
     () => displayBillers.filter((biller) => biller.category === activeCategory && !biller.isDashed),
@@ -303,7 +292,7 @@ export function PaymentSection() {
             )}
             {isError && (
               <p className="type-body text-muted">
-                Could not load products. Showing default list.
+                Could not load products.
               </p>
             )}
             {!isLoading && filteredBillers.length === 0 ? (
@@ -324,7 +313,7 @@ export function PaymentSection() {
           </div>
 
           <div className="payment-form">
-            {(selectedBiller?.fields ?? DEFAULT_FIELDS).map((field) => (
+            {(selectedBiller?.fields ?? []).map((field) => (
               <Field key={field.key} label={field.label}>
                 {field.prefix ? (
                   <div className="amount-field">

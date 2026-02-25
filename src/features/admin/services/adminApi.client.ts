@@ -61,6 +61,31 @@ export async function adminJsonFetch<T>(
   })
 }
 
+export async function adminVoidFetch(
+  path: string,
+  options: JsonRequestOptions = {},
+): Promise<void> {
+  const { method = 'GET', body, filters } = options
+  const token = getAccessToken()
+  const response = await fetch(`${API_BASE_URL}${path}${toQueryString(filters)}`, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  })
+
+  if (!response.ok) {
+    const fallbackMessage = `Request failed (${response.status})`
+    const payload = await response
+      .json()
+      .catch(() => null as { message?: string; description?: string } | null)
+    const message = payload?.description ?? payload?.message ?? fallbackMessage
+    throw new Error(message)
+  }
+}
+
 export async function adminFileFetch(
   path: string,
   filters?: QueryFilters,

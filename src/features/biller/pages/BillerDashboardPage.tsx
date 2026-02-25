@@ -202,7 +202,9 @@ export function BillerDashboardPage() {
               />
             </svg>
             <div className="absolute left-4 top-[44%] rounded-2xl bg-white shadow-lg px-4 py-3">
-              <p className="text-xl font-black text-dark-text leading-none">Mon</p>
+              <p className="text-xl font-black text-dark-text leading-none">
+                Mon
+              </p>
               <p className="text-[#7e56c2] font-bold text-lg leading-none mt-2">
                 amount : 12400
               </p>
@@ -381,6 +383,7 @@ export function BillerDashboardPage() {
               </th>
             </tr>
           </thead>
+
           <tbody className="divide-y divide-neutral-light">
             {MOCK_SETTLEMENTS.map((s) => (
               <tr key={s.id} className="hover:bg-[#f8fafc] transition-colors">
@@ -607,14 +610,24 @@ export function BillerDashboardPage() {
                   className="w-9 h-9 rounded-xl bg-neutral-light text-neutral-text flex items-center justify-center"
                   aria-label="Close menu"
                 >
-                  <span className="material-symbols-outlined text-lg">close</span>
+                  <span className="material-symbols-outlined text-lg">
+                    close
+                  </span>
                 </button>
               </div>
               <nav className="pt-4 space-y-2">
                 {[
                   { id: "overview", label: "Overview", icon: "dashboard" },
-                  { id: "collections", label: "Collections", icon: "receipt_long" },
-                  { id: "settlements", label: "Settlements", icon: "account_balance" },
+                  {
+                    id: "collections",
+                    label: "Collections",
+                    icon: "receipt_long",
+                  },
+                  {
+                    id: "settlements",
+                    label: "Settlements",
+                    icon: "account_balance",
+                  },
                   { id: "settings", label: "Portal Config", icon: "settings" },
                 ].map((tab) => (
                   <button
@@ -626,7 +639,9 @@ export function BillerDashboardPage() {
                         : "text-neutral-text hover:bg-neutral-light"
                     }`}
                   >
-                    <span className="material-symbols-outlined">{tab.icon}</span>
+                    <span className="material-symbols-outlined">
+                      {tab.icon}
+                    </span>
                     {tab.label}
                   </button>
                 ))}
@@ -649,7 +664,9 @@ export function BillerDashboardPage() {
                 type="button"
                 onClick={() => setIsMobileNavOpen((prev) => !prev)}
                 className="md:hidden mb-3 w-10 h-10 rounded-xl bg-white border border-neutral-light text-neutral-text flex items-center justify-center shadow-sm"
-                aria-label={isMobileNavOpen ? "Close navigation" : "Open navigation"}
+                aria-label={
+                  isMobileNavOpen ? "Close navigation" : "Open navigation"
+                }
               >
                 <span className="material-symbols-outlined">
                   {isMobileNavOpen ? "close" : "menu"}
@@ -692,4 +709,3 @@ export function BillerDashboardPage() {
     </div>
   );
 }
-
