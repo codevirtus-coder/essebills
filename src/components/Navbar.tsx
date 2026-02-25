@@ -7,9 +7,9 @@ import { clearAuthSession, isAuthenticated, subscribeToAuthChanges } from '../fe
 
 const navLinks = [
   { label: 'Services', to: ROUTE_PATHS.services, icon: 'widgets' },
-  { label: 'Biller', to: ROUTE_PATHS.biller, icon: 'storefront' },
-  { label: 'Agent', to: ROUTE_PATHS.agent, icon: 'badge' },
-  { label: 'Admin', to: ROUTE_PATHS.admin, icon: 'admin_panel_settings' },
+  { label: 'Biller', to: ROUTE_PATHS.biller, icon: 'storefront', reloadDocument: true },
+  { label: 'Agent', to: ROUTE_PATHS.agent, icon: 'badge', reloadDocument: true },
+  { label: 'Admin', to: ROUTE_PATHS.admin, icon: 'admin_panel_settings', reloadDocument: true },
   { label: 'Buyer', to: ROUTE_PATHS.buyer, icon: 'person' },
 ]
 
@@ -36,7 +36,12 @@ export function Navbar() {
 
           <div className="nav-actions">
             {navLinks.map((link) => (
-              <NavLink key={link.label} to={link.to} className="nav-link">
+              <NavLink
+                key={link.label}
+                to={link.to}
+                className="nav-link"
+                reloadDocument={Boolean(link.reloadDocument)}
+              >
                 <Icon name={link.icon} className="nav-link-icon" />
                 {link.label}
               </NavLink>
