@@ -1,4 +1,5 @@
-﻿import { PortalLogin } from '../../auth/components/PortalLogin'
+import { PortalLogin } from '../../auth/components/PortalLogin'
+import { loginAgent, verifyAgentLoginOtp } from '../../auth/portal-auth.service'
 import { ROUTE_PATHS } from '../../../router/paths'
 
 export function AgentLoginPage() {
@@ -17,6 +18,9 @@ export function AgentLoginPage() {
       registerTo={ROUTE_PATHS.registerAgent}
       redirectTo={ROUTE_PATHS.agent}
       role="AGENT"
+      loginAction={loginAgent}
+      verifyOtpAction={verifyAgentLoginOtp}
     />
   )
 }
+

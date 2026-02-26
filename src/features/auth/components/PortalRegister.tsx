@@ -1,10 +1,21 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import toast from 'react-hot-toast'
 import { Link, useNavigate } from 'react-router-dom'
 import { useRegisterMutation } from '../auth.hooks'
 import { getAuthSession } from '../auth.storage'
-import { getDashboardRouteByRole, ROUTE_PATHS } from '../../../router/paths'
+import { getDashboardRouteByGroup, ROUTE_PATHS } from '../../../router/paths'
 import '../styles/portal-login.css'
+
+export type PortalRegisterSubmitPayload = {
+  firstName: string
+  lastName: string
+  username: string
+  email: string
+  phoneNumber?: string
+  companyName?: string
+  password?: string
+  confirmPassword?: string
+}
 
 type PortalRegisterProps = {
   title: string
@@ -16,6 +27,10 @@ type PortalRegisterProps = {
   loginPath: string
   registerNote?: string
   showCompanyField?: boolean
+  includePasswordFields?: boolean
+  companyFieldPlaceholder?: string
+  registerAction?: (payload: PortalRegisterSubmitPayload) => Promise<unknown>
+  headerExtra?: ReactNode
 }
 
 export function PortalRegister({
@@ -28,6 +43,10 @@ export function PortalRegister({
   loginPath,
   registerNote,
   showCompanyField = false,
+  includePasswordFields = false,
+  companyFieldPlaceholder = 'Organization name',
+  registerAction,
+  headerExtra,
 }: PortalRegisterProps) {
   const navigate = useNavigate()
   const registerMutation = useRegisterMutation()
@@ -37,27 +56,54 @@ export function PortalRegister({
   const [email, setEmail] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
   const [companyName, setCompanyName] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
 
   useEffect(() => {
     const existingSession = getAuthSession()
-
     if (existingSession) {
-      navigate(getDashboardRouteByRole(existingSession.role), { replace: true })
+      navigate(getDashboardRouteByGroup(existingSession.group), { replace: true })
     }
   }, [navigate])
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
+    if (includePasswordFields) {
+      if (!password || !confirmPassword) {
+        toast.error('Password and confirm password are required')
+        return
+      }
+      if (password !== confirmPassword) {
+        toast.error('Passwords do not match')
+        return
+      }
+    }
+
+    const payload: PortalRegisterSubmitPayload = {
+      firstName,
+      lastName,
+      username,
+      email,
+      phoneNumber: phoneNumber || undefined,
+      companyName: companyName || undefined,
+      password: password || undefined,
+      confirmPassword: confirmPassword || undefined,
+    }
+
     try {
-      await registerMutation.mutateAsync({
-        firstName,
-        lastName,
-        username,
-        email,
-        groupId: 2,
-        phoneNumber: phoneNumber || undefined,
-      })
+      if (registerAction) {
+        await registerAction(payload)
+      } else {
+        await registerMutation.mutateAsync({
+          firstName,
+          lastName,
+          username,
+          email,
+          groupId: 2,
+          phoneNumber: phoneNumber || undefined,
+        })
+      }
 
       toast.success(registerNote ?? 'Account created. Please log in.')
       navigate(loginPath, { replace: true })
@@ -91,6 +137,7 @@ export function PortalRegister({
           <div className="login-pane">
             <h2 className="type-section-title">{title}</h2>
             <p className="type-body text-muted">{subtitle}</p>
+            {headerExtra ? <div className="mt-4">{headerExtra}</div> : null}
 
             <form onSubmit={handleSubmit} className="login-form register-form">
               <div className="register-name-row">
@@ -113,7 +160,7 @@ export function PortalRegister({
               {showCompanyField ? (
                 <input
                   type="text"
-                  placeholder="Organization name"
+                  placeholder={companyFieldPlaceholder}
                   value={companyName}
                   onChange={(event) => setCompanyName(event.target.value)}
                   required
@@ -142,12 +189,32 @@ export function PortalRegister({
                 required
               />
 
+              {includePasswordFields ? (
+                <>
+                  <input
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    minLength={8}
+                    required
+                  />
+                  <input
+                    type="password"
+                    placeholder="Confirm password"
+                    value={confirmPassword}
+                    onChange={(event) => setConfirmPassword(event.target.value)}
+                    required
+                  />
+                </>
+              ) : null}
+
               <button
                 type="submit"
                 className="button button-primary login-submit"
-                disabled={registerMutation.isPending}
+                disabled={!registerAction && registerMutation.isPending}
               >
-                {registerMutation.isPending ? 'Submitting...' : submitLabel}
+                {!registerAction && registerMutation.isPending ? 'Submitting...' : submitLabel}
               </button>
             </form>
 

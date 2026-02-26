@@ -16,6 +16,7 @@ import {
   updateBank,
   updateCountry,
   updateCurrency,
+  updateHoliday,
 } from '../services'
 
 type ParameterModule = 'currencies' | 'countries' | 'holidays' | 'banks'
@@ -176,7 +177,8 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
   const [isUpdating, setIsUpdating] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null)
-  const canEdit = module === 'currencies' || module === 'countries' || module === 'banks'
+  const canEdit =
+    module === 'currencies' || module === 'countries' || module === 'banks' || module === 'holidays'
   const canDelete =
     module === 'currencies' || module === 'countries' || module === 'banks' || module === 'holidays'
   const recordLabel =
@@ -337,6 +339,8 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
           name: String(editForm.name ?? ''),
           code: String(editForm.code ?? ''),
         })
+      } else if (module === 'holidays') {
+        await updateHoliday(id, String(editForm.date ?? ''))
       }
 
       toast.success(`${recordLabel} updated`)
@@ -417,6 +421,8 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
     if (module === 'currencies') return `/v1/currencies/${String(selectedRow.id ?? '')}`
     if (module === 'countries') return `/v1/countries/${String(selectedRow.id ?? '')}`
     if (module === 'banks') return `/v1/banks/${String(selectedRow.id ?? '')}`
+    if (module === 'holidays')
+      return `/v1/holidays/${String(selectedRow.id ?? '')}?date=${String(selectedRow.date ?? '')}`
     return ''
   })()
 

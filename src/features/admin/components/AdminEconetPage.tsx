@@ -1,14 +1,26 @@
 import React, { useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import {
+  changeEconetBundlePlanTypeStatus,
+  changeEconetDataBundleTypeStatus,
+  changeNetoneBundlePlanStatus,
+  changeNetoneDataBundleTypeStatus,
   createEconetBundlePlanType,
   createEconetDataBundleType,
   createNetoneBundlePlan,
   createNetoneDataBundleType,
+  deleteEconetBundlePlanType,
+  deleteEconetDataBundleType,
+  deleteNetoneBundlePlan,
+  deleteNetoneDataBundleType,
   getAllEconetBundlePlanTypes,
   getAllEconetDataBundleTypes,
   getAllNetoneBundlePlans,
   getAllNetoneDataBundleTypes,
+  updateEconetBundlePlanType,
+  updateEconetDataBundleType,
+  updateNetoneBundlePlan,
+  updateNetoneDataBundleType,
 } from '../services'
 
 type Provider = 'econet' | 'netone'
@@ -22,6 +34,9 @@ type ModuleConfig = {
   createEndpoint: string
   list: () => Promise<UnknownRecord[]>
   create: (payload: UnknownRecord) => Promise<unknown>
+  update: (id: string | number, payload: UnknownRecord) => Promise<unknown>
+  remove: (id: string | number) => Promise<unknown>
+  changeStatus: (id: string | number, active: boolean) => Promise<unknown>
 }
 
 const TELECOM_CONFIG: Record<Provider, Record<Module, ModuleConfig>> = {
@@ -33,6 +48,9 @@ const TELECOM_CONFIG: Record<Provider, Record<Module, ModuleConfig>> = {
       createEndpoint: '/v1/bundle-plan-types',
       list: getAllEconetBundlePlanTypes,
       create: createEconetBundlePlanType,
+      update: updateEconetBundlePlanType,
+      remove: deleteEconetBundlePlanType,
+      changeStatus: changeEconetBundlePlanTypeStatus,
     },
     dataBundleTypes: {
       title: 'Data Bundle Types',
@@ -41,6 +59,9 @@ const TELECOM_CONFIG: Record<Provider, Record<Module, ModuleConfig>> = {
       createEndpoint: '/v1/data-bundle-types',
       list: getAllEconetDataBundleTypes,
       create: createEconetDataBundleType,
+      update: updateEconetDataBundleType,
+      remove: deleteEconetDataBundleType,
+      changeStatus: changeEconetDataBundleTypeStatus,
     },
   },
   netone: {
@@ -51,6 +72,9 @@ const TELECOM_CONFIG: Record<Provider, Record<Module, ModuleConfig>> = {
       createEndpoint: '/v1/netone-bundle-plans',
       list: getAllNetoneBundlePlans,
       create: createNetoneBundlePlan,
+      update: updateNetoneBundlePlan,
+      remove: deleteNetoneBundlePlan,
+      changeStatus: changeNetoneBundlePlanStatus,
     },
     dataBundleTypes: {
       title: 'Data Bundle Types',
@@ -59,6 +83,9 @@ const TELECOM_CONFIG: Record<Provider, Record<Module, ModuleConfig>> = {
       createEndpoint: '/v1/netone-data-bundle-types',
       list: getAllNetoneDataBundleTypes,
       create: createNetoneDataBundleType,
+      update: updateNetoneDataBundleType,
+      remove: deleteNetoneDataBundleType,
+      changeStatus: changeNetoneDataBundleTypeStatus,
     },
   },
 }
@@ -77,8 +104,15 @@ const AdminEconetPage: React.FC<AdminEconetPageProps> = ({
   const [isLoading, setIsLoading] = useState(false)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [isDeletingId, setIsDeletingId] = useState<string | number | null>(null)
+  const [isStatusUpdatingId, setIsStatusUpdatingId] = useState<string | number | null>(null)
+  const [selectedRow, setSelectedRow] = useState<UnknownRecord | null>(null)
   const [name, setName] = useState('')
   const [active, setActive] = useState(true)
+  const [editName, setEditName] = useState('')
+  const [editActive, setEditActive] = useState(true)
 
   const loadRows = React.useCallback(async () => {
     try {
@@ -97,6 +131,13 @@ const AdminEconetPage: React.FC<AdminEconetPageProps> = ({
   }, [loadRows])
 
   const normalizedRows = useMemo(() => rows, [rows])
+
+  const openEditModal = (row: UnknownRecord) => {
+    setSelectedRow(row)
+    setEditName(String(row.name ?? ''))
+    setEditActive(row.active !== false && String(row.status ?? '').toUpperCase() !== 'INACTIVE')
+    setIsEditOpen(true)
+  }
 
   const handleCreate = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -122,6 +163,78 @@ const AdminEconetPage: React.FC<AdminEconetPageProps> = ({
       toast.error(error instanceof Error ? error.message : 'Failed to create item')
     } finally {
       setIsCreating(false)
+    }
+  }
+
+  const handleUpdate = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const trimmedName = editName.trim()
+    const id = selectedRow?.id as string | number | undefined
+    if (!id && id !== 0) {
+      toast.error('Record ID is missing')
+      return
+    }
+    if (!trimmedName) {
+      toast.error('Name is required')
+      return
+    }
+
+    try {
+      setIsUpdating(true)
+      await config.update(id, {
+        ...selectedRow,
+        name: trimmedName,
+        active: editActive,
+      })
+      toast.success(`${config.title} item updated`)
+      setIsEditOpen(false)
+      setSelectedRow(null)
+      await loadRows()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update item')
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleDelete = async (row: UnknownRecord) => {
+    const id = row.id as string | number | undefined
+    if (!id && id !== 0) {
+      toast.error('Record ID is missing')
+      return
+    }
+    const shouldDelete = window.confirm(`Delete "${String(row.name ?? id)}"?`)
+    if (!shouldDelete) return
+
+    try {
+      setIsDeletingId(id)
+      await config.remove(id)
+      toast.success('Record deleted')
+      await loadRows()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete item')
+    } finally {
+      setIsDeletingId(null)
+    }
+  }
+
+  const handleToggleStatus = async (row: UnknownRecord) => {
+    const id = row.id as string | number | undefined
+    if (!id && id !== 0) {
+      toast.error('Record ID is missing')
+      return
+    }
+    const isCurrentlyActive =
+      row.active === true || String(row.status ?? '').toUpperCase() === 'ACTIVE'
+    try {
+      setIsStatusUpdatingId(id)
+      await config.changeStatus(id, !isCurrentlyActive)
+      toast.success(!isCurrentlyActive ? 'Activated' : 'Deactivated')
+      await loadRows()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update status')
+    } finally {
+      setIsStatusUpdatingId(null)
     }
   }
 
@@ -158,10 +271,11 @@ const AdminEconetPage: React.FC<AdminEconetPageProps> = ({
 
         <div className="border border-neutral-light rounded overflow-hidden bg-white">
           <div className="bg-[#7E57C2] text-white border-b border-neutral-light">
-            <div className="grid grid-cols-3">
+            <div className="grid grid-cols-[1fr_.8fr_1fr_190px]">
               <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Name</div>
               <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Status</div>
-              <div className="px-4 py-3 text-sm font-semibold">Created on</div>
+              <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Created on</div>
+              <div className="px-4 py-3 text-sm font-semibold text-center">Actions</div>
             </div>
           </div>
           <div className="min-h-[260px] bg-white">
@@ -175,7 +289,7 @@ const AdminEconetPage: React.FC<AdminEconetPageProps> = ({
                 return (
                   <div
                     key={String(row.id ?? `${row.name ?? 'econet'}-${index}`)}
-                    className="grid grid-cols-3 border-t border-neutral-light hover:bg-neutral-light/40 transition-colors"
+                    className="grid grid-cols-[1fr_.8fr_1fr_190px] border-t border-neutral-light hover:bg-neutral-light/40 transition-colors"
                   >
                     <div className="px-4 py-3 text-sm text-dark-text">{String(row.name ?? '-')}</div>
                     <div className="px-4 py-3 text-sm">
@@ -190,6 +304,35 @@ const AdminEconetPage: React.FC<AdminEconetPageProps> = ({
                       </span>
                     </div>
                     <div className="px-4 py-3 text-sm text-dark-text">{String(row.createdDate ?? '-')}</div>
+                    <div className="px-2 py-2 flex items-center justify-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openEditModal(row)}
+                        className="h-8 px-3 rounded-lg border border-[#7E57C2]/40 text-[#7E57C2] text-xs font-semibold hover:bg-[#7E57C2]/5"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleToggleStatus(row)}
+                        disabled={isStatusUpdatingId === row.id}
+                        className={`h-8 px-3 rounded-lg border text-xs font-semibold disabled:opacity-60 ${
+                          isActive
+                            ? 'border-amber-200 text-amber-700 hover:bg-amber-50'
+                            : 'border-green-200 text-green-700 hover:bg-green-50'
+                        }`}
+                      >
+                        {isStatusUpdatingId === row.id ? '...' : isActive ? 'Disable' : 'Enable'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleDelete(row)}
+                        disabled={isDeletingId === row.id}
+                        className="h-8 px-3 rounded-lg border border-red-200 text-red-600 text-xs font-semibold hover:bg-red-50 disabled:opacity-60"
+                      >
+                        {isDeletingId === row.id ? '...' : 'Delete'}
+                      </button>
+                    </div>
                   </div>
                 )
               })
@@ -242,6 +385,57 @@ const AdminEconetPage: React.FC<AdminEconetPageProps> = ({
                   className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold disabled:opacity-60"
                 >
                   {isCreating ? 'Submitting...' : 'Submit'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
+      {isEditOpen ? (
+        <div className="fixed inset-0 z-[140] flex items-center justify-center p-4">
+          <button
+            type="button"
+            onClick={() => setIsEditOpen(false)}
+            className="absolute inset-0 bg-slate-900/45"
+            aria-label="Close edit modal"
+          />
+          <div className="relative w-full max-w-lg bg-white rounded-2xl border border-neutral-light shadow-2xl p-6">
+            <h3 className="text-lg font-bold text-dark-text">Edit {config.title}</h3>
+            <p className="text-xs text-neutral-text mt-1">
+              Endpoint: <code>{config.createEndpoint}/{String(selectedRow?.id ?? '')}</code>
+            </p>
+            <form className="mt-5 space-y-4" onSubmit={(event) => void handleUpdate(event)}>
+              <label className="block">
+                <span className="text-xs font-semibold text-neutral-text">Name</span>
+                <input
+                  value={editName}
+                  onChange={(event) => setEditName(event.target.value)}
+                  className="mt-1 w-full h-11 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </label>
+              <label className="inline-flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={editActive}
+                  onChange={(event) => setEditActive(event.target.checked)}
+                />
+                <span className="text-sm text-neutral-text">Active</span>
+              </label>
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsEditOpen(false)}
+                  className="px-4 py-2 rounded-lg border border-neutral-light text-sm font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isUpdating}
+                  className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold disabled:opacity-60"
+                >
+                  {isUpdating ? 'Saving...' : 'Save'}
                 </button>
               </div>
             </form>

@@ -1,9 +1,22 @@
-﻿import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import toast from 'react-hot-toast'
 import { Link, useNavigate } from 'react-router-dom'
 import { useLoginMutation } from '../auth.hooks'
-import { buildAuthSession, getAuthSession, saveAuthSession } from '../auth.storage'
-import { getDashboardRouteByRole, ROUTE_PATHS } from '../../../router/paths'
+import type { PortalLoginResult } from '../portal-auth.service'
+import { finalizePortalSession } from '../portal-auth.service'
+import {
+  buildAuthSession,
+  clearPendingOtpChallenge,
+  getAuthSession,
+  saveAuthSession,
+  savePendingOtpChallenge,
+} from '../auth.storage'
+import {
+  getDashboardRouteByGroup,
+  getDashboardRouteByRole,
+  getForgotPasswordRouteByRole,
+  ROUTE_PATHS,
+} from '../../../router/paths'
 import type { UserRole } from '../dto/auth.dto'
 import '../styles/portal-login.css'
 
@@ -19,9 +32,17 @@ type PortalLoginProps = {
   secondaryPrompt: string
   secondaryCta: string
   registerTo?: string
-  redirectTo: string
+  redirectTo?: string
   role: UserRole
   mockLogin?: boolean
+  forgotPasswordTo?: string
+  loginAction?: (payload: { username: string; password: string }) => Promise<PortalLoginResult>
+  verifyOtpAction?: (payload: { tempToken: string; code: string }) => Promise<{
+    jwtToken?: string
+    refreshToken?: string
+    authProvider?: 'LOCAL' | 'GOOGLE' | 'FACEBOOK'
+  }>
+  headerExtra?: ReactNode
 }
 
 export function PortalLogin({
@@ -39,40 +60,100 @@ export function PortalLogin({
   redirectTo,
   role,
   mockLogin = false,
+  forgotPasswordTo = getForgotPasswordRouteByRole(role),
+  loginAction,
+  verifyOtpAction,
+  headerExtra,
 }: PortalLoginProps) {
   const navigate = useNavigate()
   const loginMutation = useLoginMutation()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [otpCode, setOtpCode] = useState('')
+  const [otpTempToken, setOtpTempToken] = useState<string | null>(null)
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false)
 
   useEffect(() => {
     const existingSession = getAuthSession()
-
     if (existingSession) {
-      navigate(getDashboardRouteByRole(existingSession.role), { replace: true })
+      navigate(getDashboardRouteByGroup(existingSession.group), { replace: true })
     }
   }, [navigate])
+
+  const finishLogin = async (
+    jwtToken: string,
+    refreshToken?: string | null,
+    authProvider?: 'LOCAL' | 'GOOGLE' | 'FACEBOOK',
+  ) => {
+    const session = await finalizePortalSession({
+      jwtToken,
+      portalRole: role,
+      refreshToken,
+      authProvider,
+    })
+
+    navigate(getDashboardRouteByGroup(session.group), { replace: true })
+  }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     if (mockLogin) {
       saveAuthSession(buildAuthSession(`mock-${role}-${Date.now()}`, role))
-      navigate(redirectTo, { replace: true })
+      navigate(getDashboardRouteByRole(role), { replace: true })
       return
     }
 
     try {
+      if (otpTempToken && verifyOtpAction) {
+        if (!otpCode.trim()) {
+          toast.error('OTP code is required')
+          return
+        }
+
+        setIsVerifyingOtp(true)
+        const otpResponse = await verifyOtpAction({ tempToken: otpTempToken, code: otpCode.trim() })
+        if (!otpResponse.jwtToken) {
+          throw new Error('OTP verification did not return an access token')
+        }
+
+        clearPendingOtpChallenge()
+        await finishLogin(otpResponse.jwtToken, otpResponse.refreshToken, otpResponse.authProvider)
+        return
+      }
+
+      if (loginAction) {
+        const response = await loginAction({ username, password })
+
+        if (response.kind === 'otp_required') {
+          setOtpTempToken(response.tempToken)
+          setOtpCode('')
+          savePendingOtpChallenge({
+            portalRole: role,
+            username,
+            tempToken: response.tempToken,
+            createdAt: Date.now(),
+          })
+          toast.success(response.message ?? 'OTP verification required')
+          return
+        }
+
+        await finishLogin(response.jwtToken, response.refreshToken, response.authProvider)
+        return
+      }
+
       const data = await loginMutation.mutateAsync({ username, password })
-      saveAuthSession(buildAuthSession(data.jwtToken, role, data.authProvider))
-      navigate(redirectTo, { replace: true })
+      if (!data.jwtToken) {
+        throw new Error('Login response did not return jwtToken')
+      }
+      await finishLogin(data.jwtToken, data.refreshToken, data.authProvider)
     } catch (error) {
       toast.error(
-        error instanceof Error
-          ? error.message
-          : 'Login failed. Check your username/password.',
+        error instanceof Error ? error.message : 'Login failed. Check your username/password.',
       )
+    } finally {
+      setIsVerifyingOtp(false)
     }
   }
 
@@ -97,6 +178,7 @@ export function PortalLogin({
           <div className="login-pane">
             <h2 className="type-section-title">{portalName}</h2>
             <p className="type-body text-muted">{subtitle}</p>
+            {headerExtra ? <div className="mt-4">{headerExtra}</div> : null}
 
             <form onSubmit={handleSubmit} className="login-form">
               <label className="type-label login-label">{usernameLabel}</label>
@@ -113,9 +195,9 @@ export function PortalLogin({
 
               <div className="login-password-header">
                 <label className="type-label login-label">Password</label>
-                <button type="button" className="login-forgot">
+                <Link to={forgotPasswordTo} className="login-forgot">
                   Forgot?
-                </button>
+                </Link>
               </div>
               <div className="login-password-field">
                 <input
@@ -138,20 +220,42 @@ export function PortalLogin({
                 </button>
               </div>
 
+              {otpTempToken ? (
+                <>
+                  <label className="type-label login-label">OTP Code</label>
+                  <div className="login-input-with-icon">
+                    <span className="material-symbols-outlined icon-sm">pin</span>
+                    <input
+                      type="text"
+                      placeholder="Enter OTP code"
+                      value={otpCode}
+                      onChange={(event) => setOtpCode(event.target.value)}
+                      required
+                    />
+                  </div>
+                  <p className="type-body text-muted">
+                    Two-factor verification is enabled for this account.
+                  </p>
+                </>
+              ) : null}
+
               <button
                 type="submit"
                 className="button button-primary login-submit"
-                disabled={!mockLogin && loginMutation.isPending}
+                disabled={!mockLogin && (loginMutation.isPending || isVerifyingOtp)}
               >
-                {!mockLogin && loginMutation.isPending ? 'Signing in...' : submitLabel}
+                {!mockLogin && (loginMutation.isPending || isVerifyingOtp)
+                  ? otpTempToken
+                    ? 'Verifying...'
+                    : 'Signing in...'
+                  : otpTempToken
+                    ? 'Verify OTP'
+                    : submitLabel}
               </button>
             </form>
             <div className="login-register-wrap">
               <p className="type-body text-muted">{secondaryPrompt}</p>
-              <Link
-                to={registerTo}
-                className="button button-outline login-register-button"
-              >
+              <Link to={registerTo} className="button button-outline login-register-button">
                 {secondaryCta}
               </Link>
             </div>

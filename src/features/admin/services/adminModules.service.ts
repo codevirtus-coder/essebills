@@ -59,6 +59,14 @@ export async function createHoliday(date: string) {
   })
 }
 
+export async function updateHoliday(id: string | number, date: string) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.holidays.byId(id), {
+    method: 'PUT',
+    body: {},
+    filters: { date },
+  })
+}
+
 export async function deleteHoliday(id: string | number) {
   return adminVoidFetch(ADMIN_ENDPOINTS.holidays.byId(id), {
     method: 'DELETE',
@@ -159,6 +167,26 @@ export async function createEconetBundlePlanType(payload: UnknownRecord) {
   })
 }
 
+export async function updateEconetBundlePlanType(id: string | number, payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.econet.bundlePlanTypes.byId(id), {
+    method: 'PUT',
+    body: payload,
+  })
+}
+
+export async function deleteEconetBundlePlanType(id: string | number) {
+  return adminVoidFetch(ADMIN_ENDPOINTS.econet.bundlePlanTypes.byId(id), {
+    method: 'DELETE',
+  })
+}
+
+export async function changeEconetBundlePlanTypeStatus(id: string | number, active: boolean) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.econet.bundlePlanTypes.changeStatus(id), {
+    method: 'GET',
+    filters: { active },
+  })
+}
+
 export async function getAllEconetDataBundleTypes() {
   return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.econet.dataBundleTypes.all)
 }
@@ -167,6 +195,26 @@ export async function createEconetDataBundleType(payload: UnknownRecord) {
   return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.econet.dataBundleTypes.root, {
     method: 'POST',
     body: payload,
+  })
+}
+
+export async function updateEconetDataBundleType(id: string | number, payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.econet.dataBundleTypes.byId(id), {
+    method: 'PUT',
+    body: payload,
+  })
+}
+
+export async function deleteEconetDataBundleType(id: string | number) {
+  return adminVoidFetch(ADMIN_ENDPOINTS.econet.dataBundleTypes.byId(id), {
+    method: 'DELETE',
+  })
+}
+
+export async function changeEconetDataBundleTypeStatus(id: string | number, active: boolean) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.econet.dataBundleTypes.changeStatus(id), {
+    method: 'GET',
+    filters: { active },
   })
 }
 
@@ -181,6 +229,26 @@ export async function createNetoneBundlePlan(payload: UnknownRecord) {
   })
 }
 
+export async function updateNetoneBundlePlan(id: string | number, payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.netone.bundlePlans.byId(id), {
+    method: 'PUT',
+    body: payload,
+  })
+}
+
+export async function deleteNetoneBundlePlan(id: string | number) {
+  return adminVoidFetch(ADMIN_ENDPOINTS.netone.bundlePlans.byId(id), {
+    method: 'DELETE',
+  })
+}
+
+export async function changeNetoneBundlePlanStatus(id: string | number, active: boolean) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.netone.bundlePlans.changeStatus(id), {
+    method: 'GET',
+    filters: { active },
+  })
+}
+
 export async function getAllNetoneDataBundleTypes() {
   return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.netone.dataBundleTypes.all)
 }
@@ -189,6 +257,26 @@ export async function createNetoneDataBundleType(payload: UnknownRecord) {
   return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.netone.dataBundleTypes.root, {
     method: 'POST',
     body: payload,
+  })
+}
+
+export async function updateNetoneDataBundleType(id: string | number, payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.netone.dataBundleTypes.byId(id), {
+    method: 'PUT',
+    body: payload,
+  })
+}
+
+export async function deleteNetoneDataBundleType(id: string | number) {
+  return adminVoidFetch(ADMIN_ENDPOINTS.netone.dataBundleTypes.byId(id), {
+    method: 'DELETE',
+  })
+}
+
+export async function changeNetoneDataBundleTypeStatus(id: string | number, active: boolean) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.netone.dataBundleTypes.changeStatus(id), {
+    method: 'GET',
+    filters: { active },
   })
 }
 

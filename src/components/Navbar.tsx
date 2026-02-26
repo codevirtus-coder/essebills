@@ -1,30 +1,59 @@
-﻿import { useEffect, useState } from 'react'
-import { NavLink } from 'react-router-dom'
-import { Icon } from './Icon'
-import BrandLogo from './BrandLogo'
-import { ROUTE_PATHS } from '../router/paths'
-import { clearAuthSession, isAuthenticated, subscribeToAuthChanges } from '../features/auth/auth.storage'
+﻿import { useEffect, useState } from "react";
+import { NavLink } from "react-router-dom";
+import { Icon } from "./Icon";
+import BrandLogo from "./BrandLogo";
+import { ROUTE_PATHS } from "../router/paths";
+import {
+  clearAuthSession,
+  isAuthenticated,
+  subscribeToAuthChanges,
+} from "../features/auth/auth.storage";
 
 const navLinks = [
-  { label: 'Services', to: ROUTE_PATHS.services, icon: 'widgets' },
-  { label: 'Biller', to: ROUTE_PATHS.biller, icon: 'storefront', reloadDocument: true },
-  { label: 'Agent', to: ROUTE_PATHS.agent, icon: 'badge', reloadDocument: true },
-  { label: 'Admin', to: ROUTE_PATHS.admin, icon: 'admin_panel_settings', reloadDocument: true },
-  { label: 'Buyer', to: ROUTE_PATHS.buyer, icon: 'person' },
-]
+  {
+    label: "Services",
+    to: ROUTE_PATHS.services,
+    icon: "widgets",
+    reloadDocument: true,
+  },
+  {
+    label: "Biller",
+    to: ROUTE_PATHS.biller,
+    icon: "storefront",
+    reloadDocument: true,
+  },
+  {
+    label: "Agent",
+    to: ROUTE_PATHS.agent,
+    icon: "badge",
+    reloadDocument: true,
+  },
+  {
+    label: "Admin",
+    to: ROUTE_PATHS.admin,
+    icon: "admin_panel_settings",
+    reloadDocument: true,
+  },
+  {
+    label: "Buyer",
+    to: ROUTE_PATHS.buyer,
+    icon: "person",
+    reloadDocument: true,
+  },
+];
 
 export function Navbar() {
-  const [authenticated, setAuthenticated] = useState(() => isAuthenticated())
+  const [authenticated, setAuthenticated] = useState(() => isAuthenticated());
 
   useEffect(() => {
     return subscribeToAuthChanges(() => {
-      setAuthenticated(isAuthenticated())
-    })
-  }, [])
+      setAuthenticated(isAuthenticated());
+    });
+  }, []);
 
   const handleLogout = () => {
-    clearAuthSession()
-  }
+    clearAuthSession();
+  };
 
   return (
     <nav className="navbar">
@@ -48,15 +77,23 @@ export function Navbar() {
             ))}
             <div className="nav-divider" />
             {authenticated ? (
-              <button type="button" className="button button-ghost" onClick={handleLogout}>
+              <button
+                type="button"
+                className="button button-ghost"
+                onClick={handleLogout}
+              >
                 Logout
               </button>
             ) : (
               <>
-                <NavLink to={ROUTE_PATHS.login} className="button button-ghost">
+                {/* <NavLink to={ROUTE_PATHS.login} className="button button-ghost" reloadDocument>
                   Login
-                </NavLink>
-                <NavLink to={ROUTE_PATHS.register} className="button button-primary">
+                </NavLink> */}
+                <NavLink
+                  to={ROUTE_PATHS.register}
+                  className="button button-primary"
+                  reloadDocument
+                >
                   Register
                 </NavLink>
               </>
@@ -65,5 +102,5 @@ export function Navbar() {
         </div>
       </div>
     </nav>
-  )
+  );
 }

@@ -3,6 +3,7 @@
 :root {
   --nav-offset: 5.5rem;
   --font-family-base: "Plus Jakarta Sans", sans-serif;
+  --font-family-mono: "JetBrains Mono", "IBM Plex Mono", "Fira Code", Consolas, monospace;
   --fw-regular: 400;
   --fw-medium: 500;
   --fw-semibold: 600;
@@ -28,6 +29,10 @@
   --border-light: #e2e8f0;
   --border-dark: #334155;
   --shadow-soft: 0 10px 30px rgb(15 23 42 / 8%);
+}
+
+.font-data {
+  font-family: var(--font-family-mono);
 }
 
 * {

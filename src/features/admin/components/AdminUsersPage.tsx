@@ -1,14 +1,25 @@
 import React, { useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import type { AdminUserDto } from '../dto/admin-api.dto'
-import { createUser, getPaginatedUsers } from '../services'
+import { changeUserActivationStatus, createUser, getPaginatedUsers, updateUser } from '../services'
 
 const AdminUsersPage: React.FC = () => {
   const [users, setUsers] = useState<AdminUserDto[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [statusLoadingId, setStatusLoadingId] = useState<string | number | null>(null)
+  const [selectedUser, setSelectedUser] = useState<AdminUserDto | null>(null)
   const [form, setForm] = useState({
+    username: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phoneNumber: '',
+  })
+  const [editForm, setEditForm] = useState({
     username: '',
     firstName: '',
     lastName: '',
@@ -33,6 +44,18 @@ const AdminUsersPage: React.FC = () => {
   }, [loadUsers])
 
   const rows = useMemo(() => users, [users])
+
+  const openEditModal = (user: AdminUserDto) => {
+    setSelectedUser(user)
+    setEditForm({
+      username: String(user.username ?? ''),
+      firstName: String(user.firstName ?? ''),
+      lastName: String(user.lastName ?? ''),
+      email: String(user.email ?? ''),
+      phoneNumber: String(user.phoneNumber ?? ''),
+    })
+    setIsEditOpen(true)
+  }
 
   const handleCreate = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -68,6 +91,63 @@ const AdminUsersPage: React.FC = () => {
     }
   }
 
+  const handleUpdate = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!selectedUser?.id) {
+      toast.error('User ID is missing')
+      return
+    }
+
+    if (
+      !editForm.username.trim() ||
+      !editForm.email.trim() ||
+      !editForm.firstName.trim() ||
+      !editForm.lastName.trim()
+    ) {
+      toast.error('Username, First Name, Last Name and Email are required')
+      return
+    }
+
+    try {
+      setIsUpdating(true)
+      await updateUser({
+        ...selectedUser,
+        id: selectedUser.id,
+        username: editForm.username.trim(),
+        firstName: editForm.firstName.trim(),
+        lastName: editForm.lastName.trim(),
+        email: editForm.email.trim(),
+        phoneNumber: editForm.phoneNumber.trim(),
+      })
+      toast.success('User updated')
+      setIsEditOpen(false)
+      setSelectedUser(null)
+      await loadUsers()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update user')
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleToggleStatus = async (user: AdminUserDto) => {
+    if (!user.id) {
+      toast.error('User ID is missing')
+      return
+    }
+    const nextActive = user.active === false
+    try {
+      setStatusLoadingId(user.id)
+      await changeUserActivationStatus(nextActive, user.id)
+      toast.success(nextActive ? 'User activated' : 'User deactivated')
+      await loadUsers()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update user status')
+    } finally {
+      setStatusLoadingId(null)
+    }
+  }
+
   return (
     <div className="p-8 space-y-6 animate-in fade-in duration-300">
       <section className="bg-white rounded-xl border border-neutral-light p-6 min-h-[112px]">
@@ -98,13 +178,14 @@ const AdminUsersPage: React.FC = () => {
 
         <div className="border border-neutral-light rounded overflow-hidden bg-white">
           <div className="bg-[#7E57C2] text-white border-b border-neutral-light">
-            <div className="grid grid-cols-6">
+            <div className="grid grid-cols-[1fr_1.2fr_1.3fr_1fr_.8fr_1fr_160px]">
               <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Username</div>
               <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Full Name</div>
               <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Email</div>
               <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Phone</div>
               <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Status</div>
-              <div className="px-4 py-3 text-sm font-semibold">Created on</div>
+              <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Created on</div>
+              <div className="px-4 py-3 text-sm font-semibold text-center">Actions</div>
             </div>
           </div>
           <div className="min-h-[260px] bg-white">
@@ -116,7 +197,7 @@ const AdminUsersPage: React.FC = () => {
               rows.map((user, index) => (
                 <div
                   key={String(user.id ?? `${user.username ?? 'user'}-${index}`)}
-                  className="grid grid-cols-6 border-t border-neutral-light hover:bg-neutral-light/40 transition-colors"
+                  className="grid grid-cols-[1fr_1.2fr_1.3fr_1fr_.8fr_1fr_160px] border-t border-neutral-light hover:bg-neutral-light/40 transition-colors"
                 >
                   <div className="px-4 py-3 text-sm text-dark-text">{String(user.username ?? '-')}</div>
                   <div className="px-4 py-3 text-sm text-dark-text">
@@ -126,6 +207,27 @@ const AdminUsersPage: React.FC = () => {
                   <div className="px-4 py-3 text-sm text-dark-text">{String(user.phoneNumber ?? '-')}</div>
                   <div className="px-4 py-3 text-sm text-dark-text">{user.active === false ? 'Inactive' : 'Active'}</div>
                   <div className="px-4 py-3 text-sm text-dark-text">{String(user.createdDate ?? '-')}</div>
+                  <div className="px-2 py-2 flex items-center justify-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => openEditModal(user)}
+                      className="h-8 px-3 rounded-lg border border-[#7E57C2]/40 text-[#7E57C2] text-xs font-semibold hover:bg-[#7E57C2]/5"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void handleToggleStatus(user)}
+                      disabled={statusLoadingId === user.id}
+                      className={`h-8 px-3 rounded-lg border text-xs font-semibold disabled:opacity-60 ${
+                        user.active === false
+                          ? 'border-green-200 text-green-700 hover:bg-green-50'
+                          : 'border-amber-200 text-amber-700 hover:bg-amber-50'
+                      }`}
+                    >
+                      {statusLoadingId === user.id ? '...' : user.active === false ? 'Activate' : 'Disable'}
+                    </button>
+                  </div>
                 </div>
               ))
             )}
@@ -205,6 +307,82 @@ const AdminUsersPage: React.FC = () => {
                   className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold disabled:opacity-60"
                 >
                   {isCreating ? 'Submitting...' : 'Submit'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
+      {isEditOpen && selectedUser ? (
+        <div className="fixed inset-0 z-[140] flex items-center justify-center p-4">
+          <button
+            type="button"
+            onClick={() => setIsEditOpen(false)}
+            className="absolute inset-0 bg-slate-900/45"
+            aria-label="Close edit modal"
+          />
+          <div className="relative w-full max-w-xl bg-white rounded-2xl border border-neutral-light shadow-2xl p-6">
+            <h3 className="text-lg font-bold text-dark-text">Edit User</h3>
+            <p className="text-xs text-neutral-text mt-1">
+              Endpoint: <code>/v1/users/{String(selectedUser.id)}</code>
+            </p>
+            <form className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={(event) => void handleUpdate(event)}>
+              <label className="block md:col-span-2">
+                <span className="text-xs font-semibold text-neutral-text">Username</span>
+                <input
+                  value={editForm.username}
+                  onChange={(event) => setEditForm((prev) => ({ ...prev, username: event.target.value }))}
+                  className="mt-1 w-full h-11 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs font-semibold text-neutral-text">First Name</span>
+                <input
+                  value={editForm.firstName}
+                  onChange={(event) => setEditForm((prev) => ({ ...prev, firstName: event.target.value }))}
+                  className="mt-1 w-full h-11 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs font-semibold text-neutral-text">Last Name</span>
+                <input
+                  value={editForm.lastName}
+                  onChange={(event) => setEditForm((prev) => ({ ...prev, lastName: event.target.value }))}
+                  className="mt-1 w-full h-11 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </label>
+              <label className="block md:col-span-2">
+                <span className="text-xs font-semibold text-neutral-text">Email</span>
+                <input
+                  type="email"
+                  value={editForm.email}
+                  onChange={(event) => setEditForm((prev) => ({ ...prev, email: event.target.value }))}
+                  className="mt-1 w-full h-11 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </label>
+              <label className="block md:col-span-2">
+                <span className="text-xs font-semibold text-neutral-text">Phone Number</span>
+                <input
+                  value={editForm.phoneNumber}
+                  onChange={(event) => setEditForm((prev) => ({ ...prev, phoneNumber: event.target.value }))}
+                  className="mt-1 w-full h-11 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </label>
+              <div className="md:col-span-2 flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsEditOpen(false)}
+                  className="px-4 py-2 rounded-lg border border-neutral-light text-sm font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isUpdating}
+                  className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold disabled:opacity-60"
+                >
+                  {isUpdating ? 'Saving...' : 'Save'}
                 </button>
               </div>
             </form>

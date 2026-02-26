@@ -1,8 +1,9 @@
-﻿import type {
+import type {
   LoginRequestDto,
   LoginResponseDto,
   RegisterRequestDto,
   RegisterResponseDto,
+  UserProfileDto,
 } from './dto/auth.dto'
 import { getAccessToken } from './auth.storage'
 
@@ -18,7 +19,13 @@ async function parseJsonOrThrow<T>(response: Response): Promise<T> {
     throw new Error(message)
   }
 
-  return response.json() as Promise<T>
+  const text = await response.text()
+
+  if (!text.trim()) {
+    return {} as T
+  }
+
+  return JSON.parse(text) as T
 }
 
 type ApiFetchOptions = {
@@ -62,6 +69,57 @@ export async function register(payload: RegisterRequestDto): Promise<RegisterRes
   return apiFetch<RegisterResponseDto>('/opn/v1/users/sign-up', {
     method: 'POST',
     body: payload,
+  })
+}
+
+export async function requestPasswordReset(email: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/v1/users/forgot-password`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email }),
+  })
+
+  if (!response.ok) {
+    const fallbackMessage = `Request failed (${response.status})`
+    const payload = await response
+      .json()
+      .catch(() => null as { message?: string; description?: string } | null)
+    const message = payload?.description ?? payload?.message ?? fallbackMessage
+    throw new Error(message)
+  }
+
+  await response.text().catch(() => '')
+}
+
+export async function resetPassword(payload: {
+  resetToken: string
+  password: string
+}): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/v1/users/reset-password`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+
+  if (!response.ok) {
+    const fallbackMessage = `Request failed (${response.status})`
+    const body = await response
+      .json()
+      .catch(() => null as { message?: string; description?: string } | null)
+    const message = body?.description ?? body?.message ?? fallbackMessage
+    throw new Error(message)
+  }
+
+  await response.text().catch(() => '')
+}
+
+export async function getCurrentUserProfile(): Promise<UserProfileDto> {
+  return apiFetch<UserProfileDto>('/v1/users/profile', {
+    requiresAuth: true,
   })
 }
 

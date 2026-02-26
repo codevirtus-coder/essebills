@@ -1,6 +1,7 @@
 ﻿
 :root {
   --font-family-base: 'Plus Jakarta Sans', sans-serif;
+  --font-family-mono: 'JetBrains Mono', 'IBM Plex Mono', 'Fira Code', Consolas, monospace;
   --fw-regular: 400;
   --fw-medium: 500;
   --fw-semibold: 600;

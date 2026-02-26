@@ -1,4 +1,5 @@
-﻿import { PortalLogin } from '../../auth/components/PortalLogin'
+import { PortalLogin } from '../../auth/components/PortalLogin'
+import { loginAdmin, verifyAdminLoginOtp } from '../../auth/portal-auth.service'
 import { ROUTE_PATHS } from '../../../router/paths'
 
 export function AdminLoginPage() {
@@ -17,6 +18,9 @@ export function AdminLoginPage() {
       registerTo={ROUTE_PATHS.registerAdmin}
       redirectTo={ROUTE_PATHS.admin}
       role="ADMIN"
+      loginAction={loginAdmin}
+      verifyOtpAction={verifyAdminLoginOtp}
     />
   )
 }
+

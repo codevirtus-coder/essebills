@@ -64,10 +64,14 @@ export const ADMIN_ENDPOINTS = {
     bundlePlanTypes: {
       root: '/v1/bundle-plan-types',
       all: '/v1/bundle-plan-types/all',
+      byId: (id: string | number) => `/v1/bundle-plan-types/${id}`,
+      changeStatus: (id: string | number) => `/v1/bundle-plan-types/${id}/change-status`,
     },
     dataBundleTypes: {
       root: '/v1/data-bundle-types',
       all: '/v1/data-bundle-types/all',
+      byId: (id: string | number) => `/v1/data-bundle-types/${id}`,
+      changeStatus: (id: string | number) => `/v1/data-bundle-types/${id}/change-status`,
     },
     credentials: {
       root: '/v1/econet-evd-integration-credentials',
@@ -78,10 +82,14 @@ export const ADMIN_ENDPOINTS = {
     bundlePlans: {
       root: '/v1/netone-bundle-plans',
       all: '/v1/netone-bundle-plans/all',
+      byId: (id: string | number) => `/v1/netone-bundle-plans/${id}`,
+      changeStatus: (id: string | number) => `/v1/netone-bundle-plans/${id}/change-status`,
     },
     dataBundleTypes: {
       root: '/v1/netone-data-bundle-types',
       all: '/v1/netone-data-bundle-types/all',
+      byId: (id: string | number) => `/v1/netone-data-bundle-types/${id}`,
+      changeStatus: (id: string | number) => `/v1/netone-data-bundle-types/${id}/change-status`,
     },
     credentials: {
       root: '/v1/netone-evd-integration-credentials',

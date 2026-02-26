@@ -1,4 +1,5 @@
-﻿import { PortalLogin } from '../../auth/components/PortalLogin'
+import { PortalLogin } from '../../auth/components/PortalLogin'
+import { loginBiller, verifyBillerLoginOtp } from '../../auth/biller-auth.service'
 import { ROUTE_PATHS } from '../../../router/paths'
 
 export function BillerLoginPage() {
@@ -17,6 +18,9 @@ export function BillerLoginPage() {
       registerTo={ROUTE_PATHS.registerBiller}
       redirectTo={ROUTE_PATHS.biller}
       role="BILLER"
+      loginAction={loginBiller}
+      verifyOtpAction={verifyBillerLoginOtp}
     />
   )
 }
+

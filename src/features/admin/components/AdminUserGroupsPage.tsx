@@ -1,15 +1,20 @@
 import React, { useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import type { AdminGroupDto } from '../dto/admin-api.dto'
-import { createGroup, getAllGroups } from '../services'
+import { createGroup, deleteGroup, getAllGroups, updateGroup } from '../services'
 
 const AdminUserGroupsPage: React.FC = () => {
   const [groups, setGroups] = useState<AdminGroupDto[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [isDeletingId, setIsDeletingId] = useState<string | number | null>(null)
+  const [selectedGroup, setSelectedGroup] = useState<AdminGroupDto | null>(null)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
+  const [editForm, setEditForm] = useState({ name: '', description: '' })
 
   const loadGroups = React.useCallback(async () => {
     try {
@@ -28,6 +33,15 @@ const AdminUserGroupsPage: React.FC = () => {
   }, [loadGroups])
 
   const rows = useMemo(() => groups, [groups])
+
+  const openEditModal = (group: AdminGroupDto) => {
+    setSelectedGroup(group)
+    setEditForm({
+      name: String(group.name ?? ''),
+      description: String(group.description ?? ''),
+    })
+    setIsEditOpen(true)
+  }
 
   const handleCreate = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -53,6 +67,59 @@ const AdminUserGroupsPage: React.FC = () => {
       toast.error(error instanceof Error ? error.message : 'Failed to create group')
     } finally {
       setIsCreating(false)
+    }
+  }
+
+  const handleUpdate = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!selectedGroup?.id) {
+      toast.error('Group ID is missing')
+      return
+    }
+
+    const trimmedName = editForm.name.trim()
+    if (!trimmedName) {
+      toast.error('Group name is required')
+      return
+    }
+
+    try {
+      setIsUpdating(true)
+      await updateGroup({
+        ...selectedGroup,
+        id: selectedGroup.id,
+        name: trimmedName,
+        description: editForm.description.trim(),
+      })
+      toast.success('Group updated')
+      setIsEditOpen(false)
+      setSelectedGroup(null)
+      await loadGroups()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update group')
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleDelete = async (group: AdminGroupDto) => {
+    if (!group.id) {
+      toast.error('Group ID is missing')
+      return
+    }
+
+    const shouldDelete = window.confirm(`Delete group "${String(group.name ?? group.id)}"?`)
+    if (!shouldDelete) return
+
+    try {
+      setIsDeletingId(group.id)
+      await deleteGroup(group.id)
+      toast.success('Group deleted')
+      await loadGroups()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete group')
+    } finally {
+      setIsDeletingId(null)
     }
   }
 
@@ -86,12 +153,13 @@ const AdminUserGroupsPage: React.FC = () => {
 
         <div className="border border-neutral-light rounded overflow-hidden bg-white">
           <div className="bg-[#7E57C2] text-white border-b border-neutral-light">
-            <div className="grid grid-cols-5">
+            <div className="grid grid-cols-[1.1fr_1fr_1fr_1fr_1fr_148px]">
               <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Name</div>
               <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Created By</div>
               <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Last Modified By</div>
               <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Created on</div>
-              <div className="px-4 py-3 text-sm font-semibold">Last Modified on</div>
+              <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Last Modified on</div>
+              <div className="px-4 py-3 text-sm font-semibold text-center">Actions</div>
             </div>
           </div>
           <div className="min-h-[260px] bg-white">
@@ -103,13 +171,30 @@ const AdminUserGroupsPage: React.FC = () => {
               rows.map((group, index) => (
                 <div
                   key={String(group.id ?? `${group.name ?? 'group'}-${index}`)}
-                  className="grid grid-cols-5 border-t border-neutral-light hover:bg-neutral-light/40 transition-colors"
+                  className="grid grid-cols-[1.1fr_1fr_1fr_1fr_1fr_148px] border-t border-neutral-light hover:bg-neutral-light/40 transition-colors"
                 >
                   <div className="px-4 py-3 text-sm text-dark-text">{String(group.name ?? '-')}</div>
                   <div className="px-4 py-3 text-sm text-dark-text">{String(group.createdBy ?? '-')}</div>
                   <div className="px-4 py-3 text-sm text-dark-text">{String(group.lastModifiedBy ?? '-')}</div>
                   <div className="px-4 py-3 text-sm text-dark-text">{String(group.createdDate ?? '-')}</div>
                   <div className="px-4 py-3 text-sm text-dark-text">{String(group.lastModifiedDate ?? '-')}</div>
+                  <div className="px-2 py-2 flex items-center justify-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => openEditModal(group)}
+                      className="h-8 px-3 rounded-lg border border-[#7E57C2]/40 text-[#7E57C2] text-xs font-semibold hover:bg-[#7E57C2]/5"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void handleDelete(group)}
+                      disabled={isDeletingId === group.id}
+                      className="h-8 px-3 rounded-lg border border-red-200 text-red-600 text-xs font-semibold hover:bg-red-50 disabled:opacity-60"
+                    >
+                      {isDeletingId === group.id ? '...' : 'Delete'}
+                    </button>
+                  </div>
                 </div>
               ))
             )}
@@ -165,6 +250,60 @@ const AdminUserGroupsPage: React.FC = () => {
                   className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold disabled:opacity-60"
                 >
                   {isCreating ? 'Submitting...' : 'Submit'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
+      {isEditOpen && selectedGroup ? (
+        <div className="fixed inset-0 z-[140] flex items-center justify-center p-4">
+          <button
+            type="button"
+            onClick={() => setIsEditOpen(false)}
+            className="absolute inset-0 bg-slate-900/45"
+            aria-label="Close edit modal"
+          />
+          <div className="relative w-full max-w-lg bg-white rounded-2xl border border-neutral-light shadow-2xl p-6">
+            <h3 className="text-lg font-bold text-dark-text">Edit Group</h3>
+            <p className="text-xs text-neutral-text mt-1">
+              Endpoint: <code>/v1/groups/{String(selectedGroup.id)}</code>
+            </p>
+            <form className="mt-5 space-y-4" onSubmit={(event) => void handleUpdate(event)}>
+              <label className="block">
+                <span className="text-xs font-semibold text-neutral-text">Name</span>
+                <input
+                  value={editForm.name}
+                  onChange={(event) => setEditForm((prev) => ({ ...prev, name: event.target.value }))}
+                  className="mt-1 w-full h-11 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs font-semibold text-neutral-text">Description</span>
+                <textarea
+                  value={editForm.description}
+                  onChange={(event) =>
+                    setEditForm((prev) => ({ ...prev, description: event.target.value }))
+                  }
+                  rows={3}
+                  className="mt-1 w-full rounded-lg border border-neutral-light px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </label>
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsEditOpen(false)}
+                  className="px-4 py-2 rounded-lg border border-neutral-light text-sm font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isUpdating}
+                  className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold disabled:opacity-60"
+                >
+                  {isUpdating ? 'Saving...' : 'Save'}
                 </button>
               </div>
             </form>

@@ -27,6 +27,7 @@ function toDisplayStatus(value?: string) {
 }
 
 const Products: React.FC = () => {
+  const formCardRef = React.useRef<HTMLFormElement | null>(null);
   const [products, setProducts] = useState<AdminProductDto[]>([]);
   const [countries, setCountries] = useState<AdminCountryDto[]>([]);
   const [currencies, setCurrencies] = useState<AdminCurrencyDto[]>([]);
@@ -188,6 +189,10 @@ const Products: React.FC = () => {
     setReturnUrl(String(product.returnUrl ?? ""));
     setProductLogoFileName(String(product.productLogoFileName ?? ""));
     setStatus(normalizeStatus(product.status));
+
+    window.requestAnimationFrame(() => {
+      formCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   };
 
   const handleDeleteProduct = async (productId?: string | number) => {
@@ -219,6 +224,7 @@ const Products: React.FC = () => {
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
         <form
+          ref={formCardRef}
           onSubmit={(event) => void handleCreateProduct(event)}
           className="xl:col-span-1 bg-white p-6 rounded-[2rem] border border-neutral-light shadow-sm space-y-4"
         >

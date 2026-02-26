@@ -1,6 +1,6 @@
 ﻿import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { clearAuthSession } from "../../auth/auth.storage";
+import { logoutBiller } from "../../auth/biller-auth.service";
 import { ROUTE_PATHS } from "../../../router/paths";
 import BillerStatCard from "../components/BillerStatCard";
 import BillerLogo from "../components/BillerLogo";
@@ -108,7 +108,7 @@ export function BillerDashboardPage() {
   };
 
   const onLogout = () => {
-    clearAuthSession();
+    logoutBiller();
     navigate(ROUTE_PATHS.loginBiller, { replace: true });
   };
 
