@@ -572,10 +572,10 @@ export function AgentDashboardPage() {
                     BULK SALE
                   </button>
                 )}
-                <div className="text-right hidden md:block">
-                   <p className="text-[10px] font-black text-neutral-text/50 uppercase tracking-widest">AVAILABLE FLOAT</p>
-                   <p className="text-lg font-black text-primary tracking-tighter">${(floatBalance || 0).toFixed(2)}</p>
-                </div>
+              <div className="text-right hidden md:block">
+                 <p className="text-[10px] font-black text-neutral-text/50 uppercase tracking-widest">{agentName}</p>
+                 <p className="text-xs font-bold text-neutral-text">{profile?.email ?? ''}</p>
+              </div>
                 <NotificationMenu onReplenishFloat={onAddFloat} />
                 <button
                   type="button"

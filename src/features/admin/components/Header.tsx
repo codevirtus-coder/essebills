@@ -1,6 +1,9 @@
 
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import NotificationMenu from './NotificationMenu';
+import { getAuthSession, saveAuthSession } from '../../auth/auth.storage';
+import { getCurrentUserProfile } from '../../auth/auth.service';
+import type { UserProfileDto } from '../../auth/dto/auth.dto';
 
 interface HeaderProps {
   onBack?: () => void;
@@ -17,6 +20,39 @@ const Header: React.FC<HeaderProps> = ({
   onToggleMobileNav,
   isMobileNavOpen = false,
 }) => {
+  const session = getAuthSession();
+  const [profile, setProfile] = useState<UserProfileDto | null>(session?.profile ?? null);
+
+  useEffect(() => {
+    if (profile) return;
+    let mounted = true;
+    getCurrentUserProfile()
+      .then((data) => {
+        if (!mounted) return;
+        setProfile(data);
+        if (session) {
+          saveAuthSession({ ...session, profile: data });
+        }
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setProfile(null);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [profile, session]);
+
+  const displayName = useMemo(() => {
+    const first = profile?.firstName ?? '';
+    const last = profile?.lastName ?? '';
+    return `${first} ${last}`.trim() || profile?.username || 'User';
+  }, [profile]);
+
+  const displayRole = useMemo(() => {
+    return profile?.group?.name ? profile.group.name.replace(/_/g, ' ') : 'User';
+  }, [profile]);
+
   return (
     <header
       className="min-h-[5.25rem] md:min-h-16 bg-white border-b border-neutral-light dark:border-white/5 shadow-sm flex items-center justify-between px-4 md:px-8 sticky top-0 z-[60] py-2 md:py-0"
@@ -33,36 +69,6 @@ const Header: React.FC<HeaderProps> = ({
             {isMobileNavOpen ? "close" : "menu"}
           </span>
         </button>
-        {showBack && (
-          <button 
-            onClick={onBack}
-            className="p-2 hover:bg-neutral-light dark:hover:bg-white/5 rounded-full transition-colors text-neutral-text dark:text-gray-400 flex items-center justify-center"
-            title="Go Back"
-          >
-            <span className="material-symbols-outlined">arrow_back</span>
-          </button>
-        )}
-        <div className="hidden sm:block flex-1 max-w-xl">
-          <div className="h-12 bg-white dark:bg-white/5 border border-neutral-light dark:border-white/10 rounded-2xl shadow-sm shadow-neutral-light/40 px-4 flex items-center gap-3 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/40">
-            <span className="text-neutral-text/55 inline-flex items-center justify-center shrink-0">
-              <svg
-                className="w-[18px] h-[18px]"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-              >
-                <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
-                <path d="M20 20L16.8 16.8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            </span>
-            <input 
-              className="w-full h-full bg-transparent border-none p-0 text-[15px] leading-5 text-dark-text dark:text-white placeholder:text-neutral-text/55 focus:ring-0 focus:outline-none" 
-              placeholder="Search transactions, users, or billers..." 
-              type="text"
-            />
-          </div>
-        </div>
       </div>
       
       <div className="flex items-center gap-4">
@@ -74,8 +80,8 @@ const Header: React.FC<HeaderProps> = ({
           className="flex items-center gap-3 cursor-pointer group"
         >
           <div className="text-right hidden sm:block">
-            <p className="text-xs font-bold text-dark-text dark:text-white">Alex Mukunda</p>
-            <p className="text-[10px] text-neutral-text font-medium">System Administrator</p>
+            <p className="text-xs font-bold text-dark-text dark:text-white">{displayName}</p>
+            <p className="text-[10px] text-neutral-text font-medium">{displayRole}</p>
           </div>
           <div 
             className="w-10 h-10 rounded-full bg-cover bg-center border-2 border-primary/10 group-hover:scale-110 transition-transform shadow-sm" 

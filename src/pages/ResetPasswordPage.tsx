@@ -1,6 +1,6 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import toast from 'react-hot-toast'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { resetPassword } from '../features/auth/auth.service'
 import { ROUTE_PATHS } from '../router/paths'
 import '../features/auth/styles/portal-login.css'
@@ -66,6 +66,7 @@ function resolvePortalKey(value?: string): PortalKey {
 export function ResetPasswordPage() {
   const navigate = useNavigate()
   const { portal } = useParams<{ portal?: string }>()
+  const [searchParams] = useSearchParams()
   const portalKey = resolvePortalKey(portal)
   const config = CONFIGS[portalKey]
 
@@ -75,6 +76,13 @@ export function ResetPasswordPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    const tokenFromUrl = searchParams.get('token')
+    if (tokenFromUrl) {
+      setResetToken(tokenFromUrl)
+    }
+  }, [searchParams])
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -96,7 +104,7 @@ export function ResetPasswordPage() {
         password,
       })
       toast.success('Password reset successful. Please log in.')
-      navigate(config.loginPath, { replace: true })
+      navigate(ROUTE_PATHS.login, { replace: true })
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to reset password')
     } finally {
@@ -105,7 +113,7 @@ export function ResetPasswordPage() {
   }
 
   return (
-    <section className="login-shell mt-[2rem]">
+    <section className="login-shell">
       <div className="container">
         <div className="login-card">
           <aside className="login-aside">
@@ -127,18 +135,6 @@ export function ResetPasswordPage() {
             <p className="type-body text-muted">{config.subtitle}</p>
 
             <form onSubmit={handleSubmit} className="login-form">
-              <label className="type-label login-label">Reset Token</label>
-              <div className="login-input-with-icon">
-                <span className="material-symbols-outlined icon-sm">key</span>
-                <input
-                  type="text"
-                  placeholder="Paste reset token from email"
-                  value={resetToken}
-                  onChange={(event) => setResetToken(event.target.value)}
-                  required
-                />
-              </div>
-
               <label className="type-label login-label">New Password</label>
               <div className="login-password-field">
                 <input

@@ -14,7 +14,6 @@ type ForgotConfig = {
   asideAccent: string
   asideDescription: string
   loginPath: string
-  resetPath: string
   submitLabel: string
   successMessage: string
 }
@@ -22,51 +21,47 @@ type ForgotConfig = {
 const CONFIGS: Record<PortalKey, ForgotConfig> = {
   buyer: {
     title: 'Forgot Password',
-    subtitle: 'Enter your email address to receive a password reset OTP.',
+    subtitle: 'Enter your email address to reset your password.',
     asideTitle: 'Your Wallet,',
     asideAccent: 'Simplified',
     asideDescription:
       'Recover your customer account access securely and continue paying bills with confidence.',
-    loginPath: ROUTE_PATHS.buyer,
-    resetPath: ROUTE_PATHS.resetPasswordBuyer,
-    submitLabel: 'Send OTP',
-    successMessage: 'OTP sent to your email.',
+    loginPath: ROUTE_PATHS.login,
+    submitLabel: 'Send reset email',
+    successMessage: 'Password reset link sent. Check your email.',
   },
   agent: {
     title: 'Agent Forgot Password',
-    subtitle: 'Enter your agent email to receive a password reset OTP.',
+    subtitle: 'Enter your agent email to reset your password.',
     asideTitle: 'Agent',
     asideAccent: 'Operations',
     asideDescription:
       'Recover access to your field and retail agent portal securely.',
-    loginPath: ROUTE_PATHS.loginAgent,
-    resetPath: ROUTE_PATHS.resetPasswordAgent,
-    submitLabel: 'Send OTP',
-    successMessage: 'OTP sent to your email.',
+    loginPath: ROUTE_PATHS.login,
+    submitLabel: 'Send reset email',
+    successMessage: 'Password reset link sent. Check your email.',
   },
   biller: {
     title: 'Biller Forgot Password',
-    subtitle: 'Enter your biller admin email to receive a password reset OTP.',
+    subtitle: 'Enter your biller admin email to reset your password.',
     asideTitle: 'Corporate',
     asideAccent: 'Collections',
     asideDescription:
       'Recover access to your biller portal and continue managing collections.',
-    loginPath: ROUTE_PATHS.loginBiller,
-    resetPath: ROUTE_PATHS.resetPasswordBiller,
-    submitLabel: 'Send OTP',
-    successMessage: 'OTP sent to your email.',
+    loginPath: ROUTE_PATHS.login,
+    submitLabel: 'Send reset email',
+    successMessage: 'Password reset link sent. Check your email.',
   },
   admin: {
     title: 'Admin Forgot Password',
-    subtitle: 'Enter your admin email to receive a password reset OTP.',
+    subtitle: 'Enter your admin email to reset your password.',
     asideTitle: 'Platform',
     asideAccent: 'Administration',
     asideDescription:
       'Recover your secure admin portal access using your registered email.',
-    loginPath: ROUTE_PATHS.loginAdmin,
-    resetPath: ROUTE_PATHS.resetPasswordAdmin,
-    submitLabel: 'Send OTP',
-    successMessage: 'OTP sent to your email.',
+    loginPath: ROUTE_PATHS.login,
+    submitLabel: 'Send reset email',
+    successMessage: 'Password reset link sent. Check your email.',
   },
 }
 
@@ -91,7 +86,7 @@ export function ForgotPasswordPage() {
       setIsSubmitting(true)
       await requestPasswordReset(email.trim())
       toast.success(config.successMessage)
-      navigate(config.resetPath, { replace: true })
+      navigate(ROUTE_PATHS.home, { replace: true })
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : 'Failed to request password reset',
@@ -102,7 +97,7 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <section className="login-shell mt-[2rem]">
+    <section className="login-shell">
       <div className="container">
         <div className="login-card">
           <aside className="login-aside">

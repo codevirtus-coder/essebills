@@ -17,9 +17,10 @@ export function MainLayout() {
     pathname.startsWith("/admin") ||
     pathname.startsWith("/portal") ||
     pathname.startsWith("/checkout") ||
-    pathname.startsWith("/login/biller") ||
-    pathname.startsWith("/login/agent") ||
-    pathname.startsWith("/login/admin");
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/register") ||
+    pathname.startsWith("/forgot-password") ||
+    pathname.startsWith("/reset-password");
 
   return (
     <div className="app-shell">

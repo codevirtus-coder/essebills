@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { logoutBiller } from "../../auth/biller-auth.service";
 import { ROUTE_PATHS } from "../../../router/paths";
@@ -6,6 +6,9 @@ import UserProfile from "../../admin/components/UserProfile";
 import BillerStatCard from "../components/BillerStatCard";
 import BillerLogo from "../components/BillerLogo";
 import BillerNotificationMenu from "../components/BillerNotificationMenu";
+import { getCurrentUserProfile } from "../../auth/auth.service";
+import { getAuthSession, saveAuthSession } from "../../auth/auth.storage";
+import type { UserProfileDto } from "../../auth/dto/auth.dto";
 import "../styles/biller-portal.css";
 
 type BillerTab = "overview" | "collections" | "settlements" | "settings" | "profile";
@@ -95,6 +98,14 @@ const MOCK_SETTLEMENTS = [
 
 export function BillerDashboardPage() {
   const navigate = useNavigate();
+  const session = getAuthSession();
+  const [profile, setProfile] = useState<UserProfileDto | null>(session?.profile ?? null);
+  const displayName = useMemo(() => {
+    const first = profile?.firstName ?? "";
+    const last = profile?.lastName ?? "";
+    return `${first} ${last}`.trim() || profile?.username || "Biller";
+  }, [profile]);
+
   const [activeTab, setActiveTab] = useState<BillerTab>("overview");
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [notifConfig, setNotifConfig] = useState({
@@ -107,6 +118,26 @@ export function BillerDashboardPage() {
   const toggleNotif = (key: keyof typeof notifConfig) => {
     setNotifConfig((prev) => ({ ...prev, [key]: !prev[key] }));
   };
+
+  useEffect(() => {
+    if (profile) return;
+    let mounted = true;
+    getCurrentUserProfile()
+      .then((data) => {
+        if (!mounted) return;
+        setProfile(data);
+        if (session) {
+          saveAuthSession({ ...session, profile: data });
+        }
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setProfile(null);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [profile, session]);
 
   const onLogout = () => {
     logoutBiller();
@@ -320,7 +351,7 @@ export function BillerDashboardPage() {
                 <td className="px-10 py-6">
                   <p className="text-xs font-bold text-dark-text">{c.date}</p>
                   <p className="text-[9px] font-black text-neutral-text uppercase">
-                    {c.time} â€¢ {c.id}
+                    {c.time} • {c.id}
                   </p>
                 </td>
                 <td className="px-10 py-6 text-sm font-bold text-neutral-text">
@@ -691,10 +722,10 @@ export function BillerDashboardPage() {
               >
                 <div className="text-right hidden md:block">
                   <p className="text-xs font-black text-dark-text">
-                    Admin Portal
+                    {displayName}
                   </p>
                   <p className="text-[10px] text-neutral-text font-bold uppercase">
-                    Verified Entity
+                    {profile?.email ?? ''}
                   </p>
                 </div>
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
@@ -720,3 +751,4 @@ export function BillerDashboardPage() {
     </div>
   );
 }
+

@@ -3,6 +3,7 @@ import { useCurrentUser } from "../auth/useCurrentUser";
 import { AdminDashboardPage } from "../admin/pages/AdminDashboardPage";
 import { AgentDashboardPage } from "../agent/pages/AgentDashboardPage";
 import { BillerDashboardPage } from "../biller/pages/BillerDashboardPage";
+import { CustomerDashboardPage } from "../customer/pages/CustomerDashboardPage";
 import { ROUTE_PATHS } from "../../router/paths";
 
 export function UnifiedDashboardPage() {
@@ -24,6 +25,7 @@ export function UnifiedDashboardPage() {
     case "BILLER":
       return <BillerDashboardPage />;
     case "CUSTOMER":
+      return <CustomerDashboardPage />;
     default:
       return <Navigate to={ROUTE_PATHS.home} replace />;
   }

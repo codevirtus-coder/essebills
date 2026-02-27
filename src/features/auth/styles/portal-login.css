@@ -1,5 +1,8 @@
 .login-shell {
-  padding: calc(var(--nav-offset) + 1.2rem) 0 3rem;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: 3rem 0;
 }
 
 .login-card {
