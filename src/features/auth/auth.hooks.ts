@@ -1,1 +1,1 @@
-﻿export * from '../../lib/hooks/auth.hooks'
+﻿export * from './hooks/auth.hooks'

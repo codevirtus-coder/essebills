@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { logoutBiller } from "../../auth/biller-auth.service";
 import { ROUTE_PATHS } from "../../../router/paths";
 import UserProfile from "../../admin/components/UserProfile";
-import BillerStatCard from "../components/BillerStatCard";
-import BillerLogo from "../components/BillerLogo";
-import BillerNotificationMenu from "../components/BillerNotificationMenu";
+import StatCard from "../../../components/ui/StatCard";
+import Logo from "../../../components/ui/Logo";
+import NotificationMenu from "../../../components/ui/NotificationMenu";
 import { getCurrentUserProfile } from "../../auth/auth.service";
 import { getAuthSession, saveAuthSession } from "../../auth/auth.storage";
 import type { UserProfileDto } from "../../auth/dto/auth.dto";
@@ -152,7 +152,7 @@ export function BillerDashboardPage() {
   const renderOverview = () => (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <BillerStatCard
+        <StatCard
           label="Gross Collections"
           value="$12,280.50"
           change="+18.2% vs LW"
@@ -162,7 +162,7 @@ export function BillerDashboardPage() {
           chartPath="M0 25 Q 20 10, 40 20 T 80 5 T 100 15"
           strokeColor="#7e56c2"
         />
-        <BillerStatCard
+        <StatCard
           label="Total Deductions"
           value="-$420.00"
           change="3.4% Commission Avg"
@@ -172,7 +172,7 @@ export function BillerDashboardPage() {
           chartPath="M0 10 L 100 30"
           strokeColor="#ef4444"
         />
-        <BillerStatCard
+        <StatCard
           label="Net Settlement"
           value="$11,860.50"
           change="Pending Payout"
@@ -182,7 +182,7 @@ export function BillerDashboardPage() {
           chartPath="M0 25 L 20 15 L 40 22 L 100 2"
           strokeColor="#a3e635"
         />
-        <BillerStatCard
+        <StatCard
           label="Collection Points"
           value="42 Agents"
           change="Real-time Network"
@@ -587,7 +587,7 @@ export function BillerDashboardPage() {
       <div className="flex h-screen overflow-hidden">
         <aside className="hidden md:flex w-64 bg-white border-r border-neutral-light flex-col h-full shrink-0">
           <div className="p-8">
-            <BillerLogo className="h-9" />
+            <Logo className="h-9" />
           </div>
           <nav className="flex-1 px-4 space-y-1 mt-4">
             {[
@@ -635,7 +635,7 @@ export function BillerDashboardPage() {
             />
             <div className="absolute top-0 left-0 right-0 bg-white border-b border-neutral-light rounded-b-[2rem] shadow-2xl p-5 pt-6">
               <div className="flex items-center justify-between pb-4 border-b border-neutral-light">
-                <BillerLogo className="h-8" />
+                <Logo className="h-8" />
                 <button
                   type="button"
                   onClick={() => setIsMobileNavOpen(false)}
@@ -712,7 +712,7 @@ export function BillerDashboardPage() {
               </h2>
             </div>
             <div className="flex items-center gap-6">
-              <BillerNotificationMenu onReplenishFloat={() => {}} />
+              <NotificationMenu onReplenishFloat={() => {}} />
               <div className="h-10 w-[1px] bg-neutral-light" />
               <button
                 type="button"

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import StatCard from './StatCard';
+import StatCard from '../../../components/ui/StatCard';
 import { MOCK_STATS, MOCK_TRANSACTIONS, BILLER_PERFORMANCE, REVENUE_DATA, MOCK_AGENTS } from '../data/constants';
 import { TransactionStatus } from '../data/types';
 

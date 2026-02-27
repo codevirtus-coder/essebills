@@ -2,7 +2,7 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ADMIN_MENU_SECTIONS, ADMIN_PREFERENCE_ITEMS } from '../data/constants';
-import Logo from './Logo';
+import Logo from '../../../components/ui/Logo';
 import { ROUTE_PATHS } from '../../../router/paths';
 import type { AdminMenuItem } from '../data/types';
 

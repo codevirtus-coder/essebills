@@ -1,7 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import Sidebar from "../components/Sidebar";
-import Header from "../components/Header";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams, useParams } from "react-router-dom";
 import Dashboard from "../components/Dashboard";
 import UserProfile from "../components/UserProfile";
 import Reports from "../components/Reports";
@@ -33,7 +31,6 @@ import {
   getAllCgrateCredentials,
   getAllEconetCredentials,
   getAllEsolutionsAirtimeCredentials,
-  getAllHolidays,
   getAllNetoneEvdCredentials,
   getAllPesepayCredentials,
   getAllRongekaAccounts,
@@ -49,9 +46,8 @@ import {
   getAllTuitionProcessingFees,
   createTuitionProcessingFee,
 } from "../services";
-import { ADMIN_MENU_SECTIONS, ADMIN_PREFERENCE_ITEMS, INITIAL_FAQS } from "../data/constants";
+import { INITIAL_FAQS } from "../data/constants";
 import type { FAQItem } from "../data/types";
-import { clearAuthSession } from "../../auth/auth.storage";
 import { ROUTE_PATHS } from "../../../router/paths";
 import "../styles/admin-dashboard.css";
 
@@ -60,45 +56,35 @@ const ADMIN_ACTIVE_TAB_STORAGE_KEY = "admin_active_tab";
 
 export function AdminDashboardPage() {
   const navigate = useNavigate();
+  const { tab: urlTab } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [settingsInitialTab, setSettingsInitialTab] = useState<string>("commissions");
   const [faqs, setFaqs] = useState<FAQItem[]>(INITIAL_FAQS);
-  const activeTab: AdminTab =
-    searchParams.get("tab") ??
-    window.localStorage.getItem(ADMIN_ACTIVE_TAB_STORAGE_KEY) ??
-    "dashboard";
+
+  // Support both URL params and query params for backwards compatibility
+  const activeTab: AdminTab = urlTab || searchParams.get("tab") || "dashboard";
 
   useEffect(() => {
-    if (!searchParams.get("tab")) {
+    // Sync URL params if coming from old routing
+    if (!urlTab && !searchParams.get("tab")) {
       const next = new URLSearchParams(searchParams);
       next.set("tab", activeTab);
       setSearchParams(next, { replace: true });
     }
-  }, [activeTab, searchParams, setSearchParams]);
-
-  const handleBack = () => {
-    if (activeTab !== "dashboard") {
-      handleTabChange("dashboard");
-      return;
-    }
-    navigate(ROUTE_PATHS.home);
-  };
-
-  const handleLogout = () => {
-    clearAuthSession();
-    navigate(ROUTE_PATHS.loginAdmin, { replace: true });
-  };
+  }, [activeTab, searchParams, setSearchParams, urlTab]);
 
   const handleTabChange = (tab: AdminTab) => {
     if (tab === "settings") {
       setSettingsInitialTab("commissions");
     }
     window.localStorage.setItem(ADMIN_ACTIVE_TAB_STORAGE_KEY, tab);
-    const next = new URLSearchParams(searchParams);
-    next.set("tab", tab);
-    setSearchParams(next, { replace: true });
-    setIsMobileNavOpen(false);
+    
+    // Navigate with URL params
+    if (tab === "dashboard") {
+      navigate("/portal-admin");
+    } else {
+      navigate(`/portal-admin/${tab}`);
+    }
   };
 
   const renderContent = () => {
@@ -426,129 +412,10 @@ export function AdminDashboardPage() {
     }
   };
 
+  // Only render content - the shell is now provided by DashboardLayout
   return (
-    <div className="flex h-screen overflow-hidden bg-background-light dark:bg-background-dark animate-in fade-in duration-500">
-      <Sidebar
-        className="hidden md:flex"
-        activeTab={activeTab}
-        setActiveTab={(tab) => handleTabChange(tab as AdminTab)}
-        onSignOut={handleLogout}
-      />
-
-      {isMobileNavOpen ? (
-        <div className="fixed inset-0 z-[120] md:hidden">
-          <button
-            type="button"
-            onClick={() => setIsMobileNavOpen(false)}
-            className="absolute inset-0 bg-slate-900/35"
-            aria-label="Close navigation"
-          />
-          <div className="absolute top-0 left-0 right-0 bg-white border-b border-neutral-light rounded-b-[2rem] shadow-2xl p-5 pt-6">
-            <div className="pb-4 border-b border-neutral-light flex items-center justify-between">
-              <p className="text-xs font-black uppercase tracking-widest text-neutral-text">
-                Navigation
-              </p>
-              <button
-                type="button"
-                onClick={() => setIsMobileNavOpen(false)}
-                className="w-9 h-9 rounded-xl bg-neutral-light text-neutral-text flex items-center justify-center"
-                aria-label="Close menu"
-              >
-                <span className="material-symbols-outlined text-lg">close</span>
-              </button>
-            </div>
-            <nav className="pt-4 space-y-1 max-h-[70vh] overflow-y-auto hide-scrollbar">
-              {ADMIN_MENU_SECTIONS.map((section) => (
-                <div key={section.id} className="space-y-1">
-                  {section.title ? (
-                    <p className="px-1 text-[10px] font-black uppercase tracking-widest text-neutral-text/60 pt-2">
-                      {section.title}
-                    </p>
-                  ) : null}
-                  {section.items.map((item) => (
-                    <div key={item.id}>
-                      <button
-                        onClick={() =>
-                          handleTabChange(
-                            (item.children?.length ? item.children[0].id : item.id) as AdminTab,
-                          )
-                        }
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${
-                          activeTab === item.id || item.children?.some((child) => child.id === activeTab)
-                            ? "bg-primary text-white shadow-lg"
-                            : "text-neutral-text hover:bg-neutral-light"
-                        }`}
-                      >
-                        <span className="material-symbols-outlined">{item.icon}</span>
-                        {item.label}
-                      </button>
-                      {item.children?.length ? (
-                        <div className="ml-6 space-y-1 mt-1">
-                          {item.children.map((child) => (
-                            <button
-                              key={child.id}
-                              onClick={() => handleTabChange(child.id as AdminTab)}
-                              className={`w-full text-left px-4 py-2 rounded-xl text-sm font-semibold ${
-                                activeTab === child.id
-                                  ? "bg-primary text-white"
-                                  : "text-neutral-text hover:bg-neutral-light/50"
-                              }`}
-                            >
-                              {child.label}
-                            </button>
-                          ))}
-                        </div>
-                      ) : null}
-                    </div>
-                  ))}
-                </div>
-              ))}
-
-              <div className="pt-3 pb-1">
-                <p className="px-1 text-[10px] font-black uppercase tracking-widest text-neutral-text/60">
-                  Preferences
-                </p>
-              </div>
-              {ADMIN_PREFERENCE_ITEMS.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => handleTabChange(item.id as AdminTab)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${
-                    activeTab === item.id
-                      ? "bg-primary text-white shadow-lg"
-                      : "text-neutral-text hover:bg-neutral-light"
-                  }`}
-                >
-                  <span className="material-symbols-outlined">{item.icon}</span>
-                  {item.label}
-                </button>
-              ))}
-
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold text-red-500 hover:bg-red-50 mt-3"
-              >
-                <span className="material-symbols-outlined">logout</span>
-                Sign Out
-              </button>
-            </nav>
-          </div>
-        </div>
-      ) : null}
-
-      <main className="flex-1 flex flex-col min-w-0 overflow-y-auto relative">
-        <Header
-          onBack={handleBack}
-          onProfileClick={() => handleTabChange("profile")}
-          showBack={activeTab !== "dashboard"}
-          onToggleMobileNav={() => setIsMobileNavOpen((prev) => !prev)}
-          isMobileNavOpen={isMobileNavOpen}
-        />
-
-        <div className="flex-1">{renderContent()}</div>
-      </main>
+    <div className="animate-in fade-in duration-500">
+      {renderContent()}
     </div>
   );
 }
-
-

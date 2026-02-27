@@ -1,22 +1,29 @@
 import { createBrowserRouter, type RouteObject, Navigate } from "react-router-dom";
 import { MainLayout } from "../layouts/MainLayout";
-import { HomePage } from "../pages/HomePage";
+import { DashboardLayout } from "../layouts/DashboardLayout";
+import { HomePage } from "../features/landing/pages/HomePage";
 import { EmptyPage } from "../pages/EmptyPage";
 import { UnifiedDashboardPage } from "../features/portal/UnifiedDashboardPage";
 import { PortalProfilePage } from "../features/portal/PortalProfilePage";
-import { LoginPage } from "../pages/LoginPage";
-import { RegisterPage } from "../pages/RegisterPage";
-import { BuyerRegisterPage } from "../pages/BuyerRegisterPage";
-import { PaymentCheckoutPage } from "../pages/PaymentCheckoutPage";
-import { AgentRegisterPage } from "../pages/AgentRegisterPage";
-import { BillerRegisterPage } from "../pages/BillerRegisterPage";
-import { AdminAccessRequestPage } from "../pages/AdminAccessRequestPage";
-import { ForgotPasswordPage } from "../pages/ForgotPasswordPage";
-import { ResetPasswordPage } from "../pages/ResetPasswordPage";
+import { LoginPage } from "../features/auth/pages/LoginPage";
+import { RegisterPage } from "../features/auth/pages/RegisterPage";
+import { BuyerRegisterPage } from "../features/auth/pages/BuyerRegisterPage";
+import { PaymentCheckoutPage } from "../features/landing/pages/PaymentCheckoutPage";
+import { AgentRegisterPage } from "../features/auth/pages/AgentRegisterPage";
+import { BillerRegisterPage } from "../features/auth/pages/BillerRegisterPage";
+import { AdminAccessRequestPage } from "../features/auth/pages/AdminAccessRequestPage";
+import { ForgotPasswordPage } from "../features/auth/pages/ForgotPasswordPage";
+import { ResetPasswordPage } from "../features/auth/pages/ResetPasswordPage";
 import { NotFoundPage } from "../pages/NotFoundPage";
 import { RequireAuth } from "./RequireAuth";
 import { ROUTE_PATHS } from "./paths";
 import { UnauthorizedPage } from "../pages/UnauthorizedPage";
+
+// Dashboard pages
+import { AdminDashboardPage } from "../features/admin/pages/AdminDashboardPage";
+import { AgentDashboardPage } from "../features/agent/pages/AgentDashboardPage";
+import { BillerDashboardPage } from "../features/biller/pages/BillerDashboardPage";
+import { CustomerDashboardPage } from "../features/customer/pages/CustomerDashboardPage";
 
 const routes: RouteObject[] = [
   {
@@ -47,6 +54,7 @@ const routes: RouteObject[] = [
         path: "admin",
         element: <Navigate to={ROUTE_PATHS.portal} replace />,
       },
+      // Unified portal routes (without shell, for simple redirects)
       {
         path: "portal",
         element: <RequireAuth redirectTo={ROUTE_PATHS.login} />,
@@ -58,6 +66,86 @@ const routes: RouteObject[] = [
           {
             path: "profile",
             element: <PortalProfilePage />,
+          },
+        ],
+      },
+      // Admin dashboard - uses DashboardLayout with group guard
+      {
+        path: "portal-admin",
+        element: <RequireAuth redirectTo={ROUTE_PATHS.login} allowedGroups={['ADMIN']} />,
+        children: [
+          {
+            element: <DashboardLayout />,
+            children: [
+              {
+                index: true,
+                element: <AdminDashboardPage />,
+              },
+              {
+                path: ":tab",
+                element: <AdminDashboardPage />,
+              },
+            ],
+          },
+        ],
+      },
+      // Agent dashboard - uses DashboardLayout with group guard
+      {
+        path: "portal-agent",
+        element: <RequireAuth redirectTo={ROUTE_PATHS.login} allowedGroups={['AGENT']} />,
+        children: [
+          {
+            element: <DashboardLayout />,
+            children: [
+              {
+                index: true,
+                element: <AgentDashboardPage />,
+              },
+              {
+                path: ":tab",
+                element: <AgentDashboardPage />,
+              },
+            ],
+          },
+        ],
+      },
+      // Biller dashboard - uses DashboardLayout with group guard
+      {
+        path: "portal-biller",
+        element: <RequireAuth redirectTo={ROUTE_PATHS.login} allowedGroups={['BILLER']} />,
+        children: [
+          {
+            element: <DashboardLayout />,
+            children: [
+              {
+                index: true,
+                element: <BillerDashboardPage />,
+              },
+              {
+                path: ":tab",
+                element: <BillerDashboardPage />,
+              },
+            ],
+          },
+        ],
+      },
+      // Customer dashboard - uses DashboardLayout with group guard
+      {
+        path: "portal-customer",
+        element: <RequireAuth redirectTo={ROUTE_PATHS.login} allowedGroups={['CUSTOMER']} />,
+        children: [
+          {
+            element: <DashboardLayout />,
+            children: [
+              {
+                index: true,
+                element: <CustomerDashboardPage />,
+              },
+              {
+                path: ":tab",
+                element: <CustomerDashboardPage />,
+              },
+            ],
           },
         ],
       },
@@ -130,4 +218,3 @@ const routes: RouteObject[] = [
 ];
 
 export const router = createBrowserRouter(routes);
-

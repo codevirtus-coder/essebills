@@ -1,1 +1,1 @@
-export * from '../../lib/hooks/useCurrentUser'
+export * from './hooks/useCurrentUser'

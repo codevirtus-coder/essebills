@@ -1,8 +1,8 @@
 ﻿
 import React, { useEffect, useMemo, useState } from 'react';
-import StatCard from '../components/StatCard';
-import Logo from '../components/Logo';
-import NotificationMenu from '../components/NotificationMenu';
+import StatCard from '../../../components/ui/StatCard';
+import Logo from '../../../components/ui/Logo';
+import NotificationMenu from '../../../components/ui/NotificationMenu';
 import { INITIAL_CATEGORIES } from '../constants';
 import { useNavigate } from 'react-router-dom';
 import UserProfile from '../../admin/components/UserProfile';

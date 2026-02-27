@@ -1,57 +1,30 @@
+import { useMemo } from 'react'
+import NotificationMenu from '../components/ui/NotificationMenu'
+import { useCurrentUser } from '../features/auth/hooks/useCurrentUser'
+import type { UserGroup } from '../features/auth/dto/auth.dto'
 
-import React, { useEffect, useMemo, useState } from 'react';
-import NotificationMenu from '../../../components/ui/NotificationMenu';
-import { getAuthSession, saveAuthSession } from '../../auth/auth.storage';
-import { getCurrentUserProfile } from '../../auth/auth.service';
-import type { UserProfileDto } from '../../auth/dto/auth.dto';
-
-interface HeaderProps {
-  onBack?: () => void;
-  onProfileClick?: () => void;
-  showBack?: boolean;
-  onToggleMobileNav?: () => void;
-  isMobileNavOpen?: boolean;
+interface DashboardHeaderProps {
+  onToggleMobileNav?: () => void
+  isMobileNavOpen?: boolean
+  onProfileClick?: () => void
 }
 
-const Header: React.FC<HeaderProps> = ({
-  onBack,
-  onProfileClick,
-  showBack = true,
+export function DashboardHeader({
   onToggleMobileNav,
   isMobileNavOpen = false,
-}) => {
-  const session = getAuthSession();
-  const [profile, setProfile] = useState<UserProfileDto | null>(session?.profile ?? null);
-
-  useEffect(() => {
-    if (profile) return;
-    let mounted = true;
-    getCurrentUserProfile()
-      .then((data) => {
-        if (!mounted) return;
-        setProfile(data);
-        if (session) {
-          saveAuthSession({ ...session, profile: data });
-        }
-      })
-      .catch(() => {
-        if (!mounted) return;
-        setProfile(null);
-      });
-    return () => {
-      mounted = false;
-    };
-  }, [profile, session]);
+  onProfileClick,
+}: DashboardHeaderProps) {
+  const { profile, group, loading } = useCurrentUser()
 
   const displayName = useMemo(() => {
-    const first = profile?.firstName ?? '';
-    const last = profile?.lastName ?? '';
-    return `${first} ${last}`.trim() || profile?.username || 'User';
-  }, [profile]);
+    const first = profile?.firstName ?? ''
+    const last = profile?.lastName ?? ''
+    return `${first} ${last}`.trim() || profile?.username || 'User'
+  }, [profile])
 
   const displayRole = useMemo(() => {
-    return profile?.group?.name ? profile.group.name.replace(/_/g, ' ') : 'User';
-  }, [profile]);
+    return group ? group.replace(/_/g, ' ') : profile?.group?.name?.replace(/_/g, ' ') || 'User'
+  }, [group, profile])
 
   return (
     <header
@@ -80,7 +53,9 @@ const Header: React.FC<HeaderProps> = ({
           className="flex items-center gap-3 cursor-pointer group"
         >
           <div className="text-right hidden sm:block">
-            <p className="text-xs font-bold text-dark-text dark:text-white">{displayName}</p>
+            <p className="text-xs font-bold text-dark-text dark:text-white">
+              {loading ? 'Loading...' : displayName}
+            </p>
             <p className="text-[10px] text-neutral-text font-medium">{displayRole}</p>
           </div>
           <div 
@@ -90,8 +65,5 @@ const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
     </header>
-  );
-};
-
-export default Header;
-
+  )
+}
