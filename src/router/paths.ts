@@ -7,6 +7,7 @@ export const ROUTE_PATHS = {
   biller: '/biller',
   agent: '/agent',
   admin: '/admin',
+  portal: '/portal',
   buyer: '/buyer',
   loginBiller: '/login/biller',
   loginAgent: '/login/agent',
@@ -48,11 +49,11 @@ export function getDashboardRouteByRole(role: UserRole): string {
 export function getDashboardRouteByGroup(group: UserGroup): string {
   switch (group) {
     case 'ADMIN':
-      return ROUTE_PATHS.admin
+      return ROUTE_PATHS.portal
     case 'AGENT':
-      return ROUTE_PATHS.agent
+      return ROUTE_PATHS.portal
     case 'BILLER':
-      return ROUTE_PATHS.biller
+      return ROUTE_PATHS.portal
     case 'CUSTOMER':
       return ROUTE_PATHS.home
     default:

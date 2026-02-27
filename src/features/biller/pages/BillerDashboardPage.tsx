@@ -2,12 +2,13 @@
 import { useNavigate } from "react-router-dom";
 import { logoutBiller } from "../../auth/biller-auth.service";
 import { ROUTE_PATHS } from "../../../router/paths";
+import UserProfile from "../../admin/components/UserProfile";
 import BillerStatCard from "../components/BillerStatCard";
 import BillerLogo from "../components/BillerLogo";
 import BillerNotificationMenu from "../components/BillerNotificationMenu";
 import "../styles/biller-portal.css";
 
-type BillerTab = "overview" | "collections" | "settlements" | "settings";
+type BillerTab = "overview" | "collections" | "settlements" | "settings" | "profile";
 
 const COLLECTION_DATA = [
   { day: "Mon", amount: 12400 },
@@ -109,7 +110,7 @@ export function BillerDashboardPage() {
 
   const onLogout = () => {
     logoutBiller();
-    navigate(ROUTE_PATHS.loginBiller, { replace: true });
+    navigate(ROUTE_PATHS.login, { replace: true });
   };
 
   const handleTabChange = (tab: BillerTab) => {
@@ -566,7 +567,7 @@ export function BillerDashboardPage() {
                 label: "Settlements",
                 icon: "account_balance",
               },
-              { id: "settings", label: "Portal Config", icon: "settings" },
+              { id: "profile", label: "Profile", icon: "person" },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -628,7 +629,7 @@ export function BillerDashboardPage() {
                     label: "Settlements",
                     icon: "account_balance",
                   },
-                  { id: "settings", label: "Portal Config", icon: "settings" },
+                  { id: "profile", label: "Profile", icon: "person" },
                 ].map((tab) => (
                   <button
                     key={tab.id}
@@ -682,7 +683,12 @@ export function BillerDashboardPage() {
             <div className="flex items-center gap-6">
               <BillerNotificationMenu onReplenishFloat={() => {}} />
               <div className="h-10 w-[1px] bg-neutral-light" />
-              <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => handleTabChange("profile")}
+                className="flex items-center gap-3"
+                aria-label="Open profile"
+              >
                 <div className="text-right hidden md:block">
                   <p className="text-xs font-black text-dark-text">
                     Admin Portal
@@ -696,7 +702,7 @@ export function BillerDashboardPage() {
                     corporate_fare
                   </span>
                 </div>
-              </div>
+              </button>
             </div>
           </div>
 
@@ -704,6 +710,11 @@ export function BillerDashboardPage() {
           {activeTab === "collections" && renderCollections()}
           {activeTab === "settlements" && renderSettlements()}
           {activeTab === "settings" && renderSettings()}
+          {activeTab === "profile" && (
+            <div className="animate-in fade-in duration-300">
+              <UserProfile />
+            </div>
+          )}
         </main>
       </div>
     </div>

@@ -5,6 +5,7 @@ import BrandLogo from "./BrandLogo";
 import { ROUTE_PATHS } from "../router/paths";
 import {
   clearAuthSession,
+  getAuthSession,
   isAuthenticated,
   subscribeToAuthChanges,
 } from "../features/auth/auth.storage";
@@ -20,10 +21,12 @@ const navLinks = [
 
 export function Navbar() {
   const [authenticated, setAuthenticated] = useState(() => isAuthenticated());
+  const [session, setSession] = useState(() => getAuthSession());
 
   useEffect(() => {
     return subscribeToAuthChanges(() => {
       setAuthenticated(isAuthenticated());
+      setSession(getAuthSession());
     });
   }, []);
 
@@ -53,13 +56,23 @@ export function Navbar() {
             ))}
             <div className="nav-divider" />
             {authenticated ? (
-              <NavLink
-                to={ROUTE_PATHS.login}
-                className="button button-ghost"
-                reloadDocument
-              >
-                Login
-              </NavLink>
+              session?.group === "CUSTOMER" ? (
+                <button
+                  type="button"
+                  className="button button-ghost"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </button>
+              ) : (
+                <NavLink
+                  to={ROUTE_PATHS.login}
+                  className="button button-ghost"
+                  reloadDocument
+                >
+                  Login
+                </NavLink>
+              )
             ) : (
               <>
                 <NavLink

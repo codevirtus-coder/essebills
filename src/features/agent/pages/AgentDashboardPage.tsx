@@ -1,11 +1,14 @@
 ﻿
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import StatCard from '../components/StatCard';
 import Logo from '../components/Logo';
 import NotificationMenu from '../components/NotificationMenu';
 import { INITIAL_CATEGORIES } from '../constants';
 import { useNavigate } from 'react-router-dom';
-import { clearAuthSession } from '../../auth/auth.storage';
+import UserProfile from '../../admin/components/UserProfile';
+import { clearAuthSession, getAuthSession, saveAuthSession } from '../../auth/auth.storage';
+import { getCurrentUserProfile } from '../../auth/auth.service';
+import type { UserProfileDto } from '../../auth/dto/auth.dto';
 import { ROUTE_PATHS } from '../../../router/paths';
 import '../styles/agent-dashboard.css';
 
@@ -43,7 +46,13 @@ const FLOAT_HISTORY: FloatHistory[] = [
 
 export function AgentDashboardPage() {
   const navigate = useNavigate();
-  const agentName = 'Tinashe Chando';
+  const session = getAuthSession();
+  const [profile, setProfile] = useState<UserProfileDto | null>(session?.profile ?? null);
+  const agentName = useMemo(() => {
+    const first = profile?.firstName ?? '';
+    const last = profile?.lastName ?? '';
+    return `${first} ${last}`.trim() || profile?.username || 'Agent';
+  }, [profile]);
   const onLogout = () => {
     clearAuthSession();
     navigate(ROUTE_PATHS.loginAgent, { replace: true });
@@ -53,7 +62,7 @@ export function AgentDashboardPage() {
     setActiveTab('sell');
     setSellStep('select');
   };
-  const [activeTab, setActiveTab] = useState<'overview' | 'sell' | 'commissions' | 'schedule' | 'float' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'sell' | 'commissions' | 'schedule' | 'float' | 'settings' | 'profile'>('overview');
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [floatBalance, setFloatBalance] = useState(452.10);
   const [commissionBalance, setCommissionBalance] = useState(24.40);
@@ -77,6 +86,26 @@ export function AgentDashboardPage() {
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [updateFeedback, setUpdateFeedback] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (profile) return;
+    let mounted = true;
+    getCurrentUserProfile()
+      .then((data) => {
+        if (!mounted) return;
+        setProfile(data);
+        if (session) {
+          saveAuthSession({ ...session, profile: data });
+        }
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setProfile(null);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [profile, session]);
+
   // Fulfillment Interaction Logic
   const [fulfillmentStatus, setFulfillmentStatus] = useState<string | null>(null);
 
@@ -86,11 +115,11 @@ export function AgentDashboardPage() {
     { id: 'commissions', label: 'Earnings Analysis', icon: 'payments' },
     { id: 'schedule', label: 'Commission Schedule', icon: 'table_chart' },
     { id: 'float', label: 'Float Wallet', icon: 'account_balance_wallet' },
-    { id: 'settings', label: 'Shop Profile', icon: 'settings' },
+    { id: 'profile', label: 'Profile', icon: 'person' },
   ] as const;
 
   const handleAgentTabChange = (
-    tab: 'overview' | 'sell' | 'commissions' | 'schedule' | 'float' | 'settings',
+    tab: 'overview' | 'sell' | 'commissions' | 'schedule' | 'float' | 'settings' | 'profile',
   ) => {
     setActiveTab(tab);
     setSellStep('select');
@@ -382,11 +411,11 @@ export function AgentDashboardPage() {
          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-2">
                <label className="text-[10px] font-black text-neutral-text uppercase">Shop Name</label>
-               <input type="text" defaultValue="TC General Store" className="w-full bg-[#f8fafc] border-none rounded-2xl p-4 text-sm font-bold" />
+               <input type="text" defaultValue={profile?.shopName ?? ''} className="w-full bg-[#f8fafc] border-none rounded-2xl p-4 text-sm font-bold" />
             </div>
             <div className="space-y-2">
                <label className="text-[10px] font-black text-neutral-text uppercase">Location</label>
-               <input type="text" defaultValue="Harare CBD" className="w-full bg-[#f8fafc] border-none rounded-2xl p-4 text-sm font-bold" />
+               <input type="text" defaultValue={profile?.shopLocation ?? ''} className="w-full bg-[#f8fafc] border-none rounded-2xl p-4 text-sm font-bold" />
             </div>
             <div className="space-y-2">
                <label className="text-[10px] font-black text-neutral-text uppercase">Agent Owner</label>
@@ -394,7 +423,7 @@ export function AgentDashboardPage() {
             </div>
             <div className="space-y-2">
                <label className="text-[10px] font-black text-neutral-text uppercase">Mobile Number</label>
-               <input type="tel" defaultValue="+263 771 223 994" className="w-full bg-[#f8fafc] border-none rounded-2xl p-4 text-sm font-bold" />
+               <input type="tel" defaultValue={profile?.phoneNumber ?? ''} className="w-full bg-[#f8fafc] border-none rounded-2xl p-4 text-sm font-bold" />
             </div>
          </div>
       </section>
@@ -436,7 +465,7 @@ export function AgentDashboardPage() {
            className="bg-primary text-white px-12 py-5 rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-2xl shadow-primary/20 hover:scale-[1.02] transition-all flex items-center gap-2"
          >
             {isUpdatingProfile && <span className="material-symbols-outlined animate-spin text-sm">sync</span>}
-            {isUpdatingProfile ? 'Updating Shop...' : 'Update Shop Profile'}
+            {isUpdatingProfile ? 'Updating Profile...' : 'Update Profile'}
          </button>
       </div>
     </div>
@@ -444,7 +473,7 @@ export function AgentDashboardPage() {
 
   return (
     <div className="min-h-screen bg-background-light font-display text-dark-text flex">
-      <aside className="hidden md:flex w-64 bg-white border-r border-neutral-light flex-col h-screen shrink-0 sticky top-0">
+      <aside className="hidden md:flex w-64 bg-white border-r border-neutral-light flex-col shrink-0 fixed top-0 left-0 bottom-0 overflow-hidden">
         <div className="p-8"><Logo className="h-9" /></div>
         <nav className="flex-1 px-4 space-y-1">
           {navItems.map(item => (
@@ -510,45 +539,55 @@ export function AgentDashboardPage() {
         </div>
       ) : null}
 
-      <main className="flex-1 p-8 space-y-8 overflow-y-auto">
-        <div className="flex items-center justify-between sticky top-0 bg-background-light/80 backdrop-blur-md z-10 py-2">
-           <div>
-              <button
-                type="button"
-                onClick={() => setIsMobileNavOpen((prev) => !prev)}
-                className="md:hidden mb-3 w-10 h-10 rounded-xl bg-white border border-neutral-light text-neutral-text flex items-center justify-center shadow-sm"
-                aria-label={isMobileNavOpen ? 'Close navigation' : 'Open navigation'}
-              >
-                <span className="material-symbols-outlined">
-                  {isMobileNavOpen ? 'close' : 'menu'}
-                </span>
-              </button>
-              <h2 className="text-3xl font-black tracking-tight">
-                {activeTab === 'overview' ? 'Agent Overview' : 
-                 activeTab === 'sell' ? 'Sales Console' : 
-                 activeTab === 'commissions' ? 'Earnings Analysis' : 
-                 activeTab === 'schedule' ? 'Commission Schedule' : 
-                 activeTab === 'float' ? 'Float Wallet' : 'Shop Profile'}
-              </h2>
-              <p className="text-neutral-text font-medium mt-1">Partner Agent: {agentName}</p>
-           </div>
-           <div className="flex items-center gap-6">
-              {onBulkSale && (
-                <button 
-                  onClick={onBulkSale}
-                  className="bg-accent-green text-dark-text px-8 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center gap-2 hover:scale-105 transition-all shadow-xl shadow-accent-green/10"
+      <main className="flex-1 p-8 space-y-8 overflow-y-auto md:ml-64">
+        {activeTab !== 'profile' ? (
+          <div className="flex items-center justify-between sticky top-0 bg-background-light/80 backdrop-blur-md z-10 py-2">
+             <div>
+                <button
+                  type="button"
+                  onClick={() => setIsMobileNavOpen((prev) => !prev)}
+                  className="md:hidden mb-3 w-10 h-10 rounded-xl bg-white border border-neutral-light text-neutral-text flex items-center justify-center shadow-sm"
+                  aria-label={isMobileNavOpen ? 'Close navigation' : 'Open navigation'}
                 >
-                  <span className="material-symbols-outlined text-lg">batch_prediction</span>
-                  BULK SALE
+                  <span className="material-symbols-outlined">
+                    {isMobileNavOpen ? 'close' : 'menu'}
+                  </span>
                 </button>
-              )}
-              <div className="text-right hidden md:block">
-                 <p className="text-[10px] font-black text-neutral-text/50 uppercase tracking-widest">AVAILABLE FLOAT</p>
-                 <p className="text-lg font-black text-primary tracking-tighter">${(floatBalance || 0).toFixed(2)}</p>
-              </div>
-              <NotificationMenu onReplenishFloat={onAddFloat} />
-           </div>
-        </div>
+                <h2 className="text-3xl font-black tracking-tight">
+                  {activeTab === 'overview' ? 'Agent Overview' : 
+                   activeTab === 'sell' ? 'Sales Console' : 
+                   activeTab === 'commissions' ? 'Earnings Analysis' : 
+                   activeTab === 'schedule' ? 'Commission Schedule' : 
+                   activeTab === 'float' ? 'Float Wallet' : 'Profile'}
+                </h2>
+                <p className="text-neutral-text font-medium mt-1">Partner Agent: {agentName}</p>
+             </div>
+             <div className="flex items-center gap-6">
+                {onBulkSale && (
+                  <button 
+                    onClick={onBulkSale}
+                    className="bg-accent-green text-dark-text px-8 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center gap-2 hover:scale-105 transition-all shadow-xl shadow-accent-green/10"
+                  >
+                    <span className="material-symbols-outlined text-lg">batch_prediction</span>
+                    BULK SALE
+                  </button>
+                )}
+                <div className="text-right hidden md:block">
+                   <p className="text-[10px] font-black text-neutral-text/50 uppercase tracking-widest">AVAILABLE FLOAT</p>
+                   <p className="text-lg font-black text-primary tracking-tighter">${(floatBalance || 0).toFixed(2)}</p>
+                </div>
+                <NotificationMenu onReplenishFloat={onAddFloat} />
+                <button
+                  type="button"
+                  onClick={() => handleAgentTabChange('profile')}
+                  className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors"
+                  aria-label="Open profile"
+                >
+                  <span className="material-symbols-outlined">person</span>
+                </button>
+             </div>
+          </div>
+        ) : null}
 
         <div className="pb-12">
           {activeTab === 'overview' && (
@@ -750,6 +789,11 @@ export function AgentDashboardPage() {
           {activeTab === 'schedule' && renderSchedule()}
           {activeTab === 'float' && renderFloat()}
           {activeTab === 'settings' && renderSettings()}
+          {activeTab === 'profile' && (
+            <div className="animate-in fade-in duration-300">
+              <UserProfile />
+            </div>
+          )}
         </div>
       </main>
     </div>

@@ -1,10 +1,9 @@
-import { createBrowserRouter, type RouteObject } from "react-router-dom";
+import { createBrowserRouter, type RouteObject, Navigate } from "react-router-dom";
 import { MainLayout } from "../layouts/MainLayout";
 import { HomePage } from "../pages/HomePage";
 import { EmptyPage } from "../pages/EmptyPage";
-import { BillerDashboardPage } from "../features/biller/pages/BillerDashboardPage";
-import { AgentDashboardPage } from "../features/agent/pages/AgentDashboardPage";
-import { AdminDashboardPage } from "../features/admin/pages/AdminDashboardPage";
+import { UnifiedDashboardPage } from "../features/portal/UnifiedDashboardPage";
+import { PortalProfilePage } from "../features/portal/PortalProfilePage";
 import { LoginPage } from "../pages/LoginPage";
 import { RegisterPage } from "../pages/RegisterPage";
 import { BuyerRegisterPage } from "../pages/BuyerRegisterPage";
@@ -38,46 +37,27 @@ const routes: RouteObject[] = [
       },
       {
         path: "biller",
-        element: (
-          <RequireAuth
-            redirectTo={ROUTE_PATHS.login}
-            allowedRoles={["BILLER"]}
-          />
-        ),
-        children: [
-          {
-            index: true,
-            element: <BillerDashboardPage />,
-          },
-        ],
+        element: <Navigate to={ROUTE_PATHS.portal} replace />,
       },
       {
         path: "agent",
-        element: (
-          <RequireAuth
-            redirectTo={ROUTE_PATHS.login}
-            allowedRoles={["AGENT"]}
-          />
-        ),
-        children: [
-          {
-            index: true,
-            element: <AgentDashboardPage />,
-          },
-        ],
+        element: <Navigate to={ROUTE_PATHS.portal} replace />,
       },
       {
         path: "admin",
-        element: (
-          <RequireAuth
-            redirectTo={ROUTE_PATHS.login}
-            allowedRoles={["ADMIN"]}
-          />
-        ),
+        element: <Navigate to={ROUTE_PATHS.portal} replace />,
+      },
+      {
+        path: "portal",
+        element: <RequireAuth redirectTo={ROUTE_PATHS.login} />,
         children: [
           {
             index: true,
-            element: <AdminDashboardPage />,
+            element: <UnifiedDashboardPage />,
+          },
+          {
+            path: "profile",
+            element: <PortalProfilePage />,
           },
         ],
       },
