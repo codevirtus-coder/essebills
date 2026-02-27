@@ -46,4 +46,4 @@ const BillerStatCard: React.FC<BillerStatCardProps> = ({
   );
 };
 
-export default BillerStatCard;
+export { default } from '../../../components/ui/StatCard'

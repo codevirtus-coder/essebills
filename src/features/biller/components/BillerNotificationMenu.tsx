@@ -142,4 +142,4 @@ const BillerNotificationMenu: React.FC<BillerNotificationMenuProps> = ({
   );
 };
 
-export default BillerNotificationMenu;
+export { default } from '../../../components/ui/NotificationMenu'

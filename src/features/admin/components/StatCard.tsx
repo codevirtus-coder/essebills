@@ -38,5 +38,5 @@ const StatCard: React.FC<StatCardProps> = ({
   );
 };
 
-export default StatCard;
+export { default } from '../../../components/ui/StatCard'
 

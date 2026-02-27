@@ -126,19 +126,14 @@ function fieldsByProduct(name: string, category: string): BillerCardProps["field
   return DEFAULT_FIELDS;
 }
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? "https://api.test.rongeka.com";
-const PRODUCTS_ENDPOINT = `${API_BASE_URL}/v1/products/all`;
+import { apiFetch } from "../api/apiClient";
 
 async function fetchProducts(): Promise<ApiProduct[]> {
-  const response = await fetch(PRODUCTS_ENDPOINT);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch products (${response.status})`);
+  try {
+    return await apiFetch<ApiProduct[]>('/v1/products/all')
+  } catch (err) {
+    return []
   }
-
-  const payload: unknown = await response.json();
-  if (Array.isArray(payload)) return payload as ApiProduct[];
-  return [];
 }
 
 function CategoryPill({ icon, label, active = false, onClick }: CategoryPillProps & { onClick: () => void }) {

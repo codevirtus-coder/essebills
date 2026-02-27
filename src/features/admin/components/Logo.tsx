@@ -21,4 +21,4 @@ const Logo: React.FC<LogoProps> = ({ className = "h-10", inverted = false }) => 
   );
 };
 
-export default Logo;
+export { default } from '../../../components/ui/Logo'
