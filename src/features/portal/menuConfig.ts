@@ -142,7 +142,7 @@ export const ADMIN_MENU: MenuSection[] = [
 
 // Admin preference items (Profile, Settings, Support)
 export const ADMIN_PREFERENCE_ITEMS: MenuItem[] = [
-  { id: 'profile', label: 'Profile', icon: 'account_circle', path: '/portal/profile' },
+  { id: 'profile', label: 'Profile', icon: 'account_circle', path: '/portal-admin?tab=profile' },
   { id: 'settings', label: 'Settings', icon: 'settings', path: '/portal/admin?tab=settings' },
   { id: 'support', label: 'Support', icon: 'help', path: '/portal/admin?tab=support' },
 ]
@@ -157,7 +157,7 @@ export const AGENT_MENU: MenuSection[] = [
       { id: 'commissions', label: 'Earnings Analysis', icon: 'payments', path: '/portal/agent/commissions' },
       { id: 'schedule', label: 'Commission Schedule', icon: 'table_chart', path: '/portal/agent/schedule' },
       { id: 'float', label: 'Float Wallet', icon: 'account_balance_wallet', path: '/portal/agent/float' },
-      { id: 'profile', label: 'Profile', icon: 'person', path: '/portal/profile' },
+      { id: 'profile', label: 'Profile', icon: 'person', path: '/portal-agent?tab=profile' },
     ],
   },
 ]
@@ -171,7 +171,7 @@ export const BILLER_MENU: MenuSection[] = [
       { id: 'collections', label: 'Collections', icon: 'payments', path: '/portal/biller/collections' },
       { id: 'settlements', label: 'Settlements', icon: 'account_balance', path: '/portal/biller/settlements' },
       { id: 'settings', label: 'Settings', icon: 'settings', path: '/portal/biller/settings' },
-      { id: 'profile', label: 'Profile', icon: 'person', path: '/portal/profile' },
+      { id: 'profile', label: 'Profile', icon: 'person', path: '/portal-biller?tab=profile' },
     ],
   },
 ]
@@ -183,7 +183,7 @@ export const CUSTOMER_MENU: MenuSection[] = [
     items: [
       { id: 'overview', label: 'Dashboard', icon: 'home', path: '/portal/customer' },
       { id: 'transactions', label: 'My Transactions', icon: 'receipt_long', path: '/portal/customer/transactions' },
-      { id: 'profile', label: 'Profile', icon: 'person', path: '/portal/profile' },
+      { id: 'profile', label: 'Profile', icon: 'person', path: '/portal-customer?tab=profile' },
     ],
   },
 ]
