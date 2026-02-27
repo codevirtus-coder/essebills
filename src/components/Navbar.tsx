@@ -16,30 +16,6 @@ const navLinks = [
     icon: "widgets",
     reloadDocument: true,
   },
-  {
-    label: "Biller",
-    to: ROUTE_PATHS.biller,
-    icon: "storefront",
-    reloadDocument: true,
-  },
-  {
-    label: "Agent",
-    to: ROUTE_PATHS.agent,
-    icon: "badge",
-    reloadDocument: true,
-  },
-  {
-    label: "Admin",
-    to: ROUTE_PATHS.admin,
-    icon: "admin_panel_settings",
-    reloadDocument: true,
-  },
-  {
-    label: "Buyer",
-    to: ROUTE_PATHS.buyer,
-    icon: "person",
-    reloadDocument: true,
-  },
 ];
 
 export function Navbar() {
@@ -77,18 +53,22 @@ export function Navbar() {
             ))}
             <div className="nav-divider" />
             {authenticated ? (
-              <button
-                type="button"
+              <NavLink
+                to={ROUTE_PATHS.login}
                 className="button button-ghost"
-                onClick={handleLogout}
+                reloadDocument
               >
-                Logout
-              </button>
+                Login
+              </NavLink>
             ) : (
               <>
-                {/* <NavLink to={ROUTE_PATHS.login} className="button button-ghost" reloadDocument>
+                <NavLink
+                  to={ROUTE_PATHS.login}
+                  className="button button-ghost"
+                  reloadDocument
+                >
                   Login
-                </NavLink> */}
+                </NavLink>
                 <NavLink
                   to={ROUTE_PATHS.register}
                   className="button button-primary"

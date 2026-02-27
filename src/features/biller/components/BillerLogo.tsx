@@ -1,4 +1,6 @@
 import React from "react";
+import { Link } from "react-router-dom";
+import { ROUTE_PATHS } from "../../../router/paths";
 
 interface BillerLogoProps {
   className?: string;
@@ -13,7 +15,7 @@ const BillerLogo: React.FC<BillerLogoProps> = ({
   const accentColor = "#a3e635";
 
   return (
-    <div className={`flex flex-col items-start ${className}`}>
+    <Link to={ROUTE_PATHS.home} aria-label="Go to home page" className={`flex flex-col items-start ${className}`}>
       <svg
         viewBox="0 0 120 45"
         fill="none"
@@ -37,7 +39,7 @@ const BillerLogo: React.FC<BillerLogoProps> = ({
           className="drop-shadow-sm"
         />
       </svg>
-    </div>
+    </Link>
   );
 };
 

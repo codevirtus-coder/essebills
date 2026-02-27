@@ -3,7 +3,8 @@
 :root {
   --nav-offset: 5.5rem;
   --font-family-base: "Plus Jakarta Sans", sans-serif;
-  --font-family-mono: "JetBrains Mono", "IBM Plex Mono", "Fira Code", Consolas, monospace;
+  --font-family-mono:
+    "JetBrains Mono", "IBM Plex Mono", "Fira Code", Consolas, monospace;
   --fw-regular: 400;
   --fw-medium: 500;
   --fw-semibold: 600;
@@ -325,13 +326,7 @@ html.dark .button-outline {
 }
 
 .navbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 30;
   padding: 0.7rem 0;
-  background: transparent;
 }
 
 html.dark .navbar {
@@ -347,13 +342,13 @@ html.dark .navbar {
   padding: 0 1rem;
 }
 
-.nav-surface {
+/* .nav-surface {
   border: 1px solid var(--border-light);
   border-radius: 1.2rem;
   background: rgb(248 250 252 / 62%);
   box-shadow: 0 10px 24px rgb(15 23 42 / 8%);
   backdrop-filter: blur(12px);
-}
+} */
 
 html.dark .nav-surface {
   border-color: #2c3b52;
@@ -397,14 +392,14 @@ html.dark .nav-divider {
 }
 
 .hero {
-  min-height: 100vh;
+  min-height: 75vh;
   display: flex;
   align-items: center;
-  padding: calc(var(--nav-offset) + 1rem) 0 2rem;
-  background:
+  /* padding: calc(var(--nav-offset) + 1rem) 0 2rem; */
+  /* background:
     radial-gradient(circle at 15% 18%, rgb(107 78 150 / 11%), transparent 34%),
     radial-gradient(circle at 88% 22%, rgb(193 216 47 / 14%), transparent 30%),
-    var(--surface-light);
+    var(--surface-light); */
 }
 
 html.dark .hero {
@@ -838,7 +833,7 @@ html.dark .field-label {
 }
 
 .advantages {
-  background: #f3f4f6;
+  background: #fff;
   padding: 4.8rem 0 5.4rem;
 }
 
@@ -873,7 +868,7 @@ html.dark .advantages {
   border: 1px solid #d8dde6;
   border-radius: 1.85rem;
   padding: 2.2rem 2.35rem 2.05rem;
-  background: #f3f4f6;
+  background: #fff;
   min-height: 216px;
   transition:
     transform 0.22s ease,
@@ -899,6 +894,11 @@ html.dark .advantage-card {
   display: grid;
   place-items: center;
   margin-bottom: 1.65rem;
+  transition:
+    background-color 0.22s ease,
+    color 0.22s ease,
+    box-shadow 0.22s ease,
+    transform 0.22s ease;
 }
 
 .advantage-icon.primary {
@@ -909,6 +909,13 @@ html.dark .advantage-card {
 .advantage-icon.secondary {
   background: #ece9f6;
   color: #7a5ac5;
+}
+
+.advantage-card:hover .advantage-icon {
+  background: #7a5ac5;
+  color: #ffffff;
+  box-shadow: 0 10px 20px rgb(122 90 197 / 25%);
+  transform: translateY(-1px);
 }
 
 .advantage-card h3 {
@@ -1000,7 +1007,7 @@ html.dark .logo-placeholder {
 
 .biller-cta {
   padding: 4.8rem 0 5.2rem;
-  background: #f3f4f6;
+  background: #fff;
 }
 
 .biller-cta-header {
@@ -1273,4 +1280,3 @@ html.dark .footer-bottom {
     animation: none;
   }
 }
-

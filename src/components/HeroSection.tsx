@@ -1,4 +1,4 @@
-﻿import { Icon } from './Icon'
+﻿import { Icon } from "./Icon";
 
 export function HeroSection() {
   return (
@@ -6,7 +6,9 @@ export function HeroSection() {
       <div className="container hero-grid">
         <div className="hero-copy">
           <span className="chip">Fast & Secure</span>
-          <p className="hero-kicker type-overline">Digital Wallet & Payment Solutions</p>
+          <p className="hero-kicker type-overline">
+            Digital Wallet & Payment Solutions
+          </p>
           <h1 className="type-display">
             Instant & Reliable <br />
             <span className="text-primary">Bill Payments</span>
@@ -16,7 +18,10 @@ export function HeroSection() {
             insurance, and internet bills instantly from anywhere, anytime.
           </p>
           <div className="hero-actions">
-            <a href="#pay-now" className="button button-primary button-primary-cta button-lg">
+            <a
+              href="#pay-now"
+              className="button button-primary button-primary-cta button-lg"
+            >
               Get Started Now
             </a>
             <button type="button" className="button button-outline button-lg">
@@ -40,7 +45,7 @@ export function HeroSection() {
           <article className="floating-card floating-card-left">
             <p className="floating-title">Things to Do</p>
             <div className="floating-row">
-              <span>PayNow ZESA</span>
+              <span>ZESA Topup</span>
               <strong>+$32.00</strong>
             </div>
             <div className="floating-row">
@@ -51,5 +56,5 @@ export function HeroSection() {
         </div>
       </div>
     </header>
-  )
+  );
 }
