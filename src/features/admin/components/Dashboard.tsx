@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import StatCard from '../../../components/ui/StatCard';
+import { DataTable, type TableColumn } from '../../../components/ui/DataTable';
 import { MOCK_STATS, BILLER_PERFORMANCE, REVENUE_DATA, MOCK_AGENTS } from '../data/constants';
 import { TransactionStatus } from '../data/types';
 import { getRecentPaymentTransactions, getUsersCount, type DashboardTransaction } from '../services/adminDashboard.service';
@@ -26,11 +27,81 @@ const Dashboard: React.FC = () => {
     return () => { mounted = false; };
   }, []);
 
+  const txColumns: TableColumn<DashboardTransaction>[] = [
+    {
+      key: 'date',
+      header: 'Transaction Time',
+      render: (tx) => (
+        <>
+          <p className="text-sm font-black text-dark-text dark:text-gray-200">{tx.date ?? '—'}</p>
+          <p className="text-[10px] font-bold text-neutral-text uppercase tracking-tighter">{tx.time ?? ''}</p>
+        </>
+      ),
+    },
+    {
+      key: 'customer',
+      header: 'Customer Account',
+      render: (tx) => {
+        const customerInitials = tx.customerInitials ?? (String(tx.customerName ?? '').slice(0, 2).toUpperCase() || '--');
+        return (
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-primary/10 text-primary rounded-xl flex items-center justify-center text-[10px] font-black">
+              {customerInitials}
+            </div>
+            <p className="text-sm font-bold text-dark-text dark:text-gray-300">{tx.customerName ?? '—'}</p>
+          </div>
+        );
+      },
+    },
+    {
+      key: 'biller',
+      header: 'Service Biller',
+      render: (tx) => (
+        <span className="text-xs font-bold text-neutral-text">{tx.biller ?? '—'}</span>
+      ),
+    },
+    {
+      key: 'amount',
+      header: 'Settled Amount',
+      render: (tx) => (
+        <p className="text-sm font-black text-dark-text dark:text-white">${(Number(tx.amount) || 0).toFixed(2)}</p>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Fulfillment Status',
+      render: (tx) => {
+        const status = String(tx.status ?? '');
+        const isSuccess = status === TransactionStatus.SUCCESS || status.toLowerCase() === 'success' || status.toLowerCase() === 'completed';
+        const isPending = status === TransactionStatus.PENDING || status.toLowerCase() === 'pending';
+        return (
+          <span className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black border uppercase tracking-widest ${
+            isSuccess ? 'bg-accent-green/10 text-accent-green border-accent-green/20' :
+            isPending ? 'bg-yellow-50 text-yellow-600 border-yellow-100' :
+            'bg-red-50 text-red-600 border-red-100'
+          }`}>
+            {status || '—'}
+          </span>
+        );
+      },
+    },
+    {
+      key: 'action',
+      header: 'Action',
+      align: 'right',
+      render: () => (
+        <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/10 rounded-xl transition-all text-neutral-text">
+          <span className="material-symbols-outlined text-lg">more_vert</span>
+        </button>
+      ),
+    },
+  ];
+
   return (
     <div className="p-8 space-y-8 animate-in fade-in duration-700">
       {/* Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard 
+        <StatCard
           label="Total Revenue"
           value={`$${MOCK_STATS.totalRevenue.toLocaleString()}.00`}
           change={MOCK_STATS.revenueChange}
@@ -60,7 +131,7 @@ const Dashboard: React.FC = () => {
           chartPath="M0 25 L 20 15 L 40 22 L 60 8 L 80 12 L 100 2"
           strokeColor="#a3e635"
         />
-        <StatCard 
+        <StatCard
           label="Agent Earnings"
           value={`$${MOCK_AGENTS.reduce((acc, curr) => acc + curr.totalEarnings, 0).toLocaleString()}`}
           change="+8.4% vs ytd"
@@ -101,23 +172,23 @@ const Dashboard: React.FC = () => {
                   </linearGradient>
                 </defs>
                 <CartesianGrid vertical={false} stroke="#eceaf1" strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="month" 
-                  axisLine={false} 
-                  tickLine={false} 
+                <XAxis
+                  dataKey="month"
+                  axisLine={false}
+                  tickLine={false}
                   tick={{ fontSize: 10, fontWeight: 800, fill: '#6d5d89' }}
                 />
                 <YAxis hide />
-                <Tooltip 
+                <Tooltip
                   contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', fontWeight: 'bold' }}
                 />
-                <Area 
-                  type="monotone" 
-                  dataKey="revenue" 
-                  stroke="#7e56c2" 
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#7e56c2"
                   strokeWidth={4}
-                  fillOpacity={1} 
-                  fill="url(#colorRev)" 
+                  fillOpacity={1}
+                  fill="url(#colorRev)"
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -135,8 +206,8 @@ const Dashboard: React.FC = () => {
                   <span className="text-xs font-black text-dark-text dark:text-white">${biller.amount.toLocaleString()}</span>
                 </div>
                 <div className="h-2 bg-neutral-light/50 dark:bg-white/5 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-primary rounded-full transition-all duration-1000 group-hover:bg-accent-green" 
+                  <div
+                    className="h-full bg-primary rounded-full transition-all duration-1000 group-hover:bg-accent-green"
                     style={{ width: `${biller.percentage}%` }}
                   ></div>
                 </div>
@@ -150,88 +221,25 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Transactions Section */}
-      <div className="bg-white  rounded-[32px] shadow-sm border border-neutral-light dark:border-white/5 overflow-hidden">
-        <div className="p-8 border-b border-neutral-light dark:border-white/5 flex items-center justify-between">
-          <h4 className="text-xl font-black text-dark-text dark:text-white">Live Transactions</h4>
-          <div className="flex gap-4">
-            <button className="flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest hover:underline">
-               <span className="material-symbols-outlined text-sm">download</span>
-               Export Report
-            </button>
-          </div>
-        </div>
-        <div className="overflow-x-auto">
-          {isLoading ? (
-            <div className="p-12 flex flex-col items-center gap-4">
-              <span className="material-symbols-outlined text-4xl text-neutral-text animate-spin">sync</span>
-              <p className="text-xs font-bold text-neutral-text uppercase tracking-widest">Loading transactions...</p>
+      <DataTable
+        columns={txColumns}
+        data={transactions}
+        rowKey={(tx) => tx.id}
+        loading={isLoading}
+        emptyMessage="No transactions found"
+        emptyIcon="receipt_long"
+        header={
+          <div className="p-8 flex items-center justify-between">
+            <h4 className="text-xl font-black text-dark-text dark:text-white">Live Transactions</h4>
+            <div className="flex gap-4">
+              <button className="flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest hover:underline">
+                 <span className="material-symbols-outlined text-sm">download</span>
+                 Export Report
+              </button>
             </div>
-          ) : (
-          <table className="w-full text-left border-separate border-spacing-0">
-            <thead className="bg-neutral-light/20 dark:bg-white/5">
-              <tr>
-                <th className="px-8 py-5 text-[9px] font-black text-neutral-text uppercase tracking-[0.2em]">Transaction Time</th>
-                <th className="px-8 py-5 text-[9px] font-black text-neutral-text uppercase tracking-[0.2em]">Customer Account</th>
-                <th className="px-8 py-5 text-[9px] font-black text-neutral-text uppercase tracking-[0.2em]">Service Biller</th>
-                <th className="px-8 py-5 text-[9px] font-black text-neutral-text uppercase tracking-[0.2em]">Settled Amount</th>
-                <th className="px-8 py-5 text-[9px] font-black text-neutral-text uppercase tracking-[0.2em]">Fulfillment Status</th>
-                <th className="px-8 py-5 text-[9px] font-black text-neutral-text uppercase tracking-[0.2em] text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-light dark:divide-white/5">
-              {transactions.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-8 py-10 text-center text-xs font-bold text-neutral-text uppercase tracking-widest">
-                    No transactions found
-                  </td>
-                </tr>
-              ) : transactions.map((tx) => {
-                const customerInitials = tx.customerInitials ?? (String(tx.customerName ?? '').slice(0, 2).toUpperCase() || '--');
-                const status = String(tx.status ?? '');
-                const isSuccess = status === TransactionStatus.SUCCESS || status.toLowerCase() === 'success' || status.toLowerCase() === 'completed';
-                const isPending = status === TransactionStatus.PENDING || status.toLowerCase() === 'pending';
-                return (
-                  <tr key={tx.id} className="hover:bg-neutral-light/10 dark:hover:bg-white/5 transition-colors">
-                    <td className="px-8 py-5">
-                      <p className="text-sm font-black text-dark-text dark:text-gray-200">{tx.date ?? '—'}</p>
-                      <p className="text-[10px] font-bold text-neutral-text uppercase tracking-tighter">{tx.time ?? ''}</p>
-                    </td>
-                    <td className="px-8 py-5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-primary/10 text-primary rounded-xl flex items-center justify-center text-[10px] font-black">
-                          {customerInitials}
-                        </div>
-                        <p className="text-sm font-bold text-dark-text dark:text-gray-300">{tx.customerName ?? '—'}</p>
-                      </div>
-                    </td>
-                    <td className="px-8 py-5">
-                      <span className="text-xs font-bold text-neutral-text">{tx.biller ?? '—'}</span>
-                    </td>
-                    <td className="px-8 py-5">
-                      <p className="text-sm font-black text-dark-text dark:text-white">${(Number(tx.amount) || 0).toFixed(2)}</p>
-                    </td>
-                    <td className="px-8 py-5">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black border uppercase tracking-widest ${
-                        isSuccess ? 'bg-accent-green/10 text-accent-green border-accent-green/20' :
-                        isPending ? 'bg-yellow-50 text-yellow-600 border-yellow-100' :
-                        'bg-red-50 text-red-600 border-red-100'
-                      }`}>
-                        {status || '—'}
-                      </span>
-                    </td>
-                    <td className="px-8 py-5 text-right">
-                      <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/10 rounded-xl transition-all text-neutral-text">
-                        <span className="material-symbols-outlined text-lg">more_vert</span>
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          )}
-        </div>
-      </div>
+          </div>
+        }
+      />
     </div>
   );
 };

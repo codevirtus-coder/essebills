@@ -9,6 +9,7 @@ import {
   getAllProducts,
   updateProduct,
 } from "../services";
+import { DataTable, type TableColumn } from "../../../components/ui";
 
 type ProductStatus = "ACTIVE" | "COMING_SOON" | "DISABLED";
 
@@ -28,6 +29,65 @@ function toDisplayStatus(value?: string) {
 
 const Products: React.FC = () => {
   const formCardRef = React.useRef<HTMLFormElement | null>(null);
+
+  const columns: TableColumn<AdminProductDto>[] = [
+    {
+      key: 'name',
+      header: 'Product',
+      render: (product) => (
+        <p className="text-sm font-bold text-dark-text dark:text-gray-200">
+          {String(product.name ?? "Unnamed Product")}
+        </p>
+      ),
+    },
+    {
+      key: 'code',
+      header: 'Code',
+      render: (product) => (
+        <span className="text-xs font-black text-neutral-text uppercase tracking-wide">
+          {String(product.code ?? "-")}
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (product) => (
+        <span
+          className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black border uppercase tracking-widest ${
+            normalizeStatus(product.status) === "ACTIVE"
+              ? "bg-accent-green/10 text-accent-green border-accent-green/20"
+              : "bg-neutral-light text-neutral-text border-neutral-light"
+          }`}
+        >
+          {toDisplayStatus(product.status)}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      align: 'right',
+      render: (product) => (
+        <div className="flex justify-end gap-1">
+          <button
+            onClick={() => handleEditProduct(product)}
+            className="w-10 h-10 inline-flex items-center justify-center rounded-xl hover:bg-primary/10 hover:text-primary text-neutral-text transition-all"
+            title="Edit Product"
+          >
+            <span className="material-symbols-outlined text-lg">edit</span>
+          </button>
+          <button
+            onClick={() => void handleDeleteProduct(product.id)}
+            className="w-10 h-10 inline-flex items-center justify-center rounded-xl hover:bg-red-50 hover:text-red-600 text-neutral-text transition-all"
+            title="Delete Product"
+          >
+            <span className="material-symbols-outlined text-lg">delete</span>
+          </button>
+        </div>
+      ),
+    },
+  ];
   const [products, setProducts] = useState<AdminProductDto[]>([]);
   const [countries, setCountries] = useState<AdminCountryDto[]>([]);
   const [currencies, setCurrencies] = useState<AdminCurrencyDto[]>([]);
@@ -403,83 +463,14 @@ const Products: React.FC = () => {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-separate border-spacing-0">
-              <thead>
-                <tr className="bg-neutral-light/20">
-                  <th className="px-6 py-4 text-[10px] font-black text-neutral-text uppercase tracking-widest">
-                    Product
-                  </th>
-                  <th className="px-6 py-4 text-[10px] font-black text-neutral-text uppercase tracking-widest">
-                    Code
-                  </th>
-                  <th className="px-6 py-4 text-[10px] font-black text-neutral-text uppercase tracking-widest">
-                    Status
-                  </th>
-                  <th className="px-6 py-4 text-[10px] font-black text-neutral-text uppercase tracking-widest text-right">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-light">
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-8 text-sm font-semibold text-neutral-text text-center">
-                      Loading products...
-                    </td>
-                  </tr>
-                ) : filteredProducts.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-8 text-sm font-semibold text-neutral-text text-center">
-                      No products found
-                    </td>
-                  </tr>
-                ) : (
-                  filteredProducts.map((product, index) => (
-                    <tr key={String(product.id ?? `${product.code ?? "product"}-${index}`)} className="hover:bg-neutral-light/10 transition-colors">
-                      <td className="px-6 py-4">
-                        <p className="text-sm font-bold text-dark-text dark:text-gray-200">
-                          {String(product.name ?? "Unnamed Product")}
-                        </p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-xs font-black text-neutral-text uppercase tracking-wide">
-                          {String(product.code ?? "-")}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black border uppercase tracking-widest ${
-                            normalizeStatus(product.status) === "ACTIVE"
-                              ? "bg-accent-green/10 text-accent-green border-accent-green/20"
-                              : "bg-neutral-light text-neutral-text border-neutral-light"
-                          }`}
-                        >
-                          {toDisplayStatus(product.status)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <button
-                          onClick={() => handleEditProduct(product)}
-                          className="w-10 h-10 inline-flex items-center justify-center rounded-xl hover:bg-primary/10 hover:text-primary text-neutral-text transition-all mr-1"
-                          title="Edit Product"
-                        >
-                          <span className="material-symbols-outlined text-lg">edit</span>
-                        </button>
-                        <button
-                          onClick={() => void handleDeleteProduct(product.id)}
-                          className="w-10 h-10 inline-flex items-center justify-center rounded-xl hover:bg-red-50 hover:text-red-600 text-neutral-text transition-all"
-                          title="Delete Product"
-                        >
-                          <span className="material-symbols-outlined text-lg">delete</span>
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            columns={columns}
+            data={filteredProducts}
+            rowKey={(product) => String(product.id ?? `${product.code ?? "product"}`)}
+            loading={isLoading}
+            emptyMessage="No products found"
+            emptyIcon="inventory_2"
+          />
         </div>
       </div>
     </div>

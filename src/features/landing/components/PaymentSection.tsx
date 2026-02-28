@@ -193,19 +193,22 @@ export function PaymentSection() {
     queryFn: fetchProducts,
   });
 
-  const displayBillers: BillerCardProps[] = (data ?? [])
-    .filter((product) => product.status === "ACTIVE" && !product.deleted)
-    .map((product) => {
-      const category = inferCategory(product.name, product.code);
-      return {
-        id: `api-${product.id}`,
-        icon: iconByCategory(category),
-        name: product.name,
-        category,
-        fields: fieldsByProduct(product.name, category),
-        minimumPurchaseAmount: Number(product.minimumPurchaseAmount ?? 0),
-      };
-    });
+  const displayBillers: BillerCardProps[] = useMemo(() =>
+    (data ?? [])
+      .filter((product) => product.status === "ACTIVE" && !product.deleted)
+      .map((product) => {
+        const category = inferCategory(product.name, product.code);
+        return {
+          id: `api-${product.id}`,
+          icon: iconByCategory(category),
+          name: product.name,
+          category,
+          fields: fieldsByProduct(product.name, category),
+          minimumPurchaseAmount: Number(product.minimumPurchaseAmount ?? 0),
+        };
+      }),
+    [data],
+  );
 
   const filteredBillers = useMemo(
     () => displayBillers.filter((biller) => biller.category === activeCategory && !biller.isDashed),

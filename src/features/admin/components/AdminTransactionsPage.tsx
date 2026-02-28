@@ -1,5 +1,6 @@
 import React from 'react'
 import toast from 'react-hot-toast'
+import { DataTable, TableColumn } from '../../../components/ui/DataTable'
 import { adminJsonFetch, getEconetTransactionsReport, getEsolutionsTransactionsReport, getNetoneTransactionsReport, getZesaTransactionsReport } from '../services'
 
 type UnknownRecord = Record<string, unknown>
@@ -195,40 +196,35 @@ const AdminTransactionsPage: React.FC<AdminTransactionsPageProps> = ({ region })
                 </button>
               </div>
 
-              <div className="border border-neutral-light rounded overflow-hidden bg-white">
-                <div className="bg-[#7E57C2] text-white border-b border-neutral-light">
-                  <div className="grid grid-cols-4">
-                    <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Amount</div>
-                    <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Reference Number</div>
-                    <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Transaction Status</div>
-                    <div className="px-4 py-3 text-sm font-semibold">Date</div>
-                  </div>
-                </div>
-                <div className="min-h-[360px] bg-white">
-                  {isLoading ? (
-                    <div className="p-8 text-center text-neutral-text">Loading...</div>
-                  ) : rows.length === 0 ? (
-                    <div className="p-8 text-center text-neutral-text flex flex-col items-center justify-center min-h-[360px]">
-                      <span className="material-symbols-outlined text-[48px] text-primary/40">filter_alt_off</span>
-                      <p className="mt-4 text-xl text-neutral-text/70">No Transactions to display!</p>
-                    </div>
-                  ) : (
-                    rows.map((row, index) => (
-                      <div
-                        key={String(row.id ?? `txn-${index}`)}
-                        className="grid grid-cols-4 border-t border-neutral-light hover:bg-neutral-light/40 transition-colors"
-                      >
-                        <div className="px-4 py-3 text-sm text-dark-text">{String(row.amount ?? row.value ?? '-')}</div>
-                        <div className="px-4 py-3 text-sm text-dark-text">
-                          {String(row.referenceNumber ?? row.paymentReferenceNumber ?? '-')}
-                        </div>
-                        <div className="px-4 py-3 text-sm text-dark-text">{String(row.status ?? row.transactionStatus ?? '-')}</div>
-                        <div className="px-4 py-3 text-sm text-dark-text">{formatDateValue(row)}</div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
+              <DataTable
+                columns={[
+                  {
+                    key: 'amount',
+                    header: 'Amount',
+                    render: (row: UnknownRecord) => String(row.amount ?? row.value ?? '-')
+                  },
+                  {
+                    key: 'referenceNumber',
+                    header: 'Reference Number',
+                    render: (row: UnknownRecord) => String(row.referenceNumber ?? row.paymentReferenceNumber ?? '-')
+                  },
+                  {
+                    key: 'status',
+                    header: 'Transaction Status',
+                    render: (row: UnknownRecord) => String(row.status ?? row.transactionStatus ?? '-')
+                  },
+                  {
+                    key: 'date',
+                    header: 'Date',
+                    render: (row: UnknownRecord) => formatDateValue(row)
+                  }
+                ]}
+                data={rows}
+                rowKey={(row: UnknownRecord) => String(row.id ?? `txn-${Math.random()}`)}
+                loading={isLoading}
+                emptyMessage="No Transactions to display!"
+                emptyIcon="filter_alt_off"
+              />
             </div>
           </div>
         ) : (
@@ -270,46 +266,45 @@ const AdminTransactionsPage: React.FC<AdminTransactionsPageProps> = ({ region })
               </div>
             </div>
 
-            <div className="border border-neutral-light rounded overflow-hidden bg-white">
-              <div className="bg-[#7E57C2] text-white border-b border-neutral-light">
-                <div className="grid grid-cols-6">
-                  <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Amount</div>
-                  <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Payment Reference Number</div>
-                  <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Reference Number</div>
-                  <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Transaction Category</div>
-                  <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Transaction Status</div>
-                  <div className="px-4 py-3 text-sm font-semibold">Date</div>
-                </div>
-              </div>
-              <div className="min-h-[360px] bg-white">
-                {isLoading ? (
-                  <div className="p-8 text-center text-neutral-text">Loading...</div>
-                ) : rows.length === 0 ? (
-                  <div className="p-8 text-center text-neutral-text flex flex-col items-center justify-center min-h-[360px]">
-                    <span className="material-symbols-outlined text-[48px] text-primary/40">filter_alt_off</span>
-                    <p className="mt-4 text-2xl text-neutral-text/70">{activeZimProvider.label} Transactions</p>
-                  </div>
-                ) : (
-                  rows.map((row, index) => (
-                    <div
-                      key={String(row.id ?? `txn-zim-${index}`)}
-                      className="grid grid-cols-6 border-t border-neutral-light hover:bg-neutral-light/40 transition-colors"
-                    >
-                      <div className="px-4 py-3 text-sm text-dark-text">{String(row.amount ?? row.value ?? '-')}</div>
-                      <div className="px-4 py-3 text-sm text-dark-text">
-                        {String(row.paymentReferenceNumber ?? row.paymentReference ?? '-')}
-                      </div>
-                      <div className="px-4 py-3 text-sm text-dark-text">{String(row.referenceNumber ?? '-')}</div>
-                      <div className="px-4 py-3 text-sm text-dark-text">
-                        {String(row.transactionCategory ?? row.category ?? '-')}
-                      </div>
-                      <div className="px-4 py-3 text-sm text-dark-text">{String(row.status ?? row.transactionStatus ?? '-')}</div>
-                      <div className="px-4 py-3 text-sm text-dark-text">{formatDateValue(row)}</div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
+            <DataTable
+              columns={[
+                {
+                  key: 'amount',
+                  header: 'Amount',
+                  render: (row: UnknownRecord) => String(row.amount ?? row.value ?? '-')
+                },
+                {
+                  key: 'paymentReferenceNumber',
+                  header: 'Payment Reference Number',
+                  render: (row: UnknownRecord) => String(row.paymentReferenceNumber ?? row.paymentReference ?? '-')
+                },
+                {
+                  key: 'referenceNumber',
+                  header: 'Reference Number',
+                  render: (row: UnknownRecord) => String(row.referenceNumber ?? '-')
+                },
+                {
+                  key: 'transactionCategory',
+                  header: 'Transaction Category',
+                  render: (row: UnknownRecord) => String(row.transactionCategory ?? row.category ?? '-')
+                },
+                {
+                  key: 'status',
+                  header: 'Transaction Status',
+                  render: (row: UnknownRecord) => String(row.status ?? row.transactionStatus ?? '-')
+                },
+                {
+                  key: 'date',
+                  header: 'Date',
+                  render: (row: UnknownRecord) => formatDateValue(row)
+                }
+              ]}
+              data={rows}
+              rowKey={(row: UnknownRecord) => String(row.id ?? `txn-zim-${Math.random()}`)}
+              loading={isLoading}
+              emptyMessage={`${activeZimProvider.label} Transactions`}
+              emptyIcon="filter_alt_off"
+            />
           </div>
         )}
       </section>

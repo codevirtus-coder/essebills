@@ -5,6 +5,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import toast from 'react-hot-toast'
 import { adminJsonFetch } from '../services'
+import { DataTable, type TableColumn } from '../../../components/ui'
 
 type UnknownRecord = Record<string, unknown>
 
@@ -65,6 +66,72 @@ const TuitionProcessingFees: React.FC = () => {
       String(fee.feeType ?? '').toLowerCase().includes(searchLower)
     )
   })
+
+  const columns: TableColumn<UnknownRecord>[] = [
+    {
+      key: 'id',
+      header: 'ID',
+      render: (fee) => <span className="text-xs font-black text-neutral-text">{String(fee.id ?? '')}</span>,
+    },
+    {
+      key: 'name',
+      header: 'Name',
+      render: (fee) => <span className="text-sm font-bold text-dark-text dark:text-gray-200">{String(fee.name ?? '')}</span>,
+    },
+    {
+      key: 'feeType',
+      header: 'Fee Type',
+      render: (fee) => <span className="text-sm text-neutral-text">{String(fee.feeType ?? '')}</span>,
+    },
+    {
+      key: 'feeAmount',
+      header: 'Amount',
+      align: 'right',
+      render: (fee) => <span className="text-sm font-black text-dark-text dark:text-white">${Number(fee.feeAmount ?? fee.amount ?? 0).toFixed(2)}</span>,
+    },
+    {
+      key: 'institution',
+      header: 'Institution',
+      render: (fee) => <span className="text-sm text-neutral-text">{String(fee.institutionId ?? fee.institution ?? '')}</span>,
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      align: 'center',
+      render: (fee) => (
+        <span className={`px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
+          fee.isActive === true || fee.active === true || String(fee.status ?? '').toUpperCase() === 'ACTIVE'
+            ? 'bg-accent-green/10 text-accent-green border border-accent-green/20'
+            : 'bg-red-50 text-red-600 border border-red-100'
+        }`}>
+          {fee.isActive === true || fee.active === true || String(fee.status ?? '').toUpperCase() === 'ACTIVE' ? 'Active' : 'Inactive'}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      align: 'right',
+      render: () => (
+        <div className="flex items-center justify-end gap-1">
+          <button 
+            onClick={() => {}}
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-primary/10 hover:text-primary text-neutral-text transition-all"
+            title="Edit"
+          >
+            <span className="material-symbols-outlined text-sm">edit</span>
+          </button>
+          <button
+            onClick={() => {}}
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50 hover:text-red-600 text-neutral-text transition-all"
+            title="Delete"
+          >
+            <span className="material-symbols-outlined text-sm">delete</span>
+          </button>
+        </div>
+      ),
+    },
+  ]
 
   return (
     <div className="p-8 space-y-6 animate-in fade-in duration-300">
@@ -133,90 +200,14 @@ const TuitionProcessingFees: React.FC = () => {
       </div>
 
       {/* Fees Table */}
-      <div className="bg-white rounded-2xl border border-neutral-light dark:border-white/5 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-neutral-light/20 dark:bg-white/5 border-b border-neutral-light dark:border-white/5">
-                <th className="px-4 py-3 text-xs font-black text-neutral-text uppercase tracking-wider">ID</th>
-                <th className="px-4 py-3 text-xs font-black text-neutral-text uppercase tracking-wider">Name</th>
-                <th className="px-4 py-3 text-xs font-black text-neutral-text uppercase tracking-wider">Fee Type</th>
-                <th className="px-4 py-3 text-xs font-black text-neutral-text uppercase tracking-wider text-right">Amount</th>
-                <th className="px-4 py-3 text-xs font-black text-neutral-text uppercase tracking-wider">Institution</th>
-                <th className="px-4 py-3 text-xs font-black text-neutral-text uppercase tracking-wider text-center">Status</th>
-                <th className="px-4 py-3 text-xs font-black text-neutral-text uppercase tracking-wider text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-light dark:divide-white/5">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-neutral-text">
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="material-symbols-outlined animate-spin">sync</span>
-                      Loading fees...
-                    </div>
-                  </td>
-                </tr>
-              ) : filteredFees.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-neutral-text">
-                    <div className="flex flex-col items-center gap-2">
-                      <span className="material-symbols-outlined text-4xl text-primary/30">payments</span>
-                      <p>No processing fees found</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                filteredFees.map((fee, index) => {
-                  const isActive = fee.isActive === true || fee.active === true || String(fee.status ?? '').toUpperCase() === 'ACTIVE'
-                  return (
-                    <tr key={String(fee.id ?? `fee-${index}`)} className="hover:bg-neutral-light/10 dark:hover:bg-white/5 transition-colors">
-                      <td className="px-4 py-3">
-                        <span className="text-xs font-mono font-bold text-primary">#{String(fee.id ?? index + 1)}</span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="text-sm font-bold text-dark-text dark:text-white">
-                          {String(fee.name ?? '-')}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-neutral-text">
-                        {String(fee.feeType ?? fee.type ?? '-')}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <span className="text-sm font-black text-primary">
-                          ${Number(fee.feeAmount ?? fee.amount ?? 0).toFixed(2)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-neutral-text">
-                        {String(fee.institutionName ?? fee.institution ?? '-')}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-bold ${
-                          isActive
-                            ? 'bg-green-100 text-green-700 border border-green-200'
-                            : 'bg-gray-100 text-gray-700 border border-gray-200'
-                        }`}>
-                          {isActive ? 'ACTIVE' : 'INACTIVE'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/10 rounded-lg transition-colors">
-                            <span className="material-symbols-outlined text-lg text-neutral-text">edit</span>
-                          </button>
-                          <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/10 rounded-lg transition-colors">
-                            <span className="material-symbols-outlined text-lg text-neutral-text">more_vert</span>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <DataTable
+        columns={columns}
+        data={filteredFees}
+        rowKey={(fee: UnknownRecord) => String(fee.id ?? Math.random())}
+        loading={isLoading}
+        emptyMessage="No processing fees found"
+        emptyIcon="payments"
+      />
 
       {/* Add Modal */}
       {showAddModal && (

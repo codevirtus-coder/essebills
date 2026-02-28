@@ -2,9 +2,10 @@
 // Zambia Products Transactions Page
 // ============================================================================
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import toast from 'react-hot-toast'
 import { adminJsonFetch } from '../services'
+import { DataTable, TableColumn } from '../../../components/ui/DataTable'
 
 type UnknownRecord = Record<string, unknown>
 
@@ -75,6 +76,20 @@ const ZambiaProductsTransactions: React.FC = () => {
       rowStatus.toUpperCase() === statusFilter.toUpperCase()
     return matchesSearch && matchesStatus
   })
+
+  const columns: TableColumn<UnknownRecord>[] = useMemo(() => [
+    { key: 'id', header: 'ID', render: (tx) => <span className="text-xs font-mono font-bold text-primary">#{String(tx.id ?? '').padStart(6, '0')}</span> },
+    { key: 'date', header: 'Date', render: (tx) => <span className="text-sm text-dark-text dark:text-gray-200">{String(tx.createdAt ?? tx.transactionDate ?? tx.date ?? '-')}</span> },
+    { key: 'customer', header: 'Customer', render: (tx) => <span className="text-sm text-dark-text dark:text-gray-200">{String(tx.customerName ?? tx.name ?? tx.customer ?? '-')}</span> },
+    { key: 'account', header: 'Account', render: (tx) => <span className="text-sm text-neutral-text">{String(tx.accountNumber ?? tx.meterNumber ?? tx.account ?? '-')}</span> },
+    { key: 'amount', header: 'Amount', align: 'right', render: (tx) => <span className="text-sm font-black text-dark-text dark:text-white">${String(tx.amount ?? tx.value ?? '0')}</span> },
+    { key: 'status', header: 'Status', align: 'center', render: (tx) => getStatusBadge(String(tx.status ?? tx.transactionStatus ?? '-')) },
+    { key: 'actions', header: 'Actions', align: 'right', render: () => (
+      <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/10 rounded-lg transition-colors">
+        <span className="material-symbols-outlined text-lg text-neutral-text">more_vert</span>
+      </button>
+    ) },
+  ], [])
 
   const getStatusBadge = (status: string) => {
     const statusUpper = status.toUpperCase()
@@ -185,75 +200,18 @@ const ZambiaProductsTransactions: React.FC = () => {
         </div>
       </div>
 
-      {/* Transactions Table */}
       <div className="bg-white rounded-2xl border border-neutral-light dark:border-white/5 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-neutral-light/20 dark:bg-white/5 border-b border-neutral-light dark:border-white/5">
-                <th className="px-4 py-3 text-xs font-black text-neutral-text uppercase tracking-wider">ID</th>
-                <th className="px-4 py-3 text-xs font-black text-neutral-text uppercase tracking-wider">Date</th>
-                <th className="px-4 py-3 text-xs font-black text-neutral-text uppercase tracking-wider">Customer</th>
-                <th className="px-4 py-3 text-xs font-black text-neutral-text uppercase tracking-wider">Account</th>
-                <th className="px-4 py-3 text-xs font-black text-neutral-text uppercase tracking-wider text-right">Amount</th>
-                <th className="px-4 py-3 text-xs font-black text-neutral-text uppercase tracking-wider text-center">Status</th>
-                <th className="px-4 py-3 text-xs font-black text-neutral-text uppercase tracking-wider text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-light dark:divide-white/5">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-neutral-text">
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="material-symbols-outlined animate-spin">sync</span>
-                      Loading transactions...
-                    </div>
-                  </td>
-                </tr>
-              ) : filteredRows.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-neutral-text">
-                    <div className="flex flex-col items-center gap-2">
-                      <span className="material-symbols-outlined text-4xl text-primary/30">inbox</span>
-                      <p>No transactions found</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                filteredRows.slice(0, 50).map((tx, index) => (
-                  <tr key={String(tx.id ?? `tx-${index}`)} className="hover:bg-neutral-light/10 dark:hover:bg-white/5 transition-colors">
-                    <td className="px-4 py-3">
-                      <span className="text-xs font-mono font-bold text-primary">#{String(tx.id ?? index + 1).padStart(6, '0')}</span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-dark-text dark:text-gray-200">
-                      {String(tx.createdAt ?? tx.transactionDate ?? tx.date ?? '-')}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-dark-text dark:text-gray-200">
-                      {String(tx.customerName ?? tx.name ?? tx.customer ?? '-')}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-neutral-text">
-                      {String(tx.accountNumber ?? tx.meterNumber ?? tx.account ?? '-')}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <span className="text-sm font-black text-dark-text dark:text-white">
-                        ${String(tx.amount ?? tx.value ?? '0')}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      {getStatusBadge(String(tx.status ?? tx.transactionStatus ?? '-'))}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/10 rounded-lg transition-colors">
-                        <span className="material-symbols-outlined text-lg text-neutral-text">more_vert</span>
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+        <div className="p-0">
+          <DataTable
+            columns={columns}
+            data={filteredRows.slice(0, 50)}
+            rowKey={(r) => String(r.id ?? r.transactionId ?? r.createdAt ?? r.accountNumber ?? JSON.stringify(r))}
+            loading={isLoading}
+            emptyMessage="No transactions found"
+            className="rounded-2xl"
+          />
         </div>
-        
+
         {/* Pagination */}
         <div className="p-4 border-t border-neutral-light dark:border-white/5 flex items-center justify-between">
           <p className="text-xs text-neutral-text">

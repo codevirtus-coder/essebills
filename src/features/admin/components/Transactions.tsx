@@ -1,7 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { MOCK_TRANSACTIONS } from '../data/constants';
 import { TransactionStatus, Transaction } from '../data/types';
+import { DataTable, TableColumn } from '../../../components/ui/DataTable';
 
 const Transactions: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -17,6 +18,80 @@ const Transactions: React.FC = () => {
     
     return matchesSearch && matchesStatus;
   });
+
+  const columns: TableColumn<Transaction>[] = useMemo(() => [
+    {
+      key: 'id',
+      header: 'Transaction ID',
+      render: (tx) => <span className="text-xs font-mono font-bold text-primary">#EB-{tx.id.padStart(6, '0')}</span>,
+    },
+    {
+      key: 'datetime',
+      header: 'Date & Time',
+      render: (tx) => (
+        <>
+          <p className="text-sm font-bold text-dark-text dark:text-gray-200">{tx.date}</p>
+          <p className="text-[10px] text-neutral-text uppercase tracking-tighter">{tx.time}</p>
+        </>
+      ),
+    },
+    {
+      key: 'customer',
+      header: 'Customer',
+      render: (tx) => (
+        <div className="flex items-center gap-3">
+          <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-black shadow-inner ${
+            tx.status === TransactionStatus.SUCCESS ? 'bg-primary/10 text-primary' :
+            tx.status === TransactionStatus.PENDING ? 'bg-yellow-50 text-yellow-600' :
+            'bg-red-50 text-red-600'
+          }`}>
+            {tx.customerInitials}
+          </div>
+          <p className="text-sm font-bold text-dark-text dark:text-gray-200">{tx.customerName}</p>
+        </div>
+      ),
+    },
+    {
+      key: 'biller',
+      header: 'Biller',
+      render: (tx) => <span className="text-xs font-bold text-neutral-text">{tx.biller}</span>,
+    },
+    {
+      key: 'amount',
+      header: 'Amount',
+      align: 'right',
+      render: (tx) => <p className="text-sm font-black text-dark-text dark:text-white">${tx.amount.toFixed(2)}</p>,
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      align: 'center',
+      render: (tx) => (
+        <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black border ${
+          tx.status === TransactionStatus.SUCCESS ? 'bg-accent-green/10 text-accent-green border-accent-green/20' :
+          tx.status === TransactionStatus.PENDING ? 'bg-yellow-50 text-yellow-600 border-yellow-100' :
+          'bg-red-50 text-red-600 border-red-100'
+        } uppercase tracking-tighter`}>
+          {tx.status}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      align: 'right',
+      render: (tx) => (
+        <div className="flex items-center justify-end gap-2">
+          <button className="w-8 h-8 flex items-center justify-center hover:bg-neutral-light dark:hover:bg-white/10 rounded-lg text-neutral-text transition-colors">
+            <span className="material-symbols-outlined text-lg">receipt_long</span>
+          </button>
+          <button className="w-8 h-8 flex items-center justify-center hover:bg-neutral-light dark:hover:bg-white/10 rounded-lg text-neutral-text transition-colors">
+            <span className="material-symbols-outlined text-lg">more_vert</span>
+          </button>
+        </div>
+      ),
+    },
+  ], []);
 
   return (
     <div className="p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
@@ -98,113 +173,36 @@ const Transactions: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Table */}
-      <div className="bg-white  rounded-3xl shadow-sm border border-neutral-light dark:border-white/5 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-neutral-light/20 dark:bg-white/5 border-b border-neutral-light dark:border-white/5">
-                <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">Transaction ID</th>
-                <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">Date & Time</th>
-                <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">Customer</th>
-                <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">Biller</th>
-                <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest text-right">Amount</th>
-                <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest text-center">Status</th>
-                <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-light dark:divide-white/5">
-              {filteredTransactions.map((tx) => (
-                <tr key={tx.id} className="hover:bg-neutral-light/10 dark:hover:bg-white/5 transition-colors group">
-                  <td className="px-8 py-5">
-                    <span className="text-xs font-mono font-bold text-primary">#EB-{tx.id.padStart(6, '0')}</span>
-                  </td>
-                  <td className="px-8 py-5">
-                    <p className="text-sm font-bold text-dark-text dark:text-gray-200">{tx.date}</p>
-                    <p className="text-[10px] text-neutral-text uppercase tracking-tighter">{tx.time}</p>
-                  </td>
-                  <td className="px-8 py-5">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-black shadow-inner ${
-                        tx.status === TransactionStatus.SUCCESS ? 'bg-primary/10 text-primary' : 
-                        tx.status === TransactionStatus.PENDING ? 'bg-yellow-50 text-yellow-600' : 
-                        'bg-red-50 text-red-600'
-                      }`}>
-                        {tx.customerInitials}
-                      </div>
-                      <p className="text-sm font-bold text-dark-text dark:text-gray-200">{tx.customerName}</p>
-                    </div>
-                  </td>
-                  <td className="px-8 py-5">
-                    <span className="text-xs font-bold text-neutral-text">{tx.biller}</span>
-                  </td>
-                  <td className="px-8 py-5 text-right">
-                    <p className="text-sm font-black text-dark-text dark:text-white">${tx.amount.toFixed(2)}</p>
-                  </td>
-                  <td className="px-8 py-5 text-center">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black border ${
-                      tx.status === TransactionStatus.SUCCESS ? 'bg-accent-green/10 text-accent-green border-accent-green/20' :
-                      tx.status === TransactionStatus.PENDING ? 'bg-yellow-50 text-yellow-600 border-yellow-100' :
-                      'bg-red-50 text-red-600 border-red-100'
-                    } uppercase tracking-tighter`}>
-                      {tx.status}
-                    </span>
-                  </td>
-                  <td className="px-8 py-5 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <button className="w-8 h-8 flex items-center justify-center hover:bg-neutral-light dark:hover:bg-white/10 rounded-lg text-neutral-text transition-colors">
-                        <span className="material-symbols-outlined text-lg">receipt_long</span>
-                      </button>
-                      <button className="w-8 h-8 flex items-center justify-center hover:bg-neutral-light dark:hover:bg-white/10 rounded-lg text-neutral-text transition-colors">
-                        <span className="material-symbols-outlined text-lg">more_vert</span>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {filteredTransactions.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="px-8 py-20 text-center">
-                    <div className="flex flex-col items-center gap-3 opacity-50">
-                      <span className="material-symbols-outlined text-5xl text-neutral-text">search_off</span>
-                      <p className="text-sm font-bold text-neutral-text">No transactions found matching your filters.</p>
-                      <button 
-                        onClick={() => {setSearchTerm(''); setStatusFilter('ALL');}}
-                        className="text-xs text-primary font-black uppercase tracking-widest hover:underline"
-                      >
-                        Clear All Filters
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-        
-        {/* Pagination */}
-        <div className="p-8 border-t border-neutral-light dark:border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-neutral-light/5">
-          <p className="text-xs text-neutral-text font-bold">
-            Showing <span className="text-dark-text dark:text-white">{filteredTransactions.length}</span> of 12,450 results
-          </p>
-          <div className="flex items-center gap-1">
-            <button className="p-2 text-neutral-text hover:bg-neutral-light dark:hover:bg-white/10 rounded-lg disabled:opacity-30" disabled>
-              <span className="material-symbols-outlined">chevron_left</span>
+      <DataTable
+        columns={columns}
+        data={filteredTransactions}
+        rowKey={(r) => r.id}
+        emptyMessage="No transactions found matching your filters."
+        className="rounded-3xl"
+      />
+
+      {/* Pagination */}
+      <div className="p-8 border-t border-neutral-light dark:border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-neutral-light/5">
+        <p className="text-xs text-neutral-text font-bold">
+          Showing <span className="text-dark-text dark:text-white">{filteredTransactions.length}</span> of 12,450 results
+        </p>
+        <div className="flex items-center gap-1">
+          <button className="p-2 text-neutral-text hover:bg-neutral-light dark:hover:bg-white/10 rounded-lg disabled:opacity-30" disabled>
+            <span className="material-symbols-outlined">chevron_left</span>
+          </button>
+          {[1, 2, 3, '...', 45].map((page, i) => (
+            <button 
+              key={i} 
+              className={`w-9 h-9 text-xs font-black rounded-lg transition-all ${
+                page === 1 ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-neutral-text hover:bg-neutral-light dark:hover:bg-white/10'
+              }`}
+            >
+              {page}
             </button>
-            {[1, 2, 3, '...', 45].map((page, i) => (
-              <button 
-                key={i} 
-                className={`w-9 h-9 text-xs font-black rounded-lg transition-all ${
-                  page === 1 ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-neutral-text hover:bg-neutral-light dark:hover:bg-white/10'
-                }`}
-              >
-                {page}
-              </button>
-            ))}
-            <button className="p-2 text-neutral-text hover:bg-neutral-light dark:hover:bg-white/10 rounded-lg">
-              <span className="material-symbols-outlined">chevron_right</span>
-            </button>
-          </div>
+          ))}
+          <button className="p-2 text-neutral-text hover:bg-neutral-light dark:hover:bg-white/10 rounded-lg">
+            <span className="material-symbols-outlined">chevron_right</span>
+          </button>
         </div>
       </div>
     </div>

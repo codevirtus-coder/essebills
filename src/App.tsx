@@ -10,11 +10,7 @@ function App() {
         position="top-right"
         toastOptions={{
           duration: 4000,
-          style: {
-            borderRadius: '12px',
-            background: '#111827',
-            color: '#f8fafc',
-          },
+        
         }}
       />
     </>

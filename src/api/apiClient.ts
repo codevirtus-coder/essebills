@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from 'axios'
 import { getAccessToken } from '../features/auth/auth.storage'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'https://api.test.rongeka.com'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:52525'
 
 function buildAxiosInstance(baseURL: string): AxiosInstance {
   const instance = axios.create({ baseURL, headers: { 'Content-Type': 'application/json' } })

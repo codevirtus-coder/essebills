@@ -1,6 +1,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import StatCard from '../../../components/ui/StatCard';
+import { DataTable, type TableColumn } from '../../../components/ui';
 import { INITIAL_CATEGORIES } from '../constants';
 import { useSearchParams } from 'react-router-dom';
 import UserProfile from '../../admin/components/UserProfile';
@@ -33,6 +34,109 @@ const FALLBACK_FLOAT_HISTORY: WalletHistoryEntry[] = [
   { id: 'FL-9920', date: 'May 23, 2024', amount: 500.00, method: 'EcoCash', status: 'Approved' },
   { id: 'FL-9918', date: 'May 20, 2024', amount: 200.00, method: 'Visa Card', status: 'Approved' },
   { id: 'FL-9912', date: 'May 15, 2024', amount: 1000.00, method: 'Bank Transfer', status: 'Approved' },
+];
+
+// Commission Ledger table columns
+const commissionColumns: TableColumn<Sale>[] = [
+  {
+    key: 'time',
+    header: 'Time',
+    render: (sale) => <span className="text-xs font-bold text-neutral-text">{sale.time}</span>,
+  },
+  {
+    key: 'service',
+    header: 'Service',
+    render: (sale) => (
+      <div>
+        <p className="text-sm font-black text-dark-text">{sale.biller}</p>
+        <p className="text-[10px] font-bold text-neutral-text uppercase">{sale.customer}</p>
+      </div>
+    ),
+  },
+  {
+    key: 'saleAmount',
+    header: 'Sale Amount',
+    align: 'right',
+    render: (sale) => <span className="font-bold text-neutral-text">${(Number(sale.amount) || 0).toFixed(2)}</span>,
+  },
+  {
+    key: 'myCut',
+    header: 'My Cut',
+    align: 'right',
+    render: (sale) => <span className="font-black text-accent-green">+${(Number(sale.commission) || 0).toFixed(2)}</span>,
+  },
+  {
+    key: 'status',
+    header: 'Status',
+    align: 'center',
+    render: () => (
+      <span className="px-3 py-1 bg-accent-green/10 text-accent-green rounded-full text-[9px] font-black uppercase tracking-widest">Accrued</span>
+    ),
+  },
+];
+
+// Float History table columns
+const floatHistoryColumns: TableColumn<WalletHistoryEntry>[] = [
+  {
+    key: 'date',
+    header: 'Date',
+    render: (f) => <span className="text-sm font-bold text-dark-text">{String(f.date ?? '—')}</span>,
+  },
+  {
+    key: 'reference',
+    header: 'Reference',
+    render: (f) => <span className="text-xs font-mono font-bold text-primary">{String(f.id ?? '—')}</span>,
+  },
+  {
+    key: 'method',
+    header: 'Method',
+    render: (f) => <span className="text-sm text-neutral-text font-medium">{String(f.method ?? '—')}</span>,
+  },
+  {
+    key: 'amount',
+    header: 'Amount',
+    align: 'right',
+    render: (f) => <span className="font-black text-dark-text">${(Number(f.amount) || 0).toFixed(2)}</span>,
+  },
+  {
+    key: 'status',
+    header: 'Status',
+    align: 'center',
+    render: (f) => (
+      <span className="px-3 py-1 bg-accent-green/10 text-accent-green rounded-full text-[9px] font-black uppercase tracking-widest">{String(f.status ?? '—')}</span>
+    ),
+  },
+];
+
+// Recent Sales table columns
+const recentSalesColumns: TableColumn<Sale>[] = [
+  {
+    key: 'time',
+    header: 'Time',
+    render: (sale) => <span className="text-xs font-bold text-neutral-text">{sale.time}</span>,
+  },
+  {
+    key: 'customer',
+    header: 'Customer',
+    render: (sale) => <span className="text-sm font-bold text-dark-text">{sale.customer}</span>,
+  },
+  {
+    key: 'service',
+    header: 'Service',
+    render: (sale) => <span className="text-xs font-bold text-neutral-text">{sale.biller}</span>,
+  },
+  {
+    key: 'amount',
+    header: 'Amount',
+    align: 'right',
+    render: (sale) => <span className="font-black text-dark-text">${(Number(sale.amount) || 0).toFixed(2)}</span>,
+  },
+  {
+    key: 'commission',
+    header: 'Comm.',
+    align: 'right',
+    render: (sale) => <span className="font-black text-accent-green">+${(Number(sale.commission) || 0).toFixed(2)}</span>,
+  },
 ];
 
 export function AgentDashboardPage() {
@@ -256,35 +360,13 @@ export function AgentDashboardPage() {
                 <span className="material-symbols-outlined text-sm">download</span> Export Ledger
              </button>
           </div>
-          <div className="overflow-x-auto">
-             <table className="w-full text-left">
-                <thead className="bg-neutral-light/10">
-                   <tr>
-                      <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">Time</th>
-                      <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">Service</th>
-                      <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest text-right">Sale Amount</th>
-                      <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest text-right">My Cut</th>
-                      <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest text-center">Status</th>
-                   </tr>
-                </thead>
-                <tbody className="divide-y divide-neutral-light">
-                   {recentSales.map(sale => (
-                      <tr key={sale.id} className="hover:bg-[#f8fafc] transition-colors">
-                         <td className="px-8 py-5 text-xs font-bold text-neutral-text">{sale.time}</td>
-                         <td className="px-8 py-5">
-                            <p className="text-sm font-black text-dark-text">{sale.biller}</p>
-                            <p className="text-[10px] font-bold text-neutral-text uppercase">{sale.customer}</p>
-                         </td>
-                         <td className="px-8 py-5 text-right font-bold text-neutral-text">${(Number(sale.amount) || 0).toFixed(2)}</td>
-                         <td className="px-8 py-5 text-right font-black text-accent-green">+${(Number(sale.commission) || 0).toFixed(2)}</td>
-                         <td className="px-8 py-5 text-center">
-                            <span className="px-3 py-1 bg-accent-green/10 text-accent-green rounded-full text-[9px] font-black uppercase tracking-widest">Accrued</span>
-                         </td>
-                      </tr>
-                   ))}
-                </tbody>
-             </table>
-          </div>
+           <DataTable
+              columns={commissionColumns}
+              data={recentSales}
+              rowKey={(sale) => sale.id}
+              emptyMessage="No commissions yet"
+              emptyIcon="account_balance"
+           />
        </div>
     </div>
   );
@@ -365,39 +447,14 @@ export function AgentDashboardPage() {
           <div className="p-8 border-b border-neutral-light flex items-center justify-between">
              <h4 className="text-lg font-black text-dark-text tracking-tight">Float History</h4>
           </div>
-          {floatHistory === null ? (
-            <div className="p-10 flex items-center justify-center gap-3">
-              <span className="material-symbols-outlined animate-spin text-neutral-text">sync</span>
-              <span className="text-xs font-bold text-neutral-text uppercase tracking-widest">Loading history...</span>
-            </div>
-          ) : (
-          <div className="overflow-x-auto">
-             <table className="w-full text-left">
-                <thead className="bg-neutral-light/10">
-                   <tr>
-                      <th className="px-10 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">Date</th>
-                      <th className="px-10 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">Reference</th>
-                      <th className="px-10 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">Method</th>
-                      <th className="px-10 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest text-right">Amount</th>
-                      <th className="px-10 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest text-center">Status</th>
-                   </tr>
-                </thead>
-                <tbody className="divide-y divide-neutral-light">
-                   {floatHistory.map(f => (
-                      <tr key={String(f.id)} className="hover:bg-[#f8fafc] transition-colors">
-                         <td className="px-10 py-6 text-sm font-bold text-dark-text">{String(f.date ?? '—')}</td>
-                         <td className="px-10 py-6 text-xs font-mono font-bold text-primary">{String(f.id ?? '—')}</td>
-                         <td className="px-10 py-6 text-sm text-neutral-text font-medium">{String(f.method ?? '—')}</td>
-                         <td className="px-10 py-6 text-right font-black text-dark-text">${(Number(f.amount) || 0).toFixed(2)}</td>
-                         <td className="px-10 py-6 text-center">
-                            <span className="px-3 py-1 bg-accent-green/10 text-accent-green rounded-full text-[9px] font-black uppercase tracking-widest">{String(f.status ?? '—')}</span>
-                         </td>
-                      </tr>
-                   ))}
-                </tbody>
-             </table>
-          </div>
-          )}
+          <DataTable
+            columns={floatHistoryColumns}
+            data={floatHistory ?? []}
+            rowKey={(f) => String(f.id)}
+            loading={floatHistory === null}
+            emptyMessage="No float history"
+            emptyIcon="history"
+          />
        </div>
     </div>
   );
@@ -511,30 +568,13 @@ export function AgentDashboardPage() {
                  <h4 className="text-lg font-black tracking-tight">Recent Sales Activity</h4>
                  <button onClick={() => setTab('sell')} className="text-xs font-black text-primary uppercase tracking-widest hover:underline">New Sale</button>
               </div>
-              <div className="overflow-x-auto">
-                 <table className="w-full text-left">
-                    <thead className="bg-neutral-light/5">
-                       <tr>
-                          <th className="px-8 py-4 text-[9px] font-black text-neutral-text uppercase tracking-widest">Time</th>
-                          <th className="px-8 py-4 text-[9px] font-black text-neutral-text uppercase tracking-widest">Customer</th>
-                          <th className="px-8 py-4 text-[9px] font-black text-neutral-text uppercase tracking-widest">Service</th>
-                          <th className="px-8 py-4 text-[9px] font-black text-neutral-text uppercase tracking-widest text-right">Amount</th>
-                          <th className="px-8 py-4 text-[9px] font-black text-neutral-text uppercase tracking-widest text-right">Comm.</th>
-                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-neutral-light">
-                       {recentSales.slice(0, 3).map(sale => (
-                          <tr key={sale.id}>
-                             <td className="px-8 py-5 text-xs font-bold text-neutral-text">{sale.time}</td>
-                             <td className="px-8 py-5 text-sm font-bold text-dark-text">{sale.customer}</td>
-                             <td className="px-8 py-5 text-xs font-bold text-neutral-text">{sale.biller}</td>
-                             <td className="px-8 py-5 text-right font-black text-dark-text">${(Number(sale.amount) || 0).toFixed(2)}</td>
-                             <td className="px-8 py-5 text-right font-black text-accent-green">+${(Number(sale.commission) || 0).toFixed(2)}</td>
-                          </tr>
-                       ))}
-                    </tbody>
-                 </table>
-              </div>
+               <DataTable
+                  columns={recentSalesColumns}
+                  data={recentSales.slice(0, 3)}
+                  rowKey={(sale) => sale.id}
+                  emptyMessage="No recent sales"
+                  emptyIcon="point_of_sale"
+                />
               <div className="p-4 border-t border-neutral-light">
                 <button
                   onClick={() => setTab('float')}

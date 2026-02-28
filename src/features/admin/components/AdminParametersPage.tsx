@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
+import { DataTable, TableColumn } from '../../../components/ui/DataTable'
 import {
   createBank,
   createCountry,
@@ -458,56 +459,41 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
         </div>
 
         {!selectedRow ? (
-          <div className="border border-neutral-light rounded overflow-hidden bg-white">
-            <div className="bg-[#7E57C2] text-white border-b border-neutral-light">
-              <div
-                className="grid"
-                style={{ gridTemplateColumns: `repeat(${config.columns.length}, minmax(0, 1fr)) 64px` }}
-              >
-                {config.columns.map((column) => (
-                  <div key={column.key} className="px-4 py-3 text-sm font-semibold border-r border-white/20 last:border-r-0">
-                    {column.label}
-                  </div>
-                ))}
-                <div className="px-4 py-3 text-sm font-semibold text-center">View</div>
-              </div>
-            </div>
-            <div className="min-h-[260px] bg-white">
-              {isLoading ? (
-                <div className="p-8 text-center text-neutral-text">Loading...</div>
-              ) : tableRows.length === 0 ? (
-                <div className="p-8 text-center text-neutral-text">No records found</div>
-              ) : (
-                tableRows.map((row, rowIndex) => {
+          <DataTable
+            columns={[
+              ...config.columns.map(col => ({
+                key: col.key,
+                header: col.label,
+                render: (row: UnknownRecord) => String(row[col.key] ?? '-')
+              })),
+              {
+                key: 'actions',
+                header: 'View',
+                align: 'center',
+                render: (row: UnknownRecord, rowIndex: number) => {
                   const rowId = getRowId(row, rowIndex)
                   return (
-                    <div
-                      key={rowId}
-                      className="w-full grid text-left border-t border-neutral-light transition-colors hover:bg-neutral-light/50"
-                      style={{ gridTemplateColumns: `repeat(${config.columns.length}, minmax(0, 1fr)) 64px` }}
-                    >
-                      {config.columns.map((column) => (
-                        <div key={`${rowId}-${column.key}`} className="px-4 py-3 text-sm text-dark-text truncate">
-                          {String(row[column.key] ?? '-')}
-                        </div>
-                      ))}
-                      <div className="px-2 py-1 flex items-center justify-center bg-white">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedRowId(rowId)}
-                          className="w-9 h-9 rounded-lg border transition-colors flex items-center justify-center bg-white text-neutral-text border-neutral-light hover:border-primary/40 hover:text-primary"
-                          title="View details"
-                          aria-label="View details"
-                        >
-                          <span className="material-symbols-outlined text-lg">visibility</span>
-                        </button>
-                      </div>
+                    <div className="flex items-center justify-center bg-white">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedRowId(rowId)}
+                        className="w-9 h-9 rounded-lg border transition-colors flex items-center justify-center bg-white text-neutral-text border-neutral-light hover:border-primary/40 hover:text-primary"
+                        title="View details"
+                        aria-label="View details"
+                      >
+                        <span className="material-symbols-outlined text-lg">visibility</span>
+                      </button>
                     </div>
                   )
-                })
-              )}
-            </div>
-          </div>
+                }
+              }
+            ]}
+            data={tableRows}
+            rowKey={(row: UnknownRecord) => getRowId(row, 0)}
+            loading={isLoading}
+            emptyMessage="No records found"
+            emptyIcon="filter_alt_off"
+          />
         ) : (
           <div className="border border-neutral-light rounded overflow-hidden bg-white">
             <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-light bg-[#7E57C2] text-white">

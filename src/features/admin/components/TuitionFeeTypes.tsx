@@ -2,9 +2,10 @@
 // Tuition Fee Types Page
 // ============================================================================
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import toast from 'react-hot-toast'
 import { adminJsonFetch } from '../services'
+import { DataTable, TableColumn } from '../../../components/ui/DataTable'
 
 type UnknownRecord = Record<string, unknown>
 
@@ -60,6 +61,26 @@ const TuitionFeeTypes: React.FC = () => {
       String(ft.description ?? '').toLowerCase().includes(searchLower)
     )
   })
+
+  const columns: TableColumn<UnknownRecord>[] = useMemo(() => [
+    { key: 'id', header: 'ID', render: (ft, idx) => <span className="text-xs font-mono font-bold text-primary">#{String(ft.id ?? idx + 1)}</span> },
+    { key: 'name', header: 'Name', render: (ft) => <span className="text-sm font-bold text-dark-text dark:text-white">{String(ft.name ?? '-')}</span> },
+    { key: 'description', header: 'Description', render: (ft) => <span className="text-sm text-neutral-text">{String(ft.description ?? '-')}</span> },
+    { key: 'status', header: 'Status', align: 'center', render: (ft) => {
+      const isActive = ft.isActive === true || ft.active === true || String(ft.status ?? '').toUpperCase() === 'ACTIVE'
+      return <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-bold ${isActive ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-gray-100 text-gray-700 border border-gray-200'}`}>{isActive ? 'ACTIVE' : 'INACTIVE'}</span>
+    } },
+    { key: 'actions', header: 'Actions', align: 'right', render: () => (
+      <div className="flex items-center justify-end gap-1">
+        <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/10 rounded-lg transition-colors">
+          <span className="material-symbols-outlined text-lg text-neutral-text">edit</span>
+        </button>
+        <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/10 rounded-lg transition-colors">
+          <span className="material-symbols-outlined text-lg text-neutral-text">more_vert</span>
+        </button>
+      </div>
+    ) },
+  ], [])
 
   return (
     <div className="p-8 space-y-6 animate-in fade-in duration-300">
@@ -124,76 +145,15 @@ const TuitionFeeTypes: React.FC = () => {
       {/* Fee Types Table */}
       <div className="bg-white rounded-2xl border border-neutral-light dark:border-white/5 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-neutral-light/20 dark:bg-white/5 border-b border-neutral-light dark:border-white/5">
-                <th className="px-4 py-3 text-neutral-text uppercase text-xs font-black tracking-wider">ID</th>
-                <th className="px-4 py-3 text-xs font-black text-neutral-text uppercase tracking-wider">Name</th>
-                <th className="px-4 py-3 text-xs font-black text-neutral-text uppercase tracking-wider">Description</th>
-                <th className="px-4 py-3 text-xs font-black text-neutral-text uppercase tracking-wider text-center">Status</th>
-                <th className="px-4 py-3 text-xs font-black text-neutral-text uppercase tracking-wider text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-light dark:divide-white/5">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-neutral-text">
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="material-symbols-outlined animate-spin">sync</span>
-                      Loading fee types...
-                    </div>
-                  </td>
-                </tr>
-              ) : filteredFeeTypes.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-neutral-text">
-                    <div className="flex flex-col items-center gap-2">
-                      <span className="material-symbols-outlined text-4xl text-primary/30">category</span>
-                      <p>No fee types found</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                filteredFeeTypes.map((ft, index) => {
-                  const isActive = ft.isActive === true || ft.active === true || String(ft.status ?? '').toUpperCase() === 'ACTIVE'
-                  return (
-                    <tr key={String(ft.id ?? `ft-${index}`)} className="hover:bg-neutral-light/10 dark:hover:bg-white/5 transition-colors">
-                      <td className="px-4 py-3">
-                        <span className="text-xs font-mono font-bold text-primary">#{String(ft.id ?? index + 1)}</span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="text-sm font-bold text-dark-text dark:text-white">
-                          {String(ft.name ?? '-')}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-neutral-text">
-                        {String(ft.description ?? '-')}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-bold ${
-                          isActive
-                            ? 'bg-green-100 text-green-700 border border-green-200'
-                            : 'bg-gray-100 text-gray-700 border border-gray-200'
-                        }`}>
-                          {isActive ? 'ACTIVE' : 'INACTIVE'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/10 rounded-lg transition-colors">
-                            <span className="material-symbols-outlined text-lg text-neutral-text">edit</span>
-                          </button>
-                          <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/10 rounded-lg transition-colors">
-                            <span className="material-symbols-outlined text-lg text-neutral-text">more_vert</span>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })
-              )}
-            </tbody>
-          </table>
+          <DataTable
+            columns={columns}
+            data={filteredFeeTypes}
+            rowKey={(r, idx) => String(r.id ?? `ft-${idx}`)}
+            loading={isLoading}
+            skeletonRows={6}
+            tableLayout="auto"
+            ariaLabel="Tuition fee types"
+          />
         </div>
       </div>
 

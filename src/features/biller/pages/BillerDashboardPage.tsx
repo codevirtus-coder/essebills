@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import UserProfile from "../../admin/components/UserProfile";
 import StatCard from "../../../components/ui/StatCard";
+import { DataTable, type TableColumn } from "../../../components/ui";
 import { getCurrentUserProfile } from "../../auth/auth.service";
 import { getAuthSession, saveAuthSession } from "../../auth/auth.storage";
 import type { UserProfileDto } from "../../auth/dto/auth.dto";
@@ -46,6 +47,118 @@ const MOCK_SETTLEMENTS = [
     net: 12625.5,
     status: "Settled",
     reference: "REF-SCB-9918",
+  },
+];
+
+// Collections table columns
+const collectionsColumns: TableColumn<PaymentTransaction>[] = [
+  {
+    key: 'transaction',
+    header: 'Transaction',
+    render: (c) => {
+      const dateStr = c.dateTimeOfTransaction
+        ? new Date(c.dateTimeOfTransaction).toLocaleDateString()
+        : '—';
+      return (
+        <div>
+          <p className="text-xs font-bold text-dark-text">{dateStr}</p>
+          <p className="text-[9px] font-black text-neutral-text uppercase">{c.productName ?? ''} • {c.id}</p>
+        </div>
+      );
+    },
+  },
+  {
+    key: 'customerRef',
+    header: 'Customer Ref',
+    render: (c) => {
+      const customerRef = c.customerPhoneNumber ?? c.customerEmail ?? c.productReferenceNumber ?? '—';
+      return <span className="text-sm font-bold text-neutral-text">{customerRef}</span>;
+    },
+  },
+  {
+    key: 'gross',
+    header: 'Gross',
+    align: 'right',
+    render: (c) => {
+      const gross = Number(c.amount) || 0;
+      return <span className="text-sm font-black text-dark-text">${gross.toFixed(2)}</span>;
+    },
+  },
+  {
+    key: 'fee',
+    header: 'Fee',
+    align: 'right',
+    render: (c) => {
+      const fee = Number(c.serviceFees) || 0;
+      return <span className="text-sm font-bold text-red-500">-${fee.toFixed(2)}</span>;
+    },
+  },
+  {
+    key: 'net',
+    header: 'Net',
+    align: 'right',
+    render: (c) => {
+      const gross = Number(c.amount) || 0;
+      const fee = Number(c.serviceFees) || 0;
+      const net = gross - fee;
+      return <span className="text-sm font-black text-accent-green">${net.toFixed(2)}</span>;
+    },
+  },
+  {
+    key: 'status',
+    header: 'Status',
+    align: 'center',
+    render: (c) => {
+      const statusStr = c.paymentStatus ?? '';
+      return (
+        <span className="px-3 py-1 bg-accent-green/10 text-accent-green rounded-full text-[9px] font-black uppercase tracking-widest">
+          {statusStr || 'Completed'}
+        </span>
+      );
+    },
+  },
+];
+
+// Settlements table columns
+const settlementsColumns: TableColumn<typeof MOCK_SETTLEMENTS[number]>[] = [
+  {
+    key: 'id',
+    header: 'Payout ID',
+    render: (s) => <span className="text-xs font-black text-primary">{s.id}</span>,
+  },
+  {
+    key: 'date',
+    header: 'Date',
+    render: (s) => (
+      <div>
+        <p className="text-sm font-bold text-dark-text">{s.date}</p>
+        <p className="text-[9px] font-black text-neutral-text uppercase">{s.period}</p>
+      </div>
+    ),
+  },
+  {
+    key: 'gross',
+    header: 'Gross Collection',
+    render: (s) => <span className="text-sm font-bold text-neutral-text">${s.gross.toLocaleString()}</span>,
+  },
+  {
+    key: 'net',
+    header: 'Net Payout',
+    align: 'right',
+    render: (s) => <span className="text-base font-black text-dark-text">${s.net.toLocaleString()}</span>,
+  },
+  {
+    key: 'reference',
+    header: 'Reference',
+    render: (s) => <span className="text-xs font-mono text-neutral-text">{s.reference}</span>,
+  },
+  {
+    key: 'status',
+    header: 'Status',
+    align: 'center',
+    render: (s) => (
+      <span className="px-3 py-1 bg-accent-green/10 text-accent-green rounded-full text-[9px] font-black uppercase tracking-widest">{s.status}</span>
+    ),
   },
 ];
 
@@ -234,55 +347,14 @@ export function BillerDashboardPage() {
           <span className="text-xs font-bold text-neutral-text uppercase tracking-widest">Loading collections...</span>
         </div>
       ) : (
-      <div className="overflow-x-auto">
-        <table className="w-full text-left">
-          <thead className="bg-neutral-light/10">
-            <tr>
-              <th className="px-10 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">Transaction</th>
-              <th className="px-10 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">Customer Ref</th>
-              <th className="px-10 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest text-right">Gross</th>
-              <th className="px-10 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest text-right">Fee</th>
-              <th className="px-10 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest text-right">Net</th>
-              <th className="px-10 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest text-center">Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-neutral-light">
-            {(collections ?? []).length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-10 py-10 text-center text-xs font-bold text-neutral-text uppercase tracking-widest">
-                  No collections found
-                </td>
-              </tr>
-            ) : (collections ?? []).map((c) => {
-              const gross = Number(c.amount) || 0;
-              const fee = Number(c.serviceFees) || 0;
-              const net = gross - fee;
-              const statusStr = c.paymentStatus ?? '';
-              const dateStr = c.dateTimeOfTransaction
-                ? new Date(c.dateTimeOfTransaction).toLocaleDateString()
-                : '—';
-              const customerRef = c.customerPhoneNumber ?? c.customerEmail ?? c.productReferenceNumber ?? '—';
-              return (
-                <tr key={c.id} className="hover:bg-[#f8fafc] transition-colors group">
-                  <td className="px-10 py-6">
-                    <p className="text-xs font-bold text-dark-text">{dateStr}</p>
-                    <p className="text-[9px] font-black text-neutral-text uppercase">{c.productName ?? ''} • {c.id}</p>
-                  </td>
-                  <td className="px-10 py-6 text-sm font-bold text-neutral-text">{customerRef}</td>
-                  <td className="px-10 py-6 text-right text-sm font-black text-dark-text">${gross.toFixed(2)}</td>
-                  <td className="px-10 py-6 text-right text-sm font-bold text-red-500">-${fee.toFixed(2)}</td>
-                  <td className="px-10 py-6 text-right text-sm font-black text-accent-green">${net.toFixed(2)}</td>
-                  <td className="px-10 py-6 text-center">
-                    <span className="px-3 py-1 bg-accent-green/10 text-accent-green rounded-full text-[9px] font-black uppercase tracking-widest">
-                      {statusStr || 'Completed'}
-                    </span>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+        <DataTable
+          columns={collectionsColumns}
+          data={collections ?? []}
+          rowKey={(c) => c.id ?? Math.random()}
+          loading={collections === null}
+          emptyMessage="No collections found"
+          emptyIcon="payments"
+        />
       )}
     </div>
   );
@@ -297,37 +369,13 @@ export function BillerDashboardPage() {
           </p>
         </div>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-left">
-          <thead className="bg-neutral-light/10">
-            <tr>
-              <th className="px-10 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">Payout ID</th>
-              <th className="px-10 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">Date</th>
-              <th className="px-10 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">Gross Collection</th>
-              <th className="px-10 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest text-right">Net Payout</th>
-              <th className="px-10 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">Reference</th>
-              <th className="px-10 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest text-center">Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-neutral-light">
-            {MOCK_SETTLEMENTS.map((s) => (
-              <tr key={s.id} className="hover:bg-[#f8fafc] transition-colors">
-                <td className="px-10 py-6 text-xs font-black text-primary">{s.id}</td>
-                <td className="px-10 py-6">
-                  <p className="text-sm font-bold text-dark-text">{s.date}</p>
-                  <p className="text-[9px] font-black text-neutral-text uppercase">{s.period}</p>
-                </td>
-                <td className="px-10 py-6 text-sm font-bold text-neutral-text">${s.gross.toLocaleString()}</td>
-                <td className="px-10 py-6 text-right text-base font-black text-dark-text">${s.net.toLocaleString()}</td>
-                <td className="px-10 py-6 text-xs font-mono text-neutral-text">{s.reference}</td>
-                <td className="px-10 py-6 text-center">
-                  <span className="px-3 py-1 bg-accent-green/10 text-accent-green rounded-full text-[9px] font-black uppercase tracking-widest">{s.status}</span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <DataTable
+        columns={settlementsColumns}
+        data={MOCK_SETTLEMENTS}
+        rowKey={(s) => s.id}
+        emptyMessage="No settlements found"
+        emptyIcon="account_balance"
+      />
     </div>
   );
 

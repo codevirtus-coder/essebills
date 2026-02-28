@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { createProduct, deleteProduct, getAllProducts, updateProduct } from '../services';
+import { DataTable, type TableColumn } from '../../../components/ui';
 
 interface BillerField {
   id: string;
@@ -31,6 +32,82 @@ interface BillersProps {
 const Billers: React.FC<BillersProps> = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  const columns: TableColumn<Biller>[] = [
+    {
+      key: 'name',
+      header: 'Biller Entity',
+      render: (biller) => (
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center">
+            <span className="material-symbols-outlined text-2xl">{biller.icon}</span>
+          </div>
+          <div>
+            <p className="text-sm font-black text-dark-text dark:text-gray-200">{biller.name || 'Unnamed Entity'}</p>
+            <p className="text-[10px] text-neutral-text font-bold">Joined {biller.onboardedDate}</p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'allowBulk',
+      header: 'Bulk Ops',
+      render: (biller) => (
+        <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${biller.allowBulk ? 'bg-accent-green/20 text-accent-green border border-accent-green/20' : 'bg-neutral-light text-neutral-text/50 border border-neutral-light'}`}>
+          {biller.allowBulk ? 'Enabled' : 'Disabled'}
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (biller) => (
+        <span className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black border uppercase tracking-widest ${
+          biller.status === 'Active' ? 'bg-accent-green/10 text-accent-green border-accent-green/20' :
+          biller.status === 'Pending' ? 'bg-orange-50 text-orange-600 border-orange-100' :
+          'bg-red-50 text-red-600 border-red-100'
+        }`}>
+          {biller.status}
+        </span>
+      ),
+    },
+    {
+      key: 'settlement',
+      header: 'Settlement',
+      render: (biller) => (
+        <span className="text-xs font-black text-neutral-text">{biller.settlement}</span>
+      ),
+    },
+    {
+      key: 'revenueShare',
+      header: 'Commission',
+      render: (biller) => (
+        <p className="text-sm font-black text-dark-text dark:text-white">{biller.revenueShare}</p>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      align: 'right',
+      render: (biller) => (
+        <div className="flex items-center justify-end gap-2">
+          <button 
+            onClick={() => handleEditClick(biller)}
+            className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-primary/10 hover:text-primary text-neutral-text transition-all"
+          >
+            <span className="material-symbols-outlined text-lg">settings</span>
+          </button>
+          <button
+            onClick={() => void handleDeleteBiller(biller.id)}
+            className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-red-50 hover:text-red-600 text-neutral-text transition-all"
+            title="Delete Product"
+          >
+            <span className="material-symbols-outlined text-lg">delete</span>
+          </button>
+        </div>
+      ),
+    },
+  ];
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [isPersisting, setIsPersisting] = useState(false);
   const [selectedBiller, setSelectedBiller] = useState<Biller | null>(null);
@@ -324,76 +401,13 @@ const Billers: React.FC<BillersProps> = () => {
         </div>
       </div>
 
-      <div className="bg-white  rounded-[3rem] shadow-sm border border-neutral-light dark:border-white/5 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-separate border-spacing-0">
-            <thead>
-              <tr className="bg-neutral-light/20 dark:bg-white/5">
-                <th className="px-10 py-6 text-[10px] font-black text-neutral-text uppercase tracking-widest">Biller Entity</th>
-                <th className="px-10 py-6 text-[10px] font-black text-neutral-text uppercase tracking-widest">Bulk Ops</th>
-                <th className="px-10 py-6 text-[10px] font-black text-neutral-text uppercase tracking-widest">Status</th>
-                <th className="px-10 py-6 text-[10px] font-black text-neutral-text uppercase tracking-widest">Settlement</th>
-                <th className="px-10 py-6 text-[10px] font-black text-neutral-text uppercase tracking-widest">Commission</th>
-                <th className="px-10 py-6 text-[10px] font-black text-neutral-text uppercase tracking-widest text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-light dark:divide-white/5">
-              {filteredBillers.map((biller) => (
-                <tr key={biller.id} className="group hover:bg-neutral-light/10 dark:hover:bg-white/5 transition-colors">
-                  <td className="px-10 py-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center">
-                        <span className="material-symbols-outlined text-2xl">{biller.icon}</span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-black text-dark-text dark:text-gray-200">{biller.name || 'Unnamed Entity'}</p>
-                        <p className="text-[10px] text-neutral-text font-bold">Joined {biller.onboardedDate}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-10 py-6">
-                    <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${biller.allowBulk ? 'bg-accent-green/20 text-accent-green border border-accent-green/20' : 'bg-neutral-light text-neutral-text/50 border border-neutral-light'}`}>
-                      {biller.allowBulk ? 'Enabled' : 'Disabled'}
-                    </span>
-                  </td>
-                  <td className="px-10 py-6">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black border uppercase tracking-widest ${
-                      biller.status === 'Active' ? 'bg-accent-green/10 text-accent-green border-accent-green/20' :
-                      biller.status === 'Pending' ? 'bg-orange-50 text-orange-600 border-orange-100' :
-                      'bg-red-50 text-red-600 border-red-100'
-                    }`}>
-                      {biller.status}
-                    </span>
-                  </td>
-                  <td className="px-10 py-6">
-                    <span className="text-xs font-black text-neutral-text">{biller.settlement}</span>
-                  </td>
-                  <td className="px-10 py-6">
-                    <p className="text-sm font-black text-dark-text dark:text-white">{biller.revenueShare}</p>
-                  </td>
-                  <td className="px-10 py-6 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <button 
-                        onClick={() => handleEditClick(biller)}
-                        className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-primary/10 hover:text-primary text-neutral-text transition-all"
-                      >
-                        <span className="material-symbols-outlined text-lg">settings</span>
-                      </button>
-                      <button
-                        onClick={() => void handleDeleteBiller(biller.id)}
-                        className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-red-50 hover:text-red-600 text-neutral-text transition-all"
-                        title="Delete Product"
-                      >
-                        <span className="material-symbols-outlined text-lg">delete</span>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <DataTable
+        columns={columns}
+        data={filteredBillers}
+        rowKey={(biller) => biller.id}
+        emptyMessage="No billers found"
+        emptyIcon="account_balance"
+      />
 
       {isDrawerOpen && selectedBiller && (
         <div className="fixed inset-0 z-[100] flex justify-end">

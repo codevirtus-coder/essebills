@@ -3,6 +3,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import UserProfile from '../../admin/components/UserProfile';
 import { getPayments } from '../../../services/payments.service';
 import type { PaymentTransaction } from '../../../types';
+import { DataTable, type TableColumn } from '../../../components/ui';
 
 export function CustomerDashboardPage() {
   const { tab: urlTab } = useParams();
@@ -12,6 +13,59 @@ export function CustomerDashboardPage() {
 
   // Transactions state — null = not yet fetched
   const [transactions, setTransactions] = useState<PaymentTransaction[] | null>(null);
+
+  const columns: TableColumn<PaymentTransaction>[] = [
+    {
+      key: 'date',
+      header: 'Date',
+      render: (tx) => {
+        const date = tx.dateTimeOfTransaction
+          ? new Date(tx.dateTimeOfTransaction).toLocaleDateString()
+          : '—';
+        return <span className="text-sm font-bold text-dark-text">{date}</span>;
+      },
+    },
+    {
+      key: 'reference',
+      header: 'Reference',
+      render: (tx) => {
+        const ref = tx.productReferenceNumber ?? tx.pesepayReferenceNumber ?? String(tx.id);
+        return <span className="text-xs font-mono text-neutral-text">{ref}</span>;
+      },
+    },
+    {
+      key: 'service',
+      header: 'Service',
+      render: (tx) => <span className="text-sm text-neutral-text">{tx.productName ?? '—'}</span>,
+    },
+    {
+      key: 'amount',
+      header: 'Amount',
+      align: 'right',
+      render: (tx) => <span className="font-black text-dark-text">${(Number(tx.amount) || 0).toFixed(2)}</span>,
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      align: 'center',
+      render: (tx) => {
+        const status = tx.paymentStatus ?? '—';
+        const isSuccess = String(status).toLowerCase().includes('success') || String(status).toLowerCase().includes('paid');
+        const isPending = String(status).toLowerCase().includes('pending');
+        return (
+          <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
+            isSuccess
+              ? 'bg-accent-green/10 text-accent-green'
+              : isPending
+              ? 'bg-yellow-50 text-yellow-600'
+              : 'bg-red-50 text-red-500'
+          }`}>
+            {status}
+          </span>
+        );
+      },
+    },
+  ];
 
   useEffect(() => {
     if (activeTab !== 'transactions' || transactions !== null) return;
@@ -48,55 +102,20 @@ export function CustomerDashboardPage() {
               <span className="text-xs font-bold text-neutral-text uppercase tracking-widest">Loading transactions...</span>
             </div>
           ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead className="bg-neutral-light/10">
-                <tr>
-                  <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">Date</th>
-                  <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">Reference</th>
-                  <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">Service</th>
-                  <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest text-right">Amount</th>
-                  <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest text-center">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-light">
-                {transactions.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-8 py-10 text-center text-xs font-bold text-neutral-text uppercase tracking-widest">
-                      No transactions found
-                    </td>
-                  </tr>
-                ) : transactions.map((tx) => {
-                  const date = tx.dateTimeOfTransaction
-                    ? new Date(tx.dateTimeOfTransaction).toLocaleDateString()
-                    : '—';
-                  const ref = tx.productReferenceNumber ?? tx.pesepayReferenceNumber ?? String(tx.id);
-                  const status = tx.paymentStatus ?? '—';
-                  const isSuccess = String(status).toLowerCase().includes('success') || String(status).toLowerCase().includes('paid');
-                  const isPending = String(status).toLowerCase().includes('pending');
-                  return (
-                    <tr key={tx.id} className="hover:bg-[#f8fafc] transition-colors">
-                      <td className="px-8 py-5 text-sm font-bold text-dark-text">{date}</td>
-                      <td className="px-8 py-5 text-xs font-mono text-neutral-text">{ref}</td>
-                      <td className="px-8 py-5 text-sm text-neutral-text">{tx.productName ?? '—'}</td>
-                      <td className="px-8 py-5 text-right font-black text-dark-text">${(Number(tx.amount) || 0).toFixed(2)}</td>
-                      <td className="px-8 py-5 text-center">
-                        <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
-                          isSuccess
-                            ? 'bg-accent-green/10 text-accent-green'
-                            : isPending
-                            ? 'bg-yellow-50 text-yellow-600'
-                            : 'bg-red-50 text-red-500'
-                        }`}>
-                          {status}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+            <DataTable
+              columns={columns}
+              data={transactions}
+              rowKey={(tx) => tx.id ?? Math.random()}
+              loading={transactions === null}
+              emptyMessage="No transactions found"
+              emptyIcon="receipt_long"
+              header={
+                <div className="px-8 py-6">
+                  <h3 className="text-xl font-black text-dark-text tracking-tight">My Transactions</h3>
+                  <p className="text-[10px] font-bold text-neutral-text uppercase tracking-widest mt-1">Payment history</p>
+                </div>
+              }
+            />
           )}
         </div>
       </div>

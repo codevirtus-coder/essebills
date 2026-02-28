@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
+import { DataTable, type TableColumn } from '../../../components/ui'
 
 type UnknownRecord = Record<string, unknown>
 
@@ -98,62 +99,31 @@ const AdminApiModulePage: React.FC<AdminApiModulePageProps> = ({
         </div>
       </div>
 
-      <div className="bg-white rounded-[2rem] border border-neutral-light shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-separate border-spacing-0">
-            <thead>
-              <tr className="bg-neutral-light/20">
-                {columnKeys.map((key) => (
-                  <th
-                    key={key}
-                    className="px-6 py-4 text-[10px] font-black text-neutral-text uppercase tracking-widest"
-                  >
-                    {key}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td
-                    colSpan={Math.max(columnKeys.length, 1)}
-                    className="px-6 py-8 text-sm font-semibold text-neutral-text text-center"
-                  >
-                    Loading...
-                  </td>
-                </tr>
-              ) : filteredRows.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={Math.max(columnKeys.length, 1)}
-                    className="px-6 py-8 text-sm font-semibold text-neutral-text text-center"
-                  >
-                    No data returned by endpoint
-                  </td>
-                </tr>
-              ) : (
-                filteredRows.map((row, index) => (
-                  <tr key={String(row.id ?? index)} className="border-t border-neutral-light">
-                    {columnKeys.map((key) => {
-                      const value = row[key]
-                      return (
-                        <td key={`${index}-${key}`} className="px-6 py-4 text-sm text-dark-text">
-                          {value === null || value === undefined
-                            ? '-'
-                            : typeof value === 'object'
-                              ? JSON.stringify(value)
-                              : String(value)}
-                        </td>
-                      )
-                    })}
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <DataTable
+        columns={useMemo(() => 
+          columnKeys.map(key => ({
+            key,
+            header: key,
+            render: (row: UnknownRecord) => {
+              const value = row[key]
+              return (
+                <span className="text-sm text-dark-text">
+                  {value === null || value === undefined
+                    ? '-'
+                    : typeof value === 'object'
+                      ? JSON.stringify(value)
+                      : String(value)}
+                </span>
+              )
+            }
+          })),
+        [columnKeys])}
+        data={filteredRows}
+        rowKey={(row: UnknownRecord) => String(row.id ?? Math.random())}
+        loading={isLoading}
+        emptyMessage="No data returned by endpoint"
+        emptyIcon="data_object"
+      />
     </div>
   )
 }

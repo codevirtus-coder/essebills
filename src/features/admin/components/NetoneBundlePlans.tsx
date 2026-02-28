@@ -2,13 +2,14 @@
 // Netone Bundle Plans Page
 // ============================================================================
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import toast from 'react-hot-toast'
 import { 
   getAllNetoneBundlePlans, 
   createNetoneBundlePlan, 
   changeNetoneBundlePlanStatus 
 } from '../services/adminModules.service'
+import { DataTable, TableColumn } from '../../../components/ui/DataTable'
 
 type UnknownRecord = Record<string, unknown>
 
@@ -78,6 +79,37 @@ const NetoneBundlePlans: React.FC = () => {
     )
   })
 
+  const columns: TableColumn<UnknownRecord>[] = useMemo(() => [
+    { key: 'id', header: 'ID', render: (p, i) => <span className="text-xs font-mono font-bold text-primary">#{String(p.id ?? i + 1)}</span> },
+    { key: 'name', header: 'Name', render: (p) => <span className="text-sm font-bold text-dark-text dark:text-white">{String(p.name ?? '-')}</span> },
+    { key: 'code', header: 'Code', render: (p) => <span className="text-sm font-mono text-neutral-text">{String(p.code ?? '-')}</span> },
+    { key: 'amount', header: 'Amount', align: 'right', render: (p) => <span className="text-sm font-black text-dark-text dark:text-white">${Number(p.amount ?? p.value ?? 0).toFixed(2)}</span> },
+    { key: 'validity', header: 'Validity', align: 'center', render: (p) => <span className="text-sm text-neutral-text">{String(p.validityDays ?? p.validity ?? '-')} days</span> },
+    { key: 'status', header: 'Status', align: 'center', render: (p, i) => {
+      const isActive = p.isActive === true || p.active === true || String(p.status ?? '').toUpperCase() === 'ACTIVE'
+      return (
+        <button
+          onClick={() => handleToggleStatus(String(p.id ?? i), isActive)}
+          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-bold cursor-pointer transition-colors ${
+            isActive ? 'bg-green-100 text-green-700 border border-green-200 hover:bg-green-200' : 'bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200'
+          }`}
+        >
+          {isActive ? 'ACTIVE' : 'INACTIVE'}
+        </button>
+      )
+    } },
+    { key: 'actions', header: 'Actions', align: 'right', render: () => (
+      <div className="flex items-center justify-end gap-1">
+        <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/10 rounded-lg transition-colors">
+          <span className="material-symbols-outlined text-lg text-neutral-text">edit</span>
+        </button>
+        <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/10 rounded-lg transition-colors">
+          <span className="material-symbols-outlined text-lg text-neutral-text">more_vert</span>
+        </button>
+      </div>
+    ) },
+  ], [])
+
   return (
     <div className="p-8 space-y-6 animate-in fade-in duration-300">
       {/* Header */}
@@ -146,95 +178,14 @@ const NetoneBundlePlans: React.FC = () => {
 
       {/* Plans Table */}
       <div className="bg-white rounded-2xl border border-neutral-light dark:border-white/5 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-neutral-light/20 dark:bg-white/5 border-b border-neutral-light dark:border-white/5">
-                <th className="px-4 py-3 text-xs font-black text-neutral-text uppercase tracking-wider">ID</th>
-                <th className="px-4 py-3 text-xs font-black text-neutral-text uppercase tracking-wider">Name</th>
-                <th className="px-4 py-3 text-xs font-black text-neutral-text uppercase tracking-wider">Code</th>
-                <th className="px-4 py-3 text-xs font-black text-neutral-text uppercase tracking-wider text-right">Amount</th>
-                <th className="px-4 py-3 text-xs font-black text-neutral-text uppercase tracking-wider text-center">Validity</th>
-                <th className="px-4 py-3 text-xs font-black text-neutral-text uppercase tracking-wider text-center">Status</th>
-                <th className="px-4 py-3 text-xs font-black text-neutral-text uppercase tracking-wider text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-light dark:divide-white/5">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-neutral-text">
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="material-symbols-outlined animate-spin">sync</span>
-                      Loading plans...
-                    </div>
-                  </td>
-                </tr>
-              ) : filteredPlans.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-neutral-text">
-                    <div className="flex flex-col items-center gap-2">
-                      <span className="material-symbols-outlined text-4xl text-primary/30">inventory_2</span>
-                      <p>No bundle plans found</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                filteredPlans.map((plan, index) => {
-                  const isActive = plan.isActive === true || plan.active === true || String(plan.status ?? '').toUpperCase() === 'ACTIVE'
-                  return (
-                    <tr key={String(plan.id ?? `plan-${index}`)} className="hover:bg-neutral-light/10 dark:hover:bg-white/5 transition-colors">
-                      <td className="px-4 py-3">
-                        <span className="text-xs font-mono font-bold text-primary">#{String(plan.id ?? index + 1)}</span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="text-sm font-bold text-dark-text dark:text-white">
-                          {String(plan.name ?? '-')}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="text-sm font-mono text-neutral-text">
-                          {String(plan.code ?? '-')}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <span className="text-sm font-black text-dark-text dark:text-white">
-                          ${Number(plan.amount ?? plan.value ?? 0).toFixed(2)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className="text-sm text-neutral-text">
-                          {String(plan.validityDays ?? plan.validity ?? '-')} days
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <button
-                          onClick={() => handleToggleStatus(String(plan.id ?? index), isActive)}
-                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-bold cursor-pointer transition-colors ${
-                            isActive
-                              ? 'bg-green-100 text-green-700 border border-green-200 hover:bg-green-200'
-                              : 'bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200'
-                          }`}
-                        >
-                          {isActive ? 'ACTIVE' : 'INACTIVE'}
-                        </button>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/10 rounded-lg transition-colors">
-                            <span className="material-symbols-outlined text-lg text-neutral-text">edit</span>
-                          </button>
-                          <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/10 rounded-lg transition-colors">
-                            <span className="material-symbols-outlined text-lg text-neutral-text">more_vert</span>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          columns={columns}
+          data={filteredPlans}
+          rowKey={(r) => String(r.id ?? r.code ?? JSON.stringify(r))}
+          loading={isLoading}
+          emptyMessage="No bundle plans found"
+          className="rounded-2xl"
+        />
       </div>
 
       {/* Add Modal */}
