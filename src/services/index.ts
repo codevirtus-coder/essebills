@@ -22,3 +22,12 @@ export * from './institutions.service'
 
 // Integrations Service
 export * from './integrations.service'
+
+// Access Control Service
+export * from './accessControl.service'
+
+// Audits Service
+export * from './audits.service'
+
+// Agent Commission Service
+export * from './agentCommission.service'

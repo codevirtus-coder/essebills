@@ -191,14 +191,22 @@ export const API_ENDPOINTS = {
       root: '/v1/access-control/user-authorities',
       bundled: '/v1/access-control/user-authorities/bundled',
       byUser: (userId: string | number) => `/v1/access-control/user-authorities/by-user/${userId}`,
+      byUserAll: (userId: string | number) => `/v1/access-control/user-authorities/by-user/${userId}/all`,
       unassigned: (userId: string | number) => `/v1/access-control/user-authorities/unassigned/${userId}`,
     },
     groupAuthorities: {
       root: '/v1/access-control/group-authorities',
       bundled: '/v1/access-control/group-authorities/bundled',
       byGroup: (groupId: string | number) => `/v1/access-control/group-authorities/by-group/${groupId}`,
+      byGroupAll: (groupId: string | number) => `/v1/access-control/group-authorities/by-group/${groupId}/all`,
       unassigned: (groupId: string | number) => `/v1/access-control/group-authorities/unassigned/${groupId}`,
     },
+  },
+
+  // Agent Commission Rates
+  agentCommission: {
+    rates: (agentId: string | number) => `/v1/admin/agents/${agentId}/commission-rates`,
+    rateById: (agentId: string | number, id: string | number) => `/v1/admin/agents/${agentId}/commission-rates/${id}`,
   },
 
   // Agent
@@ -248,6 +256,8 @@ export const API_ENDPOINTS = {
   // Audits
   audits: {
     root: '/v1/audits',
+    byId: (id: string | number) => `/v1/audits/${id}`,
+    byPerformerPeriod: '/v1/audits/by-performer/period',
     myAudits: '/v1/my-audits/period',
   },
 } as const
