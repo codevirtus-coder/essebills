@@ -20,7 +20,7 @@ export const ADMIN_MENU: MenuSection[] = [
     id: 'payments',
     title: 'Payments',
     items: [
-      { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', path: '/portal/admin' },
+      { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
       {
         id: 'transactions',
         label: 'Transactions',
@@ -39,8 +39,8 @@ export const ADMIN_MENU: MenuSection[] = [
           { id: 'vouchersZimProducts', label: 'Zim Products', icon: 'subdirectory_arrow_right' },
         ],
       },
-      { id: 'rongekaAccounts', label: 'Rongeka Accounts', icon: 'account_balance_wallet', path: '/portal/admin?tab=rongekaAccounts' },
-      { id: 'products', label: 'Products', icon: 'inventory_2', path: '/portal/admin?tab=products' },
+      { id: 'rongekaAccounts', label: 'Rongeka Accounts', icon: 'account_balance_wallet' },
+      { id: 'products', label: 'Products', icon: 'inventory_2' },
     ],
   },
   {
@@ -131,20 +131,20 @@ export const ADMIN_MENU: MenuSection[] = [
     id: 'ops',
     title: 'Operations',
     items: [
-      { id: 'billers', label: 'Billers', icon: 'corporate_fare', path: '/portal/admin?tab=billers' },
-      { id: 'agents', label: 'Agents', icon: 'storefront', path: '/portal/admin?tab=agents' },
-      { id: 'commissions', label: 'Commissions', icon: 'payments', path: '/portal/admin?tab=commissions' },
-      { id: 'whatsapp', label: 'WhatsApp Center', icon: 'mark_chat_read', path: '/portal/admin?tab=whatsapp' },
-      { id: 'reports', label: 'Reports', icon: 'analytics', path: '/portal/admin?tab=reports' },
+      { id: 'billers', label: 'Billers', icon: 'corporate_fare' },
+      { id: 'agents', label: 'Agents', icon: 'storefront' },
+      { id: 'commissions', label: 'Commissions', icon: 'payments' },
+      { id: 'whatsapp', label: 'WhatsApp Center', icon: 'mark_chat_read' },
+      { id: 'reports', label: 'Reports', icon: 'analytics' },
     ],
   },
 ]
 
 // Admin preference items (Profile, Settings, Support)
 export const ADMIN_PREFERENCE_ITEMS: MenuItem[] = [
-  { id: 'profile', label: 'Profile', icon: 'account_circle', path: '/portal-admin?tab=profile' },
-  { id: 'settings', label: 'Settings', icon: 'settings', path: '/portal/admin?tab=settings' },
-  { id: 'support', label: 'Support', icon: 'help', path: '/portal/admin?tab=support' },
+  { id: 'profile', label: 'Profile', icon: 'account_circle' },
+  { id: 'settings', label: 'Settings', icon: 'settings' },
+  { id: 'support', label: 'Support', icon: 'help' },
 ]
 
 // Agent menu - limited access

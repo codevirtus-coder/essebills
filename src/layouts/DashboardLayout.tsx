@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Outlet, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { DashboardHeader } from './DashboardHeader'
 import { DashboardSidebar } from './DashboardSidebar'
 import { useCurrentUser } from '../features/auth/hooks/useCurrentUser'
@@ -7,9 +7,10 @@ import { useCurrentUser } from '../features/auth/hooks/useCurrentUser'
 export function DashboardLayout() {
   const { group } = useCurrentUser()
   const navigate = useNavigate()
-  const { '*': wildcard } = useParams()
+  const location = useLocation()
+  const { tab: urlTab } = useParams()
   const [searchParams] = useSearchParams()
-  
+
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
 
   // If no group yet (loading), show a basic loading state
@@ -24,14 +25,15 @@ export function DashboardLayout() {
     )
   }
 
-  // Determine active tab from URL params or wildcard
-  const activeTab = searchParams.get('tab') || wildcard || 'dashboard'
+  // Determine active tab: URL param takes precedence, then query param
+  const activeTab = urlTab || searchParams.get('tab') || 'dashboard'
+
+  // Base portal path (e.g. /portal-admin) derived from current pathname
+  const basePath = '/' + location.pathname.split('/').filter(Boolean)[0]
 
   const handleTabChange = (tab: string) => {
-    // Navigate with the tab as a query param
-    const currentParams = new URLSearchParams(searchParams)
-    currentParams.set('tab', tab)
-    navigate(`?${currentParams.toString()}`, { replace: true })
+    // Navigate to absolute base path with tab as query param to avoid stale URL param conflicts
+    navigate(`${basePath}?tab=${tab}`, { replace: true })
     setIsMobileNavOpen(false)
   }
 
