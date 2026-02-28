@@ -152,7 +152,7 @@ const TuitionInstitutions: React.FC = () => {
           <DataTable
             columns={columns}
             data={filteredInstitutions}
-            rowKey={(r, idx) => String(r.id ?? `inst-${idx}`)}
+            rowKey={(r) => String(r.id ?? Math.random())}
             loading={isLoading}
             skeletonRows={6}
             tableLayout="auto"

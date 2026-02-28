@@ -1,37 +1,64 @@
 
-import React, { useState, useMemo } from 'react';
-import { MOCK_TRANSACTIONS } from '../data/constants';
-import { TransactionStatus, Transaction } from '../data/types';
+import React, { useState, useMemo, useEffect } from 'react';
+import { TransactionStatus } from '../data/types';
 import { DataTable, TableColumn } from '../../../components/ui/DataTable';
+import { getRecentPaymentTransactions, type DashboardTransaction } from '../services/adminDashboard.service';
 
 const Transactions: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [transactions, setTransactions] = useState<DashboardTransaction[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredTransactions = MOCK_TRANSACTIONS.filter(tx => {
-    const matchesSearch = 
-      tx.customerName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      tx.biller.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tx.id.includes(searchTerm);
-    
-    const matchesStatus = statusFilter === 'ALL' || tx.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
+  useEffect(() => {
+    setLoading(true);
+    getRecentPaymentTransactions()
+      .then(setTransactions)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
 
-  const columns: TableColumn<Transaction>[] = useMemo(() => [
+  const filteredTransactions = useMemo(() =>
+    transactions.filter(tx => {
+      const name = tx.customerName ?? '';
+      const biller = tx.biller ?? '';
+      const id = String(tx.id ?? '');
+      const matchesSearch =
+        name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        biller.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        id.includes(searchTerm);
+      const matchesStatus = statusFilter === 'ALL' || tx.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    }),
+    [transactions, searchTerm, statusFilter]
+  );
+
+  const stats = useMemo(() => {
+    const total = transactions.length;
+    if (total === 0) return { successPct: '—', pendingCount: 0, failurePct: '—' };
+    const success = transactions.filter(tx => tx.status === TransactionStatus.SUCCESS).length;
+    const pending = transactions.filter(tx => tx.status === TransactionStatus.PENDING).length;
+    const failed = transactions.filter(tx => tx.status === TransactionStatus.FAILED).length;
+    return {
+      successPct: ((success / total) * 100).toFixed(1) + '%',
+      pendingCount: pending,
+      failurePct: ((failed / total) * 100).toFixed(1) + '%',
+    };
+  }, [transactions]);
+
+  const columns: TableColumn<DashboardTransaction>[] = useMemo(() => [
     {
       key: 'id',
       header: 'Transaction ID',
-      render: (tx) => <span className="text-xs font-mono font-bold text-primary">#EB-{tx.id.padStart(6, '0')}</span>,
+      render: (tx) => <span className="text-xs font-mono font-bold text-primary">#EB-{String(tx.id ?? '').padStart(6, '0')}</span>,
     },
     {
       key: 'datetime',
       header: 'Date & Time',
       render: (tx) => (
         <>
-          <p className="text-sm font-bold text-dark-text dark:text-gray-200">{tx.date}</p>
-          <p className="text-[10px] text-neutral-text uppercase tracking-tighter">{tx.time}</p>
+          <p className="text-sm font-bold text-dark-text dark:text-gray-200">{tx.date ?? '—'}</p>
+          <p className="text-[10px] text-neutral-text uppercase tracking-tighter">{tx.time ?? ''}</p>
         </>
       ),
     },
@@ -45,22 +72,22 @@ const Transactions: React.FC = () => {
             tx.status === TransactionStatus.PENDING ? 'bg-yellow-50 text-yellow-600' :
             'bg-red-50 text-red-600'
           }`}>
-            {tx.customerInitials}
+            {tx.customerInitials ?? '??'}
           </div>
-          <p className="text-sm font-bold text-dark-text dark:text-gray-200">{tx.customerName}</p>
+          <p className="text-sm font-bold text-dark-text dark:text-gray-200">{tx.customerName ?? '—'}</p>
         </div>
       ),
     },
     {
       key: 'biller',
       header: 'Biller',
-      render: (tx) => <span className="text-xs font-bold text-neutral-text">{tx.biller}</span>,
+      render: (tx) => <span className="text-xs font-bold text-neutral-text">{tx.biller ?? '—'}</span>,
     },
     {
       key: 'amount',
       header: 'Amount',
       align: 'right',
-      render: (tx) => <p className="text-sm font-black text-dark-text dark:text-white">${tx.amount.toFixed(2)}</p>,
+      render: (tx) => <p className="text-sm font-black text-dark-text dark:text-white">${(tx.amount ?? 0).toFixed(2)}</p>,
     },
     {
       key: 'status',
@@ -72,7 +99,7 @@ const Transactions: React.FC = () => {
           tx.status === TransactionStatus.PENDING ? 'bg-yellow-50 text-yellow-600 border-yellow-100' :
           'bg-red-50 text-red-600 border-red-100'
         } uppercase tracking-tighter`}>
-          {tx.status}
+          {tx.status ?? '—'}
         </span>
       ),
     },
@@ -80,7 +107,7 @@ const Transactions: React.FC = () => {
       key: 'actions',
       header: 'Actions',
       align: 'right',
-      render: (tx) => (
+      render: () => (
         <div className="flex items-center justify-end gap-2">
           <button className="w-8 h-8 flex items-center justify-center hover:bg-neutral-light dark:hover:bg-white/10 rounded-lg text-neutral-text transition-colors">
             <span className="material-symbols-outlined text-lg">receipt_long</span>
@@ -121,7 +148,7 @@ const Transactions: React.FC = () => {
           </div>
           <div>
             <p className="text-[10px] font-black text-neutral-text uppercase tracking-widest">Successful</p>
-            <h4 className="text-xl font-extrabold text-dark-text dark:text-white">94.2%</h4>
+            <h4 className="text-xl font-extrabold text-dark-text dark:text-white">{stats.successPct}</h4>
           </div>
         </div>
         <div className="bg-white p-6 rounded-lg border border-neutral-light dark:border-white/5 flex items-center gap-4">
@@ -130,7 +157,7 @@ const Transactions: React.FC = () => {
           </div>
           <div>
             <p className="text-[10px] font-black text-neutral-text uppercase tracking-widest">Processing</p>
-            <h4 className="text-xl font-extrabold text-dark-text dark:text-white">124</h4>
+            <h4 className="text-xl font-extrabold text-dark-text dark:text-white">{stats.pendingCount}</h4>
           </div>
         </div>
         <div className="bg-white p-6 rounded-lg border border-neutral-light dark:border-white/5 flex items-center gap-4">
@@ -139,7 +166,7 @@ const Transactions: React.FC = () => {
           </div>
           <div>
             <p className="text-[10px] font-black text-neutral-text uppercase tracking-widest">Failures</p>
-            <h4 className="text-xl font-extrabold text-dark-text dark:text-white">2.8%</h4>
+            <h4 className="text-xl font-extrabold text-dark-text dark:text-white">{stats.failurePct}</h4>
           </div>
         </div>
       </div>
@@ -148,8 +175,8 @@ const Transactions: React.FC = () => {
       <div className="bg-white p-4 rounded-lg border border-neutral-light dark:border-white/5 flex flex-col md:flex-row gap-4 items-center">
         <div className="relative flex-1 w-full">
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-neutral-text text-xl">search</span>
-          <input 
-            type="text" 
+          <input
+            type="text"
             placeholder="Search by customer, biller or transaction ID..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -157,7 +184,7 @@ const Transactions: React.FC = () => {
           />
         </div>
         <div className="flex gap-2 w-full md:w-auto">
-          <select 
+          <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             className="flex-1 md:w-40 bg-neutral-light/30 dark:bg-white/5 border-none rounded-xl py-3 px-4 text-sm font-bold text-neutral-text focus:ring-2 focus:ring-primary/20"
@@ -176,23 +203,24 @@ const Transactions: React.FC = () => {
       <DataTable
         columns={columns}
         data={filteredTransactions}
-        rowKey={(r) => r.id}
+        rowKey={(r) => String(r.id)}
         emptyMessage="No transactions found matching your filters."
+        loading={loading}
         className=""
       />
 
       {/* Pagination */}
       <div className="p-8 border-t border-neutral-light dark:border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-neutral-light/5">
         <p className="text-xs text-neutral-text font-bold">
-          Showing <span className="text-dark-text dark:text-white">{filteredTransactions.length}</span> of 12,450 results
+          Showing <span className="text-dark-text dark:text-white">{filteredTransactions.length}</span> of <span className="text-dark-text dark:text-white">{transactions.length}</span> results
         </p>
         <div className="flex items-center gap-1">
           <button className="p-2 text-neutral-text hover:bg-neutral-light dark:hover:bg-white/10 rounded-lg disabled:opacity-30" disabled>
             <span className="material-symbols-outlined">chevron_left</span>
           </button>
           {[1, 2, 3, '...', 45].map((page, i) => (
-            <button 
-              key={i} 
+            <button
+              key={i}
               className={`w-9 h-9 text-xs font-black rounded-lg transition-all ${
                 page === 1 ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-neutral-text hover:bg-neutral-light dark:hover:bg-white/10'
               }`}
@@ -210,4 +238,3 @@ const Transactions: React.FC = () => {
 };
 
 export default Transactions;
-

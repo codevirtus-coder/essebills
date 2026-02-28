@@ -8,7 +8,11 @@
       "mcp__ide__getDiagnostics",
       "Bash(python3:*)",
       "WebSearch",
-      "WebFetch(domain:goey-toast.vercel.app)"
+      "WebFetch(domain:goey-toast.vercel.app)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(node:*)"
     ]
   }
 }

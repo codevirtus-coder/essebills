@@ -44,7 +44,7 @@ export function DashboardLayout() {
   return (
     <div className="flex h-screen overflow-hidden bg-background-light dark:bg-background-dark">
       {/* Desktop Sidebar */}
-      <div className="hidden md:block">
+      <div className="hidden md:flex">
         <DashboardSidebar
           group={group}
           activeTab={activeTab}
@@ -81,6 +81,7 @@ export function DashboardLayout() {
                 activeTab={activeTab}
                 onTabChange={handleTabChange}
                 className="border-none w-full shadow-none"
+                disableCollapse
               />
             </div>
           </div>

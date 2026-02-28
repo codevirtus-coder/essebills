@@ -12,6 +12,7 @@ export interface AuthorityQueryParams {
   page?: number
   size?: number
   search?: string
+  [key: string]: unknown
 }
 
 // --------------------------------------------------------------------------

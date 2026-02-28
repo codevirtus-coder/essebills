@@ -4,7 +4,7 @@ import {
   GraduationCap, Building2, Store, CreditCard, MessageSquareCheck,
   BarChart2, CircleUser, Settings, HelpCircle, Home, ShoppingCart,
   Table2, User, Users, Users2, Landmark, Receipt, LogOut, Menu, X,
-  ChevronDown, ChevronUp, Bell, BellOff, CornerDownRight, Inbox,
+  ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Bell, BellOff, CornerDownRight, Inbox,
   Plus, Download, Upload, Pencil, Eye, EyeOff, MoreVertical, Send,
   CheckCircle, AlertTriangle, Info, Trash2, RefreshCw, FilterX,
   History, Lock, LockOpen, ShieldCheck, ShieldOff, Flag, Building,
@@ -20,6 +20,8 @@ const ICON_MAP: Record<string, LucideIcon> = {
   close: X,
   expand_more: ChevronDown,
   expand_less: ChevronUp,
+  chevron_left: ChevronLeft,
+  chevron_right: ChevronRight,
   subdirectory_arrow_right: CornerDownRight,
   more_vert: MoreVertical,
 

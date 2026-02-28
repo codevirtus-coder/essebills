@@ -12,6 +12,7 @@ export interface AuditQueryParams {
   page?: number
   size?: number
   search?: string
+  [key: string]: unknown
 }
 
 export interface MyAuditQueryParams {
@@ -19,6 +20,7 @@ export interface MyAuditQueryParams {
   size?: number
   fromDate?: string
   toDate?: string
+  [key: string]: unknown
 }
 
 export interface PerformerAuditQueryParams {
@@ -27,6 +29,7 @@ export interface PerformerAuditQueryParams {
   fromDate?: string
   toDate?: string
   performerId?: string | number
+  [key: string]: unknown
 }
 
 // --------------------------------------------------------------------------

@@ -1,20 +1,69 @@
 
-import React, { useState } from 'react';
-import { MOCK_AGENTS } from '../data/constants';
-import { Agent } from '../data/types';
+import React, { useState, useEffect, useMemo } from 'react';
 import { DataTable, type TableColumn } from '../../../components/ui/DataTable';
+import { getAllUsers } from '../services/adminUsers.service';
+import type { AdminUserDto } from '../dto/admin-api.dto';
+
+type AgentRow = {
+  id: string;
+  name: string;
+  initials: string;
+  shopName: string;
+  location: string;
+  floatBalance: number;
+  totalEarnings: number;
+  status: 'Active' | 'Suspended' | 'Pending';
+};
+
+function normalizeAgent(user: AdminUserDto): AgentRow {
+  const id = String(user.id ?? '');
+  const firstName = String(user.firstName ?? '');
+  const lastName = String(user.lastName ?? '');
+  const name = [firstName, lastName].filter(Boolean).join(' ') || String(user.username ?? user.email ?? '—');
+  const initials = name.replace(/[^a-zA-Z ]/g, '').split(' ').map(w => w[0] ?? '').join('').slice(0, 2).toUpperCase() || '??';
+  const status: AgentRow['status'] = user.active === false ? 'Suspended' : 'Active';
+  return {
+    id,
+    name,
+    initials,
+    shopName: String(user.username ?? '—'),
+    location: '—',
+    floatBalance: 0,
+    totalEarnings: 0,
+    status,
+  };
+}
 
 const Agents: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [agents] = useState<Agent[]>(MOCK_AGENTS);
+  const [agents, setAgents] = useState<AgentRow[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredAgents = agents.filter(agent =>
-    agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    agent.shopName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    agent.id.includes(searchTerm)
+  useEffect(() => {
+    setLoading(true);
+    getAllUsers()
+      .then((users) => {
+        const agentUsers = users.filter(
+          (u) => (u.group as { name?: string } | null | undefined)?.name === 'AGENT',
+        );
+        setAgents(agentUsers.map(normalizeAgent));
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filteredAgents = useMemo(() =>
+    agents.filter(agent =>
+      agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      agent.shopName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      agent.id.includes(searchTerm)
+    ),
+    [agents, searchTerm]
   );
 
-  const columns: TableColumn<Agent>[] = [
+  const activeCount = useMemo(() => agents.filter(a => a.status === 'Active').length, [agents]);
+
+  const columns: TableColumn<AgentRow>[] = [
     {
       key: 'partner',
       header: 'Agent Partner',
@@ -106,10 +155,10 @@ const Agents: React.FC = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[
-          { label: 'Active Shops', value: '428', icon: 'storefront', color: 'text-primary', bg: 'bg-primary/10' },
-          { label: 'Total Float', value: '$84,200', icon: 'account_balance_wallet', color: 'text-accent-green', bg: 'bg-accent-green/10' },
-          { label: 'Unpaid Comm.', value: '$2,140', icon: 'payments', color: 'text-orange-500', bg: 'bg-orange-100' },
-          { label: 'Avg Earnings', value: '$124.50', icon: 'analytics', color: 'text-blue-500', bg: 'bg-blue-100' },
+          { label: 'Active Agents', value: loading ? '…' : String(activeCount), icon: 'storefront', color: 'text-primary', bg: 'bg-primary/10' },
+          { label: 'Total Float', value: '—', icon: 'account_balance_wallet', color: 'text-accent-green', bg: 'bg-accent-green/10' },
+          { label: 'Unpaid Comm.', value: '—', icon: 'payments', color: 'text-orange-500', bg: 'bg-orange-100' },
+          { label: 'Avg Earnings', value: '—', icon: 'analytics', color: 'text-blue-500', bg: 'bg-blue-100' },
         ].map((stat, i) => (
           <div key={i} className="bg-white p-6 rounded-lg border border-neutral-light dark:border-white/5 flex items-center gap-5 shadow-sm">
             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${stat.bg} ${stat.color}`}>
@@ -153,6 +202,7 @@ const Agents: React.FC = () => {
         rowKey={(a) => a.id}
         emptyMessage="No agents found"
         emptyIcon="storefront"
+        loading={loading}
       />
 
       {/* Footer info */}
