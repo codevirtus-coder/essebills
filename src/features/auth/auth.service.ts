@@ -39,4 +39,27 @@ export async function getCurrentUserProfile(): Promise<UserProfileDto> {
   })
 }
 
+export async function changePassword(payload: {
+  currentPassword: string
+  newPassword: string
+  confirmPassword: string
+}): Promise<void> {
+  return apiFetch('/v1/users/change-password', {
+    method: 'POST',
+    body: payload,
+    requiresAuth: true,
+  })
+}
+
+export async function toggleTwoFactor(
+  userId: number,
+  otpEnabled: boolean,
+): Promise<UserProfileDto> {
+  return apiFetch<UserProfileDto>(`/v1/users/${userId}/otp`, {
+    method: 'PATCH',
+    body: { otpEnabled },
+    requiresAuth: true,
+  })
+}
+
 export { apiFetch }

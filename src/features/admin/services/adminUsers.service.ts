@@ -58,3 +58,19 @@ export async function getAllUsers() {
 export async function getUserProfile() {
   return adminJsonFetch<AdminUserDto>(ADMIN_ENDPOINTS.users.profile)
 }
+
+export async function resetUserOtp(userId: string | number) {
+  return adminJsonFetch<void>(ADMIN_ENDPOINTS.users.resetOtp(userId), {
+    method: 'POST',
+  })
+}
+
+export async function updateUserOtp(
+  userId: string | number,
+  payload: { otpEnabled: boolean },
+) {
+  return adminJsonFetch<AdminUserDto>(ADMIN_ENDPOINTS.users.updateOtp(userId), {
+    method: 'PATCH',
+    body: payload,
+  })
+}

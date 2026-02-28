@@ -10,6 +10,8 @@ export const ADMIN_ENDPOINTS = {
     myAccount: '/v1/users.my-account',
     byId: (userId: string | number) => `/v1/users/${userId}`,
     status: (userId: string | number) => `/v1/users/${userId}/status`,
+    resetOtp: (userId: string | number) => `/v1/users/${userId}/reset-otp`,
+    updateOtp: (userId: string | number) => `/v1/users/${userId}/otp`,
   },
   groups: {
     root: '/v1/groups',

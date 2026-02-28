@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { Icon } from "../components/ui/Icon";
 import BrandLogo from "./BrandLogo";
-import { ROUTE_PATHS } from "../router/paths";
+import { ROUTE_PATHS, getDashboardRouteByGroup } from "../router/paths";
 import {
   clearAuthSession,
   getAuthSession,
@@ -34,6 +34,15 @@ export function Navbar() {
     clearAuthSession();
   };
 
+  const dashboardRoute = session?.group
+    ? getDashboardRouteByGroup(session.group)
+    : ROUTE_PATHS.portal;
+
+  const displayName = session?.profile
+    ? `${session.profile.firstName ?? ""} ${session.profile.lastName ?? ""}`.trim() ||
+      session.profile.username
+    : null;
+
   return (
     <nav className="navbar">
       <div className="container">
@@ -56,23 +65,26 @@ export function Navbar() {
             ))}
             <div className="nav-divider" />
             {authenticated ? (
-              session?.group === "CUSTOMER" ? (
+              <>
+                {displayName ? (
+                  <span className="type-label text-muted hidden sm:block">
+                    {displayName}
+                  </span>
+                ) : null}
+                <NavLink
+                  to={dashboardRoute}
+                  className="button button-ghost"
+                >
+                  Dashboard
+                </NavLink>
                 <button
                   type="button"
-                  className="button button-ghost"
+                  className="button button-outline"
                   onClick={handleLogout}
                 >
                   Logout
                 </button>
-              ) : (
-                <NavLink
-                  to={ROUTE_PATHS.login}
-                  className="button button-ghost"
-                  reloadDocument
-                >
-                  Login
-                </NavLink>
-              )
+              </>
             ) : (
               <>
                 <NavLink

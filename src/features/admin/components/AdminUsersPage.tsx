@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import type { AdminUserDto } from '../dto/admin-api.dto'
-import { changeUserActivationStatus, createUser, getPaginatedUsers, updateUser } from '../services'
+import { changeUserActivationStatus, createUser, getPaginatedUsers, resetUserOtp, updateUser } from '../services'
 
 const AdminUsersPage: React.FC = () => {
   const [users, setUsers] = useState<AdminUserDto[]>([])
@@ -11,6 +11,7 @@ const AdminUsersPage: React.FC = () => {
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
   const [statusLoadingId, setStatusLoadingId] = useState<string | number | null>(null)
+  const [otpResetLoadingId, setOtpResetLoadingId] = useState<string | number | null>(null)
   const [selectedUser, setSelectedUser] = useState<AdminUserDto | null>(null)
   const [form, setForm] = useState({
     username: '',
@@ -148,6 +149,25 @@ const AdminUsersPage: React.FC = () => {
     }
   }
 
+  const handleResetOtp = async (user: AdminUserDto) => {
+    if (!user.id) {
+      toast.error('User ID is missing')
+      return
+    }
+    if (!window.confirm(`Reset OTP for ${String(user.username ?? user.email)}? A new OTP secret will be generated.`)) {
+      return
+    }
+    try {
+      setOtpResetLoadingId(user.id)
+      await resetUserOtp(user.id)
+      toast.success('OTP reset successfully')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to reset OTP')
+    } finally {
+      setOtpResetLoadingId(null)
+    }
+  }
+
   return (
     <div className="p-8 space-y-6 animate-in fade-in duration-300">
       <section className="bg-white rounded-xl border border-neutral-light p-6 min-h-[112px]">
@@ -178,7 +198,7 @@ const AdminUsersPage: React.FC = () => {
 
         <div className="border border-neutral-light rounded overflow-hidden bg-white">
           <div className="bg-[#7E57C2] text-white border-b border-neutral-light">
-            <div className="grid grid-cols-[1fr_1.2fr_1.3fr_1fr_.8fr_1fr_160px]">
+            <div className="grid grid-cols-[1fr_1.2fr_1.3fr_1fr_.8fr_1fr_220px]">
               <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Username</div>
               <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Full Name</div>
               <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Email</div>
@@ -197,7 +217,7 @@ const AdminUsersPage: React.FC = () => {
               rows.map((user, index) => (
                 <div
                   key={String(user.id ?? `${user.username ?? 'user'}-${index}`)}
-                  className="grid grid-cols-[1fr_1.2fr_1.3fr_1fr_.8fr_1fr_160px] border-t border-neutral-light hover:bg-neutral-light/40 transition-colors"
+                  className="grid grid-cols-[1fr_1.2fr_1.3fr_1fr_.8fr_1fr_220px] border-t border-neutral-light hover:bg-neutral-light/40 transition-colors"
                 >
                   <div className="px-4 py-3 text-sm text-dark-text">{String(user.username ?? '-')}</div>
                   <div className="px-4 py-3 text-sm text-dark-text">
@@ -207,7 +227,7 @@ const AdminUsersPage: React.FC = () => {
                   <div className="px-4 py-3 text-sm text-dark-text">{String(user.phoneNumber ?? '-')}</div>
                   <div className="px-4 py-3 text-sm text-dark-text">{user.active === false ? 'Inactive' : 'Active'}</div>
                   <div className="px-4 py-3 text-sm text-dark-text">{String(user.createdDate ?? '-')}</div>
-                  <div className="px-2 py-2 flex items-center justify-center gap-2">
+                  <div className="px-2 py-2 flex items-center justify-center gap-1">
                     <button
                       type="button"
                       onClick={() => openEditModal(user)}
@@ -226,6 +246,15 @@ const AdminUsersPage: React.FC = () => {
                       }`}
                     >
                       {statusLoadingId === user.id ? '...' : user.active === false ? 'Activate' : 'Disable'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void handleResetOtp(user)}
+                      disabled={otpResetLoadingId === user.id}
+                      className="h-8 px-3 rounded-lg border border-blue-200 text-blue-700 text-xs font-semibold hover:bg-blue-50 disabled:opacity-60"
+                      title="Reset OTP secret for this user"
+                    >
+                      {otpResetLoadingId === user.id ? '...' : 'OTP'}
                     </button>
                   </div>
                 </div>

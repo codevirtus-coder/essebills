@@ -1,3 +1,6 @@
+import { Link } from 'react-router-dom'
+import { ROUTE_PATHS } from '../../../router/paths'
+
 export function BillerCtaSection() {
   return (
     <section className="biller-cta">
@@ -14,10 +17,12 @@ export function BillerCtaSection() {
               Pay your bills instantly, track your spending history, and manage all your accounts from one secure and
               simple dashboard.
             </p>
-            <button type="button" className="button biller-cta-button biller-cta-button-primary">
+            <Link to={ROUTE_PATHS.registerBuyer} className="button biller-cta-button biller-cta-button-primary">
               Register as Customer
-            </button>
-            <p className="biller-cta-link type-label">Already a customer? Login</p>
+            </Link>
+            <Link to={ROUTE_PATHS.login} className="biller-cta-link type-label">
+              Already a customer? Login
+            </Link>
           </article>
 
           <article className="biller-cta-card biller-cta-card-biller">
@@ -26,10 +31,12 @@ export function BillerCtaSection() {
               For utility providers, schools, and corporate entities looking to digitize collections and reach more
               customers instantly.
             </p>
-            <button type="button" className="button biller-cta-button biller-cta-button-secondary">
+            <Link to={ROUTE_PATHS.registerBiller} className="button biller-cta-button biller-cta-button-secondary">
               Register as Biller
-            </button>
-            <p className="biller-cta-link type-label">Existing biller? Login here</p>
+            </Link>
+            <Link to={ROUTE_PATHS.loginBiller} className="biller-cta-link type-label">
+              Existing biller? Login here
+            </Link>
           </article>
 
           <article className="biller-cta-card biller-cta-card-agent">
@@ -38,10 +45,12 @@ export function BillerCtaSection() {
               For shop owners and individuals. Sell airtime, water, and electricity tokens to earn attractive
               commissions.
             </p>
-            <button type="button" className="button biller-cta-button biller-cta-button-primary">
+            <Link to={ROUTE_PATHS.registerAgent} className="button biller-cta-button biller-cta-button-primary">
               Register as EseAgent
-            </button>
-            <p className="biller-cta-link type-label">Already an agent? Login</p>
+            </Link>
+            <Link to={ROUTE_PATHS.loginAgent} className="biller-cta-link type-label">
+              Already an agent? Login
+            </Link>
           </article>
         </div>
       </div>
