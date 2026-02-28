@@ -147,26 +147,26 @@ const Reports: React.FC = () => {
       </div>
 
       {/* Recent Reports Table */}
-      <div className="bg-white  rounded-3xl shadow-sm border border-neutral-light dark:border-white/5 overflow-hidden">
-        <div className="p-8 border-b border-neutral-light dark:border-white/5 flex items-center justify-between">
-          <h4 className="text-lg font-bold text-dark-text dark:text-white">Generated Reports Archive</h4>
-          <div className="flex gap-2">
-             <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/5 rounded-lg transition-colors text-neutral-text">
+      <DataTable
+        columns={columns}
+        data={reports}
+        rowKey={(report) => report.id}
+        emptyMessage="No reports found"
+        emptyIcon="description"
+        header={
+          <div className="px-8 py-5 flex items-center justify-between">
+            <h4 className="text-lg font-bold text-dark-text dark:text-white">Generated Reports Archive</h4>
+            <div className="flex gap-2">
+              <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/5 rounded-lg transition-colors text-neutral-text">
                 <span className="material-symbols-outlined">filter_list</span>
-             </button>
-             <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/5 rounded-lg transition-colors text-neutral-text">
+              </button>
+              <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/5 rounded-lg transition-colors text-neutral-text">
                 <span className="material-symbols-outlined">refresh</span>
-             </button>
+              </button>
+            </div>
           </div>
-        </div>
-        <DataTable
-          columns={columns}
-          data={reports}
-          rowKey={(report) => report.id}
-          emptyMessage="No reports found"
-          emptyIcon="description"
-        />
-      </div>
+        }
+      />
     </div>
   );
 };

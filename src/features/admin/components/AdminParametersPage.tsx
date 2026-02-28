@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
+import { confirmToast } from '../../../lib/confirmToast'
 import { DataTable, TableColumn } from '../../../components/ui/DataTable'
 import {
   createBank,
@@ -354,7 +355,7 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
     }
   }
 
-  const handleCurrencyDelete = async () => {
+  const handleCurrencyDelete = () => {
     if (!selectedRow || module !== 'currencies') return
 
     const currencyId = Number(selectedRow.id)
@@ -364,27 +365,28 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
     }
 
     const currencyName = String(selectedRow.name ?? selectedRow.code ?? `#${currencyId}`)
-    const shouldDelete = window.confirm(`Delete currency "${currencyName}"?`)
-    if (!shouldDelete) return
-
-    try {
+    confirmToast(`Delete currency "${currencyName}"?`, () => {
       setIsDeleting(true)
-      await deleteCurrency(currencyId)
-      toast.success('Currency deleted')
-      setSelectedRowId(null)
-      await load()
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to delete currency')
-    } finally {
-      setIsDeleting(false)
-    }
+      deleteCurrency(currencyId)
+        .then(() => {
+          toast.success('Currency deleted')
+          setSelectedRowId(null)
+          return load()
+        })
+        .catch((error: unknown) => {
+          toast.error(error instanceof Error ? error.message : 'Failed to delete currency')
+        })
+        .finally(() => {
+          setIsDeleting(false)
+        })
+    })
   }
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!selectedRow || !canDelete) return
 
     if (module === 'currencies') {
-      await handleCurrencyDelete()
+      handleCurrencyDelete()
       return
     }
 
@@ -395,26 +397,27 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
     }
 
     const recordName = String(selectedRow.name ?? selectedRow.code ?? selectedRow.date ?? `#${id}`)
-    const shouldDelete = window.confirm(`Delete ${recordLabel.toLowerCase()} "${recordName}"?`)
-    if (!shouldDelete) return
-
-    try {
+    confirmToast(`Delete ${recordLabel.toLowerCase()} "${recordName}"?`, () => {
       setIsDeleting(true)
-      if (module === 'countries') {
-        await deleteCountry(id)
-      } else if (module === 'banks') {
-        await deleteBank(id)
-      } else if (module === 'holidays') {
-        await deleteHoliday(id)
-      }
-      toast.success(`${recordLabel} deleted`)
-      setSelectedRowId(null)
-      await load()
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to delete')
-    } finally {
-      setIsDeleting(false)
-    }
+      ;(async () => {
+        try {
+          if (module === 'countries') {
+            await deleteCountry(id)
+          } else if (module === 'banks') {
+            await deleteBank(id)
+          } else if (module === 'holidays') {
+            await deleteHoliday(id)
+          }
+          toast.success(`${recordLabel} deleted`)
+          setSelectedRowId(null)
+          await load()
+        } catch (error) {
+          toast.error(error instanceof Error ? error.message : 'Failed to delete')
+        } finally {
+          setIsDeleting(false)
+        }
+      })()
+    })
   }
 
   const editEndpointLabel = (() => {
@@ -429,16 +432,13 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
 
   return (
     <div className="p-8 space-y-6 animate-in fade-in duration-300">
-      <section className="bg-white rounded-xl border border-neutral-light p-6 min-h-[112px]">
-        <h2 className="text-4 leading-none font-medium text-dark-text dark:text-white flex items-center gap-3">
-          <span className="material-symbols-outlined text-[28px]">{config.icon}</span>
-          {config.title}
-        </h2>
-        <p className="text-sm text-neutral-text mt-8">{config.subtitle}</p>
-      </section>
+      <div>
+        <h2 className="text-xl font-bold text-dark-text">{config.title}</h2>
+        <p className="text-sm text-neutral-text mt-1">{config.subtitle}</p>
+      </div>
 
-      <section className="bg-white rounded-xl border border-neutral-light p-5">
-        <div className="flex flex-wrap items-center gap-2 mb-4">
+      <div>
+        <div className="flex flex-wrap items-center gap-2 mb-3">
           <button
             type="button"
             onClick={() => setIsCreateOpen(true)}
@@ -549,7 +549,7 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
             </div>
           </div>
         )}
-      </section>
+      </div>
 
       {isCreateOpen ? (
         <div className="fixed inset-0 z-[140] flex items-center justify-center p-4">

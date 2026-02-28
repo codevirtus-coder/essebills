@@ -96,21 +96,19 @@ const Messaging: React.FC = () => {
   ];
 
   const renderLogs = () => (
-    <div className="bg-white  rounded-[2.5rem] border border-neutral-light dark:border-white/5 overflow-hidden shadow-sm animate-in fade-in duration-500">
-      <div className="p-8 border-b border-neutral-light dark:border-white/5 flex items-center justify-between bg-neutral-light/5">
-        <h3 className="text-xl font-black text-dark-text dark:text-white">Communication Logs</h3>
-        <div className="flex gap-2">
+    <DataTable
+      columns={logColumns}
+      data={MOCK_LOGS}
+      rowKey={(log) => log.id}
+      emptyMessage="No communication logs found"
+      emptyIcon="message"
+      header={
+        <div className="px-8 py-5 flex items-center justify-between bg-neutral-light/5">
+          <h3 className="text-xl font-black text-dark-text dark:text-white">Communication Logs</h3>
           <button className="px-4 py-2 bg-white dark:bg-white/5 border border-neutral-light dark:border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-neutral-text hover:text-primary transition-all">Filter: All Channels</button>
         </div>
-      </div>
-      <DataTable
-        columns={logColumns}
-        data={MOCK_LOGS}
-        rowKey={(log) => log.id}
-        emptyMessage="No communication logs found"
-        emptyIcon="message"
-      />
-    </div>
+      }
+    />
   );
 
   const renderTemplates = () => (

@@ -261,7 +261,7 @@ export function BillerDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 min-w-0 bg-white p-8 rounded-[3rem] border border-neutral-light shadow-sm">
+        <div className="lg:col-span-2 min-w-0 bg-white p-8 rounded-xl border border-neutral-light shadow-sm">
           <div className="flex items-center justify-between mb-8">
             <h3 className="text-xl font-black text-dark-text tracking-tight">
               Revenue Stream Analysis
@@ -294,7 +294,7 @@ export function BillerDashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white p-10 rounded-[3rem] border border-neutral-light shadow-sm space-y-8 min-w-0">
+        <div className="bg-white p-8 rounded-xl border border-neutral-light shadow-sm space-y-8 min-w-0">
           <h4 className="text-sm font-black uppercase tracking-widest text-neutral-text">Fee Structure</h4>
           <div className="space-y-6">
             <div className="flex justify-between items-center pb-4 border-b border-neutral-light">
@@ -331,13 +331,13 @@ export function BillerDashboardPage() {
   );
 
   const renderCollections = () => (
-    <div className="bg-white rounded-[3rem] shadow-sm border border-neutral-light overflow-hidden animate-in fade-in duration-500">
-      <div className="p-10 border-b border-neutral-light flex items-center justify-between bg-[#f8fafc]">
+    <div className="space-y-4 animate-in fade-in duration-500">
+      <div className="flex items-center justify-between">
         <div>
           <h3 className="text-2xl font-black text-dark-text tracking-tight">Recent Collections</h3>
           <p className="text-[10px] font-bold text-neutral-text uppercase tracking-widest mt-1">Real-time payment inbound log</p>
         </div>
-        <button className="bg-primary text-white px-6 py-2.5 rounded-xl font-bold text-xs shadow-xl shadow-primary/20">
+        <button className="bg-primary text-white px-6 py-2.5 rounded-lg font-bold text-xs shadow-xl shadow-primary/20">
           Download Report
         </button>
       </div>
@@ -360,14 +360,12 @@ export function BillerDashboardPage() {
   );
 
   const renderSettlements = () => (
-    <div className="bg-white rounded-[3rem] shadow-sm border border-neutral-light overflow-hidden animate-in fade-in duration-500">
-      <div className="p-10 border-b border-neutral-light flex items-center justify-between bg-[#f8fafc]">
-        <div>
-          <h3 className="text-2xl font-black text-dark-text tracking-tight">Payout History</h3>
-          <p className="text-[10px] font-bold text-neutral-text uppercase tracking-widest mt-1">
-            Settlements to your Standard Chartered account
-          </p>
-        </div>
+    <div className="space-y-4 animate-in fade-in duration-500">
+      <div>
+        <h3 className="text-2xl font-black text-dark-text tracking-tight">Payout History</h3>
+        <p className="text-[10px] font-bold text-neutral-text uppercase tracking-widest mt-1">
+          Settlements to your Standard Chartered account
+        </p>
       </div>
       <DataTable
         columns={settlementsColumns}
@@ -381,7 +379,7 @@ export function BillerDashboardPage() {
 
   const renderSettings = () => (
     <div className="max-w-3xl space-y-10 animate-in fade-in duration-500">
-      <section className="bg-white p-10 rounded-[3rem] border border-neutral-light shadow-sm space-y-8">
+      <section className="bg-white p-8 rounded-xl border border-neutral-light shadow-sm space-y-8">
         <h4 className="text-[10px] font-black text-neutral-text uppercase tracking-widest border-b border-neutral-light pb-2">
           Organizational Profile
         </h4>
@@ -405,7 +403,7 @@ export function BillerDashboardPage() {
         </div>
       </section>
 
-      <section className="bg-white p-10 rounded-[3rem] border border-neutral-light shadow-sm space-y-8">
+      <section className="bg-white p-8 rounded-xl border border-neutral-light shadow-sm space-y-8">
         <div className="flex items-center justify-between border-b border-neutral-light pb-2">
           <h4 className="text-[10px] font-black text-neutral-text uppercase tracking-widest">Notification Preferences</h4>
         </div>
@@ -415,7 +413,7 @@ export function BillerDashboardPage() {
             { key: 'payoutAlerts' as const, label: 'Payout Alerts', desc: 'Get notified immediately after a successful bank settlement.' },
             { key: 'lowFloatAlerts' as const, label: 'Low Float Alerts (Agents)', desc: 'Get notified when agents are low on liquidity.' },
           ].map(({ key, label, desc }) => (
-            <div key={key} className="flex items-center justify-between p-6 bg-[#f8fafc] rounded-3xl group transition-all">
+            <div key={key} className="flex items-center justify-between p-5 bg-[#f8fafc] rounded-lg group transition-all">
               <div>
                 <p className="text-sm font-bold text-dark-text">{label}</p>
                 <p className="text-[10px] text-neutral-text font-medium">{desc}</p>
@@ -432,7 +430,7 @@ export function BillerDashboardPage() {
       </section>
 
       <div className="flex justify-end pt-4">
-        <button className="bg-primary text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all">
+        <button className="bg-primary text-white px-10 py-4 rounded-lg font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all">
           Update Portal Settings
         </button>
       </div>

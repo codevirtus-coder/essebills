@@ -286,7 +286,7 @@ const Products: React.FC = () => {
         <form
           ref={formCardRef}
           onSubmit={(event) => void handleCreateProduct(event)}
-          className="xl:col-span-1 bg-white p-6 rounded-[2rem] border border-neutral-light shadow-sm space-y-4"
+          className="xl:col-span-1 bg-white p-6 rounded-xl border border-neutral-light shadow-sm space-y-4"
         >
           <h3 className="text-lg font-extrabold text-dark-text dark:text-white">
             {editingProductId ? "Update Product" : "Add Product"}
@@ -433,7 +433,7 @@ const Products: React.FC = () => {
           <button
             type="submit"
             disabled={isSaving}
-            className="w-full bg-primary text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-opacity-90 transition-all shadow-lg shadow-primary/20 disabled:opacity-60"
+            className="w-full bg-primary text-white px-6 py-3 rounded-lg font-black text-[10px] uppercase tracking-widest hover:bg-opacity-90 transition-all shadow-lg shadow-primary/20 disabled:opacity-60"
           >
             {isSaving ? "Saving..." : editingProductId ? "Update Product" : "Add Product"}
           </button>
@@ -441,26 +441,24 @@ const Products: React.FC = () => {
             <button
               type="button"
               onClick={resetForm}
-              className="w-full bg-neutral-light text-neutral-text px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-neutral-light/80 transition-all"
+              className="w-full bg-neutral-light text-neutral-text px-6 py-3 rounded-lg font-black text-[10px] uppercase tracking-widest hover:bg-neutral-light/80 transition-all"
             >
               Cancel Edit
             </button>
           ) : null}
         </form>
 
-        <div className="xl:col-span-2 bg-white rounded-[2rem] border border-neutral-light shadow-sm overflow-hidden">
-          <div className="p-5 border-b border-neutral-light">
-            <div className="relative">
-              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-neutral-text text-lg">
-                search
-              </span>
-              <input
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder="Search products by name or code..."
-                className="w-full bg-[#f8fafc] border border-neutral-light rounded-xl pl-11 pr-4 py-3 text-sm font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
-              />
-            </div>
+        <div className="xl:col-span-2 space-y-4">
+          <div className="relative">
+            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-neutral-text text-lg">
+              search
+            </span>
+            <input
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="Search products by name or code..."
+              className="w-full bg-[#f8fafc] border border-neutral-light rounded-xl pl-11 pr-4 py-3 text-sm font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
+            />
           </div>
 
           <DataTable

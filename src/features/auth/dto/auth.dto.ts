@@ -15,6 +15,8 @@ export type UserProfileGroupDto = {
   version?: number
 }
 
+export type Gender = 'MALE' | 'FEMALE' | 'OTHER'
+
 export type UserProfileDto = {
   id: number
   username: string
@@ -25,7 +27,15 @@ export type UserProfileDto = {
   credentialsNonExpired: boolean
   firstName?: string | null
   lastName?: string | null
+  gender?: Gender | null
+  title?: string | null
+  initials?: string | null
   phoneNumber?: string | null
+  nationality?: string | null
+  dateOfBirth?: string | null
+  nationalIdentificationNumber?: string | null
+  passportNumber?: string | null
+  driverLicenseNumber?: string | null
   organisationName?: string | null
   shopName?: string | null
   shopLocation?: string | null

@@ -1,42 +1,77 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
+import { confirmToast } from '../../../lib/confirmToast';
 import { changePassword, getCurrentUserProfile, toggleTwoFactor } from '../../auth/auth.service';
 import { getAuthSession, saveAuthSession } from '../../auth/auth.storage';
-import type { UserProfileDto } from '../../auth/dto/auth.dto';
+import type { Gender, UserProfileDto } from '../../auth/dto/auth.dto';
 import { updateUser } from '../services';
 
-const DEFAULT_AVATAR =
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuCX_vV9EyjAURNA75Ew1cacAmyL1_zLC_LWTvPRzXiTmbHAkcYffvlhR2Zeoj-kKY1Y07HD5H8hm4YARk10BoIWYAozXWVVvw1ndoQJ62m4t_FNG4CERZwkg6_L2bnZ74yYP_aV2fAUoLjVaAeM1IQImX8e_GnvlSW2Fnpm0-iMiwImKLnfjq36EwAVl1svXsUIVQ07jrN15SWXj9vbWAhveG64qrgsmHsaKhmnTmYNpHje8HAwJ9XEi0JXjxzfCRKnUW3xRylP6qkA';
+// Date helpers — server uses dd/MM/yyyy, HTML date input uses YYYY-MM-DD
+const serverToHtmlDate = (val: string | null | undefined): string => {
+  if (!val) return '';
+  const parts = val.split('/');
+  if (parts.length === 3) {
+    const [d, m, y] = parts;
+    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+  }
+  return val;
+};
+
+const htmlToServerDate = (val: string): string => {
+  if (!val) return '';
+  const parts = val.split('-');
+  if (parts.length === 3) {
+    const [y, m, d] = parts;
+    return `${d}/${m}/${y}`;
+  }
+  return val;
+};
 
 type EditForm = {
-  firstName: string
-  lastName: string
-  email: string
-  phoneNumber: string
-  shopName: string
-  shopLocation: string
-  organisationName: string
-}
+  firstName: string;
+  lastName: string;
+  email: string;
+  gender: Gender | '';
+  phoneNumber: string;
+  title: string;
+  initials: string;
+  dateOfBirth: string; // YYYY-MM-DD for the HTML input
+  nationality: string;
+  nationalIdentificationNumber: string;
+  passportNumber: string;
+  driverLicenseNumber: string;
+  shopName: string;
+  shopLocation: string;
+  organisationName: string;
+};
+
+const EMPTY_FORM: EditForm = {
+  firstName: '',
+  lastName: '',
+  email: '',
+  gender: '',
+  phoneNumber: '',
+  title: '',
+  initials: '',
+  dateOfBirth: '',
+  nationality: '',
+  nationalIdentificationNumber: '',
+  passportNumber: '',
+  driverLicenseNumber: '',
+  shopName: '',
+  shopLocation: '',
+  organisationName: '',
+};
 
 const UserProfile: React.FC = () => {
   const session = getAuthSession();
   const [profile, setProfile] = useState<UserProfileDto | null>(session?.profile ?? null);
   const [loading, setLoading] = useState(false);
 
-  // Edit profile state
   const [isEditing, setIsEditing] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
-  const [editForm, setEditForm] = useState<EditForm>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phoneNumber: '',
-    shopName: '',
-    shopLocation: '',
-    organisationName: '',
-  });
+  const [editForm, setEditForm] = useState<EditForm>(EMPTY_FORM);
 
-  // Change password state
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [isSavingPassword, setIsSavingPassword] = useState(false);
   const [passwordForm, setPasswordForm] = useState({
@@ -47,7 +82,6 @@ const UserProfile: React.FC = () => {
   const [showCurrentPw, setShowCurrentPw] = useState(false);
   const [showNewPw, setShowNewPw] = useState(false);
 
-  // 2FA state
   const [isTogglingOtp, setIsTogglingOtp] = useState(false);
 
   useEffect(() => {
@@ -81,12 +115,27 @@ const UserProfile: React.FC = () => {
     return profile?.group?.name ? profile.group.name.replace(/_/g, ' ') : 'User';
   }, [profile]);
 
+  const initials = useMemo(() => {
+    return [profile?.firstName?.[0], profile?.lastName?.[0]]
+      .filter(Boolean)
+      .join('')
+      .toUpperCase() || 'U';
+  }, [profile]);
+
   const openEdit = () => {
     setEditForm({
       firstName: profile?.firstName ?? '',
       lastName: profile?.lastName ?? '',
       email: profile?.email ?? '',
+      gender: (profile?.gender as Gender) ?? '',
       phoneNumber: profile?.phoneNumber ?? '',
+      title: profile?.title ?? '',
+      initials: profile?.initials ?? '',
+      dateOfBirth: serverToHtmlDate(profile?.dateOfBirth),
+      nationality: profile?.nationality ?? '',
+      nationalIdentificationNumber: profile?.nationalIdentificationNumber ?? '',
+      passportNumber: profile?.passportNumber ?? '',
+      driverLicenseNumber: profile?.driverLicenseNumber ?? '',
       shopName: profile?.shopName ?? '',
       shopLocation: profile?.shopLocation ?? '',
       organisationName: profile?.organisationName ?? '',
@@ -100,6 +149,10 @@ const UserProfile: React.FC = () => {
       toast.error('Profile ID missing');
       return;
     }
+    if (!editForm.gender) {
+      toast.error('Gender is required');
+      return;
+    }
     try {
       setIsSavingProfile(true);
       await updateUser({
@@ -107,7 +160,15 @@ const UserProfile: React.FC = () => {
         firstName: editForm.firstName.trim(),
         lastName: editForm.lastName.trim(),
         email: editForm.email.trim(),
-        phoneNumber: editForm.phoneNumber.trim(),
+        gender: editForm.gender,
+        phoneNumber: editForm.phoneNumber.trim() || undefined,
+        title: editForm.title.trim() || undefined,
+        initials: editForm.initials.trim() || undefined,
+        dateOfBirth: editForm.dateOfBirth ? htmlToServerDate(editForm.dateOfBirth) : undefined,
+        nationality: editForm.nationality.trim() || undefined,
+        nationalIdentificationNumber: editForm.nationalIdentificationNumber.trim() || undefined,
+        passportNumber: editForm.passportNumber.trim() || undefined,
+        driverLicenseNumber: editForm.driverLicenseNumber.trim() || undefined,
         shopName: editForm.shopName.trim() || undefined,
         shopLocation: editForm.shopLocation.trim() || undefined,
         organisationName: editForm.organisationName.trim() || undefined,
@@ -117,7 +178,15 @@ const UserProfile: React.FC = () => {
         firstName: editForm.firstName.trim(),
         lastName: editForm.lastName.trim(),
         email: editForm.email.trim(),
-        phoneNumber: editForm.phoneNumber.trim(),
+        gender: editForm.gender as Gender,
+        phoneNumber: editForm.phoneNumber.trim() || profile.phoneNumber,
+        title: editForm.title.trim() || undefined,
+        initials: editForm.initials.trim() || undefined,
+        dateOfBirth: editForm.dateOfBirth ? htmlToServerDate(editForm.dateOfBirth) : undefined,
+        nationality: editForm.nationality.trim() || undefined,
+        nationalIdentificationNumber: editForm.nationalIdentificationNumber.trim() || undefined,
+        passportNumber: editForm.passportNumber.trim() || undefined,
+        driverLicenseNumber: editForm.driverLicenseNumber.trim() || undefined,
         shopName: editForm.shopName.trim() || profile.shopName,
         shopLocation: editForm.shopLocation.trim() || profile.shopLocation,
         organisationName: editForm.organisationName.trim() || profile.organisationName,
@@ -160,24 +229,30 @@ const UserProfile: React.FC = () => {
     }
   };
 
-  const handleToggle2FA = async () => {
+  const handleToggle2FA = () => {
     if (!profile?.id) return;
     const next = !profile.otpEnabled;
-    const label = next ? 'enable' : 'disable';
-    if (!window.confirm(`Are you sure you want to ${label} Two-Factor Authentication?`)) return;
-    try {
+    const label = next ? 'Enable' : 'Disable';
+    confirmToast(`${label} Two-Factor Authentication?`, () => {
       setIsTogglingOtp(true);
-      const updated = await toggleTwoFactor(profile.id, next);
-      const nextProfile = { ...profile, otpEnabled: updated.otpEnabled ?? next };
-      setProfile(nextProfile);
-      if (session) saveAuthSession({ ...session, profile: nextProfile });
-      toast.success(`Two-Factor Authentication ${next ? 'enabled' : 'disabled'}`);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update 2FA');
-    } finally {
-      setIsTogglingOtp(false);
-    }
+      toggleTwoFactor(profile.id!, next)
+        .then((updated) => {
+          const nextProfile = { ...profile, otpEnabled: updated.otpEnabled ?? next };
+          setProfile(nextProfile);
+          if (session) saveAuthSession({ ...session, profile: nextProfile });
+          toast.success(`Two-Factor Authentication ${next ? 'enabled' : 'disabled'}`);
+        })
+        .catch((error: unknown) => {
+          toast.error(error instanceof Error ? error.message : 'Failed to update 2FA');
+        })
+        .finally(() => {
+          setIsTogglingOtp(false);
+        });
+    });
   };
+
+  const inputClass = 'mt-1 w-full h-10 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20';
+  const labelClass = 'text-[10px] uppercase tracking-widest text-neutral-text/60 font-bold';
 
   return (
     <div className="max-w-5xl mx-auto px-6 pb-16 pt-6 space-y-6 animate-in fade-in duration-300">
@@ -187,12 +262,9 @@ const UserProfile: React.FC = () => {
       </div>
 
       {/* Avatar + name card */}
-      <div className="bg-white border border-neutral-light rounded-3xl shadow-sm p-6 md:p-8 flex flex-col md:flex-row gap-6 items-center md:items-start">
-        <div className="relative">
-          <div
-            className="w-20 h-20 rounded-full bg-cover bg-center border border-neutral-light"
-            style={{ backgroundImage: `url('${DEFAULT_AVATAR}')` }}
-          />
+      <div className="bg-white border border-neutral-light rounded-xl shadow-sm p-6 md:p-8 flex flex-col md:flex-row gap-6 items-center md:items-start">
+        <div className="w-20 h-20 rounded-full bg-primary/20 text-primary text-2xl font-bold flex items-center justify-center shrink-0">
+          {initials}
         </div>
         <div className="flex-1 w-full">
           <h3 className="text-lg font-bold text-dark-text">
@@ -204,7 +276,7 @@ const UserProfile: React.FC = () => {
       </div>
 
       {/* Personal Information */}
-      <section className="bg-white border border-neutral-light rounded-3xl shadow-sm p-6 md:p-8">
+      <section className="bg-white border border-neutral-light rounded-xl shadow-sm p-6 md:p-8">
         <div className="flex items-center justify-between">
           <h3 className="text-base font-bold text-dark-text">Personal Information</h3>
           {!isEditing ? (
@@ -219,72 +291,176 @@ const UserProfile: React.FC = () => {
         </div>
 
         {isEditing ? (
-          <form onSubmit={(e) => void handleSaveProfile(e)} className="mt-6 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <label className="block">
-                <span className="text-[10px] uppercase tracking-widest text-neutral-text/60 font-bold">First Name</span>
-                <input
-                  value={editForm.firstName}
-                  onChange={(e) => setEditForm((p) => ({ ...p, firstName: e.target.value }))}
-                  className="mt-1 w-full h-10 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                />
-              </label>
-              <label className="block">
-                <span className="text-[10px] uppercase tracking-widest text-neutral-text/60 font-bold">Last Name</span>
-                <input
-                  value={editForm.lastName}
-                  onChange={(e) => setEditForm((p) => ({ ...p, lastName: e.target.value }))}
-                  className="mt-1 w-full h-10 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                />
-              </label>
-              <label className="block">
-                <span className="text-[10px] uppercase tracking-widest text-neutral-text/60 font-bold">Email Address</span>
-                <input
-                  type="email"
-                  value={editForm.email}
-                  onChange={(e) => setEditForm((p) => ({ ...p, email: e.target.value }))}
-                  className="mt-1 w-full h-10 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                />
-              </label>
-              <label className="block">
-                <span className="text-[10px] uppercase tracking-widest text-neutral-text/60 font-bold">Phone Number</span>
-                <input
-                  value={editForm.phoneNumber}
-                  onChange={(e) => setEditForm((p) => ({ ...p, phoneNumber: e.target.value }))}
-                  className="mt-1 w-full h-10 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                />
-              </label>
-              {profile?.shopName !== undefined ? (
+          <form onSubmit={(e) => void handleSaveProfile(e)} className="mt-6 space-y-5">
+            {/* Required fields */}
+            <div>
+              <p className="text-[11px] uppercase tracking-widest text-neutral-text/40 font-bold mb-3">Required</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <label className="block">
-                  <span className="text-[10px] uppercase tracking-widest text-neutral-text/60 font-bold">Shop Name</span>
+                  <span className={labelClass}>First Name *</span>
                   <input
-                    value={editForm.shopName}
-                    onChange={(e) => setEditForm((p) => ({ ...p, shopName: e.target.value }))}
-                    className="mt-1 w-full h-10 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    required
+                    value={editForm.firstName}
+                    onChange={(e) => setEditForm((p) => ({ ...p, firstName: e.target.value }))}
+                    className={inputClass}
                   />
                 </label>
-              ) : null}
-              {profile?.shopLocation !== undefined ? (
                 <label className="block">
-                  <span className="text-[10px] uppercase tracking-widest text-neutral-text/60 font-bold">Shop Location</span>
+                  <span className={labelClass}>Last Name *</span>
                   <input
-                    value={editForm.shopLocation}
-                    onChange={(e) => setEditForm((p) => ({ ...p, shopLocation: e.target.value }))}
-                    className="mt-1 w-full h-10 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    required
+                    value={editForm.lastName}
+                    onChange={(e) => setEditForm((p) => ({ ...p, lastName: e.target.value }))}
+                    className={inputClass}
                   />
                 </label>
-              ) : null}
-              {profile?.organisationName !== undefined ? (
-                <label className="block md:col-span-2">
-                  <span className="text-[10px] uppercase tracking-widest text-neutral-text/60 font-bold">Organisation Name</span>
+                <label className="block">
+                  <span className={labelClass}>Email Address *</span>
                   <input
-                    value={editForm.organisationName}
-                    onChange={(e) => setEditForm((p) => ({ ...p, organisationName: e.target.value }))}
-                    className="mt-1 w-full h-10 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    required
+                    type="email"
+                    value={editForm.email}
+                    onChange={(e) => setEditForm((p) => ({ ...p, email: e.target.value }))}
+                    className={inputClass}
                   />
                 </label>
-              ) : null}
+                <label className="block">
+                  <span className={labelClass}>Gender *</span>
+                  <select
+                    required
+                    value={editForm.gender}
+                    onChange={(e) => setEditForm((p) => ({ ...p, gender: e.target.value as Gender | '' }))}
+                    className={inputClass}
+                  >
+                    <option value="">Select gender</option>
+                    <option value="MALE">Male</option>
+                    <option value="FEMALE">Female</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </label>
+              </div>
             </div>
+
+            {/* Optional fields */}
+            <div>
+              <p className="text-[11px] uppercase tracking-widest text-neutral-text/40 font-bold mb-3">Contact & Personal</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label className="block">
+                  <span className={labelClass}>Phone Number</span>
+                  <input
+                    value={editForm.phoneNumber}
+                    onChange={(e) => setEditForm((p) => ({ ...p, phoneNumber: e.target.value }))}
+                    className={inputClass}
+                  />
+                </label>
+                <label className="block">
+                  <span className={labelClass}>Date of Birth</span>
+                  <input
+                    type="date"
+                    value={editForm.dateOfBirth}
+                    onChange={(e) => setEditForm((p) => ({ ...p, dateOfBirth: e.target.value }))}
+                    className={inputClass}
+                  />
+                </label>
+                <label className="block">
+                  <span className={labelClass}>Title</span>
+                  <input
+                    value={editForm.title}
+                    placeholder="e.g. Mr, Mrs, Dr"
+                    onChange={(e) => setEditForm((p) => ({ ...p, title: e.target.value }))}
+                    className={inputClass}
+                  />
+                </label>
+                <label className="block">
+                  <span className={labelClass}>Initials</span>
+                  <input
+                    value={editForm.initials}
+                    placeholder="e.g. J.D."
+                    onChange={(e) => setEditForm((p) => ({ ...p, initials: e.target.value }))}
+                    className={inputClass}
+                  />
+                </label>
+                <label className="block">
+                  <span className={labelClass}>Nationality</span>
+                  <input
+                    value={editForm.nationality}
+                    onChange={(e) => setEditForm((p) => ({ ...p, nationality: e.target.value }))}
+                    className={inputClass}
+                  />
+                </label>
+              </div>
+            </div>
+
+            {/* ID fields */}
+            <div>
+              <p className="text-[11px] uppercase tracking-widest text-neutral-text/40 font-bold mb-3">Identification</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label className="block">
+                  <span className={labelClass}>National ID Number</span>
+                  <input
+                    value={editForm.nationalIdentificationNumber}
+                    onChange={(e) => setEditForm((p) => ({ ...p, nationalIdentificationNumber: e.target.value }))}
+                    className={inputClass}
+                  />
+                </label>
+                <label className="block">
+                  <span className={labelClass}>Passport Number</span>
+                  <input
+                    value={editForm.passportNumber}
+                    onChange={(e) => setEditForm((p) => ({ ...p, passportNumber: e.target.value }))}
+                    className={inputClass}
+                  />
+                </label>
+                <label className="block">
+                  <span className={labelClass}>Driver License Number</span>
+                  <input
+                    value={editForm.driverLicenseNumber}
+                    onChange={(e) => setEditForm((p) => ({ ...p, driverLicenseNumber: e.target.value }))}
+                    className={inputClass}
+                  />
+                </label>
+              </div>
+            </div>
+
+            {/* Business fields — only shown if they have values on the profile */}
+            {(profile?.shopName !== undefined || profile?.shopLocation !== undefined || profile?.organisationName !== undefined) ? (
+              <div>
+                <p className="text-[11px] uppercase tracking-widest text-neutral-text/40 font-bold mb-3">Business</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {profile?.organisationName !== undefined ? (
+                    <label className="block md:col-span-2">
+                      <span className={labelClass}>Organisation Name</span>
+                      <input
+                        value={editForm.organisationName}
+                        onChange={(e) => setEditForm((p) => ({ ...p, organisationName: e.target.value }))}
+                        className={inputClass}
+                      />
+                    </label>
+                  ) : null}
+                  {profile?.shopName !== undefined ? (
+                    <label className="block">
+                      <span className={labelClass}>Shop Name</span>
+                      <input
+                        value={editForm.shopName}
+                        onChange={(e) => setEditForm((p) => ({ ...p, shopName: e.target.value }))}
+                        className={inputClass}
+                      />
+                    </label>
+                  ) : null}
+                  {profile?.shopLocation !== undefined ? (
+                    <label className="block">
+                      <span className={labelClass}>Shop Location</span>
+                      <input
+                        value={editForm.shopLocation}
+                        onChange={(e) => setEditForm((p) => ({ ...p, shopLocation: e.target.value }))}
+                        className={inputClass}
+                      />
+                    </label>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+
             <div className="flex items-center gap-3 pt-2">
               <button
                 type="submit"
@@ -303,57 +479,111 @@ const UserProfile: React.FC = () => {
             </div>
           </form>
         ) : (
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-            <div>
-              <p className="text-[10px] uppercase tracking-widest text-neutral-text/60 font-bold">First Name</p>
-              <p className="font-semibold text-dark-text mt-2">{profile?.firstName ?? '—'}</p>
+          <div className="mt-6 space-y-6">
+            {/* Basic info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+              <div>
+                <p className={labelClass}>First Name</p>
+                <p className="font-semibold text-dark-text mt-2">{profile?.firstName ?? '—'}</p>
+              </div>
+              <div>
+                <p className={labelClass}>Last Name</p>
+                <p className="font-semibold text-dark-text mt-2">{profile?.lastName ?? '—'}</p>
+              </div>
+              <div>
+                <p className={labelClass}>Email Address</p>
+                <p className="font-semibold text-dark-text mt-2">{profile?.email ?? '—'}</p>
+              </div>
+              <div>
+                <p className={labelClass}>Gender</p>
+                <p className="font-semibold text-dark-text mt-2">
+                  {profile?.gender ? String(profile.gender).charAt(0) + String(profile.gender).slice(1).toLowerCase() : '—'}
+                </p>
+              </div>
+              <div>
+                <p className={labelClass}>Phone Number</p>
+                <p className="font-semibold text-dark-text mt-2">{profile?.phoneNumber ?? '—'}</p>
+              </div>
+              <div>
+                <p className={labelClass}>Date of Birth</p>
+                <p className="font-semibold text-dark-text mt-2">{profile?.dateOfBirth ?? '—'}</p>
+              </div>
+              {profile?.title ? (
+                <div>
+                  <p className={labelClass}>Title</p>
+                  <p className="font-semibold text-dark-text mt-2">{profile.title}</p>
+                </div>
+              ) : null}
+              {profile?.nationality ? (
+                <div>
+                  <p className={labelClass}>Nationality</p>
+                  <p className="font-semibold text-dark-text mt-2">{profile.nationality}</p>
+                </div>
+              ) : null}
+              <div>
+                <p className={labelClass}>Username</p>
+                <p className="font-semibold text-dark-text mt-2">{profile?.username ?? '—'}</p>
+              </div>
+              <div>
+                <p className={labelClass}>User Role</p>
+                <p className="font-semibold text-dark-text mt-2">{displayRole}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-widest text-neutral-text/60 font-bold">Last Name</p>
-              <p className="font-semibold text-dark-text mt-2">{profile?.lastName ?? '—'}</p>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-widest text-neutral-text/60 font-bold">Email Address</p>
-              <p className="font-semibold text-dark-text mt-2">{profile?.email ?? '—'}</p>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-widest text-neutral-text/60 font-bold">Phone Number</p>
-              <p className="font-semibold text-dark-text mt-2">{profile?.phoneNumber ?? '—'}</p>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-widest text-neutral-text/60 font-bold">User Role</p>
-              <p className="font-semibold text-dark-text mt-2">{displayRole}</p>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-widest text-neutral-text/60 font-bold">Username</p>
-              <p className="font-semibold text-dark-text mt-2">{profile?.username ?? '—'}</p>
-            </div>
+
+            {/* ID fields */}
+            {(profile?.nationalIdentificationNumber || profile?.passportNumber || profile?.driverLicenseNumber) ? (
+              <>
+                <div className="border-t border-neutral-light pt-4">
+                  <p className="text-[11px] uppercase tracking-widest text-neutral-text/40 font-bold mb-4">Identification</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                    {profile?.nationalIdentificationNumber ? (
+                      <div>
+                        <p className={labelClass}>National ID Number</p>
+                        <p className="font-semibold text-dark-text mt-2">{profile.nationalIdentificationNumber}</p>
+                      </div>
+                    ) : null}
+                    {profile?.passportNumber ? (
+                      <div>
+                        <p className={labelClass}>Passport Number</p>
+                        <p className="font-semibold text-dark-text mt-2">{profile.passportNumber}</p>
+                      </div>
+                    ) : null}
+                    {profile?.driverLicenseNumber ? (
+                      <div>
+                        <p className={labelClass}>Driver License</p>
+                        <p className="font-semibold text-dark-text mt-2">{profile.driverLicenseNumber}</p>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </>
+            ) : null}
           </div>
         )}
       </section>
 
-      {/* Business / Org section (read-only handled by edit above) */}
+      {/* Business / Org section (read-only) */}
       {!isEditing && (profile?.shopName || profile?.organisationName || profile?.shopLocation) ? (
-        <section className="bg-white border border-neutral-light rounded-3xl shadow-sm p-6 md:p-8">
+        <section className="bg-white border border-neutral-light rounded-xl shadow-sm p-6 md:p-8">
           <h3 className="text-base font-bold text-dark-text">
             {profile?.organisationName ? 'Organization' : 'Business'} Information
           </h3>
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
             {profile?.organisationName ? (
               <div>
-                <p className="text-[10px] uppercase tracking-widest text-neutral-text/60 font-bold">Organization</p>
+                <p className={labelClass}>Organization</p>
                 <p className="font-semibold text-dark-text mt-2">{profile.organisationName}</p>
               </div>
             ) : null}
             {profile?.shopName ? (
               <div>
-                <p className="text-[10px] uppercase tracking-widest text-neutral-text/60 font-bold">Shop Name</p>
+                <p className={labelClass}>Shop Name</p>
                 <p className="font-semibold text-dark-text mt-2">{profile.shopName}</p>
               </div>
             ) : null}
             {profile?.shopLocation ? (
               <div>
-                <p className="text-[10px] uppercase tracking-widest text-neutral-text/60 font-bold">Location</p>
+                <p className={labelClass}>Location</p>
                 <p className="font-semibold text-dark-text mt-2">{profile.shopLocation}</p>
               </div>
             ) : null}
@@ -362,11 +592,11 @@ const UserProfile: React.FC = () => {
       ) : null}
 
       {/* Security section */}
-      <section className="bg-white border border-neutral-light rounded-3xl shadow-sm p-6 md:p-8 space-y-6">
+      <section className="bg-white border border-neutral-light rounded-xl shadow-sm p-6 md:p-8 space-y-6">
         <h3 className="text-base font-bold text-dark-text">Security</h3>
 
         {/* Change Password */}
-        <div className="border border-neutral-light rounded-2xl p-5">
+        <div className="border border-neutral-light rounded-xl p-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="material-symbols-outlined text-[22px] text-primary">lock</span>
@@ -390,7 +620,7 @@ const UserProfile: React.FC = () => {
           {showPasswordForm ? (
             <form onSubmit={(e) => void handleChangePassword(e)} className="mt-5 space-y-4">
               <label className="block">
-                <span className="text-[10px] uppercase tracking-widest text-neutral-text/60 font-bold">Current Password</span>
+                <span className={labelClass}>Current Password</span>
                 <div className="relative mt-1">
                   <input
                     type={showCurrentPw ? 'text' : 'password'}
@@ -412,7 +642,7 @@ const UserProfile: React.FC = () => {
                 </div>
               </label>
               <label className="block">
-                <span className="text-[10px] uppercase tracking-widest text-neutral-text/60 font-bold">New Password</span>
+                <span className={labelClass}>New Password</span>
                 <div className="relative mt-1">
                   <input
                     type={showNewPw ? 'text' : 'password'}
@@ -434,7 +664,7 @@ const UserProfile: React.FC = () => {
                 </div>
               </label>
               <label className="block">
-                <span className="text-[10px] uppercase tracking-widest text-neutral-text/60 font-bold">Confirm New Password</span>
+                <span className={labelClass}>Confirm New Password</span>
                 <input
                   type="password"
                   value={passwordForm.confirmPassword}
@@ -456,7 +686,7 @@ const UserProfile: React.FC = () => {
         </div>
 
         {/* Two-Factor Authentication */}
-        <div className="border border-neutral-light rounded-2xl p-5">
+        <div className="border border-neutral-light rounded-xl p-5">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <span className="material-symbols-outlined text-[22px] text-primary">verified_user</span>

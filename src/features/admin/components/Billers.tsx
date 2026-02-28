@@ -357,7 +357,7 @@ const Billers: React.FC<BillersProps> = () => {
         </div>
         <button 
           onClick={handleCreateClick}
-          className="bg-primary text-white px-8 py-4 rounded-[2rem] font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-opacity-90 transition-all shadow-xl shadow-primary/20"
+          className="bg-primary text-white px-8 py-4 rounded-lg font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-opacity-90 transition-all shadow-xl shadow-primary/20"
         >
           <span className="material-symbols-outlined text-lg">add_business</span>
           Onboard New Provider
@@ -371,7 +371,7 @@ const Billers: React.FC<BillersProps> = () => {
           { label: 'Review Required', value: billers.filter(b => b.status === 'Pending').length.toString(), icon: 'fact_check', color: 'text-orange-500', bg: 'bg-orange-100' },
           { label: 'Platform Cut', value: '2.4%', icon: 'percent', color: 'text-blue-500', bg: 'bg-blue-100' },
         ].map((stat, i) => (
-          <div key={i} className="bg-white  p-8 rounded-[2rem] border border-neutral-light dark:border-white/5 flex items-center gap-5 shadow-sm">
+          <div key={i} className="bg-white p-6 rounded-lg border border-neutral-light dark:border-white/5 flex items-center gap-5 shadow-sm">
             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${stat.bg} ${stat.color}`}>
               <span className="material-symbols-outlined text-2xl">{stat.icon}</span>
             </div>
@@ -383,7 +383,7 @@ const Billers: React.FC<BillersProps> = () => {
         ))}
       </div>
 
-      <div className="bg-white  p-4 rounded-[2rem] border border-neutral-light dark:border-white/5 flex flex-col md:flex-row gap-4 items-center shadow-sm">
+      <div className="bg-white p-4 rounded-lg border border-neutral-light dark:border-white/5 flex flex-col md:flex-row gap-4 items-center shadow-sm">
         <div className="relative flex-1 w-full">
           <span className="material-symbols-outlined absolute left-5 top-1/2 -translate-y-1/2 text-neutral-text text-xl">search</span>
           <input 
@@ -391,11 +391,11 @@ const Billers: React.FC<BillersProps> = () => {
             placeholder="Master search billers..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-[#f8fafc] dark:bg-white/5 border-none rounded-2xl pl-12 pr-6 py-4 text-sm font-bold focus:ring-2 focus:ring-primary/20"
+            className="w-full bg-[#f8fafc] dark:bg-white/5 border-none rounded-xl pl-12 pr-6 py-3 text-sm font-bold focus:ring-2 focus:ring-primary/20"
           />
         </div>
         <div className="flex gap-2">
-          <button className="p-4 bg-[#f8fafc] dark:bg-white/5 text-neutral-text rounded-2xl hover:bg-neutral-light transition-all">
+          <button className="p-3 bg-[#f8fafc] dark:bg-white/5 text-neutral-text rounded-lg hover:bg-neutral-light transition-all">
             <span className="material-symbols-outlined">tune</span>
           </button>
         </div>
@@ -490,7 +490,7 @@ const Billers: React.FC<BillersProps> = () => {
                 </div>
                 
                 {/* BULK PAYMENT CONFIGURATION */}
-                <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10 flex items-center justify-between">
+                <div className="p-6 bg-primary/5 rounded-lg border border-primary/10 flex items-center justify-between">
                    <div>
                       <p className="text-sm font-bold text-dark-text">Allow Bulk Payments</p>
                       <p className="text-[10px] text-neutral-text font-medium">Enable CSV/Excel batch processing for this biller.</p>
@@ -518,7 +518,7 @@ const Billers: React.FC<BillersProps> = () => {
                 
                 <div className="space-y-4">
                   {selectedBiller.fields.map((field) => (
-                    <div key={field.id} className="p-6 bg-[#f8fafc] rounded-3xl border border-neutral-light relative group animate-in slide-in-from-top-2">
+                    <div key={field.id} className="p-6 bg-[#f8fafc] rounded-lg border border-neutral-light relative group animate-in slide-in-from-top-2">
                       <button 
                         onClick={() => removeProvisionField(field.id)}
                         className="absolute -top-2 -right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
@@ -578,14 +578,14 @@ const Billers: React.FC<BillersProps> = () => {
             <div className="p-8 border-t border-neutral-light bg-[#f8fafc] flex gap-4">
               <button 
                 onClick={() => setIsDrawerOpen(false)}
-                className="flex-1 py-4 rounded-2xl border border-neutral-light font-black text-[10px] uppercase tracking-widest hover:bg-white transition-all"
+                className="flex-1 py-4 rounded-lg border border-neutral-light font-black text-[10px] uppercase tracking-widest hover:bg-white transition-all"
               >
                 Discard Changes
               </button>
               <button 
                 onClick={() => void handleSaveBiller()}
                 disabled={!selectedBiller.name || isPersisting}
-                className="flex-1 py-4 bg-primary text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+                className="flex-1 py-4 bg-primary text-white rounded-lg font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
               >
                 {isPersisting
                   ? 'Saving...'

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { Icon } from './Icon'
 
 type Notification = {
   id: string
@@ -49,7 +50,7 @@ export default function NotificationMenu({ onReplenishFloat }: { onReplenishFloa
           isOpen ? 'bg-primary text-white scale-110 shadow-lg shadow-primary/20' : 'bg-neutral-light/50 dark:bg-white/5 text-neutral-text dark:text-gray-400 hover:bg-neutral-light dark:hover:bg-white/10'
         }`}
       >
-        <span className="material-symbols-outlined text-xl">notifications</span>
+        <Icon name="notifications" size={18} />
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-black rounded-full border-2 border-white dark:border-[#211d29] flex items-center justify-center shadow-sm">
             {unreadCount}
@@ -58,7 +59,7 @@ export default function NotificationMenu({ onReplenishFloat }: { onReplenishFloa
       </button>
 
       {isOpen && (
-        <div className="absolute top-14 right-0 w-96 bg-white rounded-[2rem] shadow-2xl border border-neutral-light/50 dark:border-white/5 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-200 z-[100]">
+        <div className="absolute top-14 right-0 w-96 bg-white rounded-xl shadow-2xl border border-neutral-light/50 dark:border-white/5 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-200 z-[100]">
           <div className="p-6 border-b border-neutral-light/30 dark:border-white/5 flex items-center justify-between">
             <h4 className="text-xs font-black uppercase tracking-widest text-dark-text/40 dark:text-white/40">INBOX</h4>
             <div className="flex gap-4">
@@ -88,7 +89,7 @@ export default function NotificationMenu({ onReplenishFloat }: { onReplenishFloa
                           n.type === 'success' ? 'bg-[#f0f9e6] text-[#a3e635]' : n.type === 'alert' ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-blue-500'
                         }`}
                       >
-                        <span className="material-symbols-outlined text-2xl">{n.type === 'success' ? 'check_circle' : n.type === 'alert' ? 'warning' : 'info'}</span>
+                        <Icon name={n.type === 'success' ? 'check_circle' : n.type === 'alert' ? 'warning' : 'info'} size={22} />
                       </div>
                       <div className="flex-1 min-w-0 pr-6">
                         <div className="flex items-center justify-between gap-2">
@@ -109,7 +110,7 @@ export default function NotificationMenu({ onReplenishFloat }: { onReplenishFloa
                           }}
                           className="bg-primary text-white px-10 py-4 rounded-full font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 w-full max-w-[280px]"
                         >
-                          <span className="material-symbols-outlined text-lg">add_circle</span>
+                          <Icon name="add_circle" size={16} />
                           REPLENISH FLOAT
                         </button>
                       </div>
@@ -119,7 +120,7 @@ export default function NotificationMenu({ onReplenishFloat }: { onReplenishFloa
               </div>
             ) : (
               <div className="py-24 flex flex-col items-center justify-center opacity-30 text-neutral-text">
-                <span className="material-symbols-outlined text-6xl mb-4">notifications_off</span>
+                <Icon name="notifications_off" size={48} className="mb-4" />
                 <p className="text-xs font-black uppercase tracking-widest">Inbox is empty</p>
               </div>
             )}

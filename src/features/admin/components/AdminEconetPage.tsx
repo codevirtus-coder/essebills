@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
+import { confirmToast } from '../../../lib/confirmToast'
 import { DataTable, TableColumn } from '../../../components/ui/DataTable'
 import {
   changeEconetBundlePlanTypeStatus,
@@ -198,25 +199,27 @@ const AdminEconetPage: React.FC<AdminEconetPageProps> = ({
     }
   }
 
-  const handleDelete = async (row: UnknownRecord) => {
+  const handleDelete = (row: UnknownRecord) => {
     const id = row.id as string | number | undefined
     if (!id && id !== 0) {
       toast.error('Record ID is missing')
       return
     }
-    const shouldDelete = window.confirm(`Delete "${String(row.name ?? id)}"?`)
-    if (!shouldDelete) return
 
-    try {
-      setIsDeletingId(id)
-      await config.remove(id)
-      toast.success('Record deleted')
-      await loadRows()
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to delete item')
-    } finally {
-      setIsDeletingId(null)
-    }
+    confirmToast(`Delete "${String(row.name ?? id)}"?`, () => {
+      setIsDeletingId(id!)
+      config.remove(id!)
+        .then(() => {
+          toast.success('Record deleted')
+          return loadRows()
+        })
+        .catch((error: unknown) => {
+          toast.error(error instanceof Error ? error.message : 'Failed to delete item')
+        })
+        .finally(() => {
+          setIsDeletingId(null)
+        })
+    })
   }
 
   const handleToggleStatus = async (row: UnknownRecord) => {
@@ -241,16 +244,13 @@ const AdminEconetPage: React.FC<AdminEconetPageProps> = ({
 
   return (
     <div className="p-8 space-y-6 animate-in fade-in duration-300">
-      <section className="bg-white rounded-xl border border-neutral-light p-6 min-h-[112px]">
-        <h2 className="text-4 leading-none font-medium text-dark-text dark:text-white flex items-center gap-3">
-          <span className="material-symbols-outlined text-[28px]">account_balance</span>
-          {config.title}
-        </h2>
-        <p className="text-sm text-neutral-text mt-8">{config.subtitle}</p>
-      </section>
+      <div>
+        <h2 className="text-xl font-bold text-dark-text">{config.title}</h2>
+        <p className="text-sm text-neutral-text mt-1">{config.subtitle}</p>
+      </div>
 
-      <section className="bg-white rounded-xl border border-neutral-light p-5">
-        <div className="flex flex-wrap items-center gap-2 mb-4">
+      <div>
+        <div className="flex flex-wrap items-center gap-2 mb-3">
           <button
             type="button"
             onClick={() => setIsCreateOpen(true)}
@@ -346,7 +346,7 @@ const AdminEconetPage: React.FC<AdminEconetPageProps> = ({
           emptyMessage="No records found"
           emptyIcon="filter_alt_off"
         />
-      </section>
+      </div>
 
       {isCreateOpen ? (
         <div className="fixed inset-0 z-[140] flex items-center justify-center p-4">

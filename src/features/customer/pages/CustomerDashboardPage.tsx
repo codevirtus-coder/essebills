@@ -88,36 +88,26 @@ export function CustomerDashboardPage() {
 
   if (activeTab === 'transactions') {
     return (
-      <div className="p-8 animate-in fade-in duration-500">
-        <div className="bg-white rounded-[3rem] shadow-sm border border-neutral-light overflow-hidden">
-          <div className="p-8 border-b border-neutral-light flex items-center justify-between bg-[#f8fafc]">
-            <div>
-              <h3 className="text-xl font-black text-dark-text tracking-tight">My Transactions</h3>
-              <p className="text-[10px] font-bold text-neutral-text uppercase tracking-widest mt-1">Payment history</p>
-            </div>
-          </div>
-          {transactions === null ? (
-            <div className="p-12 flex items-center justify-center gap-3">
-              <span className="material-symbols-outlined animate-spin text-neutral-text">sync</span>
-              <span className="text-xs font-bold text-neutral-text uppercase tracking-widest">Loading transactions...</span>
-            </div>
-          ) : (
-            <DataTable
-              columns={columns}
-              data={transactions}
-              rowKey={(tx) => tx.id ?? Math.random()}
-              loading={transactions === null}
-              emptyMessage="No transactions found"
-              emptyIcon="receipt_long"
-              header={
-                <div className="px-8 py-6">
-                  <h3 className="text-xl font-black text-dark-text tracking-tight">My Transactions</h3>
-                  <p className="text-[10px] font-bold text-neutral-text uppercase tracking-widest mt-1">Payment history</p>
-                </div>
-              }
-            />
-          )}
+      <div className="p-8 space-y-4 animate-in fade-in duration-500">
+        <div>
+          <h3 className="text-xl font-black text-dark-text tracking-tight">My Transactions</h3>
+          <p className="text-[10px] font-bold text-neutral-text uppercase tracking-widest mt-1">Payment history</p>
         </div>
+        {transactions === null ? (
+          <div className="p-12 flex items-center justify-center gap-3">
+            <span className="material-symbols-outlined animate-spin text-neutral-text">sync</span>
+            <span className="text-xs font-bold text-neutral-text uppercase tracking-widest">Loading transactions...</span>
+          </div>
+        ) : (
+          <DataTable
+            columns={columns}
+            data={transactions}
+            rowKey={(tx) => tx.id ?? Math.random()}
+            loading={transactions === null}
+            emptyMessage="No transactions found"
+            emptyIcon="receipt_long"
+          />
+        )}
       </div>
     );
   }
@@ -125,7 +115,7 @@ export function CustomerDashboardPage() {
   // Default: overview/dashboard content
   return (
     <div className="p-8">
-      <div className="bg-white border border-neutral-light rounded-3xl shadow-sm p-10">
+      <div className="bg-white border border-neutral-light rounded-xl shadow-sm p-8">
         <p className="text-[10px] uppercase tracking-widest text-neutral-text/60 font-bold">Customer Portal</p>
         <h2 className="text-2xl font-extrabold text-dark-text mt-2">Dashboard Coming Soon</h2>
         <p className="text-sm text-neutral-text mt-3">This space is ready for your customer dashboard content.</p>

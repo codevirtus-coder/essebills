@@ -64,8 +64,13 @@ const routes: RouteObject[] = [
             element: <UnifiedDashboardPage />,
           },
           {
-            path: "profile",
-            element: <PortalProfilePage />,
+            element: <DashboardLayout />,
+            children: [
+              {
+                path: "profile",
+                element: <PortalProfilePage />,
+              },
+            ],
           },
         ],
       },

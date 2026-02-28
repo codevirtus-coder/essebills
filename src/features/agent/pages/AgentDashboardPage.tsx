@@ -305,7 +305,7 @@ export function AgentDashboardPage() {
   const renderCommissions = () => (
     <div className="space-y-8 animate-in fade-in duration-500">
        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="bg-accent-green p-10 rounded-[3rem] text-dark-text relative overflow-hidden shadow-2xl">
+          <div className="bg-accent-green p-10 rounded-xl text-dark-text relative overflow-hidden shadow-2xl">
              <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, #131118 1px, transparent 0)', backgroundSize: '30px 30px' }}></div>
              <div className="relative z-10 flex justify-between items-start">
                 <div>
@@ -314,7 +314,7 @@ export function AgentDashboardPage() {
                    <button
                      onClick={handleRequestPayout}
                      disabled={isRequestingPayout || payoutRequested || commissionBalance <= 0}
-                     className={`mt-8 px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all flex items-center gap-2 ${
+                     className={`mt-8 px-8 py-3 rounded-lg font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all flex items-center gap-2 ${
                         payoutRequested ? 'bg-white text-accent-green border border-accent-green' : 'bg-dark-text text-white'
                      }`}
                    >
@@ -326,13 +326,13 @@ export function AgentDashboardPage() {
                      {isRequestingPayout ? 'Processing...' : payoutRequested ? 'Payout Success' : 'Request Payout'}
                    </button>
                 </div>
-                <div className="w-16 h-16 bg-white/20 rounded-3xl flex items-center justify-center border border-white/30 backdrop-blur-md">
+                <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center border border-white/30 backdrop-blur-md">
                    <span className="material-symbols-outlined text-3xl">account_balance_wallet</span>
                 </div>
              </div>
           </div>
 
-          <div className="bg-white p-10 rounded-[3rem] border border-neutral-light shadow-sm flex flex-col justify-center gap-6">
+          <div className="bg-white p-8 rounded-xl border border-neutral-light shadow-sm flex flex-col justify-center gap-6">
              <h4 className="text-[10px] font-black text-neutral-text uppercase tracking-widest">Earning Breakdown</h4>
              <div className="space-y-4">
                 {INITIAL_CATEGORIES.map(cat => {
@@ -353,20 +353,20 @@ export function AgentDashboardPage() {
           </div>
        </div>
 
-       <div className="bg-white rounded-[3rem] border border-neutral-light shadow-sm overflow-hidden">
-          <div className="p-8 border-b border-neutral-light flex items-center justify-between bg-[#f8fafc]">
+       <div className="space-y-2">
+          <div className="flex items-center justify-between">
              <h4 className="text-lg font-black text-dark-text tracking-tight">Commission Ledger</h4>
              <button className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-1 hover:underline">
                 <span className="material-symbols-outlined text-sm">download</span> Export Ledger
              </button>
           </div>
-           <DataTable
-              columns={commissionColumns}
-              data={recentSales}
-              rowKey={(sale) => sale.id}
-              emptyMessage="No commissions yet"
-              emptyIcon="account_balance"
-           />
+          <DataTable
+             columns={commissionColumns}
+             data={recentSales}
+             rowKey={(sale) => sale.id}
+             emptyMessage="No commissions yet"
+             emptyIcon="account_balance"
+          />
        </div>
     </div>
   );
@@ -374,16 +374,16 @@ export function AgentDashboardPage() {
   const renderSchedule = () => (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="max-w-4xl mx-auto space-y-8">
-        <div className="bg-white p-12 rounded-[4rem] border border-neutral-light shadow-sm text-center space-y-4">
+        <div className="bg-white p-10 rounded-xl border border-neutral-light shadow-sm text-center space-y-4">
            <h3 className="text-3xl font-black text-dark-text tracking-tight">Your Earning Potential</h3>
            <p className="text-neutral-text font-medium">Earn attractive commissions on every utility, airtime and fee payment you process.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {INITIAL_CATEGORIES.map((cat) => (
-            <div key={cat.id} className="bg-white p-10 rounded-[3.5rem] border border-neutral-light shadow-sm flex items-center justify-between group hover:border-primary/30 transition-all">
+            <div key={cat.id} className="bg-white p-8 rounded-xl border border-neutral-light shadow-sm flex items-center justify-between group hover:border-primary/30 transition-all">
               <div className="flex items-center gap-6">
-                <div className="w-16 h-16 rounded-3xl bg-background-light flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
+                <div className="w-14 h-14 rounded-lg bg-background-light flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
                   <span className="material-symbols-outlined text-3xl">{cat.icon}</span>
                 </div>
                 <div>
@@ -399,7 +399,7 @@ export function AgentDashboardPage() {
           ))}
         </div>
 
-        <div className="bg-[#1e293b] p-12 rounded-[4rem] text-white relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-12">
+        <div className="bg-[#1e293b] p-10 rounded-xl text-white relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-12">
           <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '40px 40px' }}></div>
           <div className="relative z-10 space-y-4 max-w-xl">
              <h3 className="text-2xl font-black tracking-tight">Maximize Your Earnings</h3>
@@ -407,7 +407,7 @@ export function AgentDashboardPage() {
                Did you know you can increase your daily payout by reaching <span className="text-accent-green font-bold">Elite Agent</span> status? Process more than 100 transactions monthly to unlock premium rates.
              </p>
           </div>
-          <button className="relative z-10 bg-primary text-white px-10 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-2xl shadow-primary/20 hover:scale-105 transition-all">
+          <button className="relative z-10 bg-primary text-white px-10 py-4 rounded-lg font-black text-[10px] uppercase tracking-widest shadow-2xl shadow-primary/20 hover:scale-105 transition-all">
              View Achievements
           </button>
         </div>
@@ -417,7 +417,7 @@ export function AgentDashboardPage() {
 
   const renderFloat = () => (
     <div className="space-y-8 animate-in fade-in duration-500">
-       <div className="bg-[#1e293b] p-12 rounded-[4rem] text-white relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-8">
+       <div className="bg-[#1e293b] p-10 rounded-xl text-white relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-8">
           <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '40px 40px' }}></div>
           <div className="relative z-10">
              <p className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-2">Active Float Balance</p>
@@ -436,17 +436,15 @@ export function AgentDashboardPage() {
           </div>
           <button
              onClick={onAddFloat}
-             className="relative z-10 bg-primary px-10 py-5 rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-2xl shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
+             className="relative z-10 bg-primary px-10 py-5 rounded-lg font-black text-xs uppercase tracking-widest shadow-2xl shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
           >
              <span className="material-symbols-outlined text-lg">add_circle</span>
              Replenish Float
           </button>
        </div>
 
-       <div className="bg-white rounded-[3rem] border border-neutral-light shadow-sm overflow-hidden">
-          <div className="p-8 border-b border-neutral-light flex items-center justify-between">
-             <h4 className="text-lg font-black text-dark-text tracking-tight">Float History</h4>
-          </div>
+       <div className="space-y-2">
+          <h4 className="text-lg font-black text-dark-text tracking-tight">Float History</h4>
           <DataTable
             columns={floatHistoryColumns}
             data={floatHistory ?? []}
@@ -463,39 +461,39 @@ export function AgentDashboardPage() {
     <div className="max-w-3xl space-y-10 animate-in fade-in duration-500 relative">
       {updateFeedback && (
         <div className="fixed bottom-10 right-10 z-[100] animate-in slide-in-from-right-10">
-           <div className="bg-dark-text text-white px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-3 border border-white/10">
+           <div className="bg-dark-text text-white px-8 py-4 rounded-xl shadow-2xl flex items-center gap-3 border border-white/10">
               <span className="material-symbols-outlined text-accent-green">check_circle</span>
               <span className="text-sm font-bold tracking-tight">{updateFeedback}</span>
            </div>
         </div>
       )}
 
-      <section className="bg-white p-12 rounded-[4rem] border border-neutral-light shadow-sm space-y-10">
+      <section className="bg-white p-8 rounded-xl border border-neutral-light shadow-sm space-y-8">
          <h4 className="text-[10px] font-black text-neutral-text uppercase tracking-widest border-b border-neutral-light pb-2">Business Information</h4>
          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-2">
                <label className="text-[10px] font-black text-neutral-text uppercase">Shop Name</label>
-               <input type="text" defaultValue={profile?.shopName ?? ''} className="w-full bg-[#f8fafc] border-none rounded-2xl p-4 text-sm font-bold" />
+               <input type="text" defaultValue={profile?.shopName ?? ''} className="w-full bg-[#f8fafc] border-none rounded-xl px-4 py-3 text-sm font-bold" />
             </div>
             <div className="space-y-2">
                <label className="text-[10px] font-black text-neutral-text uppercase">Location</label>
-               <input type="text" defaultValue={profile?.shopLocation ?? ''} className="w-full bg-[#f8fafc] border-none rounded-2xl p-4 text-sm font-bold" />
+               <input type="text" defaultValue={profile?.shopLocation ?? ''} className="w-full bg-[#f8fafc] border-none rounded-xl px-4 py-3 text-sm font-bold" />
             </div>
             <div className="space-y-2">
                <label className="text-[10px] font-black text-neutral-text uppercase">Agent Owner</label>
-               <input type="text" defaultValue={agentName} className="w-full bg-[#f8fafc] border-none rounded-2xl p-4 text-sm font-bold" />
+               <input type="text" defaultValue={agentName} className="w-full bg-[#f8fafc] border-none rounded-xl px-4 py-3 text-sm font-bold" />
             </div>
             <div className="space-y-2">
                <label className="text-[10px] font-black text-neutral-text uppercase">Mobile Number</label>
-               <input type="tel" defaultValue={profile?.phoneNumber ?? ''} className="w-full bg-[#f8fafc] border-none rounded-2xl p-4 text-sm font-bold" />
+               <input type="tel" defaultValue={profile?.phoneNumber ?? ''} className="w-full bg-[#f8fafc] border-none rounded-xl px-4 py-3 text-sm font-bold" />
             </div>
          </div>
       </section>
 
-      <section className="bg-white p-12 rounded-[4rem] border border-neutral-light shadow-sm space-y-10">
+      <section className="bg-white p-8 rounded-xl border border-neutral-light shadow-sm space-y-8">
          <h4 className="text-[10px] font-black text-neutral-text uppercase tracking-widest border-b border-neutral-light pb-2">Preferences</h4>
          <div className="space-y-6">
-            <div className="flex items-center justify-between p-6 bg-[#f8fafc] rounded-3xl group transition-all">
+            <div className="flex items-center justify-between p-5 bg-[#f8fafc] rounded-lg group transition-all">
                <div>
                   <p className="text-sm font-bold text-dark-text">Low Float Alerts</p>
                   <p className="text-[10px] text-neutral-text font-medium">Notify when float falls below $50.</p>
@@ -507,7 +505,7 @@ export function AgentDashboardPage() {
                   <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${settingsConfig.lowFloatAlerts ? 'right-1' : 'left-1'}`}></div>
                </button>
             </div>
-            <div className="flex items-center justify-between p-6 bg-[#f8fafc] rounded-3xl group transition-all">
+            <div className="flex items-center justify-between p-5 bg-[#f8fafc] rounded-lg group transition-all">
                <div>
                   <p className="text-sm font-bold text-dark-text">Daily Earnings SMS</p>
                   <p className="text-[10px] text-neutral-text font-medium">Receive a summary of today's commissions.</p>
@@ -526,7 +524,7 @@ export function AgentDashboardPage() {
          <button
            onClick={handleUpdateProfile}
            disabled={isUpdatingProfile}
-           className="bg-primary text-white px-12 py-5 rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-2xl shadow-primary/20 hover:scale-[1.02] transition-all flex items-center gap-2"
+           className="bg-primary text-white px-12 py-5 rounded-lg font-black text-xs uppercase tracking-widest shadow-2xl shadow-primary/20 hover:scale-[1.02] transition-all flex items-center gap-2"
          >
             {isUpdatingProfile && <span className="material-symbols-outlined animate-spin text-sm">sync</span>}
             {isUpdatingProfile ? 'Updating Profile...' : 'Update Profile'}
@@ -563,32 +561,30 @@ export function AgentDashboardPage() {
            </div>
 
            {/* Recent Sales Table Snippet */}
-           <div className="bg-white rounded-[3rem] border border-neutral-light shadow-sm overflow-hidden">
-              <div className="p-8 border-b border-neutral-light flex items-center justify-between">
+           <div className="space-y-2">
+              <div className="flex items-center justify-between">
                  <h4 className="text-lg font-black tracking-tight">Recent Sales Activity</h4>
                  <button onClick={() => setTab('sell')} className="text-xs font-black text-primary uppercase tracking-widest hover:underline">New Sale</button>
               </div>
-               <DataTable
-                  columns={recentSalesColumns}
-                  data={recentSales.slice(0, 3)}
-                  rowKey={(sale) => sale.id}
-                  emptyMessage="No recent sales"
-                  emptyIcon="point_of_sale"
-                />
-              <div className="p-4 border-t border-neutral-light">
-                <button
-                  onClick={() => setTab('float')}
-                  className="w-full text-xs font-black text-primary uppercase tracking-widest hover:underline py-2"
-                >
-                  View Float Wallet
-                </button>
-              </div>
+              <DataTable
+                 columns={recentSalesColumns}
+                 data={recentSales.slice(0, 3)}
+                 rowKey={(sale) => sale.id}
+                 emptyMessage="No recent sales"
+                 emptyIcon="point_of_sale"
+              />
+              <button
+                onClick={() => setTab('float')}
+                className="w-full text-xs font-black text-primary uppercase tracking-widest hover:underline py-2"
+              >
+                View Float Wallet
+              </button>
            </div>
 
            <div className="flex gap-4">
              <button
                onClick={onBulkSale}
-               className="bg-accent-green text-dark-text px-8 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center gap-2 hover:scale-105 transition-all shadow-xl shadow-accent-green/10"
+               className="bg-accent-green text-dark-text px-8 py-3 rounded-lg font-black text-[11px] uppercase tracking-widest flex items-center gap-2 hover:scale-105 transition-all shadow-xl shadow-accent-green/10"
              >
                <span className="material-symbols-outlined text-lg">batch_prediction</span>
                BULK SALE
@@ -600,8 +596,8 @@ export function AgentDashboardPage() {
       {activeTab === 'sell' && sellStep === 'select' && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 animate-in slide-in-from-bottom-4">
            {billers.map(b => (
-              <button key={b.id} onClick={() => { setSellForm({...sellForm, billerId: b.id, billerName: b.name, catId: b.catId}); setSellStep('details'); }} className="bg-white p-10 rounded-[3rem] border border-neutral-light hover:border-primary hover:shadow-2xl transition-all group flex flex-col items-center gap-4">
-                 <div className={`w-20 h-20 rounded-[2.5rem] flex items-center justify-center transition-transform group-hover:scale-110 ${b.color}`}><span className="material-symbols-outlined text-4xl">{b.icon}</span></div>
+              <button key={b.id} onClick={() => { setSellForm({...sellForm, billerId: b.id, billerName: b.name, catId: b.catId}); setSellStep('details'); }} className="bg-white p-8 rounded-xl border border-neutral-light hover:border-primary hover:shadow-2xl transition-all group flex flex-col items-center gap-4">
+                 <div className={`w-16 h-16 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 ${b.color}`}><span className="material-symbols-outlined text-3xl">{b.icon}</span></div>
                  <h4 className="text-sm font-black text-dark-text">{b.name}</h4>
                  <p className="text-[10px] font-black text-accent-green uppercase tracking-widest">Earn {getCommissionRate(b.catId)}%</p>
               </button>
@@ -610,7 +606,7 @@ export function AgentDashboardPage() {
       )}
 
       {activeTab === 'sell' && sellStep === 'details' && (
-        <div className="max-w-2xl mx-auto bg-white p-16 rounded-[4rem] border border-neutral-light shadow-sm space-y-10 animate-in zoom-in-95">
+        <div className="max-w-2xl mx-auto bg-white p-10 rounded-xl border border-neutral-light shadow-sm space-y-8 animate-in zoom-in-95">
            <div className="text-center space-y-2">
               <h3 className="text-3xl font-black text-dark-text tracking-tight">Confirm Authorization</h3>
               <p className="text-neutral-text font-medium">Verify customer information before authorizing float deduction.</p>
@@ -618,14 +614,14 @@ export function AgentDashboardPage() {
            <div className="space-y-6">
               <div className="space-y-2">
                  <label className="text-[10px] font-black text-neutral-text uppercase tracking-widest">Customer Reference / Mobile</label>
-                 <input type="text" placeholder="e.g. 0771***567" onChange={e => setSellForm({...sellForm, customerRef: e.target.value})} className="w-full bg-[#f8fafc] border-none rounded-2xl p-4 font-bold text-sm" />
+                 <input type="text" placeholder="e.g. 0771***567" onChange={e => setSellForm({...sellForm, customerRef: e.target.value})} className="w-full bg-[#f8fafc] border-none rounded-xl px-4 py-3 font-bold text-sm" />
               </div>
               <div className="space-y-2">
                  <label className="text-[10px] font-black text-neutral-text uppercase tracking-widest">Amount to Deduct ($)</label>
-                 <input type="number" placeholder="0.00" onChange={e => setSellForm({...sellForm, amount: e.target.value})} className="w-full bg-[#f8fafc] border-none rounded-2xl p-6 text-2xl font-black text-primary text-center" />
+                 <input type="number" placeholder="0.00" onChange={e => setSellForm({...sellForm, amount: e.target.value})} className="w-full bg-[#f8fafc] border-none rounded-xl p-5 text-2xl font-black text-primary text-center" />
               </div>
            </div>
-           <div className="p-6 bg-accent-green/10 rounded-3xl border border-accent-green/20 flex items-center justify-between">
+           <div className="p-5 bg-accent-green/10 rounded-lg border border-accent-green/20 flex items-center justify-between">
               <div>
                  <p className="text-[10px] font-black text-neutral-text uppercase tracking-widest">Estimated Commission</p>
                  <p className="text-xl font-black text-accent-green">+${( (parseFloat(sellForm.amount) || 0) * (getCommissionRate(sellForm.catId)/100)).toFixed(2)}</p>
@@ -633,15 +629,15 @@ export function AgentDashboardPage() {
               <span className="material-symbols-outlined text-accent-green text-3xl">savings</span>
            </div>
            <div className="grid grid-cols-2 gap-4">
-              <button onClick={() => setSellStep('select')} className="py-4 rounded-2xl border border-neutral-light font-black text-[10px] uppercase">Cancel</button>
-              <button onClick={handleProcess} disabled={isProcessing} className="py-4 bg-primary text-white rounded-2xl font-black text-[10px] uppercase shadow-xl">{isProcessing ? 'Authorizing...' : 'Confirm Sale'}</button>
+              <button onClick={() => setSellStep('select')} className="py-4 rounded-lg border border-neutral-light font-black text-[10px] uppercase">Cancel</button>
+              <button onClick={handleProcess} disabled={isProcessing} className="py-4 bg-primary text-white rounded-lg font-black text-[10px] uppercase shadow-xl">{isProcessing ? 'Authorizing...' : 'Confirm Sale'}</button>
            </div>
         </div>
       )}
 
       {activeTab === 'sell' && sellStep === 'success' && (
         <div className="max-w-2xl mx-auto animate-in zoom-in duration-500 pb-20">
-           <div className="bg-white rounded-[4rem] shadow-2xl border border-neutral-light overflow-hidden">
+           <div className="bg-white rounded-xl shadow-2xl border border-neutral-light overflow-hidden">
               <div className="bg-primary/5 p-12 text-center border-b border-dashed border-neutral-light relative">
                  <div className="absolute -bottom-2 left-0 w-full flex justify-around opacity-10">
                     {[...Array(20)].map((_, i) => <div key={i} className="w-4 h-4 rounded-full bg-dark-text"></div>)}
@@ -656,7 +652,7 @@ export function AgentDashboardPage() {
               {lastSale?.token && (
                  <div className="p-10 bg-slate-50 text-center space-y-4">
                     <p className="text-[10px] font-black text-neutral-text uppercase tracking-widest">Voucher Token</p>
-                    <div className="bg-white border-2 border-primary/20 rounded-3xl p-8 shadow-inner">
+                    <div className="bg-white border-2 border-primary/20 rounded-xl p-8 shadow-inner">
                        <p className="text-3xl md:text-4xl font-black text-dark-text tracking-tighter font-mono">{lastSale.token}</p>
                     </div>
                     <div className="flex justify-center gap-4">
@@ -695,22 +691,22 @@ export function AgentDashboardPage() {
                  </div>
 
                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6">
-                    <button onClick={() => handleFulfillAction('Thermal Receipt')} className="flex flex-col items-center justify-center p-6 bg-background-light rounded-[2rem] hover:bg-neutral-light transition-all gap-2 group">
+                    <button onClick={() => handleFulfillAction('Thermal Receipt')} className="flex flex-col items-center justify-center p-6 bg-background-light rounded-lg hover:bg-neutral-light transition-all gap-2 group">
                        <span className="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">print</span>
                        <span className="text-[10px] font-black uppercase tracking-widest">Thermal Print</span>
                     </button>
-                    <button onClick={() => handleFulfillAction('WhatsApp Message')} className="flex flex-col items-center justify-center p-6 bg-background-light rounded-[2rem] hover:bg-neutral-light transition-all gap-2 group">
+                    <button onClick={() => handleFulfillAction('WhatsApp Message')} className="flex flex-col items-center justify-center p-6 bg-background-light rounded-lg hover:bg-neutral-light transition-all gap-2 group">
                        <span className="material-symbols-outlined text-green-600 group-hover:scale-110 transition-transform">share</span>
                        <span className="text-[10px] font-black uppercase tracking-widest">WhatsApp</span>
                     </button>
-                    <button onClick={() => handleFulfillAction('SMS Confirmation')} className="flex flex-col items-center justify-center p-6 bg-background-light rounded-[2rem] hover:bg-neutral-light transition-all gap-2 group">
+                    <button onClick={() => handleFulfillAction('SMS Confirmation')} className="flex flex-col items-center justify-center p-6 bg-background-light rounded-lg hover:bg-neutral-light transition-all gap-2 group">
                        <span className="material-symbols-outlined text-blue-600 group-hover:scale-110 transition-transform">sms</span>
                        <span className="text-[10px] font-black uppercase tracking-widest">Send SMS</span>
                     </button>
                  </div>
 
                  <div className="pt-8 flex flex-col gap-4">
-                    <button onClick={() => setSellStep('select')} className="w-full bg-dark-text text-white py-5 rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-xl hover:bg-primary transition-all flex items-center justify-center gap-3">
+                    <button onClick={() => setSellStep('select')} className="w-full bg-dark-text text-white py-5 rounded-lg font-black text-xs uppercase tracking-widest shadow-xl hover:bg-primary transition-all flex items-center justify-center gap-3">
                        <span className="material-symbols-outlined">add_circle</span>
                        New Transaction
                     </button>

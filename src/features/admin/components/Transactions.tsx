@@ -115,7 +115,7 @@ const Transactions: React.FC = () => {
 
       {/* Transaction Summary Mini-Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white  p-6 rounded-3xl border border-neutral-light dark:border-white/5 flex items-center gap-4">
+        <div className="bg-white p-6 rounded-lg border border-neutral-light dark:border-white/5 flex items-center gap-4">
           <div className="w-12 h-12 bg-accent-green/10 text-accent-green rounded-2xl flex items-center justify-center">
             <span className="material-symbols-outlined">check_circle</span>
           </div>
@@ -124,7 +124,7 @@ const Transactions: React.FC = () => {
             <h4 className="text-xl font-extrabold text-dark-text dark:text-white">94.2%</h4>
           </div>
         </div>
-        <div className="bg-white  p-6 rounded-3xl border border-neutral-light dark:border-white/5 flex items-center gap-4">
+        <div className="bg-white p-6 rounded-lg border border-neutral-light dark:border-white/5 flex items-center gap-4">
           <div className="w-12 h-12 bg-yellow-100 text-yellow-600 rounded-2xl flex items-center justify-center">
             <span className="material-symbols-outlined">pending</span>
           </div>
@@ -133,7 +133,7 @@ const Transactions: React.FC = () => {
             <h4 className="text-xl font-extrabold text-dark-text dark:text-white">124</h4>
           </div>
         </div>
-        <div className="bg-white  p-6 rounded-3xl border border-neutral-light dark:border-white/5 flex items-center gap-4">
+        <div className="bg-white p-6 rounded-lg border border-neutral-light dark:border-white/5 flex items-center gap-4">
           <div className="w-12 h-12 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center">
             <span className="material-symbols-outlined">error</span>
           </div>
@@ -145,7 +145,7 @@ const Transactions: React.FC = () => {
       </div>
 
       {/* Filters Section */}
-      <div className="bg-white  p-4 rounded-3xl border border-neutral-light dark:border-white/5 flex flex-col md:flex-row gap-4 items-center">
+      <div className="bg-white p-4 rounded-lg border border-neutral-light dark:border-white/5 flex flex-col md:flex-row gap-4 items-center">
         <div className="relative flex-1 w-full">
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-neutral-text text-xl">search</span>
           <input 
@@ -178,7 +178,7 @@ const Transactions: React.FC = () => {
         data={filteredTransactions}
         rowKey={(r) => r.id}
         emptyMessage="No transactions found matching your filters."
-        className="rounded-3xl"
+        className=""
       />
 
       {/* Pagination */}

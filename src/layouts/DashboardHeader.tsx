@@ -1,20 +1,24 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import NotificationMenu from '../components/ui/NotificationMenu'
+import { Icon } from '../components/ui/Icon'
 import { useCurrentUser } from '../features/auth/hooks/useCurrentUser'
-import type { UserGroup } from '../features/auth/dto/auth.dto'
+import { clearAuthSession } from '../features/auth/auth.storage'
+import { ROUTE_PATHS } from '../router/paths'
 
 interface DashboardHeaderProps {
   onToggleMobileNav?: () => void
   isMobileNavOpen?: boolean
-  onProfileClick?: () => void
 }
 
 export function DashboardHeader({
   onToggleMobileNav,
   isMobileNavOpen = false,
-  onProfileClick,
 }: DashboardHeaderProps) {
+  const navigate = useNavigate()
   const { profile, group, loading } = useCurrentUser()
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
 
   const displayName = useMemo(() => {
     const first = profile?.firstName ?? ''
@@ -26,42 +30,96 @@ export function DashboardHeader({
     return group ? group.replace(/_/g, ' ') : profile?.group?.name?.replace(/_/g, ' ') || 'User'
   }, [group, profile])
 
+  const initials = useMemo(() => {
+    return [profile?.firstName?.[0], profile?.lastName?.[0]]
+      .filter(Boolean)
+      .join('')
+      .toUpperCase() || 'U'
+  }, [profile])
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setProfileMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const handleSignOut = () => {
+    setProfileMenuOpen(false)
+    clearAuthSession()
+    navigate(ROUTE_PATHS.login)
+  }
+
   return (
-    <header
-      className="min-h-[5.25rem] md:min-h-16 bg-white border-b border-neutral-light dark:border-white/5 shadow-sm flex items-center justify-between px-4 md:px-8 sticky top-0 z-[60] py-2 md:py-0"
-      style={{ paddingTop: "max(env(safe-area-inset-top), 0.5rem)" }}
-    >
+    <header className="h-14 bg-white border-b border-neutral-light dark:border-white/5 shadow-sm flex items-center justify-between px-4 md:px-6 sticky top-0 z-[60]">
       <div className="flex items-center gap-4 flex-1">
         <button
           type="button"
           onClick={onToggleMobileNav}
-          className="md:hidden w-10 h-10 rounded-xl bg-neutral-light text-neutral-text flex items-center justify-center"
-          aria-label={isMobileNavOpen ? "Close navigation" : "Open navigation"}
+          className="md:hidden w-9 h-9 rounded-lg bg-neutral-light text-neutral-text flex items-center justify-center"
+          aria-label={isMobileNavOpen ? 'Close navigation' : 'Open navigation'}
         >
-          <span className="material-symbols-outlined text-lg">
-            {isMobileNavOpen ? "close" : "menu"}
-          </span>
+          <Icon name={isMobileNavOpen ? 'close' : 'menu'} size={18} />
         </button>
       </div>
-      
-      <div className="flex items-center gap-4">
+
+      <div className="flex items-center gap-3">
         <NotificationMenu />
 
-        <div className="h-8 w-[1px] bg-neutral-light dark:bg-white/10 mx-2"></div>
-        <div 
-          onClick={onProfileClick}
-          className="flex items-center gap-3 cursor-pointer group"
-        >
-          <div className="text-right hidden sm:block">
-            <p className="text-xs font-bold text-dark-text dark:text-white">
-              {loading ? 'Loading...' : displayName}
-            </p>
-            <p className="text-[10px] text-neutral-text font-medium">{displayRole}</p>
-          </div>
-          <div 
-            className="w-10 h-10 rounded-full bg-cover bg-center border-2 border-primary/10 group-hover:scale-110 transition-transform shadow-sm" 
-            style={{ backgroundImage: `url('https://lh3.googleusercontent.com/aida-public/AB6AXuCX_vV9EyjAURNA75Ew1cacAmyL1_zLC_LWTvPRzXiTmbHAkcYffvlhR2Zeoj-kKY1Y07HD5H8hm4YARk10BoIWYAozXWVVvw1ndoQJ62m4t_FNG4CERZwkg6_L2bnZ74yYP_aV2fAUoLjVaAeM1IQImX8e_GnvlSW2Fnpm0-iMiwImKLnfjq36EwAVl1svXsUIVQ07jrN15SWXj9vbWAhveG64qrgsmHsaKhmnTmYNpHje8HAwJ9XEi0JXjxzfCRKnUW3xRylP6qkA')` }}
-          ></div>
+        <div className="h-8 w-px bg-neutral-light dark:bg-white/10" />
+
+        {/* Profile dropdown */}
+        <div className="relative" ref={menuRef}>
+          <button
+            type="button"
+            onClick={() => setProfileMenuOpen((p) => !p)}
+            className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-neutral-light/50 transition-colors"
+            aria-label="Open profile menu"
+          >
+            <div className="text-right hidden sm:block">
+              <p className="text-xs font-bold text-dark-text dark:text-white">
+                {loading ? '...' : displayName}
+              </p>
+              <p className="text-[10px] text-neutral-text font-medium">{displayRole}</p>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-primary/20 text-primary text-xs font-bold flex items-center justify-center">
+              {initials}
+            </div>
+            <Icon name="expand_more" size={14} className="text-neutral-text hidden sm:block" />
+          </button>
+
+          {profileMenuOpen && (
+            <div className="absolute top-12 right-0 w-52 bg-white border border-neutral-light rounded-xl shadow-xl overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-150">
+              {/* User summary */}
+              <div className="px-4 py-3 border-b border-neutral-light">
+                <p className="text-sm font-bold text-dark-text truncate">{displayName}</p>
+                <p className="text-[10px] text-neutral-text uppercase tracking-wider mt-0.5">{displayRole}</p>
+              </div>
+
+              {/* Actions */}
+              <div className="py-1">
+                <Link
+                  to="/portal/profile"
+                  onClick={() => setProfileMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-dark-text hover:bg-neutral-light/50 transition-colors w-full"
+                >
+                  <Icon name="person" size={15} className="text-neutral-text" />
+                  My Profile
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors w-full"
+                >
+                  <Icon name="logout" size={15} />
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </header>

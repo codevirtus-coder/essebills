@@ -201,7 +201,7 @@ const Users: React.FC = () => {
         </div>
         <button
           onClick={() => setIsInviteDrawerOpen(true)}
-          className="bg-primary text-white px-8 py-4 rounded-[2rem] font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-opacity-90 transition-all shadow-xl shadow-primary/20 active:scale-95"
+          className="bg-primary text-white px-8 py-4 rounded-lg font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-opacity-90 transition-all shadow-xl shadow-primary/20 active:scale-95"
         >
           <span className="material-symbols-outlined text-lg">person_add</span>
           Invite New User
@@ -216,7 +216,7 @@ const Users: React.FC = () => {
           { label: 'Pending Verif.', value: users.filter(u => u.status === 'Pending').length.toString(), icon: 'how_to_reg', color: 'text-orange-500', bg: 'bg-orange-100' },
           { label: 'Avg LTV', value: '$84.20', icon: 'monetization_on', color: 'text-blue-500', bg: 'bg-blue-100' },
         ].map((stat, i) => (
-          <div key={i} className="bg-white  p-6 rounded-3xl border border-neutral-light dark:border-white/5 flex items-center gap-4">
+          <div key={i} className="bg-white p-6 rounded-lg border border-neutral-light dark:border-white/5 flex items-center gap-4">
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${stat.bg} ${stat.color}`}>
               <span className="material-symbols-outlined">{stat.icon}</span>
             </div>
@@ -229,7 +229,7 @@ const Users: React.FC = () => {
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white  p-4 rounded-3xl border border-neutral-light dark:border-white/5 flex flex-col md:flex-row gap-4 items-center">
+      <div className="bg-white p-4 rounded-lg border border-neutral-light dark:border-white/5 flex flex-col md:flex-row gap-4 items-center">
         <div className="relative flex-1 w-full">
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-neutral-text text-xl">search</span>
           <input
@@ -297,7 +297,7 @@ const Users: React.FC = () => {
                         required
                         value={inviteForm.name}
                         onChange={e => setInviteForm({...inviteForm, name: e.target.value})}
-                        className="w-full bg-[#f8fafc] border-none rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-primary/20"
+                        className="w-full bg-[#f8fafc] border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-primary/20"
                         placeholder="Johnathan Doe"
                       />
                    </div>
@@ -309,7 +309,7 @@ const Users: React.FC = () => {
                           required
                           value={inviteForm.email}
                           onChange={e => setInviteForm({...inviteForm, email: e.target.value})}
-                          className="w-full bg-[#f8fafc] border-none rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-primary/20"
+                          className="w-full bg-[#f8fafc] border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-primary/20"
                           placeholder="name@example.com"
                         />
                       </div>
@@ -319,7 +319,7 @@ const Users: React.FC = () => {
                           type="tel"
                           value={inviteForm.phone}
                           onChange={e => setInviteForm({...inviteForm, phone: e.target.value})}
-                          className="w-full bg-[#f8fafc] border-none rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-primary/20"
+                          className="w-full bg-[#f8fafc] border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-primary/20"
                           placeholder="+263 77*******"
                         />
                       </div>
@@ -337,7 +337,7 @@ const Users: React.FC = () => {
                         key={role}
                         type="button"
                         onClick={() => setInviteForm({...inviteForm, role})}
-                        className={`py-3 px-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 transition-all ${
+                        className={`py-3 px-4 rounded-lg text-[10px] font-black uppercase tracking-widest border-2 transition-all ${
                           inviteForm.role === role ? 'border-primary bg-primary/5 text-primary' : 'border-neutral-light text-neutral-text hover:border-primary/20'
                         }`}
                       >
@@ -355,7 +355,7 @@ const Users: React.FC = () => {
                       { id: 'reports', label: 'Financial Reporting', desc: 'Access to revenue charts and ledgers.' },
                       { id: 'settings', label: 'System Configuration', desc: 'Modify global platform policies.' }
                     ].map((p) => (
-                      <div key={p.id} className="p-4 bg-[#f8fafc] rounded-2xl border border-neutral-light flex items-center justify-between">
+                      <div key={p.id} className="p-4 bg-[#f8fafc] rounded-lg border border-neutral-light flex items-center justify-between">
                          <div>
                             <p className="text-xs font-black text-dark-text tracking-tight uppercase">{p.label}</p>
                             <p className="text-[9px] text-neutral-text font-bold uppercase tracking-tighter">{p.desc}</p>
@@ -378,14 +378,14 @@ const Users: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsInviteDrawerOpen(false)}
-                className="flex-1 py-5 rounded-2xl border border-neutral-light font-black text-[10px] uppercase tracking-widest hover:bg-white transition-all"
+                className="flex-1 py-5 rounded-lg border border-neutral-light font-black text-[10px] uppercase tracking-widest hover:bg-white transition-all"
               >
                 Discard
               </button>
               <button
                 onClick={handleSendInvite}
                 disabled={isSending || !inviteForm.name || !inviteForm.email}
-                className="flex-1 py-5 bg-primary text-white rounded-[2rem] font-black text-[10px] uppercase tracking-widest shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+                className="flex-1 py-5 bg-primary text-white rounded-lg font-black text-[10px] uppercase tracking-widest shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
               >
                 {isSending ? (
                   <span className="flex items-center justify-center gap-2">

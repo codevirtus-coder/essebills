@@ -229,48 +229,48 @@ const AdminStyledApiModulePage: React.FC<AdminStyledApiModulePageProps> = ({
 
   return (
     <div className="p-8 space-y-6 animate-in fade-in duration-300">
-      <section className="bg-white rounded-xl border border-neutral-light p-6 min-h-[112px]">
+      <div className="mb-2">
         <h2 className="text-4 leading-none font-medium text-dark-text dark:text-white flex items-center gap-3">
           <span className="material-symbols-outlined text-[28px]">{icon}</span>
           {title}
         </h2>
         {description.trim() ? <p className="text-sm text-neutral-text mt-8">{description}</p> : null}
-      </section>
+      </div>
 
-      <section className="bg-white rounded-xl border border-neutral-light p-5">
-        <div className="flex flex-wrap items-center gap-2 mb-4">
-          {showCreateButton ? (
-            <button
-              type="button"
-              onClick={() => {
-                if (!createData) {
-                  toast('Create endpoint is not configured for this credentials module yet.')
-                  return
-                }
-                setIsCreateOpen(true)
-              }}
-              className="px-4 py-2 rounded border border-[#7E57C2] text-[#7E57C2] text-lg font-medium uppercase tracking-wide hover:bg-[#7E57C2]/5 transition-colors"
-            >
-              + Create
-            </button>
-          ) : null}
-          {showRefreshButton ? (
-            <button
-              type="button"
-              onClick={() => void loadRows()}
-              className="px-4 py-2 rounded border border-[#7E57C2] text-[#7E57C2] text-lg font-medium uppercase tracking-wide hover:bg-[#7E57C2]/5 transition-colors"
-            >
-              Refresh
-            </button>
-          ) : null}
-          {showEndpointLabel ? (
-            <span className="ml-auto text-xs text-neutral-text">
-              List: <code>{endpoint}</code>
-            </span>
-          ) : null}
-        </div>
-
-        <DataTable
+      <DataTable
+          header={
+            <div className="px-5 py-3 flex flex-wrap items-center gap-2">
+              {showCreateButton ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!createData) {
+                      toast('Create endpoint is not configured for this credentials module yet.')
+                      return
+                    }
+                    setIsCreateOpen(true)
+                  }}
+                  className="px-4 py-2 rounded border border-[#7E57C2] text-[#7E57C2] text-lg font-medium uppercase tracking-wide hover:bg-[#7E57C2]/5 transition-colors"
+                >
+                  + Create
+                </button>
+              ) : null}
+              {showRefreshButton ? (
+                <button
+                  type="button"
+                  onClick={() => void loadRows()}
+                  className="px-4 py-2 rounded border border-[#7E57C2] text-[#7E57C2] text-lg font-medium uppercase tracking-wide hover:bg-[#7E57C2]/5 transition-colors"
+                >
+                  Refresh
+                </button>
+              ) : null}
+              {showEndpointLabel ? (
+                <span className="ml-auto text-xs text-neutral-text">
+                  List: <code>{endpoint}</code>
+                </span>
+              ) : null}
+            </div>
+          }
           columns={useMemo<TableColumn<UnknownRecord>[]>(() => {
             if (columns?.length) {
               return columns.map(col => ({
@@ -326,7 +326,6 @@ const AdminStyledApiModulePage: React.FC<AdminStyledApiModulePageProps> = ({
           emptyMessage={emptyLabel ?? 'No records found'}
           emptyIcon="filter_alt_off"
         />
-      </section>
 
       {isCreateOpen ? (
         <div className="fixed inset-0 z-[140] flex items-center justify-center p-4">

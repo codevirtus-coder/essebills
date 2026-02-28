@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
+import { confirmToast } from '../../../lib/confirmToast'
 import { DataTable, TableColumn } from '../../../components/ui/DataTable'
 import type { AdminUserDto } from '../dto/admin-api.dto'
 import { changeUserActivationStatus, createUser, getPaginatedUsers, resetUserOtp, updateUser } from '../services'
@@ -150,37 +151,35 @@ const AdminUsersPage: React.FC = () => {
     }
   }
 
-  const handleResetOtp = async (user: AdminUserDto) => {
+  const handleResetOtp = (user: AdminUserDto) => {
     if (!user.id) {
       toast.error('User ID is missing')
       return
     }
-    if (!window.confirm(`Reset OTP for ${String(user.username ?? user.email)}? A new OTP secret will be generated.`)) {
-      return
-    }
-    try {
-      setOtpResetLoadingId(user.id)
-      await resetUserOtp(user.id)
-      toast.success('OTP reset successfully')
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to reset OTP')
-    } finally {
-      setOtpResetLoadingId(null)
-    }
+    confirmToast(`Reset OTP for ${String(user.username ?? user.email)}? A new OTP secret will be generated.`, () => {
+      setOtpResetLoadingId(user.id!)
+      resetUserOtp(user.id!)
+        .then(() => {
+          toast.success('OTP reset successfully')
+        })
+        .catch((error: unknown) => {
+          toast.error(error instanceof Error ? error.message : 'Failed to reset OTP')
+        })
+        .finally(() => {
+          setOtpResetLoadingId(null)
+        })
+    })
   }
 
   return (
     <div className="p-8 space-y-6 animate-in fade-in duration-300">
-      <section className="bg-white rounded-xl border border-neutral-light p-6 min-h-[112px]">
-        <h2 className="text-4 leading-none font-medium text-dark-text dark:text-white flex items-center gap-3">
-          <span className="material-symbols-outlined text-[28px]">group</span>
-          User Management
-        </h2>
-        <p className="text-sm text-neutral-text mt-8">Users List</p>
-      </section>
+      <div>
+        <h2 className="text-xl font-bold text-dark-text">User Management</h2>
+        <p className="text-sm text-neutral-text mt-1">Users List</p>
+      </div>
 
-      <section className="bg-white rounded-xl border border-neutral-light p-5">
-        <div className="flex flex-wrap items-center gap-2 mb-4">
+      <div>
+        <div className="flex flex-wrap items-center gap-2 mb-3">
           <button
             type="button"
             onClick={() => setIsCreateOpen(true)}
@@ -273,7 +272,7 @@ const AdminUsersPage: React.FC = () => {
           emptyMessage="No users found"
           emptyIcon="filter_alt_off"
         />
-      </section>
+      </div>
 
       {isCreateOpen ? (
         <div className="fixed inset-0 z-[140] flex items-center justify-center p-4">

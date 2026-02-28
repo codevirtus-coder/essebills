@@ -145,7 +145,7 @@ const Dashboard: React.FC = () => {
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 min-w-0 bg-white  p-8 rounded-3xl shadow-sm border border-neutral-light dark:border-white/5">
+        <div className="lg:col-span-2 min-w-0 bg-white p-8 rounded-xl shadow-sm border border-neutral-light dark:border-white/5">
           <div className="flex items-center justify-between mb-8">
             <div>
               <h4 className="text-xl font-black text-dark-text dark:text-white">Revenue Pulse</h4>
@@ -196,7 +196,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Top Billers List */}
-        <div className="bg-white  p-8 rounded-3xl shadow-sm border border-neutral-light dark:border-white/5 flex flex-col min-w-0">
+        <div className="bg-white p-8 rounded-xl shadow-sm border border-neutral-light dark:border-white/5 flex flex-col min-w-0">
           <h4 className="text-xl font-black text-dark-text dark:text-white mb-8">Top Billers</h4>
           <div className="space-y-6 flex-1">
             {BILLER_PERFORMANCE.map((biller) => (
@@ -214,7 +214,7 @@ const Dashboard: React.FC = () => {
               </div>
             ))}
           </div>
-          <button className="mt-8 w-full bg-neutral-light/30 dark:bg-white/5 text-[10px] font-black uppercase tracking-[0.2em] py-4 rounded-2xl hover:bg-primary hover:text-white transition-all">
+          <button className="mt-8 w-full bg-neutral-light/30 dark:bg-white/5 text-[10px] font-black uppercase tracking-[0.2em] py-4 rounded-lg hover:bg-primary hover:text-white transition-all">
             Full Biller Audit
           </button>
         </div>

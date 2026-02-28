@@ -3,7 +3,12 @@
     "allow": [
       "Bash(test:*)",
       "Bash(npm run:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npm install:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(python3:*)",
+      "WebSearch",
+      "WebFetch(domain:goey-toast.vercel.app)"
     ]
   }
 }
