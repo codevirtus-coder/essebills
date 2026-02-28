@@ -1,11 +1,31 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import StatCard from '../../../components/ui/StatCard';
-import { MOCK_STATS, MOCK_TRANSACTIONS, BILLER_PERFORMANCE, REVENUE_DATA, MOCK_AGENTS } from '../data/constants';
+import { MOCK_STATS, BILLER_PERFORMANCE, REVENUE_DATA, MOCK_AGENTS } from '../data/constants';
 import { TransactionStatus } from '../data/types';
+import { getRecentPaymentTransactions, getUsersCount, type DashboardTransaction } from '../services/adminDashboard.service';
 
 const Dashboard: React.FC = () => {
+  const [transactions, setTransactions] = useState<DashboardTransaction[]>([]);
+  const [usersCount, setUsersCount] = useState<number>(MOCK_STATS.activeUsers);
+  const [totalTransactions, setTotalTransactions] = useState<number>(MOCK_STATS.totalTransactions);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    Promise.all([getRecentPaymentTransactions(), getUsersCount()])
+      .then(([txs, count]) => {
+        if (!mounted) return;
+        setTransactions(txs);
+        setTotalTransactions(txs.length || MOCK_STATS.totalTransactions);
+        setUsersCount(count || MOCK_STATS.activeUsers);
+      })
+      .catch(() => { /* keep mock fallbacks */ })
+      .finally(() => { if (mounted) setIsLoading(false); });
+    return () => { mounted = false; };
+  }, []);
+
   return (
     <div className="p-8 space-y-8 animate-in fade-in duration-700">
       {/* Stat Cards */}
@@ -20,9 +40,9 @@ const Dashboard: React.FC = () => {
           chartPath="M0 25 Q 20 10, 40 20 T 80 5 T 100 15"
           strokeColor="#7e56c2"
         />
-        <StatCard 
+        <StatCard
           label="Total Transactions"
-          value={MOCK_STATS.totalTransactions.toLocaleString()}
+          value={totalTransactions.toLocaleString()}
           change={MOCK_STATS.transactionsChange}
           icon="sync_alt"
           iconBg="bg-blue-100"
@@ -30,9 +50,9 @@ const Dashboard: React.FC = () => {
           chartPath="M0 20 Q 25 25, 50 10 T 100 5"
           strokeColor="#7e56c2"
         />
-        <StatCard 
+        <StatCard
           label="Active Users"
-          value={MOCK_STATS.activeUsers.toLocaleString()}
+          value={usersCount.toLocaleString()}
           change={MOCK_STATS.usersChange}
           icon="person_check"
           iconBg="bg-accent-green/10"
@@ -141,6 +161,12 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
         <div className="overflow-x-auto">
+          {isLoading ? (
+            <div className="p-12 flex flex-col items-center gap-4">
+              <span className="material-symbols-outlined text-4xl text-neutral-text animate-spin">sync</span>
+              <p className="text-xs font-bold text-neutral-text uppercase tracking-widest">Loading transactions...</p>
+            </div>
+          ) : (
           <table className="w-full text-left border-separate border-spacing-0">
             <thead className="bg-neutral-light/20 dark:bg-white/5">
               <tr>
@@ -153,44 +179,57 @@ const Dashboard: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-light dark:divide-white/5">
-              {MOCK_TRANSACTIONS.map((tx) => (
-                <tr key={tx.id} className="hover:bg-neutral-light/10 dark:hover:bg-white/5 transition-colors">
-                  <td className="px-8 py-5">
-                    <p className="text-sm font-black text-dark-text dark:text-gray-200">{tx.date}</p>
-                    <p className="text-[10px] font-bold text-neutral-text uppercase tracking-tighter">{tx.time}</p>
-                  </td>
-                  <td className="px-8 py-5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 bg-primary/10 text-primary rounded-xl flex items-center justify-center text-[10px] font-black">
-                        {tx.customerInitials}
-                      </div>
-                      <p className="text-sm font-bold text-dark-text dark:text-gray-300">{tx.customerName}</p>
-                    </div>
-                  </td>
-                  <td className="px-8 py-5">
-                    <span className="text-xs font-bold text-neutral-text">{tx.biller}</span>
-                  </td>
-                  <td className="px-8 py-5">
-                    <p className="text-sm font-black text-dark-text dark:text-white">${tx.amount.toFixed(2)}</p>
-                  </td>
-                  <td className="px-8 py-5">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black border uppercase tracking-widest ${
-                      tx.status === TransactionStatus.SUCCESS ? 'bg-accent-green/10 text-accent-green border-accent-green/20' :
-                      tx.status === TransactionStatus.PENDING ? 'bg-yellow-50 text-yellow-600 border-yellow-100' :
-                      'bg-red-50 text-red-600 border-red-100'
-                    }`}>
-                      {tx.status}
-                    </span>
-                  </td>
-                  <td className="px-8 py-5 text-right">
-                    <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/10 rounded-xl transition-all text-neutral-text">
-                      <span className="material-symbols-outlined text-lg">more_vert</span>
-                    </button>
+              {transactions.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-8 py-10 text-center text-xs font-bold text-neutral-text uppercase tracking-widest">
+                    No transactions found
                   </td>
                 </tr>
-              ))}
+              ) : transactions.map((tx) => {
+                const customerInitials = tx.customerInitials ?? (String(tx.customerName ?? '').slice(0, 2).toUpperCase() || '--');
+                const status = String(tx.status ?? '');
+                const isSuccess = status === TransactionStatus.SUCCESS || status.toLowerCase() === 'success' || status.toLowerCase() === 'completed';
+                const isPending = status === TransactionStatus.PENDING || status.toLowerCase() === 'pending';
+                return (
+                  <tr key={tx.id} className="hover:bg-neutral-light/10 dark:hover:bg-white/5 transition-colors">
+                    <td className="px-8 py-5">
+                      <p className="text-sm font-black text-dark-text dark:text-gray-200">{tx.date ?? '—'}</p>
+                      <p className="text-[10px] font-bold text-neutral-text uppercase tracking-tighter">{tx.time ?? ''}</p>
+                    </td>
+                    <td className="px-8 py-5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 bg-primary/10 text-primary rounded-xl flex items-center justify-center text-[10px] font-black">
+                          {customerInitials}
+                        </div>
+                        <p className="text-sm font-bold text-dark-text dark:text-gray-300">{tx.customerName ?? '—'}</p>
+                      </div>
+                    </td>
+                    <td className="px-8 py-5">
+                      <span className="text-xs font-bold text-neutral-text">{tx.biller ?? '—'}</span>
+                    </td>
+                    <td className="px-8 py-5">
+                      <p className="text-sm font-black text-dark-text dark:text-white">${(Number(tx.amount) || 0).toFixed(2)}</p>
+                    </td>
+                    <td className="px-8 py-5">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black border uppercase tracking-widest ${
+                        isSuccess ? 'bg-accent-green/10 text-accent-green border-accent-green/20' :
+                        isPending ? 'bg-yellow-50 text-yellow-600 border-yellow-100' :
+                        'bg-red-50 text-red-600 border-red-100'
+                      }`}>
+                        {status || '—'}
+                      </span>
+                    </td>
+                    <td className="px-8 py-5 text-right">
+                      <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/10 rounded-xl transition-all text-neutral-text">
+                        <span className="material-symbols-outlined text-lg">more_vert</span>
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
+          )}
         </div>
       </div>
     </div>
