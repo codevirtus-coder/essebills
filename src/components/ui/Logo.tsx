@@ -1,7 +1,7 @@
 import esebillsLogo from '../../assets/esebills_logo.png'
 import type React from 'react'
 
-export default function Logo({ size = 32, className = '', inverted = false }: { size?: number; className?: string; inverted?: boolean }) {
+export default function Logo({ size = 80, className = '', inverted = false }: { size?: number; className?: string; inverted?: boolean }) {
   const imgStyle: React.CSSProperties = {
     height: size,
     width: 'auto',

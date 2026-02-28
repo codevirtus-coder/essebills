@@ -17,10 +17,18 @@ import Settings from "../components/Settings";
 import Support from "../components/Support";
 import Messaging from "../components/Messaging";
 import WhatsAppCenter from "../components/WhatsAppCenter";
+// New custom pages for missing features
+import ZambiaProductsTransactions from "../components/ZambiaProductsTransactions";
+import ZimProductsTransactions from "../components/ZimProductsTransactions";
+import RongekaAccounts from "../components/RongekaAccounts";
+import NetoneBundlePlans from "../components/NetoneBundlePlans";
+import NetoneDataBundles from "../components/NetoneDataBundles";
+import TuitionInstitutions from "../components/TuitionInstitutions";
+import TuitionFeeTypes from "../components/TuitionFeeTypes";
+import TuitionProcessingFees from "../components/TuitionProcessingFees";
 import {
   createSmsCharge,
   createSmsMessage,
-  createRongekaAccount,
   createCgrateCredentials,
   createEconetCredentials,
   createEsolutionsAirtimeCredentials,
@@ -33,18 +41,11 @@ import {
   getAllEsolutionsAirtimeCredentials,
   getAllNetoneEvdCredentials,
   getAllPesepayCredentials,
-  getAllRongekaAccounts,
   getAllSmsCharges,
   getAllSmsMessages,
   getAllZesaCredentials,
   getAllEsolutionsSmsCredentials,
   getAllTuitionTransactions,
-  getAllTuitionInstitutions,
-  createTuitionInstitution,
-  getAllTuitionFeeTypes,
-  createTuitionFeeType,
-  getAllTuitionProcessingFees,
-  createTuitionProcessingFee,
 } from "../services";
 import { INITIAL_FAQS } from "../data/constants";
 import type { FAQItem } from "../data/types";
@@ -98,39 +99,15 @@ export function AdminDashboardPage() {
       case "transactions":
         return <AdminTransactionsPage region="zambia" />;
       case "transactionsZambiaProducts":
-        return <AdminTransactionsPage region="zambia" />;
+        return <ZambiaProductsTransactions />;
       case "transactionsZimProducts":
-        return <AdminTransactionsPage region="zim" />;
+        return <ZimProductsTransactions />;
       case "vouchersZambiaProducts":
         return <AdminVouchersPage region="zambia" />;
       case "vouchersZimProducts":
         return <AdminVouchersPage region="zim" />;
       case "rongekaAccounts":
-        return (
-          <AdminStyledApiModulePage
-            key="rongekaAccounts"
-            title="Rongeka Accounts"
-            description="Live Rongeka accounts from the migrated Angular endpoint."
-            endpoint="/v1/rongeka-accounts/all"
-            createEndpoint="/v1/rongeka-accounts"
-            createData={createRongekaAccount}
-            tableMode="auto"
-            createMode="fields"
-            columns={[
-              { key: "accountName", label: "Account Name" },
-              { key: "bank", label: "Bank" },
-              { key: "accountNumber", label: "Account Number" },
-              { key: "createdDate", label: "Created on" },
-            ]}
-            createFields={[
-              { key: "accountName", label: "Account Name", type: "text" },
-              { key: "bank", label: "Bank", type: "text" },
-              { key: "accountNumber", label: "Account Number", type: "text" },
-            ]}
-            emptyLabel="RongekaAccounts"
-            loadData={getAllRongekaAccounts}
-          />
-        );
+        return <RongekaAccounts />;
       case "billers":
         return (
           <Billers
@@ -191,9 +168,9 @@ export function AdminDashboardPage() {
       case "econetDataBundleTypes":
         return <AdminEconetPage provider="econet" module="dataBundleTypes" />;
       case "netoneBundlePlanTypes":
-        return <AdminEconetPage provider="netone" module="bundlePlanTypes" />;
+        return <NetoneBundlePlans />;
       case "netoneDataBundleTypes":
-        return <AdminEconetPage provider="netone" module="dataBundleTypes" />;
+        return <NetoneDataBundles />;
       case "credentialsPesepay":
         return (
           <AdminStyledApiModulePage
@@ -324,71 +301,11 @@ export function AdminDashboardPage() {
           />
         );
       case "tuitionInstitutions":
-        return (
-          <AdminStyledApiModulePage
-            key="tuitionInstitutions"
-            title="Institutions"
-            icon="account_balance"
-            description=""
-            endpoint="/v1/institutions/all"
-            createEndpoint="/v1/institutions"
-            createData={createTuitionInstitution}
-            tableMode="auto"
-            createMode="json"
-            columns={[
-              { key: "name", label: "Name" },
-              { key: "institutionCode", label: "Code" },
-              { key: "institutionType", label: "Type" },
-              { key: "location", label: "Location" },
-              { key: "percentageSettlementDiscount", label: "% Settlement Discount" },
-            ]}
-            loadData={getAllTuitionInstitutions}
-          />
-        );
+        return <TuitionInstitutions />;
       case "tuitionFeeTypes":
-        return (
-          <AdminStyledApiModulePage
-            key="tuitionFeeTypes"
-            title="Fee Types"
-            icon="shopping_bag"
-            description="Fee Types"
-            endpoint="/v1/fee-types/all"
-            createEndpoint="/v1/fee-types"
-            createData={createTuitionFeeType}
-            tableMode="auto"
-            createMode="json"
-            columns={[
-              { key: "name", label: "Name" },
-              { key: "createdBy", label: "CreatedBy" },
-              { key: "createdDate", label: "CreatedOn" },
-            ]}
-            emptyLabel="feeTypes"
-            loadData={getAllTuitionFeeTypes}
-          />
-        );
+        return <TuitionFeeTypes />;
       case "tuitionProcessingFees":
-        return (
-          <AdminStyledApiModulePage
-            key="tuitionProcessingFees"
-            title="Tuition Processing Fees"
-            icon="account_balance"
-            description=""
-            endpoint="/v1/tuition-processing-fees/all"
-            createEndpoint="/v1/tuition-processing-fees"
-            createData={createTuitionProcessingFee}
-            tableMode="auto"
-            createMode="json"
-            columns={[
-              { key: "name", label: "Name" },
-              { key: "currencyCode", label: "Currency Code" },
-              { key: "effectiveRangeMinimum", label: "Effective Range Minimum" },
-              { key: "effectiveRangeMaximum", label: "Effective Range Maximum" },
-              { key: "fixedChargeAmount", label: "Fixed Charge Amount" },
-              { key: "percentageIncrement", label: "Percentage Increment" },
-            ]}
-            loadData={getAllTuitionProcessingFees}
-          />
-        );
+        return <TuitionProcessingFees />;
       case "commissions":
         return (
           <Settings
