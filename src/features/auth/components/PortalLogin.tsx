@@ -199,66 +199,72 @@ export function PortalLogin({
             {headerExtra ? <div className="mt-4">{headerExtra}</div> : null}
 
             <form onSubmit={handleSubmit} className="login-form">
-              <label className="type-label login-label">{usernameLabel}</label>
-              <div className="login-input-with-icon">
-                <span className="material-symbols-outlined icon-sm">mail</span>
-                <input
-                  type="text"
-                  placeholder={usernamePlaceholder}
-                  value={username}
-                  onChange={(event) => setUsername(event.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="login-password-header">
-                <label className="type-label login-label">Password</label>
-                <Link to={forgotPasswordTo} className="login-forgot">
-                  Forgot?
-                </Link>
-              </div>
-              <div className="login-password-field login-input-with-icon">
-                <span className="material-symbols-outlined icon-sm">lock</span>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="********"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  required
-                />
-                <button
-                  type="button"
-                  className="login-password-toggle"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  aria-pressed={showPassword}
-                >
-                  <span className="material-symbols-outlined icon-sm">
-                    {showPassword ? "visibility_off" : "visibility"}
-                  </span>
-                </button>
-              </div>
-
               {otpTempToken ? (
                 <>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="material-symbols-outlined text-[#7E57C2]">verified_user</span>
+                    <p className="type-label text-dark-text font-semibold">Two-Factor Verification</p>
+                  </div>
+                  <p className="type-body text-muted mb-2">
+                    Enter the OTP code sent to your registered device or email.
+                  </p>
                   <label className="type-label login-label">OTP Code</label>
                   <div className="login-input-with-icon">
-                    <span className="material-symbols-outlined icon-sm">
-                      pin
-                    </span>
+                    <span className="material-symbols-outlined icon-sm">pin</span>
                     <input
                       type="text"
+                      inputMode="numeric"
                       placeholder="Enter OTP code"
                       value={otpCode}
                       onChange={(event) => setOtpCode(event.target.value)}
+                      autoFocus
                       required
                     />
                   </div>
-                  <p className="type-body text-muted">
-                    Two-factor verification is enabled for this account.
-                  </p>
                 </>
-              ) : null}
+              ) : (
+                <>
+                  <label className="type-label login-label">{usernameLabel}</label>
+                  <div className="login-input-with-icon">
+                    <span className="material-symbols-outlined icon-sm">mail</span>
+                    <input
+                      type="text"
+                      placeholder={usernamePlaceholder}
+                      value={username}
+                      onChange={(event) => setUsername(event.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="login-password-header">
+                    <label className="type-label login-label">Password</label>
+                    <Link to={forgotPasswordTo} className="login-forgot">
+                      Forgot?
+                    </Link>
+                  </div>
+                  <div className="login-password-field login-input-with-icon">
+                    <span className="material-symbols-outlined icon-sm">lock</span>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="********"
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="login-password-toggle"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      aria-pressed={showPassword}
+                    >
+                      <span className="material-symbols-outlined icon-sm">
+                        {showPassword ? "visibility_off" : "visibility"}
+                      </span>
+                    </button>
+                  </div>
+                </>
+              )}
 
               <button
                 type="submit"
@@ -275,6 +281,19 @@ export function PortalLogin({
                     ? "Verify OTP"
                     : submitLabel}
               </button>
+
+              {otpTempToken ? (
+                <button
+                  type="button"
+                  className="button button-ghost login-submit"
+                  onClick={() => {
+                    setOtpTempToken(null)
+                    setOtpCode("")
+                  }}
+                >
+                  Back to Login
+                </button>
+              ) : null}
             </form>
             <div className="login-register-wrap">
               <p className="type-body text-muted">{secondaryPrompt}</p>

@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
+import { DataTable, TableColumn } from '../../../components/ui/DataTable'
 
 type UnknownRecord = Record<string, unknown>
 
@@ -228,113 +229,103 @@ const AdminStyledApiModulePage: React.FC<AdminStyledApiModulePageProps> = ({
 
   return (
     <div className="p-8 space-y-6 animate-in fade-in duration-300">
-      <section className="bg-white rounded-xl border border-neutral-light p-6 min-h-[112px]">
+      <div className="mb-2">
         <h2 className="text-4 leading-none font-medium text-dark-text dark:text-white flex items-center gap-3">
           <span className="material-symbols-outlined text-[28px]">{icon}</span>
           {title}
         </h2>
         {description.trim() ? <p className="text-sm text-neutral-text mt-8">{description}</p> : null}
-      </section>
+      </div>
 
-      <section className="bg-white rounded-xl border border-neutral-light p-5">
-        <div className="flex flex-wrap items-center gap-2 mb-4">
-          {showCreateButton ? (
-            <button
-              type="button"
-              onClick={() => {
-                if (!createData) {
-                  toast('Create endpoint is not configured for this credentials module yet.')
-                  return
-                }
-                setIsCreateOpen(true)
-              }}
-              className="px-4 py-2 rounded border border-[#7E57C2] text-[#7E57C2] text-lg font-medium uppercase tracking-wide hover:bg-[#7E57C2]/5 transition-colors"
-            >
-              + Create
-            </button>
-          ) : null}
-          {showRefreshButton ? (
-            <button
-              type="button"
-              onClick={() => void loadRows()}
-              className="px-4 py-2 rounded border border-[#7E57C2] text-[#7E57C2] text-lg font-medium uppercase tracking-wide hover:bg-[#7E57C2]/5 transition-colors"
-            >
-              Refresh
-            </button>
-          ) : null}
-          {showEndpointLabel ? (
-            <span className="ml-auto text-xs text-neutral-text">
-              List: <code>{endpoint}</code>
-            </span>
-          ) : null}
-        </div>
-
-        <div className="border border-neutral-light rounded overflow-hidden bg-white">
-          <div className="bg-[#7E57C2] text-white border-b border-neutral-light">
-            <div
-              className="grid"
-              style={{ gridTemplateColumns: `repeat(${Math.max(columnKeys.length, 1)}, minmax(0, 1fr))` }}
-            >
-              {(columnKeys.length ? columnKeys : ['Data']).map((key, index) => (
-                <div
-                  key={key}
-                  className={`px-4 py-3 text-sm font-semibold ${index < Math.max(columnKeys.length, 1) - 1 ? 'border-r border-white/20' : ''}`}
+      <DataTable
+          header={
+            <div className="px-5 py-3 flex flex-wrap items-center gap-2">
+              {showCreateButton ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!createData) {
+                      toast('Create endpoint is not configured for this credentials module yet.')
+                      return
+                    }
+                    setIsCreateOpen(true)
+                  }}
+                  className="px-4 py-2 rounded border border-[#7E57C2] text-[#7E57C2] text-lg font-medium uppercase tracking-wide hover:bg-[#7E57C2]/5 transition-colors"
                 >
-                  {key}
-                </div>
-              ))}
+                  + Create
+                </button>
+              ) : null}
+              {showRefreshButton ? (
+                <button
+                  type="button"
+                  onClick={() => void loadRows()}
+                  className="px-4 py-2 rounded border border-[#7E57C2] text-[#7E57C2] text-lg font-medium uppercase tracking-wide hover:bg-[#7E57C2]/5 transition-colors"
+                >
+                  Refresh
+                </button>
+              ) : null}
+              {showEndpointLabel ? (
+                <span className="ml-auto text-xs text-neutral-text">
+                  List: <code>{endpoint}</code>
+                </span>
+              ) : null}
             </div>
-          </div>
-          <div className="bg-white">
-            {isLoading ? (
-              <div className="p-8 text-center text-neutral-text min-h-[160px] flex items-center justify-center">
-                Loading...
-              </div>
-            ) : rows.length === 0 ? (
-              <div className="p-8 text-center text-neutral-text flex flex-col items-center justify-center min-h-[160px]">
-                <span className="material-symbols-outlined text-[48px] text-primary/40">filter_alt_off</span>
-                {emptyLabel ? <p className="mt-4 text-[28px] text-neutral-text/60">{emptyLabel}</p> : null}
-              </div>
-            ) : (
-              rows.map((row, rowIndex) => (
-                <div
-                  key={String(row.id ?? `row-${rowIndex}`)}
-                  className="grid border-t border-neutral-light hover:bg-neutral-light/40 transition-colors"
-                  style={{ gridTemplateColumns: `repeat(${Math.max(columnKeys.length, 1)}, minmax(0, 1fr))` }}
-                >
-                  {columns?.length ? (
-                    columns.map((column) => (
-                      <div key={`${rowIndex}-${column.key}`} className="px-4 py-3 text-sm text-dark-text break-words">
-                        {getValueByPath(row, column.key) === null || getValueByPath(row, column.key) === undefined
-                          ? '-'
-                          : typeof getValueByPath(row, column.key) === 'object'
-                            ? JSON.stringify(getValueByPath(row, column.key))
-                            : String(getValueByPath(row, column.key))}
-                      </div>
-                    ))
-                  ) : tableMode === 'credentials' ? (
-                    <>
-                      <div className="px-4 py-3 text-sm text-dark-text break-words">{mapIntegrationKey(row)}</div>
-                      <div className="px-4 py-3 text-sm text-dark-text break-words">{mapEncryptionKey(row)}</div>
-                      <div className="px-4 py-3 text-sm text-dark-text break-words">{mapCreatedOn(row)}</div>
-                    </>
-                  ) : (
-                    columnKeys.map((key) => (
-                      <div key={`${rowIndex}-${key}`} className="px-4 py-3 text-sm text-dark-text break-words">
-                        {row[key] === null || row[key] === undefined
-                          ? '-'
-                          : typeof row[key] === 'object'
-                            ? JSON.stringify(row[key])
-                            : String(row[key])}
-                      </div>
-                    ))
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </section>
+          }
+          columns={useMemo<TableColumn<UnknownRecord>[]>(() => {
+            if (columns?.length) {
+              return columns.map(col => ({
+                key: col.key,
+                header: col.label,
+                render: (row) => {
+                  const value = getValueByPath(row, col.key)
+                  return value === null || value === undefined
+                    ? '-'
+                    : typeof value === 'object'
+                      ? JSON.stringify(value)
+                      : String(value)
+                }
+              }))
+            }
+            
+            if (tableMode === 'credentials') {
+              return [
+                {
+                  key: 'integrationKey',
+                  header: 'Integration Key',
+                  render: mapIntegrationKey
+                },
+                {
+                  key: 'encryptionKey',
+                  header: 'Encryption Key',
+                  render: mapEncryptionKey
+                },
+                {
+                  key: 'createdOn',
+                  header: 'Created On',
+                  render: mapCreatedOn
+                }
+              ]
+            }
+            
+            return columnKeys.map(key => ({
+              key,
+              header: key,
+              render: (row) => {
+                const value = row[key]
+                return value === null || value === undefined
+                  ? '-'
+                  : typeof value === 'object'
+                    ? JSON.stringify(value)
+                    : String(value)
+              }
+            }))
+          }, [columns, columnKeys, tableMode])}
+          data={rows}
+          rowKey={(row) => String(row.id ?? `row-${Math.random()}`)}
+          loading={isLoading}
+          emptyMessage={emptyLabel ?? 'No records found'}
+          emptyIcon="filter_alt_off"
+        />
 
       {isCreateOpen ? (
         <div className="fixed inset-0 z-[140] flex items-center justify-center p-4">

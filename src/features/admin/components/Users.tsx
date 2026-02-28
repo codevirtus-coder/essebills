@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { getPaginatedUsers } from '../services';
+import { DataTable, type TableColumn } from '../../../components/ui/DataTable';
 
 interface User {
   id: string;
@@ -85,8 +86,8 @@ const Users: React.FC = () => {
     void loadUsers();
   }, []);
 
-  const filteredUsers = users.filter(user => 
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+  const filteredUsers = users.filter(user =>
+    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.phone.includes(searchTerm)
   );
@@ -119,6 +120,74 @@ const Users: React.FC = () => {
     }, 1500);
   };
 
+  const columns: TableColumn<User>[] = [
+    {
+      key: 'profile',
+      header: 'User Profile',
+      render: (user) => (
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center font-black">
+            {user.initials}
+          </div>
+          <div>
+            <p className="text-sm font-black text-dark-text dark:text-gray-200">{user.name}</p>
+            <p className="text-xs text-neutral-text font-medium">{user.email}</p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'role',
+      header: 'Access Level',
+      render: (user) => (
+        <span className="text-xs font-black text-neutral-text/80 uppercase tracking-widest">{user.role || 'User'}</span>
+      ),
+    },
+    {
+      key: 'joinDate',
+      header: 'Join Date',
+      render: (user) => (
+        <p className="text-sm text-neutral-text font-bold">{user.joinDate}</p>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (user) => (
+        <span className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black border uppercase tracking-tighter ${
+          user.status === 'Active' ? 'bg-accent-green/10 text-accent-green border-accent-green/20' :
+          user.status === 'Pending' ? 'bg-orange-50 text-orange-600 border-orange-100' :
+          'bg-red-50 text-red-600 border-red-100'
+        }`}>
+          {user.status}
+        </span>
+      ),
+    },
+    {
+      key: 'ltv',
+      header: 'LTV',
+      align: 'right',
+      render: (user) => (
+        <p className="text-sm font-black text-dark-text dark:text-white">${user.totalSpent.toFixed(2)}</p>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      align: 'right',
+      render: () => (
+        <div className="flex items-center justify-end gap-2">
+          <button className="w-9 h-9 flex items-center justify-center hover:bg-primary/10 hover:text-primary rounded-xl text-neutral-text transition-all" title="View Profile">
+            <span className="material-symbols-outlined text-lg">visibility</span>
+          </button>
+          <button className="w-9 h-9 flex items-center justify-center hover:bg-primary/10 hover:text-primary rounded-xl text-neutral-text transition-all" title="Edit User">
+            <span className="material-symbols-outlined text-lg">edit</span>
+          </button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20 relative">
       {/* Header */}
@@ -130,9 +199,9 @@ const Users: React.FC = () => {
             Source: {isLoadingUsers ? 'Loading...' : dataSource === 'api' ? 'Live API' : 'Fallback Mock'}
           </p>
         </div>
-        <button 
+        <button
           onClick={() => setIsInviteDrawerOpen(true)}
-          className="bg-primary text-white px-8 py-4 rounded-[2rem] font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-opacity-90 transition-all shadow-xl shadow-primary/20 active:scale-95"
+          className="bg-primary text-white px-8 py-4 rounded-lg font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-opacity-90 transition-all shadow-xl shadow-primary/20 active:scale-95"
         >
           <span className="material-symbols-outlined text-lg">person_add</span>
           Invite New User
@@ -147,7 +216,7 @@ const Users: React.FC = () => {
           { label: 'Pending Verif.', value: users.filter(u => u.status === 'Pending').length.toString(), icon: 'how_to_reg', color: 'text-orange-500', bg: 'bg-orange-100' },
           { label: 'Avg LTV', value: '$84.20', icon: 'monetization_on', color: 'text-blue-500', bg: 'bg-blue-100' },
         ].map((stat, i) => (
-          <div key={i} className="bg-white  p-6 rounded-3xl border border-neutral-light dark:border-white/5 flex items-center gap-4">
+          <div key={i} className="bg-white p-6 rounded-lg border border-neutral-light dark:border-white/5 flex items-center gap-4">
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${stat.bg} ${stat.color}`}>
               <span className="material-symbols-outlined">{stat.icon}</span>
             </div>
@@ -160,11 +229,11 @@ const Users: React.FC = () => {
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white  p-4 rounded-3xl border border-neutral-light dark:border-white/5 flex flex-col md:flex-row gap-4 items-center">
+      <div className="bg-white p-4 rounded-lg border border-neutral-light dark:border-white/5 flex flex-col md:flex-row gap-4 items-center">
         <div className="relative flex-1 w-full">
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-neutral-text text-xl">search</span>
-          <input 
-            type="text" 
+          <input
+            type="text"
             placeholder="Search by name, email, or phone number..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -183,74 +252,21 @@ const Users: React.FC = () => {
       </div>
 
       {/* Users Table */}
-      <div className="bg-white  rounded-[3rem] shadow-sm border border-neutral-light dark:border-white/5 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-neutral-light/20 dark:bg-white/5 border-b border-neutral-light dark:border-white/5">
-                <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">User Profile</th>
-                <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">Access Level</th>
-                <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">Join Date</th>
-                <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">Status</th>
-                <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest text-right">LTV</th>
-                <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-light dark:divide-white/5">
-              {filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-neutral-light/10 dark:hover:bg-white/5 transition-colors group">
-                  <td className="px-8 py-5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center font-black">
-                        {user.initials}
-                      </div>
-                      <div>
-                        <p className="text-sm font-black text-dark-text dark:text-gray-200">{user.name}</p>
-                        <p className="text-xs text-neutral-text font-medium">{user.email}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-8 py-5">
-                    <span className="text-xs font-black text-neutral-text/80 uppercase tracking-widest">{user.role || 'User'}</span>
-                  </td>
-                  <td className="px-8 py-5">
-                    <p className="text-sm text-neutral-text font-bold">{user.joinDate}</p>
-                  </td>
-                  <td className="px-8 py-5">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black border uppercase tracking-tighter ${
-                      user.status === 'Active' ? 'bg-accent-green/10 text-accent-green border-accent-green/20' :
-                      user.status === 'Pending' ? 'bg-orange-50 text-orange-600 border-orange-100' :
-                      'bg-red-50 text-red-600 border-red-100'
-                    }`}>
-                      {user.status}
-                    </span>
-                  </td>
-                  <td className="px-8 py-5 text-right">
-                    <p className="text-sm font-black text-dark-text dark:text-white">${user.totalSpent.toFixed(2)}</p>
-                  </td>
-                  <td className="px-8 py-5 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <button className="w-9 h-9 flex items-center justify-center hover:bg-primary/10 hover:text-primary rounded-xl text-neutral-text transition-all" title="View Profile">
-                        <span className="material-symbols-outlined text-lg">visibility</span>
-                      </button>
-                      <button className="w-9 h-9 flex items-center justify-center hover:bg-primary/10 hover:text-primary rounded-xl text-neutral-text transition-all" title="Edit User">
-                        <span className="material-symbols-outlined text-lg">edit</span>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        
-        {/* Simple Pagination */}
-        <div className="p-8 bg-neutral-light/5 border-t border-neutral-light dark:border-white/5 flex items-center justify-between">
-          <p className="text-[10px] font-black text-neutral-text uppercase tracking-widest">Showing {filteredUsers.length} of 12,450 users</p>
-          <div className="flex gap-4">
-            <button className="text-[10px] font-black uppercase text-neutral-text hover:text-primary disabled:opacity-30" disabled>Previous Page</button>
-            <button className="text-[10px] font-black uppercase text-primary hover:underline">Next Page</button>
-          </div>
+      <DataTable
+        columns={columns}
+        data={filteredUsers}
+        rowKey={(u) => u.id}
+        loading={isLoadingUsers && users.length === 0}
+        emptyMessage="No users found"
+        emptyIcon="person_search"
+      />
+
+      {/* Simple Pagination */}
+      <div className="p-4 flex items-center justify-between">
+        <p className="text-[10px] font-black text-neutral-text uppercase tracking-widest">Showing {filteredUsers.length} of 12,450 users</p>
+        <div className="flex gap-4">
+          <button className="text-[10px] font-black uppercase text-neutral-text hover:text-primary disabled:opacity-30" disabled>Previous Page</button>
+          <button className="text-[10px] font-black uppercase text-primary hover:underline">Next Page</button>
         </div>
       </div>
 
@@ -258,7 +274,7 @@ const Users: React.FC = () => {
       {isInviteDrawerOpen && (
         <div className="fixed inset-0 z-[100] flex justify-end">
           <div className="absolute inset-0 bg-dark-text/40 backdrop-blur-sm transition-opacity" onClick={() => setIsInviteDrawerOpen(false)}></div>
-          
+
           <div className="relative w-full max-w-xl bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-500">
             <div className="p-8 border-b border-neutral-light flex items-center justify-between">
               <div>
@@ -276,34 +292,34 @@ const Users: React.FC = () => {
                 <div className="grid grid-cols-1 gap-6">
                    <div className="space-y-2">
                       <label className="text-[10px] font-black text-neutral-text uppercase">Full Legal Name</label>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         required
                         value={inviteForm.name}
                         onChange={e => setInviteForm({...inviteForm, name: e.target.value})}
-                        className="w-full bg-[#f8fafc] border-none rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-primary/20"
+                        className="w-full bg-[#f8fafc] border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-primary/20"
                         placeholder="Johnathan Doe"
                       />
                    </div>
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-neutral-text uppercase">Email Address</label>
-                        <input 
-                          type="email" 
+                        <input
+                          type="email"
                           required
                           value={inviteForm.email}
                           onChange={e => setInviteForm({...inviteForm, email: e.target.value})}
-                          className="w-full bg-[#f8fafc] border-none rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-primary/20"
+                          className="w-full bg-[#f8fafc] border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-primary/20"
                           placeholder="name@example.com"
                         />
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-neutral-text uppercase">Mobile Number</label>
-                        <input 
-                          type="tel" 
+                        <input
+                          type="tel"
                           value={inviteForm.phone}
                           onChange={e => setInviteForm({...inviteForm, phone: e.target.value})}
-                          className="w-full bg-[#f8fafc] border-none rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-primary/20"
+                          className="w-full bg-[#f8fafc] border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-primary/20"
                           placeholder="+263 77*******"
                         />
                       </div>
@@ -321,7 +337,7 @@ const Users: React.FC = () => {
                         key={role}
                         type="button"
                         onClick={() => setInviteForm({...inviteForm, role})}
-                        className={`py-3 px-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 transition-all ${
+                        className={`py-3 px-4 rounded-lg text-[10px] font-black uppercase tracking-widest border-2 transition-all ${
                           inviteForm.role === role ? 'border-primary bg-primary/5 text-primary' : 'border-neutral-light text-neutral-text hover:border-primary/20'
                         }`}
                       >
@@ -339,12 +355,12 @@ const Users: React.FC = () => {
                       { id: 'reports', label: 'Financial Reporting', desc: 'Access to revenue charts and ledgers.' },
                       { id: 'settings', label: 'System Configuration', desc: 'Modify global platform policies.' }
                     ].map((p) => (
-                      <div key={p.id} className="p-4 bg-[#f8fafc] rounded-2xl border border-neutral-light flex items-center justify-between">
+                      <div key={p.id} className="p-4 bg-[#f8fafc] rounded-lg border border-neutral-light flex items-center justify-between">
                          <div>
                             <p className="text-xs font-black text-dark-text tracking-tight uppercase">{p.label}</p>
                             <p className="text-[9px] text-neutral-text font-bold uppercase tracking-tighter">{p.desc}</p>
                          </div>
-                         <button 
+                         <button
                            type="button"
                            onClick={() => setInviteForm({...inviteForm, permissions: {...inviteForm.permissions, [p.id]: !inviteForm.permissions[p.id as keyof typeof inviteForm.permissions]}})}
                            className={`w-10 h-5 rounded-full relative transition-all ${inviteForm.permissions[p.id as keyof typeof inviteForm.permissions] ? 'bg-primary' : 'bg-neutral-light'}`}
@@ -359,17 +375,17 @@ const Users: React.FC = () => {
             </form>
 
             <div className="p-8 border-t border-neutral-light bg-[#f8fafc] flex gap-4">
-              <button 
+              <button
                 type="button"
                 onClick={() => setIsInviteDrawerOpen(false)}
-                className="flex-1 py-5 rounded-2xl border border-neutral-light font-black text-[10px] uppercase tracking-widest hover:bg-white transition-all"
+                className="flex-1 py-5 rounded-lg border border-neutral-light font-black text-[10px] uppercase tracking-widest hover:bg-white transition-all"
               >
                 Discard
               </button>
-              <button 
+              <button
                 onClick={handleSendInvite}
                 disabled={isSending || !inviteForm.name || !inviteForm.email}
-                className="flex-1 py-5 bg-primary text-white rounded-[2rem] font-black text-[10px] uppercase tracking-widest shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+                className="flex-1 py-5 bg-primary text-white rounded-lg font-black text-[10px] uppercase tracking-widest shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
               >
                 {isSending ? (
                   <span className="flex items-center justify-center gap-2">
@@ -392,4 +408,3 @@ const Users: React.FC = () => {
 };
 
 export default Users;
-

@@ -1,0 +1,32 @@
+@import './tokens.css';
+
+/* Global resets & utility tokens
+   Use this file as the single entrypoint for app-wide styles.
+ */
+
+:root {
+  /* Example global fallbacks (tokens are in tokens.css) */
+  --app-font-sans: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--app-font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--bg-color, #fff);
+  color: var(--text-color, #111827);
+}
+
+a { color: inherit; text-decoration: none }
+
+/* App level helpers (small set to start) */
+.container { max-width: 1200px; margin: 0 auto; padding-left: 1rem; padding-right: 1rem }

@@ -6,6 +6,7 @@ import { getDashboardRouteByGroup, ROUTE_PATHS } from './paths'
 type RequireAuthProps = {
   redirectTo: string
   allowedRoles?: UserRole[]
+  allowedGroups?: UserGroup[]
 }
 
 function mapRoleToGroup(role: UserRole): UserGroup {
@@ -24,7 +25,7 @@ function isAccountUsable(session: ReturnType<typeof getAuthSession>): boolean {
   )
 }
 
-export function RequireAuth({ redirectTo, allowedRoles }: RequireAuthProps) {
+export function RequireAuth({ redirectTo, allowedRoles, allowedGroups }: RequireAuthProps) {
   const session = getAuthSession()
 
   if (!session) {
@@ -35,9 +36,17 @@ export function RequireAuth({ redirectTo, allowedRoles }: RequireAuthProps) {
     return <Navigate to={ROUTE_PATHS.unauthorized} replace />
   }
 
-  if (allowedRoles?.length) {
-    const allowedGroups = allowedRoles.map(mapRoleToGroup)
+  // Check allowedGroups if provided directly
+  if (allowedGroups?.length) {
     if (!allowedGroups.includes(session.group)) {
+      // Redirect to their own dashboard
+      return <Navigate to={getDashboardRouteByGroup(session.group)} replace />
+    }
+  }
+  // Otherwise fall back to allowedRoles if provided
+  else if (allowedRoles?.length) {
+    const mappedGroups = allowedRoles.map(mapRoleToGroup)
+    if (!mappedGroups.includes(session.group)) {
       return <Navigate to={getDashboardRouteByGroup(session.group)} replace />
     }
   }

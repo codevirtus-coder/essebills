@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { DataTable, type TableColumn } from '../../../components/ui';
 
 interface Report {
   id: string;
@@ -18,6 +19,70 @@ const Reports: React.FC = () => {
     { id: '3', name: 'User Growth Analytics 2024', type: 'Operational', date: 'May 15, 2024', status: 'Ready', size: '4.8 MB' },
     { id: '4', name: 'Tax Compliance Document', type: 'Tax', date: 'Apr 30, 2024', status: 'Ready', size: '850 KB' },
   ]);
+
+  const columns: TableColumn<Report>[] = [
+    {
+      key: 'name',
+      header: 'Report Name',
+      render: (report) => (
+        <div className="flex items-center gap-3">
+          <span className="material-symbols-outlined text-primary">description</span>
+          <p className="text-sm font-bold text-dark-text dark:text-gray-200">{report.name}</p>
+        </div>
+      ),
+    },
+    {
+      key: 'type',
+      header: 'Type',
+      render: (report) => (
+        <span className="px-2 py-1 bg-neutral-light/50 dark:bg-white/5 text-[10px] font-bold text-neutral-text rounded uppercase">{report.type}</span>
+      ),
+    },
+    {
+      key: 'date',
+      header: 'Created Date',
+      render: (report) => <span className="text-sm text-neutral-text">{report.date}</span>,
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (report) => (
+        <div className="flex items-center gap-2">
+          <div className={`w-2 h-2 rounded-full ${
+            report.status === 'Ready' ? 'bg-accent-green' : 
+            report.status === 'Processing' ? 'bg-yellow-500' : 'bg-red-500'
+          }`}></div>
+          <span className={`text-xs font-bold ${
+            report.status === 'Ready' ? 'text-accent-green' : 
+            report.status === 'Processing' ? 'text-yellow-600' : 'text-red-600'
+          }`}>{report.status}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'size',
+      header: 'Size',
+      render: (report) => <span className="text-sm text-neutral-text">{report.size}</span>,
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      align: 'right',
+      render: () => (
+        <div className="flex items-center justify-end gap-2">
+          <button className="p-2 hover:bg-primary/10 hover:text-primary rounded-lg transition-all text-neutral-text" title="Download PDF">
+            <span className="material-symbols-outlined text-lg">picture_as_pdf</span>
+          </button>
+          <button className="p-2 hover:bg-primary/10 hover:text-primary rounded-lg transition-all text-neutral-text" title="Download Excel">
+            <span className="material-symbols-outlined text-lg">table_view</span>
+          </button>
+          <button className="p-2 hover:bg-red-50 hover:text-red-500 rounded-lg transition-all text-neutral-text" title="Delete">
+            <span className="material-symbols-outlined text-lg">delete</span>
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   const handleGenerateReport = () => {
     setIsGenerating(true);
@@ -82,69 +147,26 @@ const Reports: React.FC = () => {
       </div>
 
       {/* Recent Reports Table */}
-      <div className="bg-white  rounded-3xl shadow-sm border border-neutral-light dark:border-white/5 overflow-hidden">
-        <div className="p-8 border-b border-neutral-light dark:border-white/5 flex items-center justify-between">
-          <h4 className="text-lg font-bold text-dark-text dark:text-white">Generated Reports Archive</h4>
-          <div className="flex gap-2">
-             <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/5 rounded-lg transition-colors text-neutral-text">
+      <DataTable
+        columns={columns}
+        data={reports}
+        rowKey={(report) => report.id}
+        emptyMessage="No reports found"
+        emptyIcon="description"
+        header={
+          <div className="px-8 py-5 flex items-center justify-between">
+            <h4 className="text-lg font-bold text-dark-text dark:text-white">Generated Reports Archive</h4>
+            <div className="flex gap-2">
+              <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/5 rounded-lg transition-colors text-neutral-text">
                 <span className="material-symbols-outlined">filter_list</span>
-             </button>
-             <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/5 rounded-lg transition-colors text-neutral-text">
+              </button>
+              <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/5 rounded-lg transition-colors text-neutral-text">
                 <span className="material-symbols-outlined">refresh</span>
-             </button>
+              </button>
+            </div>
           </div>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-neutral-light/20 dark:bg-white/5">
-                <th className="px-8 py-4 text-[10px] font-black text-neutral-text uppercase tracking-widest">Report Name</th>
-                <th className="px-8 py-4 text-[10px] font-black text-neutral-text uppercase tracking-widest">Type</th>
-                <th className="px-8 py-4 text-[10px] font-black text-neutral-text uppercase tracking-widest">Created Date</th>
-                <th className="px-8 py-4 text-[10px] font-black text-neutral-text uppercase tracking-widest">Status</th>
-                <th className="px-8 py-4 text-[10px] font-black text-neutral-text uppercase tracking-widest">Size</th>
-                <th className="px-8 py-4 text-[10px] font-black text-neutral-text uppercase tracking-widest text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-light dark:divide-white/5">
-              {reports.map((report) => (
-                <tr key={report.id} className="hover:bg-neutral-light/10 dark:hover:bg-white/5 transition-colors group">
-                  <td className="px-8 py-5">
-                    <div className="flex items-center gap-3">
-                      <span className="material-symbols-outlined text-primary">description</span>
-                      <p className="text-sm font-bold text-dark-text dark:text-gray-200">{report.name}</p>
-                    </div>
-                  </td>
-                  <td className="px-8 py-5">
-                    <span className="px-2 py-1 bg-neutral-light/50 dark:bg-white/5 text-[10px] font-bold text-neutral-text rounded uppercase">{report.type}</span>
-                  </td>
-                  <td className="px-8 py-5 text-sm text-neutral-text">{report.date}</td>
-                  <td className="px-8 py-5">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-accent-green"></div>
-                      <span className="text-xs font-bold text-accent-green">{report.status}</span>
-                    </div>
-                  </td>
-                  <td className="px-8 py-5 text-sm text-neutral-text">{report.size}</td>
-                  <td className="px-8 py-5 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <button className="p-2 hover:bg-primary/10 hover:text-primary rounded-lg transition-all text-neutral-text" title="Download PDF">
-                        <span className="material-symbols-outlined text-lg">picture_as_pdf</span>
-                      </button>
-                      <button className="p-2 hover:bg-primary/10 hover:text-primary rounded-lg transition-all text-neutral-text" title="Download Excel">
-                        <span className="material-symbols-outlined text-lg">table_view</span>
-                      </button>
-                      <button className="p-2 hover:bg-red-50 hover:text-red-500 rounded-lg transition-all text-neutral-text" title="Delete">
-                        <span className="material-symbols-outlined text-lg">delete</span>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+        }
+      />
     </div>
   );
 };

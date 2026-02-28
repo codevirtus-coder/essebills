@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { DataTable, type TableColumn } from '../../../components/ui';
 
 interface MessageLog {
   id: string;
@@ -44,57 +45,70 @@ const Messaging: React.FC = () => {
     }, 1500);
   };
 
+  const logColumns: TableColumn<MessageLog>[] = [
+    {
+      key: 'recipient',
+      header: 'Recipient',
+      render: (log) => (
+        <div>
+          <p className="text-sm font-bold text-dark-text dark:text-gray-200">{log.recipient}</p>
+          <p className="text-[10px] font-mono text-primary">{log.id}</p>
+        </div>
+      ),
+    },
+    {
+      key: 'type',
+      header: 'Channel',
+      render: (log) => (
+        <div className="flex items-center gap-2">
+          <span className={`material-symbols-outlined text-lg ${
+            log.type === 'SMS' ? 'text-blue-500' : log.type === 'WhatsApp' ? 'text-green-500' : 'text-primary'
+          }`}>{log.type === 'SMS' ? 'sms' : log.type === 'WhatsApp' ? 'chat' : 'mail'}</span>
+          <span className="text-xs font-black text-neutral-text">{log.type}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'subject',
+      header: 'Message Focus',
+      render: (log) => <span className="text-sm font-medium text-neutral-text">{log.subject}</span>,
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      align: 'center',
+      render: (log) => (
+        <span className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black border uppercase tracking-widest ${
+          log.status === 'Delivered' ? 'bg-accent-green/10 text-accent-green border-accent-green/20' :
+          log.status === 'Pending' ? 'bg-yellow-50 text-yellow-600 border-yellow-100' :
+          'bg-red-50 text-red-600 border-red-100'
+        }`}>
+          {log.status}
+        </span>
+      ),
+    },
+    {
+      key: 'timestamp',
+      header: 'Sent',
+      align: 'right',
+      render: (log) => <span className="text-xs font-bold text-neutral-text">{log.timestamp}</span>,
+    },
+  ];
+
   const renderLogs = () => (
-    <div className="bg-white  rounded-[2.5rem] border border-neutral-light dark:border-white/5 overflow-hidden shadow-sm animate-in fade-in duration-500">
-      <div className="p-8 border-b border-neutral-light dark:border-white/5 flex items-center justify-between bg-neutral-light/5">
-        <h3 className="text-xl font-black text-dark-text dark:text-white">Communication Logs</h3>
-        <div className="flex gap-2">
+    <DataTable
+      columns={logColumns}
+      data={MOCK_LOGS}
+      rowKey={(log) => log.id}
+      emptyMessage="No communication logs found"
+      emptyIcon="message"
+      header={
+        <div className="px-8 py-5 flex items-center justify-between bg-neutral-light/5">
+          <h3 className="text-xl font-black text-dark-text dark:text-white">Communication Logs</h3>
           <button className="px-4 py-2 bg-white dark:bg-white/5 border border-neutral-light dark:border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-neutral-text hover:text-primary transition-all">Filter: All Channels</button>
         </div>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-left">
-          <thead>
-            <tr className="bg-neutral-light/20 dark:bg-white/5">
-              <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">Recipient</th>
-              <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">Channel</th>
-              <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">Message Focus</th>
-              <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest text-center">Status</th>
-              <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest text-right">Sent</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-neutral-light dark:divide-white/5">
-            {MOCK_LOGS.map((log) => (
-              <tr key={log.id} className="hover:bg-neutral-light/10 dark:hover:bg-white/5 transition-colors">
-                <td className="px-8 py-5">
-                  <p className="text-sm font-bold text-dark-text dark:text-gray-200">{log.recipient}</p>
-                  <p className="text-[10px] font-mono text-primary">{log.id}</p>
-                </td>
-                <td className="px-8 py-5">
-                   <div className="flex items-center gap-2">
-                      <span className={`material-symbols-outlined text-lg ${
-                        log.type === 'SMS' ? 'text-blue-500' : log.type === 'WhatsApp' ? 'text-green-500' : 'text-primary'
-                      }`}>{log.type === 'SMS' ? 'sms' : log.type === 'WhatsApp' ? 'chat' : 'mail'}</span>
-                      <span className="text-xs font-black text-neutral-text">{log.type}</span>
-                   </div>
-                </td>
-                <td className="px-8 py-5 text-sm font-medium text-neutral-text">{log.subject}</td>
-                <td className="px-8 py-5 text-center">
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black border uppercase tracking-widest ${
-                    log.status === 'Delivered' ? 'bg-accent-green/10 text-accent-green border-accent-green/20' :
-                    log.status === 'Pending' ? 'bg-yellow-50 text-yellow-600 border-yellow-100' :
-                    'bg-red-50 text-red-600 border-red-100'
-                  }`}>
-                    {log.status}
-                  </span>
-                </td>
-                <td className="px-8 py-5 text-right text-xs font-bold text-neutral-text">{log.timestamp}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+      }
+    />
   );
 
   const renderTemplates = () => (

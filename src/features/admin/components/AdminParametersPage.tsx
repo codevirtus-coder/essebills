@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
+import { confirmToast } from '../../../lib/confirmToast'
+import { DataTable, TableColumn } from '../../../components/ui/DataTable'
 import {
   createBank,
   createCountry,
@@ -353,7 +355,7 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
     }
   }
 
-  const handleCurrencyDelete = async () => {
+  const handleCurrencyDelete = () => {
     if (!selectedRow || module !== 'currencies') return
 
     const currencyId = Number(selectedRow.id)
@@ -363,27 +365,28 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
     }
 
     const currencyName = String(selectedRow.name ?? selectedRow.code ?? `#${currencyId}`)
-    const shouldDelete = window.confirm(`Delete currency "${currencyName}"?`)
-    if (!shouldDelete) return
-
-    try {
+    confirmToast(`Delete currency "${currencyName}"?`, () => {
       setIsDeleting(true)
-      await deleteCurrency(currencyId)
-      toast.success('Currency deleted')
-      setSelectedRowId(null)
-      await load()
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to delete currency')
-    } finally {
-      setIsDeleting(false)
-    }
+      deleteCurrency(currencyId)
+        .then(() => {
+          toast.success('Currency deleted')
+          setSelectedRowId(null)
+          return load()
+        })
+        .catch((error: unknown) => {
+          toast.error(error instanceof Error ? error.message : 'Failed to delete currency')
+        })
+        .finally(() => {
+          setIsDeleting(false)
+        })
+    })
   }
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!selectedRow || !canDelete) return
 
     if (module === 'currencies') {
-      await handleCurrencyDelete()
+      handleCurrencyDelete()
       return
     }
 
@@ -394,26 +397,27 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
     }
 
     const recordName = String(selectedRow.name ?? selectedRow.code ?? selectedRow.date ?? `#${id}`)
-    const shouldDelete = window.confirm(`Delete ${recordLabel.toLowerCase()} "${recordName}"?`)
-    if (!shouldDelete) return
-
-    try {
+    confirmToast(`Delete ${recordLabel.toLowerCase()} "${recordName}"?`, () => {
       setIsDeleting(true)
-      if (module === 'countries') {
-        await deleteCountry(id)
-      } else if (module === 'banks') {
-        await deleteBank(id)
-      } else if (module === 'holidays') {
-        await deleteHoliday(id)
-      }
-      toast.success(`${recordLabel} deleted`)
-      setSelectedRowId(null)
-      await load()
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to delete')
-    } finally {
-      setIsDeleting(false)
-    }
+      ;(async () => {
+        try {
+          if (module === 'countries') {
+            await deleteCountry(id)
+          } else if (module === 'banks') {
+            await deleteBank(id)
+          } else if (module === 'holidays') {
+            await deleteHoliday(id)
+          }
+          toast.success(`${recordLabel} deleted`)
+          setSelectedRowId(null)
+          await load()
+        } catch (error) {
+          toast.error(error instanceof Error ? error.message : 'Failed to delete')
+        } finally {
+          setIsDeleting(false)
+        }
+      })()
+    })
   }
 
   const editEndpointLabel = (() => {
@@ -428,16 +432,13 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
 
   return (
     <div className="p-8 space-y-6 animate-in fade-in duration-300">
-      <section className="bg-white rounded-xl border border-neutral-light p-6 min-h-[112px]">
-        <h2 className="text-4 leading-none font-medium text-dark-text dark:text-white flex items-center gap-3">
-          <span className="material-symbols-outlined text-[28px]">{config.icon}</span>
-          {config.title}
-        </h2>
-        <p className="text-sm text-neutral-text mt-8">{config.subtitle}</p>
-      </section>
+      <div>
+        <h2 className="text-xl font-bold text-dark-text">{config.title}</h2>
+        <p className="text-sm text-neutral-text mt-1">{config.subtitle}</p>
+      </div>
 
-      <section className="bg-white rounded-xl border border-neutral-light p-5">
-        <div className="flex flex-wrap items-center gap-2 mb-4">
+      <div>
+        <div className="flex flex-wrap items-center gap-2 mb-3">
           <button
             type="button"
             onClick={() => setIsCreateOpen(true)}
@@ -458,56 +459,41 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
         </div>
 
         {!selectedRow ? (
-          <div className="border border-neutral-light rounded overflow-hidden bg-white">
-            <div className="bg-[#7E57C2] text-white border-b border-neutral-light">
-              <div
-                className="grid"
-                style={{ gridTemplateColumns: `repeat(${config.columns.length}, minmax(0, 1fr)) 64px` }}
-              >
-                {config.columns.map((column) => (
-                  <div key={column.key} className="px-4 py-3 text-sm font-semibold border-r border-white/20 last:border-r-0">
-                    {column.label}
-                  </div>
-                ))}
-                <div className="px-4 py-3 text-sm font-semibold text-center">View</div>
-              </div>
-            </div>
-            <div className="min-h-[260px] bg-white">
-              {isLoading ? (
-                <div className="p-8 text-center text-neutral-text">Loading...</div>
-              ) : tableRows.length === 0 ? (
-                <div className="p-8 text-center text-neutral-text">No records found</div>
-              ) : (
-                tableRows.map((row, rowIndex) => {
+          <DataTable
+            columns={[
+              ...config.columns.map(col => ({
+                key: col.key,
+                header: col.label,
+                render: (row: UnknownRecord) => String(row[col.key] ?? '-')
+              })),
+              {
+                key: 'actions',
+                header: 'View',
+                align: 'center',
+                render: (row: UnknownRecord, rowIndex: number) => {
                   const rowId = getRowId(row, rowIndex)
                   return (
-                    <div
-                      key={rowId}
-                      className="w-full grid text-left border-t border-neutral-light transition-colors hover:bg-neutral-light/50"
-                      style={{ gridTemplateColumns: `repeat(${config.columns.length}, minmax(0, 1fr)) 64px` }}
-                    >
-                      {config.columns.map((column) => (
-                        <div key={`${rowId}-${column.key}`} className="px-4 py-3 text-sm text-dark-text truncate">
-                          {String(row[column.key] ?? '-')}
-                        </div>
-                      ))}
-                      <div className="px-2 py-1 flex items-center justify-center bg-white">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedRowId(rowId)}
-                          className="w-9 h-9 rounded-lg border transition-colors flex items-center justify-center bg-white text-neutral-text border-neutral-light hover:border-primary/40 hover:text-primary"
-                          title="View details"
-                          aria-label="View details"
-                        >
-                          <span className="material-symbols-outlined text-lg">visibility</span>
-                        </button>
-                      </div>
+                    <div className="flex items-center justify-center bg-white">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedRowId(rowId)}
+                        className="w-9 h-9 rounded-lg border transition-colors flex items-center justify-center bg-white text-neutral-text border-neutral-light hover:border-primary/40 hover:text-primary"
+                        title="View details"
+                        aria-label="View details"
+                      >
+                        <span className="material-symbols-outlined text-lg">visibility</span>
+                      </button>
                     </div>
                   )
-                })
-              )}
-            </div>
-          </div>
+                }
+              }
+            ]}
+            data={tableRows}
+            rowKey={(row: UnknownRecord) => getRowId(row, 0)}
+            loading={isLoading}
+            emptyMessage="No records found"
+            emptyIcon="filter_alt_off"
+          />
         ) : (
           <div className="border border-neutral-light rounded overflow-hidden bg-white">
             <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-light bg-[#7E57C2] text-white">
@@ -563,7 +549,7 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
             </div>
           </div>
         )}
-      </section>
+      </div>
 
       {isCreateOpen ? (
         <div className="fixed inset-0 z-[140] flex items-center justify-center p-4">

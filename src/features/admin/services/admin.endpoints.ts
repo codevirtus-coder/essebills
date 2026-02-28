@@ -7,9 +7,11 @@ export const ADMIN_ENDPOINTS = {
     root: '/v1/users',
     all: '/v1/users/all',
     profile: '/v1/users/profile',
-    myAccount: '/v1/users.my-account',
+    myAccount: '/v1/users/my-account',
     byId: (userId: string | number) => `/v1/users/${userId}`,
     status: (userId: string | number) => `/v1/users/${userId}/status`,
+    resetOtp: (userId: string | number) => `/v1/users/${userId}/reset-otp`,
+    updateOtp: (userId: string | number) => `/v1/users/${userId}/otp`,
   },
   groups: {
     root: '/v1/groups',
@@ -19,7 +21,7 @@ export const ADMIN_ENDPOINTS = {
   products: {
     root: '/v1/products',
     all: '/v1/products/all',
-    allActive: '/v1/products/all',
+    allActive: '/v1/products/all/active',
     byId: (productId: string | number) => `/v1/products/${productId}`,
     vendorBalance: '/v1/products/vendor-balance',
   },
@@ -140,5 +142,35 @@ export const ADMIN_ENDPOINTS = {
     telecelAirtime: '/v1/telecel-airtime/reports',
     esolutionsAirtime: (format: string) =>
       `/v1/esolutions-airtime/reports/${format}`,
+  },
+  accessControl: {
+    authorities: {
+      root: '/v1/access-control/authorities',
+      all: '/v1/access-control/authorities/all',
+    },
+    userAuthorities: {
+      root: '/v1/access-control/user-authorities',
+      bundled: '/v1/access-control/user-authorities/bundled',
+      byUser: (userId: string | number) => `/v1/access-control/user-authorities/by-user/${userId}`,
+      byUserAll: (userId: string | number) => `/v1/access-control/user-authorities/by-user/${userId}/all`,
+      unassigned: (userId: string | number) => `/v1/access-control/user-authorities/unassigned/${userId}`,
+    },
+    groupAuthorities: {
+      root: '/v1/access-control/group-authorities',
+      bundled: '/v1/access-control/group-authorities/bundled',
+      byGroup: (groupId: string | number) => `/v1/access-control/group-authorities/by-group/${groupId}`,
+      byGroupAll: (groupId: string | number) => `/v1/access-control/group-authorities/by-group/${groupId}/all`,
+      unassigned: (groupId: string | number) => `/v1/access-control/group-authorities/unassigned/${groupId}`,
+    },
+  },
+  audits: {
+    root: '/v1/audits',
+    byId: (id: string | number) => `/v1/audits/${id}`,
+    myAudits: '/v1/my-audits/period',
+    byPerformerPeriod: '/v1/audits/by-performer/period',
+  },
+  agentCommission: {
+    rates: (agentId: string | number) => `/v1/admin/agents/${agentId}/commission-rates`,
+    rateById: (agentId: string | number, id: string | number) => `/v1/admin/agents/${agentId}/commission-rates/${id}`,
   },
 } as const

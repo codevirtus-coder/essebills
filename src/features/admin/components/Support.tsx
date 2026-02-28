@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { DataTable, type TableColumn } from '../../../components/ui';
 
 interface Ticket {
   id: string;
@@ -26,6 +27,62 @@ const Support: React.FC = () => {
     { q: 'How do I onboard a new utility biller?', a: 'Go to the Billers module and click "Onboard New Biller". You will need the biller official documentation and settlement account details.' },
     { q: 'What are the supported currencies?', a: 'We currently support ZiG (Zimbabwe Gold) and USD. You can set the default currency in your System Settings.' },
     { q: 'How to handle a failed transaction?', a: 'Navigate to the Transactions tab, locate the failed entry, and check the "Error Log" in the more options menu for specific failure reasons.' },
+  ];
+
+  const columns: TableColumn<Ticket>[] = [
+    {
+      key: 'id',
+      header: 'Ticket ID',
+      render: (ticket) => <span className="font-mono text-xs font-bold text-primary">{ticket.id}</span>,
+    },
+    {
+      key: 'subject',
+      header: 'Subject',
+      render: (ticket) => (
+        <div>
+          <p className="text-sm font-bold text-dark-text dark:text-white">{ticket.subject}</p>
+          <p className="text-[10px] text-neutral-text uppercase font-black">{ticket.category}</p>
+        </div>
+      ),
+    },
+    {
+      key: 'priority',
+      header: 'Priority',
+      align: 'center',
+      render: (ticket) => (
+        <span className={`text-[10px] font-black px-2 py-1 rounded ${
+          ticket.priority === 'High' ? 'bg-red-100 text-red-600' : 
+          ticket.priority === 'Medium' ? 'bg-orange-100 text-orange-600' : 
+          'bg-blue-100 text-blue-600'
+        }`}>
+          {ticket.priority}
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      align: 'center',
+      render: (ticket) => (
+        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black border uppercase ${
+          ticket.status === 'Open' ? 'bg-accent-green/10 text-accent-green border-accent-green/20' :
+          ticket.status === 'Pending' ? 'bg-yellow-50 text-yellow-600 border-yellow-100' :
+          'bg-neutral-light/50 text-neutral-text border-neutral-light'
+        }`}>
+          <div className={`w-1.5 h-1.5 rounded-full ${
+            ticket.status === 'Open' ? 'bg-accent-green' : 
+            ticket.status === 'Pending' ? 'bg-yellow-600' : 'bg-neutral-text'
+          }`}></div>
+          {ticket.status}
+        </span>
+      ),
+    },
+    {
+      key: 'lastUpdate',
+      header: 'Last Update',
+      align: 'right',
+      render: (ticket) => <span className="text-sm text-neutral-text">{ticket.lastUpdate}</span>,
+    },
   ];
 
   const handleOpenTicket = () => {
@@ -111,53 +168,13 @@ const Support: React.FC = () => {
               </button>
             </div>
             
-            <div className="bg-white  rounded-3xl border border-neutral-light dark:border-white/5 overflow-hidden shadow-sm">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="bg-neutral-light/20 dark:bg-white/5">
-                    <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">Ticket ID</th>
-                    <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest">Subject</th>
-                    <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest text-center">Priority</th>
-                    <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest text-center">Status</th>
-                    <th className="px-8 py-5 text-[10px] font-black text-neutral-text uppercase tracking-widest text-right">Last Update</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-neutral-light dark:divide-white/5">
-                  {tickets.map((ticket) => (
-                    <tr key={ticket.id} className="hover:bg-neutral-light/10 dark:hover:bg-white/5 transition-colors cursor-pointer group">
-                      <td className="px-8 py-5 font-mono text-xs font-bold text-primary">{ticket.id}</td>
-                      <td className="px-8 py-5">
-                        <p className="text-sm font-bold text-dark-text dark:text-white">{ticket.subject}</p>
-                        <p className="text-[10px] text-neutral-text uppercase font-black">{ticket.category}</p>
-                      </td>
-                      <td className="px-8 py-5 text-center">
-                        <span className={`text-[10px] font-black px-2 py-1 rounded ${
-                          ticket.priority === 'High' ? 'bg-red-100 text-red-600' : 
-                          ticket.priority === 'Medium' ? 'bg-orange-100 text-orange-600' : 
-                          'bg-blue-100 text-blue-600'
-                        }`}>
-                          {ticket.priority}
-                        </span>
-                      </td>
-                      <td className="px-8 py-5 text-center">
-                         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black border uppercase ${
-                          ticket.status === 'Open' ? 'bg-accent-green/10 text-accent-green border-accent-green/20' :
-                          ticket.status === 'Pending' ? 'bg-yellow-50 text-yellow-600 border-yellow-100' :
-                          'bg-neutral-light/50 text-neutral-text border-neutral-light'
-                        }`}>
-                          <div className={`w-1.5 h-1.5 rounded-full ${
-                            ticket.status === 'Open' ? 'bg-accent-green' : 
-                            ticket.status === 'Pending' ? 'bg-yellow-600' : 'bg-neutral-text'
-                          }`}></div>
-                          {ticket.status}
-                        </span>
-                      </td>
-                      <td className="px-8 py-5 text-right text-xs font-bold text-neutral-text">{ticket.lastUpdate}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              columns={columns}
+              data={tickets}
+              rowKey={(ticket) => ticket.id}
+              emptyMessage="No support tickets found"
+              emptyIcon="support_agent"
+            />
           </div>
         )}
 

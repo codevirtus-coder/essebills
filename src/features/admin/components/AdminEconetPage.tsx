@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
+import { confirmToast } from '../../../lib/confirmToast'
+import { DataTable, TableColumn } from '../../../components/ui/DataTable'
 import {
   changeEconetBundlePlanTypeStatus,
   changeEconetDataBundleTypeStatus,
@@ -197,25 +199,27 @@ const AdminEconetPage: React.FC<AdminEconetPageProps> = ({
     }
   }
 
-  const handleDelete = async (row: UnknownRecord) => {
+  const handleDelete = (row: UnknownRecord) => {
     const id = row.id as string | number | undefined
     if (!id && id !== 0) {
       toast.error('Record ID is missing')
       return
     }
-    const shouldDelete = window.confirm(`Delete "${String(row.name ?? id)}"?`)
-    if (!shouldDelete) return
 
-    try {
-      setIsDeletingId(id)
-      await config.remove(id)
-      toast.success('Record deleted')
-      await loadRows()
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to delete item')
-    } finally {
-      setIsDeletingId(null)
-    }
+    confirmToast(`Delete "${String(row.name ?? id)}"?`, () => {
+      setIsDeletingId(id!)
+      config.remove(id!)
+        .then(() => {
+          toast.success('Record deleted')
+          return loadRows()
+        })
+        .catch((error: unknown) => {
+          toast.error(error instanceof Error ? error.message : 'Failed to delete item')
+        })
+        .finally(() => {
+          setIsDeletingId(null)
+        })
+    })
   }
 
   const handleToggleStatus = async (row: UnknownRecord) => {
@@ -240,16 +244,13 @@ const AdminEconetPage: React.FC<AdminEconetPageProps> = ({
 
   return (
     <div className="p-8 space-y-6 animate-in fade-in duration-300">
-      <section className="bg-white rounded-xl border border-neutral-light p-6 min-h-[112px]">
-        <h2 className="text-4 leading-none font-medium text-dark-text dark:text-white flex items-center gap-3">
-          <span className="material-symbols-outlined text-[28px]">account_balance</span>
-          {config.title}
-        </h2>
-        <p className="text-sm text-neutral-text mt-8">{config.subtitle}</p>
-      </section>
+      <div>
+        <h2 className="text-xl font-bold text-dark-text">{config.title}</h2>
+        <p className="text-sm text-neutral-text mt-1">{config.subtitle}</p>
+      </div>
 
-      <section className="bg-white rounded-xl border border-neutral-light p-5">
-        <div className="flex flex-wrap items-center gap-2 mb-4">
+      <div>
+        <div className="flex flex-wrap items-center gap-2 mb-3">
           <button
             type="button"
             onClick={() => setIsCreateOpen(true)}
@@ -269,77 +270,83 @@ const AdminEconetPage: React.FC<AdminEconetPageProps> = ({
           </span>
         </div>
 
-        <div className="border border-neutral-light rounded overflow-hidden bg-white">
-          <div className="bg-[#7E57C2] text-white border-b border-neutral-light">
-            <div className="grid grid-cols-[1fr_.8fr_1fr_190px]">
-              <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Name</div>
-              <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Status</div>
-              <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Created on</div>
-              <div className="px-4 py-3 text-sm font-semibold text-center">Actions</div>
-            </div>
-          </div>
-          <div className="min-h-[260px] bg-white">
-            {isLoading ? (
-              <div className="p-8 text-center text-neutral-text">Loading...</div>
-            ) : normalizedRows.length === 0 ? (
-              <div className="p-8 text-center text-neutral-text">No records found</div>
-            ) : (
-              normalizedRows.map((row, index) => {
+        <DataTable
+          columns={useMemo<TableColumn<UnknownRecord>[]>(() => [
+            {
+              key: 'name',
+              header: 'Name',
+              render: (row) => String(row.name ?? '-')
+            },
+            {
+              key: 'status',
+              header: 'Status',
+              render: (row) => {
                 const isActive = row.active === true || String(row.status ?? '').toUpperCase() === 'ACTIVE'
                 return (
-                  <div
-                    key={String(row.id ?? `${row.name ?? 'econet'}-${index}`)}
-                    className="grid grid-cols-[1fr_.8fr_1fr_190px] border-t border-neutral-light hover:bg-neutral-light/40 transition-colors"
+                  <span
+                    className={`inline-flex px-3 py-1 rounded-full text-xs border ${
+                      isActive
+                        ? 'bg-green-100 text-green-700 border-green-300'
+                        : 'bg-red-100 text-red-700 border-red-300'
+                    }`}
                   >
-                    <div className="px-4 py-3 text-sm text-dark-text">{String(row.name ?? '-')}</div>
-                    <div className="px-4 py-3 text-sm">
-                      <span
-                        className={`inline-flex px-3 py-1 rounded-full text-xs border ${
-                          isActive
-                            ? 'bg-green-100 text-green-700 border-green-300'
-                            : 'bg-red-100 text-red-700 border-red-300'
-                        }`}
-                      >
-                        {isActive ? 'Active' : 'Inactive'}
-                      </span>
-                    </div>
-                    <div className="px-4 py-3 text-sm text-dark-text">{String(row.createdDate ?? '-')}</div>
-                    <div className="px-2 py-2 flex items-center justify-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => openEditModal(row)}
-                        className="h-8 px-3 rounded-lg border border-[#7E57C2]/40 text-[#7E57C2] text-xs font-semibold hover:bg-[#7E57C2]/5"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => void handleToggleStatus(row)}
-                        disabled={isStatusUpdatingId === row.id}
-                        className={`h-8 px-3 rounded-lg border text-xs font-semibold disabled:opacity-60 ${
-                          isActive
-                            ? 'border-amber-200 text-amber-700 hover:bg-amber-50'
-                            : 'border-green-200 text-green-700 hover:bg-green-50'
-                        }`}
-                      >
-                        {isStatusUpdatingId === row.id ? '...' : isActive ? 'Disable' : 'Enable'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => void handleDelete(row)}
-                        disabled={isDeletingId === row.id}
-                        className="h-8 px-3 rounded-lg border border-red-200 text-red-600 text-xs font-semibold hover:bg-red-50 disabled:opacity-60"
-                      >
-                        {isDeletingId === row.id ? '...' : 'Delete'}
-                      </button>
-                    </div>
+                    {isActive ? 'Active' : 'Inactive'}
+                  </span>
+                )
+              }
+            },
+            {
+              key: 'createdDate',
+              header: 'Created on',
+              render: (row) => String(row.createdDate ?? '-')
+            },
+            {
+              key: 'actions',
+              header: 'Actions',
+              align: 'center',
+              render: (row) => {
+                const isActive = row.active === true || String(row.status ?? '').toUpperCase() === 'ACTIVE'
+                return (
+                  <div className="flex items-center justify-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => openEditModal(row)}
+                      className="h-8 px-3 rounded-lg border border-[#7E57C2]/40 text-[#7E57C2] text-xs font-semibold hover:bg-[#7E57C2]/5"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void handleToggleStatus(row)}
+                      disabled={isStatusUpdatingId === row.id}
+                      className={`h-8 px-3 rounded-lg border text-xs font-semibold disabled:opacity-60 ${
+                        isActive
+                          ? 'border-amber-200 text-amber-700 hover:bg-amber-50'
+                          : 'border-green-200 text-green-700 hover:bg-green-50'
+                      }`}
+                    >
+                      {isStatusUpdatingId === row.id ? '...' : isActive ? 'Disable' : 'Enable'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void handleDelete(row)}
+                      disabled={isDeletingId === row.id}
+                      className="h-8 px-3 rounded-lg border border-red-200 text-red-600 text-xs font-semibold hover:bg-red-50 disabled:opacity-60"
+                    >
+                      {isDeletingId === row.id ? '...' : 'Delete'}
+                    </button>
                   </div>
                 )
-              })
-            )}
-          </div>
-        </div>
-      </section>
+              }
+            }
+          ], [isStatusUpdatingId, isDeletingId])}
+          data={normalizedRows}
+          rowKey={(row) => String(row.id ?? `${row.name ?? 'econet'}-${Math.random()}`)}
+          loading={isLoading}
+          emptyMessage="No records found"
+          emptyIcon="filter_alt_off"
+        />
+      </div>
 
       {isCreateOpen ? (
         <div className="fixed inset-0 z-[140] flex items-center justify-center p-4">

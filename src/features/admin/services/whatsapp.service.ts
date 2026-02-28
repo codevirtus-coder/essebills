@@ -29,29 +29,10 @@ type ChatsResponse = {
   threads: ChatThreadDto[]
 }
 
-async function parseJsonOrThrow<T>(response: Response): Promise<T> {
-  if (!response.ok) {
-    const fallbackMessage = `Request failed (${response.status})`
-    const payload = await response
-      .json()
-      .catch(() => null as { message?: string } | null)
-
-    throw new Error(payload?.message ?? fallbackMessage)
-  }
-
-  return response.json() as Promise<T>
-}
+import { fetchWithBase } from '../../../api/apiClient'
 
 async function whatsappFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const response = await fetch(`${WHATSAPP_API_BASE_URL}${path}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.headers ?? {}),
-    },
-    ...options,
-  })
-
-  return parseJsonOrThrow<T>(response)
+  return fetchWithBase<T>(WHATSAPP_API_BASE_URL, path, options)
 }
 
 export async function getWhatsAppStatus(): Promise<StatusResponse> {

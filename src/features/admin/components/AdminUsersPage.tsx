@@ -1,7 +1,9 @@
 import React, { useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
+import { confirmToast } from '../../../lib/confirmToast'
+import { DataTable, TableColumn } from '../../../components/ui/DataTable'
 import type { AdminUserDto } from '../dto/admin-api.dto'
-import { changeUserActivationStatus, createUser, getPaginatedUsers, updateUser } from '../services'
+import { changeUserActivationStatus, createUser, getPaginatedUsers, resetUserOtp, updateUser } from '../services'
 
 const AdminUsersPage: React.FC = () => {
   const [users, setUsers] = useState<AdminUserDto[]>([])
@@ -11,6 +13,7 @@ const AdminUsersPage: React.FC = () => {
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
   const [statusLoadingId, setStatusLoadingId] = useState<string | number | null>(null)
+  const [otpResetLoadingId, setOtpResetLoadingId] = useState<string | number | null>(null)
   const [selectedUser, setSelectedUser] = useState<AdminUserDto | null>(null)
   const [form, setForm] = useState({
     username: '',
@@ -148,18 +151,35 @@ const AdminUsersPage: React.FC = () => {
     }
   }
 
+  const handleResetOtp = (user: AdminUserDto) => {
+    if (!user.id) {
+      toast.error('User ID is missing')
+      return
+    }
+    confirmToast(`Reset OTP for ${String(user.username ?? user.email)}? A new OTP secret will be generated.`, () => {
+      setOtpResetLoadingId(user.id!)
+      resetUserOtp(user.id!)
+        .then(() => {
+          toast.success('OTP reset successfully')
+        })
+        .catch((error: unknown) => {
+          toast.error(error instanceof Error ? error.message : 'Failed to reset OTP')
+        })
+        .finally(() => {
+          setOtpResetLoadingId(null)
+        })
+    })
+  }
+
   return (
     <div className="p-8 space-y-6 animate-in fade-in duration-300">
-      <section className="bg-white rounded-xl border border-neutral-light p-6 min-h-[112px]">
-        <h2 className="text-4 leading-none font-medium text-dark-text dark:text-white flex items-center gap-3">
-          <span className="material-symbols-outlined text-[28px]">group</span>
-          User Management
-        </h2>
-        <p className="text-sm text-neutral-text mt-8">Users List</p>
-      </section>
+      <div>
+        <h2 className="text-xl font-bold text-dark-text">User Management</h2>
+        <p className="text-sm text-neutral-text mt-1">Users List</p>
+      </div>
 
-      <section className="bg-white rounded-xl border border-neutral-light p-5">
-        <div className="flex flex-wrap items-center gap-2 mb-4">
+      <div>
+        <div className="flex flex-wrap items-center gap-2 mb-3">
           <button
             type="button"
             onClick={() => setIsCreateOpen(true)}
@@ -176,67 +196,83 @@ const AdminUsersPage: React.FC = () => {
           </button>
         </div>
 
-        <div className="border border-neutral-light rounded overflow-hidden bg-white">
-          <div className="bg-[#7E57C2] text-white border-b border-neutral-light">
-            <div className="grid grid-cols-[1fr_1.2fr_1.3fr_1fr_.8fr_1fr_160px]">
-              <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Username</div>
-              <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Full Name</div>
-              <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Email</div>
-              <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Phone</div>
-              <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Status</div>
-              <div className="px-4 py-3 text-sm font-semibold border-r border-white/20">Created on</div>
-              <div className="px-4 py-3 text-sm font-semibold text-center">Actions</div>
-            </div>
-          </div>
-          <div className="min-h-[260px] bg-white">
-            {isLoading ? (
-              <div className="p-8 text-center text-neutral-text">Loading...</div>
-            ) : rows.length === 0 ? (
-              <div className="p-8 text-center text-neutral-text">No users found</div>
-            ) : (
-              rows.map((user, index) => (
-                <div
-                  key={String(user.id ?? `${user.username ?? 'user'}-${index}`)}
-                  className="grid grid-cols-[1fr_1.2fr_1.3fr_1fr_.8fr_1fr_160px] border-t border-neutral-light hover:bg-neutral-light/40 transition-colors"
-                >
-                  <div className="px-4 py-3 text-sm text-dark-text">{String(user.username ?? '-')}</div>
-                  <div className="px-4 py-3 text-sm text-dark-text">
-                    {`${String(user.firstName ?? '')} ${String(user.lastName ?? '')}`.trim() || '-'}
-                  </div>
-                  <div className="px-4 py-3 text-sm text-dark-text truncate">{String(user.email ?? '-')}</div>
-                  <div className="px-4 py-3 text-sm text-dark-text">{String(user.phoneNumber ?? '-')}</div>
-                  <div className="px-4 py-3 text-sm text-dark-text">{user.active === false ? 'Inactive' : 'Active'}</div>
-                  <div className="px-4 py-3 text-sm text-dark-text">{String(user.createdDate ?? '-')}</div>
-                  <div className="px-2 py-2 flex items-center justify-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => openEditModal(user)}
-                      className="h-8 px-3 rounded-lg border border-[#7E57C2]/40 text-[#7E57C2] text-xs font-semibold hover:bg-[#7E57C2]/5"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void handleToggleStatus(user)}
-                      disabled={statusLoadingId === user.id}
-                      className={`h-8 px-3 rounded-lg border text-xs font-semibold disabled:opacity-60 ${
-                        user.active === false
-                          ? 'border-green-200 text-green-700 hover:bg-green-50'
-                          : 'border-amber-200 text-amber-700 hover:bg-amber-50'
-                      }`}
-                    >
-                      {statusLoadingId === user.id ? '...' : user.active === false ? 'Activate' : 'Disable'}
-                    </button>
-                  </div>
+        <DataTable
+          columns={useMemo<TableColumn<AdminUserDto>[]>(() => [
+            {
+              key: 'username',
+              header: 'Username',
+              render: (user) => String(user.username ?? '-')
+            },
+            {
+              key: 'fullName',
+              header: 'Full Name',
+              render: (user) => `${String(user.firstName ?? '')} ${String(user.lastName ?? '')}`.trim() || '-'
+            },
+            {
+              key: 'email',
+              header: 'Email',
+              render: (user) => String(user.email ?? '-')
+            },
+            {
+              key: 'phoneNumber',
+              header: 'Phone',
+              render: (user) => String(user.phoneNumber ?? '-')
+            },
+            {
+              key: 'status',
+              header: 'Status',
+              render: (user) => user.active === false ? 'Inactive' : 'Active'
+            },
+            {
+              key: 'createdDate',
+              header: 'Created on',
+              render: (user) => String(user.createdDate ?? '-')
+            },
+            {
+              key: 'actions',
+              header: 'Actions',
+              align: 'center',
+              render: (user) => (
+                <div className="flex items-center justify-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => openEditModal(user)}
+                    className="h-8 px-3 rounded-lg border border-[#7E57C2]/40 text-[#7E57C2] text-xs font-semibold hover:bg-[#7E57C2]/5"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleToggleStatus(user)}
+                    disabled={statusLoadingId === user.id}
+                    className={`h-8 px-3 rounded-lg border text-xs font-semibold disabled:opacity-60 ${
+                      user.active === false
+                        ? 'border-green-200 text-green-700 hover:bg-green-50'
+                        : 'border-amber-200 text-amber-700 hover:bg-amber-50'
+                    }`}
+                  >
+                    {statusLoadingId === user.id ? '...' : user.active === false ? 'Activate' : 'Disable'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleResetOtp(user)}
+                    disabled={otpResetLoadingId === user.id}
+                    className="h-8 px-3 rounded-lg border border-blue-200 text-blue-700 text-xs font-semibold hover:bg-blue-50 disabled:opacity-60"
+                    title="Reset OTP secret for this user"
+                  >
+                    {otpResetLoadingId === user.id ? '...' : 'OTP'}
+                  </button>
                 </div>
-              ))
-            )}
-          </div>
-          <div className="px-4 py-3 border-t border-neutral-light text-right text-sm text-neutral-text">
-            1 - {rows.length} of {rows.length} Users
-          </div>
-        </div>
-      </section>
+              )
+            }
+          ], [statusLoadingId, otpResetLoadingId])}
+          data={rows}
+          rowKey={(user) => String(user.id ?? `${user.username ?? 'user'}-${Math.random()}`)}
+          loading={isLoading}
+          emptyMessage="No users found"
+          emptyIcon="filter_alt_off"
+        />
+      </div>
 
       {isCreateOpen ? (
         <div className="fixed inset-0 z-[140] flex items-center justify-center p-4">

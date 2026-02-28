@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { createProduct, deleteProduct, getAllProducts, updateProduct } from '../services';
+import { DataTable, type TableColumn } from '../../../components/ui';
 
 interface BillerField {
   id: string;
@@ -31,6 +32,82 @@ interface BillersProps {
 const Billers: React.FC<BillersProps> = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  const columns: TableColumn<Biller>[] = [
+    {
+      key: 'name',
+      header: 'Biller Entity',
+      render: (biller) => (
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center">
+            <span className="material-symbols-outlined text-2xl">{biller.icon}</span>
+          </div>
+          <div>
+            <p className="text-sm font-black text-dark-text dark:text-gray-200">{biller.name || 'Unnamed Entity'}</p>
+            <p className="text-[10px] text-neutral-text font-bold">Joined {biller.onboardedDate}</p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'allowBulk',
+      header: 'Bulk Ops',
+      render: (biller) => (
+        <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${biller.allowBulk ? 'bg-accent-green/20 text-accent-green border border-accent-green/20' : 'bg-neutral-light text-neutral-text/50 border border-neutral-light'}`}>
+          {biller.allowBulk ? 'Enabled' : 'Disabled'}
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (biller) => (
+        <span className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black border uppercase tracking-widest ${
+          biller.status === 'Active' ? 'bg-accent-green/10 text-accent-green border-accent-green/20' :
+          biller.status === 'Pending' ? 'bg-orange-50 text-orange-600 border-orange-100' :
+          'bg-red-50 text-red-600 border-red-100'
+        }`}>
+          {biller.status}
+        </span>
+      ),
+    },
+    {
+      key: 'settlement',
+      header: 'Settlement',
+      render: (biller) => (
+        <span className="text-xs font-black text-neutral-text">{biller.settlement}</span>
+      ),
+    },
+    {
+      key: 'revenueShare',
+      header: 'Commission',
+      render: (biller) => (
+        <p className="text-sm font-black text-dark-text dark:text-white">{biller.revenueShare}</p>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      align: 'right',
+      render: (biller) => (
+        <div className="flex items-center justify-end gap-2">
+          <button 
+            onClick={() => handleEditClick(biller)}
+            className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-primary/10 hover:text-primary text-neutral-text transition-all"
+          >
+            <span className="material-symbols-outlined text-lg">settings</span>
+          </button>
+          <button
+            onClick={() => void handleDeleteBiller(biller.id)}
+            className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-red-50 hover:text-red-600 text-neutral-text transition-all"
+            title="Delete Product"
+          >
+            <span className="material-symbols-outlined text-lg">delete</span>
+          </button>
+        </div>
+      ),
+    },
+  ];
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [isPersisting, setIsPersisting] = useState(false);
   const [selectedBiller, setSelectedBiller] = useState<Biller | null>(null);
@@ -280,7 +357,7 @@ const Billers: React.FC<BillersProps> = () => {
         </div>
         <button 
           onClick={handleCreateClick}
-          className="bg-primary text-white px-8 py-4 rounded-[2rem] font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-opacity-90 transition-all shadow-xl shadow-primary/20"
+          className="bg-primary text-white px-8 py-4 rounded-lg font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-opacity-90 transition-all shadow-xl shadow-primary/20"
         >
           <span className="material-symbols-outlined text-lg">add_business</span>
           Onboard New Provider
@@ -294,7 +371,7 @@ const Billers: React.FC<BillersProps> = () => {
           { label: 'Review Required', value: billers.filter(b => b.status === 'Pending').length.toString(), icon: 'fact_check', color: 'text-orange-500', bg: 'bg-orange-100' },
           { label: 'Platform Cut', value: '2.4%', icon: 'percent', color: 'text-blue-500', bg: 'bg-blue-100' },
         ].map((stat, i) => (
-          <div key={i} className="bg-white  p-8 rounded-[2rem] border border-neutral-light dark:border-white/5 flex items-center gap-5 shadow-sm">
+          <div key={i} className="bg-white p-6 rounded-lg border border-neutral-light dark:border-white/5 flex items-center gap-5 shadow-sm">
             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${stat.bg} ${stat.color}`}>
               <span className="material-symbols-outlined text-2xl">{stat.icon}</span>
             </div>
@@ -306,7 +383,7 @@ const Billers: React.FC<BillersProps> = () => {
         ))}
       </div>
 
-      <div className="bg-white  p-4 rounded-[2rem] border border-neutral-light dark:border-white/5 flex flex-col md:flex-row gap-4 items-center shadow-sm">
+      <div className="bg-white p-4 rounded-lg border border-neutral-light dark:border-white/5 flex flex-col md:flex-row gap-4 items-center shadow-sm">
         <div className="relative flex-1 w-full">
           <span className="material-symbols-outlined absolute left-5 top-1/2 -translate-y-1/2 text-neutral-text text-xl">search</span>
           <input 
@@ -314,86 +391,23 @@ const Billers: React.FC<BillersProps> = () => {
             placeholder="Master search billers..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-[#f8fafc] dark:bg-white/5 border-none rounded-2xl pl-12 pr-6 py-4 text-sm font-bold focus:ring-2 focus:ring-primary/20"
+            className="w-full bg-[#f8fafc] dark:bg-white/5 border-none rounded-xl pl-12 pr-6 py-3 text-sm font-bold focus:ring-2 focus:ring-primary/20"
           />
         </div>
         <div className="flex gap-2">
-          <button className="p-4 bg-[#f8fafc] dark:bg-white/5 text-neutral-text rounded-2xl hover:bg-neutral-light transition-all">
+          <button className="p-3 bg-[#f8fafc] dark:bg-white/5 text-neutral-text rounded-lg hover:bg-neutral-light transition-all">
             <span className="material-symbols-outlined">tune</span>
           </button>
         </div>
       </div>
 
-      <div className="bg-white  rounded-[3rem] shadow-sm border border-neutral-light dark:border-white/5 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-separate border-spacing-0">
-            <thead>
-              <tr className="bg-neutral-light/20 dark:bg-white/5">
-                <th className="px-10 py-6 text-[10px] font-black text-neutral-text uppercase tracking-widest">Biller Entity</th>
-                <th className="px-10 py-6 text-[10px] font-black text-neutral-text uppercase tracking-widest">Bulk Ops</th>
-                <th className="px-10 py-6 text-[10px] font-black text-neutral-text uppercase tracking-widest">Status</th>
-                <th className="px-10 py-6 text-[10px] font-black text-neutral-text uppercase tracking-widest">Settlement</th>
-                <th className="px-10 py-6 text-[10px] font-black text-neutral-text uppercase tracking-widest">Commission</th>
-                <th className="px-10 py-6 text-[10px] font-black text-neutral-text uppercase tracking-widest text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-light dark:divide-white/5">
-              {filteredBillers.map((biller) => (
-                <tr key={biller.id} className="group hover:bg-neutral-light/10 dark:hover:bg-white/5 transition-colors">
-                  <td className="px-10 py-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center">
-                        <span className="material-symbols-outlined text-2xl">{biller.icon}</span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-black text-dark-text dark:text-gray-200">{biller.name || 'Unnamed Entity'}</p>
-                        <p className="text-[10px] text-neutral-text font-bold">Joined {biller.onboardedDate}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-10 py-6">
-                    <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${biller.allowBulk ? 'bg-accent-green/20 text-accent-green border border-accent-green/20' : 'bg-neutral-light text-neutral-text/50 border border-neutral-light'}`}>
-                      {biller.allowBulk ? 'Enabled' : 'Disabled'}
-                    </span>
-                  </td>
-                  <td className="px-10 py-6">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black border uppercase tracking-widest ${
-                      biller.status === 'Active' ? 'bg-accent-green/10 text-accent-green border-accent-green/20' :
-                      biller.status === 'Pending' ? 'bg-orange-50 text-orange-600 border-orange-100' :
-                      'bg-red-50 text-red-600 border-red-100'
-                    }`}>
-                      {biller.status}
-                    </span>
-                  </td>
-                  <td className="px-10 py-6">
-                    <span className="text-xs font-black text-neutral-text">{biller.settlement}</span>
-                  </td>
-                  <td className="px-10 py-6">
-                    <p className="text-sm font-black text-dark-text dark:text-white">{biller.revenueShare}</p>
-                  </td>
-                  <td className="px-10 py-6 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <button 
-                        onClick={() => handleEditClick(biller)}
-                        className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-primary/10 hover:text-primary text-neutral-text transition-all"
-                      >
-                        <span className="material-symbols-outlined text-lg">settings</span>
-                      </button>
-                      <button
-                        onClick={() => void handleDeleteBiller(biller.id)}
-                        className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-red-50 hover:text-red-600 text-neutral-text transition-all"
-                        title="Delete Product"
-                      >
-                        <span className="material-symbols-outlined text-lg">delete</span>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <DataTable
+        columns={columns}
+        data={filteredBillers}
+        rowKey={(biller) => biller.id}
+        emptyMessage="No billers found"
+        emptyIcon="account_balance"
+      />
 
       {isDrawerOpen && selectedBiller && (
         <div className="fixed inset-0 z-[100] flex justify-end">
@@ -476,7 +490,7 @@ const Billers: React.FC<BillersProps> = () => {
                 </div>
                 
                 {/* BULK PAYMENT CONFIGURATION */}
-                <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10 flex items-center justify-between">
+                <div className="p-6 bg-primary/5 rounded-lg border border-primary/10 flex items-center justify-between">
                    <div>
                       <p className="text-sm font-bold text-dark-text">Allow Bulk Payments</p>
                       <p className="text-[10px] text-neutral-text font-medium">Enable CSV/Excel batch processing for this biller.</p>
@@ -504,7 +518,7 @@ const Billers: React.FC<BillersProps> = () => {
                 
                 <div className="space-y-4">
                   {selectedBiller.fields.map((field) => (
-                    <div key={field.id} className="p-6 bg-[#f8fafc] rounded-3xl border border-neutral-light relative group animate-in slide-in-from-top-2">
+                    <div key={field.id} className="p-6 bg-[#f8fafc] rounded-lg border border-neutral-light relative group animate-in slide-in-from-top-2">
                       <button 
                         onClick={() => removeProvisionField(field.id)}
                         className="absolute -top-2 -right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
@@ -564,14 +578,14 @@ const Billers: React.FC<BillersProps> = () => {
             <div className="p-8 border-t border-neutral-light bg-[#f8fafc] flex gap-4">
               <button 
                 onClick={() => setIsDrawerOpen(false)}
-                className="flex-1 py-4 rounded-2xl border border-neutral-light font-black text-[10px] uppercase tracking-widest hover:bg-white transition-all"
+                className="flex-1 py-4 rounded-lg border border-neutral-light font-black text-[10px] uppercase tracking-widest hover:bg-white transition-all"
               >
                 Discard Changes
               </button>
               <button 
                 onClick={() => void handleSaveBiller()}
                 disabled={!selectedBiller.name || isPersisting}
-                className="flex-1 py-4 bg-primary text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+                className="flex-1 py-4 bg-primary text-white rounded-lg font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
               >
                 {isPersisting
                   ? 'Saving...'
