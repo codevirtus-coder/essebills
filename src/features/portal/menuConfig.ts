@@ -152,12 +152,12 @@ export const AGENT_MENU: MenuSection[] = [
   {
     id: 'main',
     items: [
-      { id: 'overview', label: 'Dashboard', icon: 'home', path: '/portal/agent' },
-      { id: 'sell', label: 'Make a Sale', icon: 'point_of_sale', path: '/portal/agent/sell' },
-      { id: 'commissions', label: 'Earnings Analysis', icon: 'payments', path: '/portal/agent/commissions' },
-      { id: 'schedule', label: 'Commission Schedule', icon: 'table_chart', path: '/portal/agent/schedule' },
-      { id: 'float', label: 'Float Wallet', icon: 'account_balance_wallet', path: '/portal/agent/float' },
-      { id: 'profile', label: 'Profile', icon: 'person', path: '/portal-agent?tab=profile' },
+      { id: 'overview', label: 'Dashboard', icon: 'home' },
+      { id: 'sell', label: 'Make a Sale', icon: 'point_of_sale' },
+      { id: 'commissions', label: 'Earnings Analysis', icon: 'payments' },
+      { id: 'schedule', label: 'Commission Schedule', icon: 'table_chart' },
+      { id: 'float', label: 'Float Wallet', icon: 'account_balance_wallet' },
+      { id: 'profile', label: 'Profile', icon: 'person' },
     ],
   },
 ]
@@ -167,11 +167,11 @@ export const BILLER_MENU: MenuSection[] = [
   {
     id: 'main',
     items: [
-      { id: 'overview', label: 'Dashboard', icon: 'home', path: '/portal/biller' },
-      { id: 'collections', label: 'Collections', icon: 'payments', path: '/portal/biller/collections' },
-      { id: 'settlements', label: 'Settlements', icon: 'account_balance', path: '/portal/biller/settlements' },
-      { id: 'settings', label: 'Settings', icon: 'settings', path: '/portal/biller/settings' },
-      { id: 'profile', label: 'Profile', icon: 'person', path: '/portal-biller?tab=profile' },
+      { id: 'overview', label: 'Dashboard', icon: 'home' },
+      { id: 'collections', label: 'Collections', icon: 'payments' },
+      { id: 'settlements', label: 'Settlements', icon: 'account_balance' },
+      { id: 'settings', label: 'Settings', icon: 'settings' },
+      { id: 'profile', label: 'Profile', icon: 'person' },
     ],
   },
 ]
@@ -181,9 +181,9 @@ export const CUSTOMER_MENU: MenuSection[] = [
   {
     id: 'main',
     items: [
-      { id: 'overview', label: 'Dashboard', icon: 'home', path: '/portal/customer' },
-      { id: 'transactions', label: 'My Transactions', icon: 'receipt_long', path: '/portal/customer/transactions' },
-      { id: 'profile', label: 'Profile', icon: 'person', path: '/portal-customer?tab=profile' },
+      { id: 'overview', label: 'Dashboard', icon: 'home' },
+      { id: 'transactions', label: 'My Transactions', icon: 'receipt_long' },
+      { id: 'profile', label: 'Profile', icon: 'person' },
     ],
   },
 ]
