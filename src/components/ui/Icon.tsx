@@ -9,7 +9,7 @@ import {
   CheckCircle, AlertTriangle, Info, Trash2, RefreshCw, FilterX,
   History, Lock, LockOpen, ShieldCheck, ShieldOff, Flag, Building,
   Calendar, Filter, Search, ExternalLink, Copy, RotateCcw, XCircle,
-  Heart, Globe, Droplets, Zap,
+  Heart, Globe, Droplets, Zap, Headphones,
   type LucideIcon, type LucideProps
 } from 'lucide-react'
 
@@ -127,6 +127,8 @@ const ICON_MAP: Record<string, LucideIcon> = {
   umbrella: ShieldCheck,
   auto_stories: GraduationCap,
   medical_services: ShieldCheck,
+  no_accounts: ShieldOff,
+  support_agent: Headphones,
 }
 
 interface IconProps extends Omit<LucideProps, 'ref'> {
