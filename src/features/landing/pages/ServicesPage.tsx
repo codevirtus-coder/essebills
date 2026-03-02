@@ -218,7 +218,7 @@ export function ServicesPage() {
               ))}
             </div>
 
-            <div className="mt-8 grid min-h-[400px] grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-8 grid grid-cols-1 items-start gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {isLoading ? (
                 <div className="col-span-full flex items-center justify-center py-24 text-center">
                   <p className="type-body text-muted">Loading services...</p>
