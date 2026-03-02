@@ -9,6 +9,7 @@ import {
   CheckCircle, AlertTriangle, Info, Trash2, RefreshCw, FilterX,
   History, Lock, LockOpen, ShieldCheck, ShieldOff, Flag, Building,
   Calendar, Filter, Search, ExternalLink, Copy, RotateCcw, XCircle,
+  Heart, Globe, Droplets,
   type LucideIcon, type LucideProps
 } from 'lucide-react'
 
@@ -101,6 +102,31 @@ const ICON_MAP: Record<string, LucideIcon> = {
   notifications_off: BellOff,
   inbox: Inbox,
   logout: LogOut,
+
+  // Material-style aliases used across landing/admin screens
+  bolt: CreditCard,
+  electric_bolt: CreditCard,
+  cell_tower: Signal,
+  settings_input_antenna: Signal,
+  signal_cellular_alt: Signal,
+  wifi: Signal,
+  health_and_safety: ShieldCheck,
+  medical_information: ShieldCheck,
+  local_gas_station: Package,
+  volunteer_activism: Heart,
+  casino: Ticket,
+  faucet: Landmark,
+  location_city: Building,
+  domain: Building2,
+  tty: MessageSquare,
+  language: Globe,
+  history_edu: GraduationCap,
+  water_drop: Droplets,
+  oil_barrel: Package,
+  router: Signal,
+  umbrella: ShieldCheck,
+  auto_stories: GraduationCap,
+  medical_services: ShieldCheck,
 }
 
 interface IconProps extends Omit<LucideProps, 'ref'> {
