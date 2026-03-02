@@ -15,7 +15,6 @@ type Biller = {
   name: string;
   icon: string;
   category: string;
-  colorClass: string;
 };
 
 type ApiProduct = {
@@ -73,25 +72,25 @@ function iconByCategory(category: string): string {
   }
 }
 
-function colorClassByCategory(category: string): string {
-  switch (category) {
-    case "Airtime":
-      return "bg-red-50 text-red-600";
-    case "Internet":
-      return "bg-indigo-50 text-indigo-600";
-    case "Education":
-      return "bg-blue-50 text-blue-800";
-    case "Insurance":
-      return "bg-pink-50 text-pink-600";
-    case "Fuel":
-      return "bg-amber-50 text-amber-700";
-    case "Donations":
-      return "bg-red-50 text-red-800";
-    case "Lottery":
-      return "bg-yellow-50 text-yellow-700";
-    default:
-      return "bg-orange-50 text-orange-600";
-  }
+function iconByProduct(name: string, category: string): string {
+  const normalized = name.toLowerCase();
+  if (/(zesa|zesco|token|electric)/.test(normalized)) return "bolt";
+  if (/(zinwa|water)/.test(normalized)) return "water_drop";
+  if (/(telone|adsl|router)/.test(normalized)) return "router";
+  if (/(econet|evd|airtime)/.test(normalized)) return "cell_tower";
+  if (/(netone|topup)/.test(normalized)) return "signal_cellular_alt";
+  if (/(uz|university|school|tuition)/.test(normalized)) return "school";
+  if (/(msu|stories|fees)/.test(normalized)) return "auto_stories";
+  if (/(harare|city of harare)/.test(normalized)) return "domain";
+  if (/(bulawayo|city of bulawayo)/.test(normalized)) return "location_city";
+  if (/(liquid|home|internet)/.test(normalized)) return "language";
+  if (/(cimas|medical)/.test(normalized)) return "medical_services";
+  if (/(nyaradzo|insurance)/.test(normalized)) return "umbrella";
+  if (/(puma|fuel|diesel|petrol)/.test(normalized)) return "local_gas_station";
+  if (/(zuva|petroleum|oil)/.test(normalized)) return "oil_barrel";
+  if (/(red cross|donat)/.test(normalized)) return "volunteer_activism";
+  if (/(lotto|lottery|jackpot)/.test(normalized)) return "casino";
+  return iconByCategory(category);
 }
 
 async function fetchProducts(): Promise<ApiProduct[]> {
@@ -127,8 +126,7 @@ export function ServicesPage() {
             id: `api-${product.id}`,
             name: product.name,
             category,
-            icon: iconByCategory(category),
-            colorClass: colorClassByCategory(category),
+            icon: iconByProduct(product.name, category),
           };
         }),
     [products],
@@ -235,9 +233,7 @@ export function ServicesPage() {
                     key={biller.id}
                     className="services-market-card group"
                   >
-                    <div
-                      className={`services-market-icon ${biller.colorClass}`}
-                    >
+                    <div className="services-market-icon bg-slate-100 text-slate-400">
                       <Icon name={biller.icon} size={28} />
                     </div>
                     <h3 className="services-market-title">{biller.name}</h3>
@@ -290,6 +286,7 @@ export function ServicesPage() {
               backgroundSize: "40px 40px",
             }}
           />
+
           <div className="relative z-10 max-w-xl space-y-4 text-center md:text-left">
             <h2 className="type-section-title">Don&apos;t see your biller?</h2>
             <p className="services-market-bottom-title type-body">
@@ -297,6 +294,7 @@ export function ServicesPage() {
               looking to reach thousands of customers, join our ecosystem today.
             </p>
           </div>
+
           <div className="relative z-10 flex flex-col gap-3 sm:flex-row">
             <button
               type="button"
