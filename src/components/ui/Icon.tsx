@@ -9,7 +9,7 @@ import {
   CheckCircle, AlertTriangle, Info, Trash2, RefreshCw, FilterX,
   History, Lock, LockOpen, ShieldCheck, ShieldOff, Flag, Building,
   Calendar, Filter, Search, ExternalLink, Copy, RotateCcw, XCircle,
-  Heart, Globe, Droplets,
+  Heart, Globe, Droplets, Zap,
   type LucideIcon, type LucideProps
 } from 'lucide-react'
 
@@ -104,8 +104,8 @@ const ICON_MAP: Record<string, LucideIcon> = {
   logout: LogOut,
 
   // Material-style aliases used across landing/admin screens
-  bolt: CreditCard,
-  electric_bolt: CreditCard,
+  bolt: Zap,
+  electric_bolt: Zap,
   cell_tower: Signal,
   settings_input_antenna: Signal,
   signal_cellular_alt: Signal,

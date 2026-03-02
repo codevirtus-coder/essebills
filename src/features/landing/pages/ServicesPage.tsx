@@ -74,10 +74,12 @@ function iconByCategory(category: string): string {
 
 function iconByProduct(name: string, category: string): string {
   const normalized = name.toLowerCase();
+  if (/(wallet|float|balance)/.test(normalized)) return "account_balance_wallet";
   if (/(zesa|zesco|token|electric)/.test(normalized)) return "bolt";
   if (/(zinwa|water)/.test(normalized)) return "water_drop";
+  if (/(bundle|data)/.test(normalized)) return "wifi";
   if (/(telone|adsl|router)/.test(normalized)) return "router";
-  if (/(econet|evd|airtime)/.test(normalized)) return "cell_tower";
+  if (/(econet|evd|airtime|recharge)/.test(normalized)) return "cell_tower";
   if (/(netone|topup)/.test(normalized)) return "signal_cellular_alt";
   if (/(uz|university|school|tuition)/.test(normalized)) return "school";
   if (/(msu|stories|fees)/.test(normalized)) return "auto_stories";
