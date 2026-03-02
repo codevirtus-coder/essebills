@@ -2,7 +2,7 @@ import { createBrowserRouter, type RouteObject, Navigate } from "react-router-do
 import { MainLayout } from "../layouts/MainLayout";
 import { DashboardLayout } from "../layouts/DashboardLayout";
 import { HomePage } from "../features/landing/pages/HomePage";
-import { EmptyPage } from "../pages/EmptyPage";
+import { ServicesPage } from "../features/landing/pages/ServicesPage";
 import { UnifiedDashboardPage } from "../features/portal/UnifiedDashboardPage";
 import { PortalProfilePage } from "../features/portal/PortalProfilePage";
 import { LoginPage } from "../features/auth/pages/LoginPage";
@@ -40,7 +40,7 @@ const routes: RouteObject[] = [
       },
       {
         path: "services",
-        element: <EmptyPage />,
+        element: <ServicesPage />,
       },
       {
         path: "biller",

@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, ArrowLeftRight, Ticket, Wallet, Package,
   SlidersHorizontal, MessageSquare, UserCog, Signal, Key,
-  GraduationCap, Building2, Store, CreditCard, MessageSquareCheck,
+  GraduationCap, Building2, Store, CreditCard,
   BarChart2, CircleUser, Settings, HelpCircle, Home, ShoppingCart,
   Table2, User, Users, Users2, Landmark, Receipt, LogOut, Menu, X,
   ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Bell, BellOff, CornerDownRight, Inbox,
@@ -84,7 +84,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
 
   // Comms
   sms: MessageSquare,
-  mark_chat_read: MessageSquareCheck,
+  mark_chat_read: CheckCircle,
 
   // Analytics & data
   analytics: BarChart2,
