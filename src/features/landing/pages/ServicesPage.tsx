@@ -74,7 +74,8 @@ function iconByCategory(category: string): string {
 
 function iconByProduct(name: string, category: string): string {
   const normalized = name.toLowerCase();
-  if (/(wallet|float|balance)/.test(normalized)) return "account_balance_wallet";
+  if (/(wallet|float|balance)/.test(normalized))
+    return "account_balance_wallet";
   if (/(zesa|zesco|token|electric)/.test(normalized)) return "bolt";
   if (/(zinwa|water)/.test(normalized)) return "water_drop";
   if (/(bundle|data)/.test(normalized)) return "wifi";
@@ -236,7 +237,7 @@ export function ServicesPage() {
                     className="services-market-card group"
                   >
                     <div className="services-market-icon bg-slate-100 text-slate-400">
-                      <Icon name={biller.icon} size={28} />
+                      <Icon name={biller.icon} size={20} />
                     </div>
                     <h3 className="services-market-title">{biller.name}</h3>
                     <p className="services-market-category">
@@ -316,7 +317,7 @@ export function ServicesPage() {
             </button>
             <NavLink
               to={ROUTE_PATHS.register}
-              className="services-market-cta inline-flex h-12 min-w-[198px] items-center justify-center rounded-full bg-white/10 px-6 text-center uppercase whitespace-nowrap transition hover:bg-white/20"
+              className="services-market-cta inline-flex h-12 min-w-49.5 items-center justify-center rounded-full bg-white/10 px-6 text-center uppercase whitespace-nowrap transition hover:bg-white/20"
             >
               Biller Onboarding
             </NavLink>
