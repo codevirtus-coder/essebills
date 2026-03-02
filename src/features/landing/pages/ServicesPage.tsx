@@ -144,7 +144,7 @@ export function ServicesPage() {
           .includes(searchQuery.toLowerCase());
         return matchesCategory && matchesSearch;
       }),
-    [activeCategory, searchQuery],
+    [billers, activeCategory, searchQuery],
   );
 
   const handleSelectBiller = (name: string) => {
