@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Icon } from "../../../components/ui/Icon";
-import { billerCategories } from "../data/siteData";
 import { ROUTE_PATHS } from "../../../router/paths";
+import { getAllProducts, getProductCategories } from "../../../services/products.service";
+import type { Product, ProductCategory } from "../../../types/products";
 
 type CategoryPillProps = {
   icon: string;
@@ -14,7 +15,8 @@ type BillerCardProps = {
   id: string;
   icon: string;
   name: string;
-  category: string;
+  categoryKey: string;
+  categoryLabel: string;
   fields: Array<{
     key: string;
     label: string;
@@ -26,20 +28,15 @@ type BillerCardProps = {
   isDashed?: boolean;
 };
 
+type CategoryTab = {
+  key: string;
+  label: string;
+  icon: string;
+};
+
 type FieldProps = {
   label: string;
   children: ReactNode;
-};
-
-type ApiProduct = {
-  id: number;
-  name: string;
-  code: string;
-  status: string;
-  deleted?: boolean;
-  description?: string;
-  productLogoFileName?: string;
-  minimumPurchaseAmount?: string;
 };
 
 const DEFAULT_FIELDS: BillerCardProps["fields"] = [
@@ -48,16 +45,16 @@ const DEFAULT_FIELDS: BillerCardProps["fields"] = [
   { key: "amount", label: "Amount", placeholder: "0.00", type: "number", prefix: "$" },
 ];
 
-function inferCategory(name: string, code: string): string {
+function inferCategory(name: string, code: string): { key: string; label: string } {
   const value = `${name} ${code}`.toLowerCase();
-  if (/(airtime|recharge|evd|topup)/.test(value)) return "Airtime";
-  if (/(bundle|data)/.test(value)) return "Internet";
-  if (/(school|tuition|fees|university|college|education)/.test(value)) return "Education";
-  if (/(insurance|life|medical|health)/.test(value)) return "Insurance";
-  if (/(fuel|petrol|diesel|gas)/.test(value)) return "Fuel";
-  if (/(donat)/.test(value)) return "Donations";
-  if (/(lottery|loto|jackpot)/.test(value)) return "Lottery";
-  return "Utilities";
+  if (/(airtime|recharge|evd|topup)/.test(value)) return { key: "airtime", label: "Airtime" };
+  if (/(bundle|data)/.test(value)) return { key: "internet", label: "Internet" };
+  if (/(school|tuition|fees|university|college|education)/.test(value)) return { key: "education", label: "Education" };
+  if (/(insurance|life|medical|health)/.test(value)) return { key: "insurance", label: "Insurance" };
+  if (/(fuel|petrol|diesel|gas)/.test(value)) return { key: "fuel", label: "Fuel" };
+  if (/(donat)/.test(value)) return { key: "donations", label: "Donations" };
+  if (/(lottery|loto|jackpot)/.test(value)) return { key: "lottery", label: "Lottery" };
+  return { key: "utilities", label: "Utilities" };
 }
 
 function iconByCategory(category: string): string {
@@ -126,14 +123,15 @@ function fieldsByProduct(name: string, category: string): BillerCardProps["field
   return DEFAULT_FIELDS;
 }
 
-import { apiFetch } from "../../../api/apiClient";
-
-async function fetchProducts(): Promise<ApiProduct[]> {
-  try {
-    return await apiFetch<ApiProduct[]>('/v1/products/all')
-  } catch (err) {
-    return []
-  }
+async function fetchProductsAndCategories(): Promise<{ products: Product[]; categories: ProductCategory[] }> {
+  const [products, categories] = await Promise.all([
+    getAllProducts(),
+    getProductCategories(),
+  ]);
+  return {
+    products: Array.isArray(products) ? products : [],
+    categories: Array.isArray(categories) ? categories : [],
+  };
 }
 
 function CategoryPill({ icon, label, active = false, onClick }: CategoryPillProps & { onClick: () => void }) {
@@ -184,36 +182,67 @@ function Field({ label, children }: FieldProps) {
 }
 
 export function PaymentSection() {
-  const [activeCategory, setActiveCategory] = useState<string>(billerCategories[0]?.label ?? "Utilities");
+  const [activeCategory, setActiveCategory] = useState<string>("");
   const [selectedBillerId, setSelectedBillerId] = useState<string>("");
   const [formValues, setFormValues] = useState<Record<string, string>>({});
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["products", "all"],
-    queryFn: fetchProducts,
+    queryKey: ["products", "all", "categories", "all"],
+    queryFn: fetchProductsAndCategories,
   });
 
+  const categoryTabs: CategoryTab[] = useMemo(() => {
+    const fromBackend = (data?.categories ?? [])
+      .filter((category) => category.active !== false)
+      .map((category) => {
+        const key = String(category.id ?? category.name ?? "").trim();
+        const label = String(category.displayName ?? category.name ?? "Category");
+        const icon = String(category.emoji ?? "").trim() || iconByCategory(label);
+        return { key, label, icon };
+      })
+      .filter((category) => category.key.length > 0);
+
+    if (fromBackend.length > 0) return fromBackend;
+    return [{ key: "utilities", label: "Utilities", icon: iconByCategory("Utilities") }];
+  }, [data?.categories]);
+
   const displayBillers: BillerCardProps[] = useMemo(() =>
-    (data ?? [])
+    (data?.products ?? [])
       .filter((product) => product.status === "ACTIVE" && !product.deleted)
       .map((product) => {
-        const category = inferCategory(product.name, product.code);
+        const productName = String(product.name ?? "Unnamed Product");
+        const productCode = String(product.code ?? "");
+        const backendCategory = product.category;
+
+        const inferred = inferCategory(productName, productCode);
+        const categoryKey = String(backendCategory?.id ?? backendCategory?.name ?? inferred.key);
+        const categoryLabel = String(backendCategory?.displayName ?? backendCategory?.name ?? inferred.label);
+        const categoryIcon = String(backendCategory?.emoji ?? "").trim() || iconByCategory(categoryLabel);
+
         return {
-          id: `api-${product.id}`,
-          icon: iconByCategory(category),
-          name: product.name,
-          category,
-          fields: fieldsByProduct(product.name, category),
+          id: `api-${String(product.id ?? product.code ?? Math.random())}`,
+          icon: categoryIcon,
+          name: productName,
+          categoryKey,
+          categoryLabel,
+          fields: fieldsByProduct(productName, categoryLabel),
           minimumPurchaseAmount: Number(product.minimumPurchaseAmount ?? 0),
         };
       }),
-    [data],
+    [data?.products],
   );
 
-  const filteredBillers = useMemo(
-    () => displayBillers.filter((biller) => biller.category === activeCategory && !biller.isDashed),
-    [activeCategory, displayBillers],
-  );
+  useEffect(() => {
+    if (!categoryTabs.length) return;
+    if (!activeCategory || !categoryTabs.some((category) => category.key === activeCategory)) {
+      setActiveCategory(categoryTabs[0].key);
+    }
+  }, [categoryTabs, activeCategory]);
+
+  const filteredBillers = useMemo(() => {
+    if (!activeCategory) return [];
+    return displayBillers.filter((biller) => biller.categoryKey === activeCategory && !biller.isDashed);
+  }, [activeCategory, displayBillers]);
 
   const selectedBiller = useMemo(
     () => filteredBillers.find((biller) => biller.id === selectedBillerId) ?? filteredBillers[0] ?? null,
@@ -272,13 +301,13 @@ export function PaymentSection() {
           <div>
             <h2 className="type-section-title">Select Biller to Pay</h2>
             <div className="categories-row">
-              {billerCategories.map((category) => (
+              {categoryTabs.map((category) => (
                 <CategoryPill
-                  key={category.label}
+                  key={category.key}
                   icon={category.icon}
                   label={category.label}
-                  active={category.label === activeCategory}
-                  onClick={() => setActiveCategory(category.label)}
+                  active={category.key === activeCategory}
+                  onClick={() => setActiveCategory(category.key)}
                 />
               ))}
             </div>
@@ -296,7 +325,10 @@ export function PaymentSection() {
             {!isLoading && filteredBillers.length === 0 ? (
               <div className="billers-empty-state" role="status" aria-live="polite">
                 <span className="material-symbols-outlined">inventory_2</span>
-                <p>No active products under {activeCategory}.</p>
+                <p>
+                  No active products under{" "}
+                  {categoryTabs.find((category) => category.key === activeCategory)?.label ?? "this category"}.
+                </p>
               </div>
             ) : (
               filteredBillers.map((biller) => (

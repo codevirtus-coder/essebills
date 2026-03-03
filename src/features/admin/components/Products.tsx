@@ -1,11 +1,17 @@
 import React, { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import type { AdminCountryDto, AdminCurrencyDto, AdminProductDto } from "../dto/admin-api.dto";
+import type {
+  AdminCountryDto,
+  AdminCurrencyDto,
+  AdminProductCategoryDto,
+  AdminProductDto,
+} from "../dto/admin-api.dto";
 import {
   createProduct,
   deleteProduct,
   getAllCountries,
   getAllCurrencies,
+  getAllProductCategories,
   getAllProducts,
   updateProduct,
 } from "../services";
@@ -65,6 +71,17 @@ const Products: React.FC = () => {
       ),
     },
     {
+      key: 'category',
+      header: 'Category',
+      render: (product) => (
+        <span className="text-xs font-semibold text-neutral-text">
+          {String((product.category as { displayName?: string; name?: string } | undefined)?.displayName
+            ?? (product.category as { name?: string } | undefined)?.name
+            ?? "-")}
+        </span>
+      ),
+    },
+    {
       key: 'actions',
       header: 'Actions',
       align: 'right',
@@ -91,6 +108,7 @@ const Products: React.FC = () => {
   const [products, setProducts] = useState<AdminProductDto[]>([]);
   const [countries, setCountries] = useState<AdminCountryDto[]>([]);
   const [currencies, setCurrencies] = useState<AdminCurrencyDto[]>([]);
+  const [productCategories, setProductCategories] = useState<AdminProductCategoryDto[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -98,6 +116,7 @@ const Products: React.FC = () => {
   const [code, setCode] = useState("");
   const [countryCode, setCountryCode] = useState("");
   const [defaultCurrencyCode, setDefaultCurrencyCode] = useState("");
+  const [categoryId, setCategoryId] = useState("");
   const [minimumDisablingBalance, setMinimumDisablingBalance] = useState("");
   const [minimumPurchaseAmount, setMinimumPurchaseAmount] = useState("");
   const [description, setDescription] = useState("");
@@ -120,15 +139,18 @@ const Products: React.FC = () => {
 
   const loadLookups = async () => {
     try {
-      const [countriesRes, currenciesRes] = await Promise.all([
+      const [countriesRes, currenciesRes, categoriesRes] = await Promise.all([
         getAllCountries(),
         getAllCurrencies(),
+        getAllProductCategories(),
       ]);
       setCountries(Array.isArray(countriesRes) ? countriesRes : []);
       setCurrencies(Array.isArray(currenciesRes) ? currenciesRes : []);
+      setProductCategories(Array.isArray(categoriesRes) ? categoriesRes : []);
     } catch {
       setCountries([]);
       setCurrencies([]);
+      setProductCategories([]);
     }
   };
 
@@ -153,6 +175,7 @@ const Products: React.FC = () => {
     setCode("");
     setCountryCode("");
     setDefaultCurrencyCode("");
+    setCategoryId("");
     setMinimumDisablingBalance("");
     setMinimumPurchaseAmount("");
     setDescription("");
@@ -173,6 +196,7 @@ const Products: React.FC = () => {
       !trimmedCode ||
       !countryCode ||
       !defaultCurrencyCode ||
+      !categoryId ||
       !description.trim() ||
       !returnUrl.trim() ||
       !productLogoFileName.trim() ||
@@ -190,6 +214,7 @@ const Products: React.FC = () => {
         code: trimmedCode,
         countryCode,
         defaultCurrencyCode,
+        category: { id: Number(categoryId) },
         minimumDisablingBalance: Number(minimumDisablingBalance),
         minimumPurchaseAmount: Number(minimumPurchaseAmount),
         description: description.trim(),
@@ -229,12 +254,17 @@ const Products: React.FC = () => {
       (typeof product.defaultCurrency === "object" && product.defaultCurrency !== null
         ? String((product.defaultCurrency as { code?: string }).code ?? "")
         : "");
+    const categoryValue =
+      typeof product.category === "object" && product.category !== null
+        ? String((product.category as { id?: string | number }).id ?? "")
+        : "";
 
     setEditingProductId(product.id ?? null);
     setName(String(product.name ?? ""));
     setCode(String(product.code ?? ""));
     setCountryCode(String(countryValue));
     setDefaultCurrencyCode(String(currencyValue));
+    setCategoryId(String(categoryValue));
     setMinimumDisablingBalance(
       product.minimumDisablingBalance !== undefined && product.minimumDisablingBalance !== null
         ? String(product.minimumDisablingBalance)
@@ -344,6 +374,24 @@ const Products: React.FC = () => {
               {currencies.map((currency) => (
                 <option key={String(currency.id ?? currency.code)} value={String(currency.code ?? "")}>
                   {String(currency.name ?? currency.code ?? "Unknown")}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="block space-y-2">
+            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-text">
+              Product Category
+            </span>
+            <select
+              value={categoryId}
+              onChange={(event) => setCategoryId(event.target.value)}
+              className="w-full bg-[#f8fafc] border border-neutral-light rounded-xl px-4 py-3 text-sm font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
+            >
+              <option value="">Select category</option>
+              {productCategories.map((category) => (
+                <option key={String(category.id ?? category.name)} value={String(category.id ?? "")}>
+                  {String(category.displayName ?? category.name ?? "Unknown")}
                 </option>
               ))}
             </select>

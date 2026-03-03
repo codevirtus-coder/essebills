@@ -38,6 +38,16 @@ export type AdminProductDto = {
   minimumPurchaseAmount?: number
   productLogoFileName?: string
   returnUrl?: string
+  category?: AdminProductCategoryDto
+} & Record<string, unknown>
+
+export type AdminProductCategoryDto = {
+  id?: number | string
+  name?: string
+  displayName?: string
+  emoji?: string
+  sortOrder?: number
+  active?: boolean
 } & Record<string, unknown>
 
 export type AdminCountryDto = {

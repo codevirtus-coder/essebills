@@ -163,6 +163,8 @@ export function AdminDashboardPage() {
         return <AdminParametersPage module="holidays" />;
       case "parametersBanks":
         return <AdminParametersPage module="banks" />;
+      case "parametersProductCategories":
+        return <AdminParametersPage module="productCategories" />;
       case "econetBundlePlanTypes":
         return <AdminEconetPage provider="econet" module="bundlePlanTypes" />;
       case "econetDataBundleTypes":

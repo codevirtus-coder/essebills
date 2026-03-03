@@ -50,6 +50,17 @@
   border-color: #dedce8;
 }
 
+.data-table tbody > tr {
+  border-color: #dedce8 !important;
+}
+
+.data-table tbody > tr:focus,
+.data-table tbody > tr:focus-within,
+.data-table tbody > tr > td:focus-within {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 .bg-neutral-light {
   background-color: #eceaf3;
 }

@@ -7,6 +7,30 @@ export async function getAllRongekaAccounts() {
   return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.rongekaAccounts.all)
 }
 
+export async function getAllProductCategories() {
+  return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.productCategories.all)
+}
+
+export async function createProductCategory(payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.productCategories.root, {
+    method: 'POST',
+    body: payload,
+  })
+}
+
+export async function updateProductCategory(id: string | number, payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.productCategories.byId(id), {
+    method: 'PUT',
+    body: payload,
+  })
+}
+
+export async function deleteProductCategory(id: string | number) {
+  return adminVoidFetch(ADMIN_ENDPOINTS.productCategories.byId(id), {
+    method: 'DELETE',
+  })
+}
+
 export async function createRongekaAccount(payload: UnknownRecord) {
   return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.rongekaAccounts.root, {
     method: 'POST',

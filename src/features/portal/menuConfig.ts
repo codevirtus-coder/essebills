@@ -56,6 +56,7 @@ export const ADMIN_MENU: MenuSection[] = [
           { id: 'parametersCountries', label: 'Countries', icon: 'subdirectory_arrow_right' },
           { id: 'parametersHolidays', label: 'Holidays', icon: 'subdirectory_arrow_right' },
           { id: 'parametersBanks', label: 'Banks', icon: 'subdirectory_arrow_right' },
+          { id: 'parametersProductCategories', label: 'Product Categories', icon: 'subdirectory_arrow_right' },
         ],
       },
       {

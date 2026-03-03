@@ -139,6 +139,7 @@ export const ADMIN_MENU_SECTIONS: AdminMenuSection[] = [
           { id: 'parametersCountries', label: 'Countries', icon: 'public' },
           { id: 'parametersHolidays', label: 'Holidays', icon: 'event' },
           { id: 'parametersBanks', label: 'Banks', icon: 'account_balance' },
+          { id: 'parametersProductCategories', label: 'Product Categories', icon: 'category' },
         ],
       },
       {

@@ -25,6 +25,12 @@ export const ADMIN_ENDPOINTS = {
     byId: (productId: string | number) => `/v1/products/${productId}`,
     vendorBalance: '/v1/products/vendor-balance',
   },
+  productCategories: {
+    root: '/v1/product-categories',
+    all: '/v1/product-categories/all',
+    allActive: '/v1/product-categories/all/active',
+    byId: (id: string | number) => `/v1/product-categories/${id}`,
+  },
   countries: {
     root: '/v1/countries',
     all: '/v1/countries/all',

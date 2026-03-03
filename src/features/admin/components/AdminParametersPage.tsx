@@ -7,27 +7,31 @@ import {
   createCountry,
   createCurrency,
   createHoliday,
+  createProductCategory,
   deleteBank,
   deleteCountry,
   deleteCurrency,
   deleteHoliday,
+  deleteProductCategory,
   getAllBanks,
   getAllHolidays,
   getAllParameterCountries,
   getAllParameterCurrencies,
+  getAllProductCategories,
   updateBank,
   updateCountry,
   updateCurrency,
   updateHoliday,
+  updateProductCategory,
 } from '../services'
 
-type ParameterModule = 'currencies' | 'countries' | 'holidays' | 'banks'
+type ParameterModule = 'currencies' | 'countries' | 'holidays' | 'banks' | 'productCategories'
 type UnknownRecord = Record<string, unknown>
 
 type FieldConfig = {
   key: string
   label: string
-  type?: 'text' | 'number' | 'date'
+  type?: 'text' | 'number' | 'date' | 'checkbox'
 }
 
 type ColumnConfig = {
@@ -161,6 +165,40 @@ const MODULE_CONFIGS: Record<ParameterModule, ModuleConfig> = {
     ],
     detailsTitle: 'Registry Details',
   },
+  productCategories: {
+    title: 'Product Categories',
+    subtitle: 'Product Categories List',
+    icon: 'category',
+    listEndpoint: '/v1/product-categories/all',
+    createEndpoint: '/v1/product-categories',
+    list: getAllProductCategories,
+    create: createProductCategory,
+    fields: [
+      { key: 'name', label: 'Name' },
+      { key: 'displayName', label: 'Display Name' },
+      { key: 'emoji', label: 'Icon Name (Lucide)' },
+      { key: 'sortOrder', label: 'Sort Order', type: 'number' },
+      { key: 'active', label: 'Active', type: 'checkbox' },
+    ],
+    columns: [
+      { key: 'name', label: 'Name' },
+      { key: 'displayName', label: 'Display Name' },
+      { key: 'createdBy', label: 'Created By' },
+      { key: 'createdDate', label: 'Created On' },
+    ],
+    detailFields: [
+      { key: 'name', label: 'Name' },
+      { key: 'displayName', label: 'Display Name' },
+      { key: 'emoji', label: 'Emoji' },
+      { key: 'sortOrder', label: 'Sort Order' },
+      { key: 'active', label: 'Active' },
+      { key: 'createdBy', label: 'Created By' },
+      { key: 'createdDate', label: 'Created Date' },
+      { key: 'lastModifiedBy', label: 'Last Modified By' },
+      { key: 'lastModifiedDate', label: 'Last Modified Date' },
+    ],
+    detailsTitle: 'Product Category Details',
+  },
 }
 
 interface AdminParametersPageProps {
@@ -173,16 +211,16 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
   const [isLoading, setIsLoading] = React.useState(false)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
-  const [form, setForm] = useState<Record<string, string>>({})
+  const [form, setForm] = useState<Record<string, string | boolean>>({})
   const [isEditOpen, setIsEditOpen] = useState(false)
-  const [editForm, setEditForm] = useState<Record<string, string>>({})
+  const [editForm, setEditForm] = useState<Record<string, string | boolean>>({})
   const [isUpdating, setIsUpdating] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null)
   const canEdit =
-    module === 'currencies' || module === 'countries' || module === 'banks' || module === 'holidays'
+    module === 'currencies' || module === 'countries' || module === 'banks' || module === 'holidays' || module === 'productCategories'
   const canDelete =
-    module === 'currencies' || module === 'countries' || module === 'banks' || module === 'holidays'
+    module === 'currencies' || module === 'countries' || module === 'banks' || module === 'holidays' || module === 'productCategories'
   const recordLabel =
     module === 'currencies'
       ? 'Currency'
@@ -190,7 +228,9 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
         ? 'Country'
         : module === 'holidays'
           ? 'Holiday'
-          : 'Bank'
+          : module === 'productCategories'
+            ? 'Product Category'
+            : 'Bank'
 
   const getRowId = React.useCallback(
     (row: UnknownRecord, index: number) => String(row.id ?? row.code ?? row.name ?? index),
@@ -229,6 +269,7 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
     event.preventDefault()
 
     for (const field of config.fields) {
+      if (field.type === 'checkbox') continue
       if (!String(form[field.key] ?? '').trim()) {
         toast.error(`${field.label} is required`)
         return
@@ -237,7 +278,17 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
 
     try {
       setIsSubmitting(true)
-      await config.create(form)
+      if (module === 'productCategories') {
+        await createProductCategory({
+          name: String(form.name ?? ''),
+          displayName: String(form.displayName ?? ''),
+          emoji: String(form.emoji ?? ''),
+          sortOrder: Number(form.sortOrder ?? 0),
+          active: Boolean(form.active),
+        })
+      } else {
+        await config.create(form as UnknownRecord)
+      }
       toast.success(`${config.title} entry created`)
       setIsCreateOpen(false)
       setForm({})
@@ -251,9 +302,13 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
 
   const openEditModal = () => {
     if (!selectedRow) return
-    const nextForm: Record<string, string> = {}
+    const nextForm: Record<string, string | boolean> = {}
     config.fields.forEach((field) => {
-      nextForm[field.key] = String(selectedRow[field.key] ?? '')
+      if (field.type === 'checkbox') {
+        nextForm[field.key] = Boolean(selectedRow[field.key])
+      } else {
+        nextForm[field.key] = String(selectedRow[field.key] ?? '')
+      }
     })
     setEditForm(nextForm)
     setIsEditOpen(true)
@@ -264,6 +319,7 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
     if (!selectedRow || module !== 'currencies') return
 
     for (const field of config.fields) {
+      if (field.type === 'checkbox') continue
       if (!String(editForm[field.key] ?? '').trim()) {
         toast.error(`${field.label} is required`)
         return
@@ -343,6 +399,14 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
         })
       } else if (module === 'holidays') {
         await updateHoliday(id, String(editForm.date ?? ''))
+      } else if (module === 'productCategories') {
+        await updateProductCategory(id, {
+          name: String(editForm.name ?? ''),
+          displayName: String(editForm.displayName ?? ''),
+          emoji: String(editForm.emoji ?? ''),
+          sortOrder: Number(editForm.sortOrder ?? 0),
+          active: Boolean(editForm.active),
+        })
       }
 
       toast.success(`${recordLabel} updated`)
@@ -407,6 +471,8 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
             await deleteBank(id)
           } else if (module === 'holidays') {
             await deleteHoliday(id)
+          } else if (module === 'productCategories') {
+            await deleteProductCategory(id)
           }
           toast.success(`${recordLabel} deleted`)
           setSelectedRowId(null)
@@ -427,6 +493,8 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
     if (module === 'banks') return `/v1/banks/${String(selectedRow.id ?? '')}`
     if (module === 'holidays')
       return `/v1/holidays/${String(selectedRow.id ?? '')}?date=${String(selectedRow.date ?? '')}`
+    if (module === 'productCategories')
+      return `/v1/product-categories/${String(selectedRow.id ?? '')}`
     return ''
   })()
 
@@ -453,9 +521,6 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
           >
             Refresh
           </button>
-          <span className="ml-auto text-xs text-neutral-text">
-            List: <code>{config.listEndpoint}</code>
-          </span>
         </div>
 
         {!selectedRow ? (
@@ -568,14 +633,27 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
               {config.fields.map((field) => (
                 <label key={field.key} className="block">
                   <span className="text-xs font-semibold text-neutral-text">{field.label}</span>
-                  <input
-                    type={field.type ?? 'text'}
-                    value={form[field.key] ?? ''}
-                    onChange={(event) =>
-                      setForm((prev) => ({ ...prev, [field.key]: event.target.value }))
-                    }
-                    className="mt-1 w-full h-11 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  />
+                  {field.type === 'checkbox' ? (
+                    <label className="mt-2 inline-flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(form[field.key])}
+                        onChange={(event) =>
+                          setForm((prev) => ({ ...prev, [field.key]: event.target.checked }))
+                        }
+                      />
+                      <span className="text-sm text-dark-text">Enabled</span>
+                    </label>
+                  ) : (
+                    <input
+                      type={field.type ?? 'text'}
+                      value={String(form[field.key] ?? '')}
+                      onChange={(event) =>
+                        setForm((prev) => ({ ...prev, [field.key]: event.target.value }))
+                      }
+                      className="mt-1 w-full h-11 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                  )}
                 </label>
               ))}
               <div className="flex items-center justify-end gap-2 pt-2">
@@ -618,14 +696,27 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
               {config.fields.map((field) => (
                 <label key={`edit-${field.key}`} className="block">
                   <span className="text-xs font-semibold text-neutral-text">{field.label}</span>
-                  <input
-                    type={field.type ?? 'text'}
-                    value={editForm[field.key] ?? ''}
-                    onChange={(event) =>
-                      setEditForm((prev) => ({ ...prev, [field.key]: event.target.value }))
-                    }
-                    className="mt-1 w-full h-11 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  />
+                  {field.type === 'checkbox' ? (
+                    <label className="mt-2 inline-flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(editForm[field.key])}
+                        onChange={(event) =>
+                          setEditForm((prev) => ({ ...prev, [field.key]: event.target.checked }))
+                        }
+                      />
+                      <span className="text-sm text-dark-text">Enabled</span>
+                    </label>
+                  ) : (
+                    <input
+                      type={field.type ?? 'text'}
+                      value={String(editForm[field.key] ?? '')}
+                      onChange={(event) =>
+                        setEditForm((prev) => ({ ...prev, [field.key]: event.target.value }))
+                      }
+                      className="mt-1 w-full h-11 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                  )}
                 </label>
               ))}
               <div className="flex items-center justify-end gap-2 pt-2">

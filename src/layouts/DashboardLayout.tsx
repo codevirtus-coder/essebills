@@ -1,17 +1,23 @@
-import { useState } from 'react'
-import { Outlet, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { DashboardHeader } from './DashboardHeader'
-import { DashboardSidebar } from './DashboardSidebar'
-import { useCurrentUser } from '../features/auth/hooks/useCurrentUser'
+import { useState } from "react";
+import {
+  Outlet,
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
+import { DashboardHeader } from "./DashboardHeader";
+import { DashboardSidebar } from "./DashboardSidebar";
+import { useCurrentUser } from "../features/auth/hooks/useCurrentUser";
 
 export function DashboardLayout() {
-  const { group } = useCurrentUser()
-  const navigate = useNavigate()
-  const location = useLocation()
-  const { tab: urlTab } = useParams()
-  const [searchParams] = useSearchParams()
+  const { group } = useCurrentUser();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { tab: urlTab } = useParams();
+  const [searchParams] = useSearchParams();
 
-  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   // If no group yet (loading), show a basic loading state
   if (!group) {
@@ -22,24 +28,24 @@ export function DashboardLayout() {
           <p className="text-neutral-text">Loading...</p>
         </div>
       </div>
-    )
+    );
   }
 
   // Determine active tab: URL param takes precedence, then query param
-  const activeTab = urlTab || searchParams.get('tab') || 'dashboard'
+  const activeTab = urlTab || searchParams.get("tab") || "dashboard";
 
   // Base portal path (e.g. /portal-admin) derived from current pathname
-  const basePath = '/' + location.pathname.split('/').filter(Boolean)[0]
+  const basePath = "/" + location.pathname.split("/").filter(Boolean)[0];
 
   const handleTabChange = (tab: string) => {
     // Navigate to absolute base path with tab as query param to avoid stale URL param conflicts
-    navigate(`${basePath}?tab=${tab}`, { replace: true })
-    setIsMobileNavOpen(false)
-  }
+    navigate(`${basePath}?tab=${tab}`, { replace: true });
+    setIsMobileNavOpen(false);
+  };
 
   const handleToggleMobileNav = () => {
-    setIsMobileNavOpen((prev) => !prev)
-  }
+    setIsMobileNavOpen((prev) => !prev);
+  };
 
   return (
     <div className="flex h-screen overflow-hidden bg-background-light dark:bg-background-dark">
@@ -54,7 +60,7 @@ export function DashboardLayout() {
 
       {/* Mobile Navigation Overlay */}
       {isMobileNavOpen && (
-        <div className="fixed inset-0 z-[120] md:hidden">
+        <div className="fixed inset-0 z-120 md:hidden">
           <button
             type="button"
             onClick={() => setIsMobileNavOpen(false)}
@@ -93,11 +99,11 @@ export function DashboardLayout() {
           onToggleMobileNav={handleToggleMobileNav}
           isMobileNavOpen={isMobileNavOpen}
         />
-        
+
         <main className="flex-1 overflow-y-auto">
           <Outlet />
         </main>
       </div>
     </div>
-  )
+  );
 }

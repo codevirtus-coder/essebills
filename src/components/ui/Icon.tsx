@@ -12,6 +12,7 @@ import {
   Heart, Globe, Droplets, Zap, Headphones,
   type LucideIcon, type LucideProps
 } from 'lucide-react'
+import * as LucideIcons from 'lucide-react'
 
 const ICON_MAP: Record<string, LucideIcon> = {
   // Navigation / layout
@@ -135,8 +136,39 @@ interface IconProps extends Omit<LucideProps, 'ref'> {
   name: string
 }
 
+function normalizeToPascalCase(value: string): string {
+  return value
+    .trim()
+    .replace(/[_\s]+/g, '-')
+    .replace(/-+/g, '-')
+    .split('-')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join('')
+}
+
+function resolveDynamicLucideIcon(name: string): LucideIcon | null {
+  if (!name) return null
+
+  const pascal = normalizeToPascalCase(name)
+  const variants = [
+    pascal,
+    pascal.endsWith('Icon') ? pascal : `${pascal}Icon`,
+    name.trim(),
+  ]
+
+  for (const key of variants) {
+    const candidate = (LucideIcons as Record<string, unknown>)[key]
+    if (candidate && (typeof candidate === 'function' || typeof candidate === 'object')) {
+      return candidate as LucideIcon
+    }
+  }
+
+  return null
+}
+
 export function Icon({ name, size = 18, ...props }: IconProps) {
-  const Component = ICON_MAP[name]
+  const Component = ICON_MAP[name] ?? resolveDynamicLucideIcon(name)
   if (!Component) return null
   return <Component size={size} {...props} />
 }

@@ -2,11 +2,13 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { NavLink } from "react-router-dom";
 import { Icon } from "../../../components/ui/Icon";
-import { apiFetch } from "../../../api/apiClient";
 import { ROUTE_PATHS } from "../../../router/paths";
+import { getAllProducts, getProductCategories } from "../../../services/products.service";
+import type { Product, ProductCategory } from "../../../types/products";
 
 type Category = {
-  id: string;
+  key: string;
+  label: string;
   icon: string;
 };
 
@@ -14,41 +16,20 @@ type Biller = {
   id: string;
   name: string;
   icon: string;
-  category: string;
+  categoryKey: string;
+  categoryLabel: string;
 };
-
-type ApiProduct = {
-  id: number;
-  name: string;
-  code: string;
-  status: string;
-  deleted?: boolean;
-  minimumPurchaseAmount?: string;
-};
-
-const categories: Category[] = [
-  { id: "All", icon: "table_chart" },
-  { id: "Utilities", icon: "receipt_long" },
-  { id: "Airtime", icon: "network_cell" },
-  { id: "Internet", icon: "network_cell" },
-  { id: "Education", icon: "school" },
-  { id: "Insurance", icon: "verified_user" },
-  { id: "Fuel", icon: "inventory_2" },
-  { id: "Donations", icon: "payments" },
-  { id: "Lottery", icon: "confirmation_number" },
-];
-
-function inferCategory(name: string, code: string): string {
+function inferCategory(name: string, code: string): { key: string; label: string } {
   const value = `${name} ${code}`.toLowerCase();
-  if (/(airtime|recharge|evd|topup)/.test(value)) return "Airtime";
-  if (/(bundle|data)/.test(value)) return "Internet";
+  if (/(airtime|recharge|evd|topup)/.test(value)) return { key: "airtime", label: "Airtime" };
+  if (/(bundle|data)/.test(value)) return { key: "internet", label: "Internet" };
   if (/(school|tuition|fees|university|college|education)/.test(value))
-    return "Education";
-  if (/(insurance|life|medical|health)/.test(value)) return "Insurance";
-  if (/(fuel|petrol|diesel|gas)/.test(value)) return "Fuel";
-  if (/(donat)/.test(value)) return "Donations";
-  if (/(lottery|loto|jackpot)/.test(value)) return "Lottery";
-  return "Utilities";
+    return { key: "education", label: "Education" };
+  if (/(insurance|life|medical|health)/.test(value)) return { key: "insurance", label: "Insurance" };
+  if (/(fuel|petrol|diesel|gas)/.test(value)) return { key: "fuel", label: "Fuel" };
+  if (/(donat)/.test(value)) return { key: "donations", label: "Donations" };
+  if (/(lottery|loto|jackpot)/.test(value)) return { key: "lottery", label: "Lottery" };
+  return { key: "utilities", label: "Utilities" };
 }
 
 function iconByCategory(category: string): string {
@@ -96,50 +77,77 @@ function iconByProduct(name: string, category: string): string {
   return iconByCategory(category);
 }
 
-async function fetchProducts(): Promise<ApiProduct[]> {
-  try {
-    return await apiFetch<ApiProduct[]>("/v1/products/all");
-  } catch {
-    return [];
-  }
+async function fetchProductsAndCategories(): Promise<{ products: Product[]; categories: ProductCategory[] }> {
+  const [products, categories] = await Promise.all([
+    getAllProducts(),
+    getProductCategories(),
+  ]);
+  return {
+    products: Array.isArray(products) ? products : [],
+    categories: Array.isArray(categories) ? categories : [],
+  };
 }
 
 export function ServicesPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState("All");
+  const [activeCategory, setActiveCategory] = useState("all");
   const [isRequestingBiller, setIsRequestingBiller] = useState(false);
   const [billerRequested, setBillerRequested] = useState(false);
 
   const {
-    data: products,
+    data,
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ["products", "all", "services-page"],
-    queryFn: fetchProducts,
+    queryKey: ["products", "all", "categories", "all", "services-page"],
+    queryFn: fetchProductsAndCategories,
   });
+
+  const categories = useMemo<Category[]>(() => {
+    const backendCategories = (data?.categories ?? [])
+      .filter((category) => category.active !== false)
+      .map((category) => {
+        const key = String(category.id ?? category.name ?? "").trim();
+        const label = String(category.displayName ?? category.name ?? "Category");
+        const icon = String(category.emoji ?? "").trim() || iconByCategory(label);
+        return { key, label, icon };
+      })
+      .filter((category) => category.key.length > 0);
+
+    return [{ key: "all", label: "All", icon: "table_chart" }, ...backendCategories];
+  }, [data?.categories]);
 
   const billers = useMemo<Biller[]>(
     () =>
-      (products ?? [])
+      (data?.products ?? [])
         .filter((product) => product.status === "ACTIVE" && !product.deleted)
         .map((product) => {
-          const category = inferCategory(product.name, product.code);
+          const productName = String(product.name ?? "Unnamed Product");
+          const productCode = String(product.code ?? "");
+          const backendCategory = product.category;
+          const inferred = inferCategory(productName, productCode);
+          const categoryKey = String(
+            backendCategory?.id ?? backendCategory?.name ?? inferred.key,
+          );
+          const categoryLabel = String(
+            backendCategory?.displayName ?? backendCategory?.name ?? inferred.label,
+          );
           return {
-            id: `api-${product.id}`,
-            name: product.name,
-            category,
-            icon: iconByProduct(product.name, category),
+            id: `api-${String(product.id ?? product.code ?? Math.random())}`,
+            name: productName,
+            categoryKey,
+            categoryLabel,
+            icon: String(backendCategory?.emoji ?? "").trim() || iconByProduct(productName, categoryLabel),
           };
         }),
-    [products],
+    [data?.products],
   );
 
   const filteredBillers = useMemo(
     () =>
       billers.filter((biller) => {
         const matchesCategory =
-          activeCategory === "All" || biller.category === activeCategory;
+          activeCategory === "all" || biller.categoryKey === activeCategory;
         const matchesSearch = biller.name
           .toLowerCase()
           .includes(searchQuery.toLowerCase());
@@ -208,13 +216,13 @@ export function ServicesPage() {
             <div className="services-hide-scrollbar flex justify-center items-center gap-3 overflow-x-auto pb-6">
               {categories.map((cat) => (
                 <button
-                  key={cat.id}
+                  key={cat.key}
                   type="button"
-                  onClick={() => setActiveCategory(cat.id)}
-                  className={`category-pill mt-8 whitespace-nowrap ${activeCategory === cat.id ? "active" : ""}`}
+                  onClick={() => setActiveCategory(cat.key)}
+                  className={`category-pill mt-8 whitespace-nowrap ${activeCategory === cat.key ? "active" : ""}`}
                 >
                   <Icon name={cat.icon} size={16} />
-                  {cat.id}
+                  {cat.label}
                 </button>
               ))}
             </div>
@@ -241,7 +249,7 @@ export function ServicesPage() {
                     </div>
                     <h3 className="services-market-title">{biller.name}</h3>
                     <p className="services-market-category">
-                      {biller.category}
+                      {biller.categoryLabel}
                     </p>
                     <button
                       type="button"

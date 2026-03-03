@@ -137,7 +137,7 @@ export function DataTable<T>({
   };
 
   return (
-    <div className={`bg-white border border-neutral-light overflow-hidden rounded-lg ${className}`}>
+    <div className={`data-table bg-white border border-neutral-light overflow-hidden rounded-lg ${className}`}>
       {header && (
         <div className="border-b border-neutral-light dark:border-white/5">
           {header}
@@ -214,7 +214,7 @@ export function DataTable<T>({
                 <tr
                   key={rowKey(row)}
                   role="row"
-                  className="hover:bg-neutral-light/10 dark:hover:bg-white/5 transition-colors group"
+                  className="hover:bg-neutral-light/10 dark:hover:bg-white/5 transition-colors group focus-within:outline-none"
                 >
                   {columns.map((col) => (
                     <td key={col.key} role="cell" className={`px-5 py-3.5 ${alignClass(col.align)}`}>
