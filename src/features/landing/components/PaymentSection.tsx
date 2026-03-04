@@ -1,8 +1,13 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
 import { Icon } from "../../../components/ui/Icon";
+import { useScrollDirection } from "../../../hooks/useScrollDirection";
 import { ROUTE_PATHS } from "../../../router/paths";
-import { getAllProducts, getProductCategories } from "../../../services/products.service";
+import {
+  getAllProducts,
+  getProductCategories,
+} from "../../../services/products.service";
 import type { Product, ProductCategory } from "../../../types/products";
 
 type CategoryPillProps = {
@@ -40,20 +45,45 @@ type FieldProps = {
 };
 
 const DEFAULT_FIELDS: BillerCardProps["fields"] = [
-  { key: "accountNumber", label: "Account / Card Number", placeholder: "Enter biller account", type: "text" },
-  { key: "mobileNumber", label: "Mobile Number", placeholder: "77*******", type: "tel" },
-  { key: "amount", label: "Amount", placeholder: "0.00", type: "number", prefix: "$" },
+  {
+    key: "accountNumber",
+    label: "Account / Card Number",
+    placeholder: "Enter biller account",
+    type: "text",
+  },
+  {
+    key: "mobileNumber",
+    label: "Mobile Number",
+    placeholder: "77*******",
+    type: "tel",
+  },
+  {
+    key: "amount",
+    label: "Amount",
+    placeholder: "0.00",
+    type: "number",
+    prefix: "$",
+  },
 ];
 
-function inferCategory(name: string, code: string): { key: string; label: string } {
+function inferCategory(
+  name: string,
+  code: string,
+): { key: string; label: string } {
   const value = `${name} ${code}`.toLowerCase();
-  if (/(airtime|recharge|evd|topup)/.test(value)) return { key: "airtime", label: "Airtime" };
-  if (/(bundle|data)/.test(value)) return { key: "internet", label: "Internet" };
-  if (/(school|tuition|fees|university|college|education)/.test(value)) return { key: "education", label: "Education" };
-  if (/(insurance|life|medical|health)/.test(value)) return { key: "insurance", label: "Insurance" };
-  if (/(fuel|petrol|diesel|gas)/.test(value)) return { key: "fuel", label: "Fuel" };
+  if (/(airtime|recharge|evd|topup)/.test(value))
+    return { key: "airtime", label: "Airtime" };
+  if (/(bundle|data)/.test(value))
+    return { key: "internet", label: "Internet" };
+  if (/(school|tuition|fees|university|college|education)/.test(value))
+    return { key: "education", label: "Education" };
+  if (/(insurance|life|medical|health)/.test(value))
+    return { key: "insurance", label: "Insurance" };
+  if (/(fuel|petrol|diesel|gas)/.test(value))
+    return { key: "fuel", label: "Fuel" };
   if (/(donat)/.test(value)) return { key: "donations", label: "Donations" };
-  if (/(lottery|loto|jackpot)/.test(value)) return { key: "lottery", label: "Lottery" };
+  if (/(lottery|loto|jackpot)/.test(value))
+    return { key: "lottery", label: "Lottery" };
   return { key: "utilities", label: "Utilities" };
 }
 
@@ -78,52 +108,133 @@ function iconByCategory(category: string): string {
   }
 }
 
-function fieldsByProduct(name: string, category: string): BillerCardProps["fields"] {
+function fieldsByProduct(
+  name: string,
+  category: string,
+): BillerCardProps["fields"] {
   const normalized = name.toLowerCase();
 
   if (/(zesa|zesco|token|electric)/.test(normalized)) {
     return [
-      { key: "accountNumber", label: "Meter Number", placeholder: "Enter meter number", type: "text" },
-      { key: "mobileNumber", label: "Mobile Number", placeholder: "77*******", type: "tel" },
-      { key: "amount", label: "Amount", placeholder: "0.00", type: "number", prefix: "$" },
+      {
+        key: "accountNumber",
+        label: "Meter Number",
+        placeholder: "Enter meter number",
+        type: "text",
+      },
+      {
+        key: "mobileNumber",
+        label: "Mobile Number",
+        placeholder: "77*******",
+        type: "tel",
+      },
+      {
+        key: "amount",
+        label: "Amount",
+        placeholder: "0.00",
+        type: "number",
+        prefix: "$",
+      },
     ];
   }
 
   if (/(airtime|bundle|data)/.test(normalized) || category === "Airtime") {
     return [
-      { key: "mobileNumber", label: "Mobile Number", placeholder: "77*******", type: "tel" },
-      { key: "amount", label: "Amount", placeholder: "0.00", type: "number", prefix: "$" },
+      {
+        key: "mobileNumber",
+        label: "Mobile Number",
+        placeholder: "77*******",
+        type: "tel",
+      },
+      {
+        key: "amount",
+        label: "Amount",
+        placeholder: "0.00",
+        type: "number",
+        prefix: "$",
+      },
     ];
   }
 
   if (/(dstv|gotv|tv)/.test(normalized)) {
     return [
-      { key: "accountNumber", label: "Smart Card Number", placeholder: "Enter smart card number", type: "text" },
-      { key: "mobileNumber", label: "Mobile Number", placeholder: "77*******", type: "tel" },
-      { key: "amount", label: "Amount", placeholder: "0.00", type: "number", prefix: "$" },
+      {
+        key: "accountNumber",
+        label: "Smart Card Number",
+        placeholder: "Enter smart card number",
+        type: "text",
+      },
+      {
+        key: "mobileNumber",
+        label: "Mobile Number",
+        placeholder: "77*******",
+        type: "tel",
+      },
+      {
+        key: "amount",
+        label: "Amount",
+        placeholder: "0.00",
+        type: "number",
+        prefix: "$",
+      },
     ];
   }
 
   if (category === "Education") {
     return [
-      { key: "accountNumber", label: "Student Number", placeholder: "Enter student number", type: "text" },
-      { key: "mobileNumber", label: "Mobile Number", placeholder: "77*******", type: "tel" },
-      { key: "amount", label: "Amount", placeholder: "0.00", type: "number", prefix: "$" },
+      {
+        key: "accountNumber",
+        label: "Student Number",
+        placeholder: "Enter student number",
+        type: "text",
+      },
+      {
+        key: "mobileNumber",
+        label: "Mobile Number",
+        placeholder: "77*******",
+        type: "tel",
+      },
+      {
+        key: "amount",
+        label: "Amount",
+        placeholder: "0.00",
+        type: "number",
+        prefix: "$",
+      },
     ];
   }
 
   if (category === "Insurance") {
     return [
-      { key: "accountNumber", label: "Policy Number", placeholder: "Enter policy number", type: "text" },
-      { key: "mobileNumber", label: "Mobile Number", placeholder: "77*******", type: "tel" },
-      { key: "amount", label: "Amount", placeholder: "0.00", type: "number", prefix: "$" },
+      {
+        key: "accountNumber",
+        label: "Policy Number",
+        placeholder: "Enter policy number",
+        type: "text",
+      },
+      {
+        key: "mobileNumber",
+        label: "Mobile Number",
+        placeholder: "77*******",
+        type: "tel",
+      },
+      {
+        key: "amount",
+        label: "Amount",
+        placeholder: "0.00",
+        type: "number",
+        prefix: "$",
+      },
     ];
   }
 
   return DEFAULT_FIELDS;
 }
 
-async function fetchProductsAndCategories(): Promise<{ products: Product[]; categories: ProductCategory[] }> {
+async function fetchProductsAndCategories(): Promise<{
+  products: Product[];
+  categories: ProductCategory[];
+}> {
   const [products, categories] = await Promise.all([
     getAllProducts(),
     getProductCategories(),
@@ -134,9 +245,18 @@ async function fetchProductsAndCategories(): Promise<{ products: Product[]; cate
   };
 }
 
-function CategoryPill({ icon, label, active = false, onClick }: CategoryPillProps & { onClick: () => void }) {
+function CategoryPill({
+  icon,
+  label,
+  active = false,
+  onClick,
+}: CategoryPillProps & { onClick: () => void }) {
   return (
-    <button type="button" className={`category-pill ${active ? "active" : ""}`} onClick={onClick}>
+    <button
+      type="button"
+      className={`category-pill ${active ? "active" : ""}`}
+      onClick={onClick}
+    >
       <Icon name={icon} className="icon-sm" />
       {label}
     </button>
@@ -182,6 +302,10 @@ function Field({ label, children }: FieldProps) {
 }
 
 export function PaymentSection() {
+  const headingWords = ["Select", "Biller", "to", "Pay"];
+  const scrollDirection = useScrollDirection();
+  const inViewVariant = scrollDirection === "down" ? "visible" : "visibleInstant";
+
   const [activeCategory, setActiveCategory] = useState<string>("");
   const [selectedBillerId, setSelectedBillerId] = useState<string>("");
   const [formValues, setFormValues] = useState<Record<string, string>>({});
@@ -196,56 +320,82 @@ export function PaymentSection() {
       .filter((category) => category.active !== false)
       .map((category) => {
         const key = String(category.id ?? category.name ?? "").trim();
-        const label = String(category.displayName ?? category.name ?? "Category");
-        const icon = String(category.emoji ?? "").trim() || iconByCategory(label);
+        const label = String(
+          category.displayName ?? category.name ?? "Category",
+        );
+        const icon =
+          String(category.emoji ?? "").trim() || iconByCategory(label);
         return { key, label, icon };
       })
       .filter((category) => category.key.length > 0);
 
     if (fromBackend.length > 0) return fromBackend;
-    return [{ key: "utilities", label: "Utilities", icon: iconByCategory("Utilities") }];
+    return [
+      {
+        key: "utilities",
+        label: "Utilities",
+        icon: iconByCategory("Utilities"),
+      },
+    ];
   }, [data?.categories]);
 
-  const displayBillers: BillerCardProps[] = useMemo(() =>
-    (data?.products ?? [])
-      .filter((product) => product.status === "ACTIVE" && !product.deleted)
-      .map((product) => {
-        const productName = String(product.name ?? "Unnamed Product");
-        const productCode = String(product.code ?? "");
-        const backendCategory = product.category;
+  const displayBillers: BillerCardProps[] = useMemo(
+    () =>
+      (data?.products ?? [])
+        .filter((product) => product.status === "ACTIVE" && !product.deleted)
+        .map((product) => {
+          const productName = String(product.name ?? "Unnamed Product");
+          const productCode = String(product.code ?? "");
+          const backendCategory = product.category;
 
-        const inferred = inferCategory(productName, productCode);
-        const categoryKey = String(backendCategory?.id ?? backendCategory?.name ?? inferred.key);
-        const categoryLabel = String(backendCategory?.displayName ?? backendCategory?.name ?? inferred.label);
-        const categoryIcon = String(backendCategory?.emoji ?? "").trim() || iconByCategory(categoryLabel);
+          const inferred = inferCategory(productName, productCode);
+          const categoryKey = String(
+            backendCategory?.id ?? backendCategory?.name ?? inferred.key,
+          );
+          const categoryLabel = String(
+            backendCategory?.displayName ??
+              backendCategory?.name ??
+              inferred.label,
+          );
+          const categoryIcon =
+            String(backendCategory?.emoji ?? "").trim() ||
+            iconByCategory(categoryLabel);
 
-        return {
-          id: `api-${String(product.id ?? product.code ?? Math.random())}`,
-          icon: categoryIcon,
-          name: productName,
-          categoryKey,
-          categoryLabel,
-          fields: fieldsByProduct(productName, categoryLabel),
-          minimumPurchaseAmount: Number(product.minimumPurchaseAmount ?? 0),
-        };
-      }),
+          return {
+            id: `api-${String(product.id ?? product.code ?? Math.random())}`,
+            icon: categoryIcon,
+            name: productName,
+            categoryKey,
+            categoryLabel,
+            fields: fieldsByProduct(productName, categoryLabel),
+            minimumPurchaseAmount: Number(product.minimumPurchaseAmount ?? 0),
+          };
+        }),
     [data?.products],
   );
 
   useEffect(() => {
     if (!categoryTabs.length) return;
-    if (!activeCategory || !categoryTabs.some((category) => category.key === activeCategory)) {
+    if (
+      !activeCategory ||
+      !categoryTabs.some((category) => category.key === activeCategory)
+    ) {
       setActiveCategory(categoryTabs[0].key);
     }
   }, [categoryTabs, activeCategory]);
 
   const filteredBillers = useMemo(() => {
     if (!activeCategory) return [];
-    return displayBillers.filter((biller) => biller.categoryKey === activeCategory && !biller.isDashed);
+    return displayBillers.filter(
+      (biller) => biller.categoryKey === activeCategory && !biller.isDashed,
+    );
   }, [activeCategory, displayBillers]);
 
   const selectedBiller = useMemo(
-    () => filteredBillers.find((biller) => biller.id === selectedBillerId) ?? filteredBillers[0] ?? null,
+    () =>
+      filteredBillers.find((biller) => biller.id === selectedBillerId) ??
+      filteredBillers[0] ??
+      null,
     [filteredBillers, selectedBillerId],
   );
 
@@ -265,7 +415,11 @@ export function PaymentSection() {
 
     const nextValues: Record<string, string> = {};
     selectedBiller.fields.forEach((field) => {
-      if (field.key === "amount" && selectedBiller.minimumPurchaseAmount && selectedBiller.minimumPurchaseAmount > 0) {
+      if (
+        field.key === "amount" &&
+        selectedBiller.minimumPurchaseAmount &&
+        selectedBiller.minimumPurchaseAmount > 0
+      ) {
         nextValues[field.key] = String(selectedBiller.minimumPurchaseAmount);
         return;
       }
@@ -296,10 +450,86 @@ export function PaymentSection() {
 
   return (
     <section className="payment" id="pay-now">
+      <motion.h2
+        className="payment-animated-title"
+        initial="hidden"
+        whileInView={inViewVariant}
+        viewport={{ once: false, amount: 0.55 }}
+        variants={{
+          hidden: {},
+          visible: {
+            transition: {
+              delayChildren: 0.08,
+              staggerChildren: 0.22,
+            },
+          },
+          visibleInstant: {
+            transition: { delayChildren: 0, staggerChildren: 0 },
+          },
+        }}
+      >
+        {headingWords.map((word, index) => (
+          <motion.span
+            key={`${word}-${index}`}
+            className="payment-animated-word"
+            variants={{
+              hidden: {
+                opacity: 0.18,
+                y: 20,
+                scale: 0.92,
+                color: "#9ca3af",
+              },
+              visible: {
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                color: "#0f172a",
+              },
+              visibleInstant: {
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                color: "#0f172a",
+                transition: { duration: 0 },
+              },
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 220,
+              damping: 18,
+              mass: 0.75,
+            }}
+          >
+            {word}
+          </motion.span>
+        ))}
+      </motion.h2>
       <div className="container">
-        <div className="payment-card">
+        <motion.div
+          className="payment-card"
+          initial="hidden"
+          whileInView={inViewVariant}
+          viewport={{ once: false, amount: 0.35 }}
+          variants={{
+            hidden: { opacity: 0, y: 110, scale: 0.98 },
+            visible: {
+              opacity: 1,
+              y: 0,
+              scale: 1,
+              transition: {
+                duration: 1.05,
+                ease: [0.16, 1, 0.3, 1] as const,
+              },
+            },
+            visibleInstant: {
+              opacity: 1,
+              y: 0,
+              scale: 1,
+              transition: { duration: 0 },
+            },
+          }}
+        >
           <div>
-            <h2 className="type-section-title">Select Biller to Pay</h2>
             <div className="categories-row">
               {categoryTabs.map((category) => (
                 <CategoryPill
@@ -318,16 +548,21 @@ export function PaymentSection() {
               <p className="type-body text-muted">Loading products...</p>
             )}
             {isError && (
-              <p className="type-body text-muted">
-                Could not load products.
-              </p>
+              <p className="type-body text-muted">Could not load products.</p>
             )}
             {!isLoading && filteredBillers.length === 0 ? (
-              <div className="billers-empty-state" role="status" aria-live="polite">
+              <div
+                className="billers-empty-state"
+                role="status"
+                aria-live="polite"
+              >
                 <span className="material-symbols-outlined">inventory_2</span>
                 <p>
                   No active products under{" "}
-                  {categoryTabs.find((category) => category.key === activeCategory)?.label ?? "this category"}.
+                  {categoryTabs.find(
+                    (category) => category.key === activeCategory,
+                  )?.label ?? "this category"}
+                  .
                 </p>
               </div>
             ) : (
@@ -353,7 +588,10 @@ export function PaymentSection() {
                       placeholder={field.placeholder}
                       value={formValues[field.key] ?? ""}
                       onChange={(event) =>
-                        setFormValues((prev) => ({ ...prev, [field.key]: event.target.value }))
+                        setFormValues((prev) => ({
+                          ...prev,
+                          [field.key]: event.target.value,
+                        }))
                       }
                     />
                   </div>
@@ -363,7 +601,10 @@ export function PaymentSection() {
                     placeholder={field.placeholder}
                     value={formValues[field.key] ?? ""}
                     onChange={(event) =>
-                      setFormValues((prev) => ({ ...prev, [field.key]: event.target.value }))
+                      setFormValues((prev) => ({
+                        ...prev,
+                        [field.key]: event.target.value,
+                      }))
                     }
                   />
                 )}
@@ -380,7 +621,7 @@ export function PaymentSection() {
               <Icon name="arrow_forward" />
             </button>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

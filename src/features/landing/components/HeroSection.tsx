@@ -1,10 +1,44 @@
+import { useEffect, useState } from "react";
 import { Icon } from "../../../components/ui/Icon";
+import { motion } from "framer-motion";
 
 export function HeroSection() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobile(mediaQuery.matches);
+    update();
+    mediaQuery.addEventListener("change", update);
+    return () => mediaQuery.removeEventListener("change", update);
+  }, []);
+
+  const backCardVariants = {
+    stacked: { x: 0, y: 0, rotate: -1, opacity: 1, scale: 1 },
+    split: {
+      x: isMobile ? -20 : -44,
+      y: isMobile ? 30 : 70,
+      rotate: -1,
+      opacity: 1,
+      scale: 1,
+    },
+  };
+
+  const frontCardVariants = {
+    stacked: { x: 0, y: 0, rotate: -1, opacity: 1, scale: 1 },
+    split: {
+      x: isMobile ? 20 : 44,
+      y: isMobile ? -12 : -22,
+      rotate: -1,
+      opacity: 1,
+      scale: 1,
+    },
+  };
+
   return (
     <header className="hero">
-      <div className="container hero-grid">
-        <div className="hero-copy">
+      <div className="container  hero-grid">
+        <div className="hero-copy mt-12">
           <span className="chip">Fast & Secure</span>
           <p className="hero-kicker type-overline">
             Digital Wallet & Payment Solutions
@@ -18,10 +52,7 @@ export function HeroSection() {
             insurance, and internet bills instantly from anywhere, anytime.
           </p>
           <div className="hero-actions">
-            <a
-              href="#pay-now"
-              className="button button-primary button-primary-cta button-lg"
-            >
+            <a href="#pay-now" className="button button-lg hero-cta-solid-hero">
               Get Started Now
             </a>
             <button type="button" className="button button-outline button-lg">
@@ -32,27 +63,29 @@ export function HeroSection() {
         </div>
 
         <div className="hero-image-wrap">
-          <div className="hero-glow hero-glow-right" />
-          <div className="hero-glow hero-glow-left" />
-          <div className="hero-image-shell">
-            <img
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4sL3oRU393IJofWUvu3QKo7KqlLvcB4cqJTfozFyoI7r0jTkMlUGS4LVY6irP8GSkTnqbxBEhGf2E30IcTC4fa1y14_L6zMkqYypt2xXHgg20yZ-30a0BZAk6QZMuP7rnwYx-ZM6w-JHcIdVr_THUe76eRBQnnCxS9cWlj-kIza4gHBxZFerIVesmEPsi-Dwm0MbCxiu92rjjFeWV8X_ND4YipRJ_4ghJHUGYreWn_UYdaGGSKxAUW_DpbsAqlC63zXC7X1Uqhl8"
-              alt="Person managing bills on laptop"
-              className="hero-image"
+          <motion.div
+            className="hero-card-stack"
+            aria-hidden="true"
+            initial="stacked"
+            whileInView="split"
+            whileHover="stacked"
+            viewport={{ once: false, amount: 0.5 }}
+          >
+            <motion.img
+              src="/zesa.png"
+              alt="ZESA card"
+              className="hero-stack-card hero-stack-card-back"
+              variants={backCardVariants}
+              transition={{ duration: 0.55, ease: "easeOut", delay: 0.05 }}
             />
-          </div>
-
-          <article className="floating-card floating-card-left">
-            <p className="floating-title">Things to Do</p>
-            <div className="floating-row">
-              <span>ZESA Topup</span>
-              <strong>+$32.00</strong>
-            </div>
-            <div className="floating-row">
-              <span>Airtime Topup</span>
-              <strong>+$8.00</strong>
-            </div>
-          </article>
+            <motion.img
+              src="/econet.png"
+              alt="Econet card"
+              className="hero-stack-card hero-stack-card-front"
+              variants={frontCardVariants}
+              transition={{ duration: 0.55, ease: "easeOut" }}
+            />
+          </motion.div>
         </div>
       </div>
     </header>
