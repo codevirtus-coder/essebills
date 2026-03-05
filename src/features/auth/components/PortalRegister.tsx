@@ -143,6 +143,7 @@ export function PortalRegister({
               <div className="register-name-row">
                 <input
                   type="text"
+                  className="portal-input-base"
                   placeholder="First name"
                   value={firstName}
                   onChange={(event) => setFirstName(event.target.value)}
@@ -150,6 +151,7 @@ export function PortalRegister({
                 />
                 <input
                   type="text"
+                  className="portal-input-base"
                   placeholder="Last name"
                   value={lastName}
                   onChange={(event) => setLastName(event.target.value)}
@@ -160,6 +162,7 @@ export function PortalRegister({
               {showCompanyField ? (
                 <input
                   type="text"
+                  className="portal-input-base"
                   placeholder={companyFieldPlaceholder}
                   value={companyName}
                   onChange={(event) => setCompanyName(event.target.value)}
@@ -169,6 +172,7 @@ export function PortalRegister({
 
               <input
                 type="text"
+                className="portal-input-base"
                 placeholder="Username"
                 value={username}
                 onChange={(event) => setUsername(event.target.value)}
@@ -176,6 +180,7 @@ export function PortalRegister({
               />
               <input
                 type="email"
+                className="portal-input-base"
                 placeholder="Email address"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
@@ -183,6 +188,7 @@ export function PortalRegister({
               />
               <input
                 type="tel"
+                className="portal-input-base"
                 placeholder="Phone number"
                 value={phoneNumber}
                 onChange={(event) => setPhoneNumber(event.target.value)}
@@ -193,6 +199,7 @@ export function PortalRegister({
                 <>
                   <input
                     type="password"
+                    className="portal-input-base"
                     placeholder="Password"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
@@ -201,6 +208,7 @@ export function PortalRegister({
                   />
                   <input
                     type="password"
+                    className="portal-input-base"
                     placeholder="Confirm password"
                     value={confirmPassword}
                     onChange={(event) => setConfirmPassword(event.target.value)}

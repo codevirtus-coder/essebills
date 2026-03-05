@@ -213,6 +213,7 @@ export function PortalLogin({
                     <span className="material-symbols-outlined icon-sm">pin</span>
                     <input
                       type="text"
+                      className="portal-input-base"
                       inputMode="numeric"
                       placeholder="Enter OTP code"
                       value={otpCode}
@@ -229,6 +230,7 @@ export function PortalLogin({
                     <span className="material-symbols-outlined icon-sm">mail</span>
                     <input
                       type="text"
+                      className="portal-input-base"
                       placeholder={usernamePlaceholder}
                       value={username}
                       onChange={(event) => setUsername(event.target.value)}
@@ -246,6 +248,7 @@ export function PortalLogin({
                     <span className="material-symbols-outlined icon-sm">lock</span>
                     <input
                       type={showPassword ? "text" : "password"}
+                      className="portal-input-base"
                       placeholder="********"
                       value={password}
                       onChange={(event) => setPassword(event.target.value)}

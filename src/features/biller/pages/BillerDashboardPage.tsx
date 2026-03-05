@@ -386,19 +386,19 @@ export function BillerDashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <label className="text-[10px] font-black text-neutral-text uppercase">Display Name</label>
-            <input type="text" defaultValue={displayName || "ZESA Prepaid"} className="w-full bg-[#f8fafc] border-none rounded-xl py-3 px-4 text-sm font-bold" />
+            <input type="text" defaultValue={displayName || "ZESA Prepaid"} className="portal-input-base w-full rounded-xl py-3 px-4 text-sm font-bold" />
           </div>
           <div className="space-y-2">
             <label className="text-[10px] font-black text-neutral-text uppercase">Support Email</label>
-            <input type="email" defaultValue={profile?.email ?? "billing@zesa.co.zw"} className="w-full bg-[#f8fafc] border-none rounded-xl py-3 px-4 text-sm font-bold" />
+            <input type="email" defaultValue={profile?.email ?? "billing@zesa.co.zw"} className="portal-input-base w-full rounded-xl py-3 px-4 text-sm font-bold" />
           </div>
           <div className="space-y-2">
             <label className="text-[10px] font-black text-neutral-text uppercase">Settlement Bank</label>
-            <input type="text" defaultValue="Standard Chartered" className="w-full bg-[#f8fafc] border-none rounded-xl py-3 px-4 text-sm font-bold" />
+            <input type="text" defaultValue="Standard Chartered" className="portal-input-base w-full rounded-xl py-3 px-4 text-sm font-bold" />
           </div>
           <div className="space-y-2">
             <label className="text-[10px] font-black text-neutral-text uppercase">Account Number</label>
-            <input type="text" defaultValue="**** 9920" className="w-full bg-[#f8fafc] border-none rounded-xl py-3 px-4 text-sm font-bold" />
+            <input type="text" defaultValue="**** 9920" className="portal-input-base w-full rounded-xl py-3 px-4 text-sm font-bold" />
           </div>
         </div>
       </section>

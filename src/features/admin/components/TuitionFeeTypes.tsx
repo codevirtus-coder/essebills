@@ -226,16 +226,11 @@ const TuitionFeeTypes: React.FC = () => {
 
       {/* Search */}
       <div className="bg-white rounded-2xl border border-neutral-light dark:border-white/5 p-4">
-        <div className="relative max-w-md">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-neutral-text text-xl">
-            search
-          </span>
-          <input
-            type="text"
-            placeholder="Search by name or description..."
+        <div className="max-w-md">
+          <AdminSearchInput
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-neutral-light/30 dark:bg-white/5 border-none rounded-xl pl-10 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20"
+            placeholder="Search by name or description..."
           />
         </div>
       </div>

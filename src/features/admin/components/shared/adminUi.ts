@@ -35,13 +35,13 @@ export const ADMIN_ICON_BUTTON =
   "p-3 bg-[#f8fafc] dark:bg-white/5 text-neutral-text rounded-lg hover:bg-neutral-light transition-all";
 
 export const ADMIN_INPUT =
-  "w-full h-11 bg-[#f8fafc] border border-neutral-light rounded-lg px-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20";
+  "portal-input-base w-full h-11 bg-[#f8fafc] border border-neutral-light rounded-lg px-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20";
 
 export const ADMIN_TEXTAREA =
-  "w-full bg-[#f8fafc] border border-neutral-light rounded-lg px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20";
+  "portal-input-base portal-textarea-base w-full bg-[#f8fafc] border border-neutral-light rounded-lg px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20";
 
 export const ADMIN_SELECT =
-  "w-full h-11 bg-[#f8fafc] border border-neutral-light rounded-lg px-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20";
+  "portal-input-base w-full h-11 bg-[#f8fafc] border border-neutral-light rounded-lg px-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20";
 
 /** Status badge base */
 export const ADMIN_BADGE_BASE =
@@ -67,4 +67,4 @@ export const ADMIN_SECTION_LABEL =
 /** Search input wrapper */
 export const ADMIN_SEARCH_WRAPPER = "relative flex-1 w-full";
 export const ADMIN_SEARCH_INPUT =
-  "w-full h-11 bg-[#f8fafc] border border-neutral-light rounded-lg pl-10 pr-4 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20";
+  "portal-input-base portal-search-input w-full h-11 bg-[#f8fafc] border border-neutral-light rounded-lg pl-10 pr-4 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20";

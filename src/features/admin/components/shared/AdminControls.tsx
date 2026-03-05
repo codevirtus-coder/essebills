@@ -304,6 +304,8 @@ export function statusVariant(status: string): StatusVariant {
 // ── Search Input ─────────────────────────────────────────────────────────────
 
 export function AdminSearchInput(props: InputHTMLAttributes<HTMLInputElement>) {
+  const { type, ...inputProps } = props;
+
   return (
     <div className={ADMIN_SEARCH_WRAPPER}>
       <Search
@@ -311,9 +313,9 @@ export function AdminSearchInput(props: InputHTMLAttributes<HTMLInputElement>) {
         className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-text pointer-events-none"
       />
       <input
-        type="search"
-        {...props}
-        className={joinClass(ADMIN_SEARCH_INPUT, props.className)}
+        type={type ?? "text"}
+        {...inputProps}
+        className={joinClass(ADMIN_SEARCH_INPUT, inputProps.className)}
       />
     </div>
   );

@@ -11,8 +11,8 @@ import { AdminTableLayout } from "./shared/AdminTableLayout";
 import {
   AdminIconDeleteButton,
   AdminIconEditButton,
-  AdminInput,
   AdminPrimaryButton,
+  AdminSearchInput,
 } from "./shared/AdminControls";
 
 interface BillerField {
@@ -523,16 +523,11 @@ const Billers: React.FC<BillersProps> = () => {
       }
       toolbar={
         <>
-          <div className="relative flex-1 w-full">
-            <span className="material-symbols-outlined absolute left-5 top-1/2 -translate-y-1/2 text-neutral-text text-xl">
-              search
-            </span>
-            <AdminInput
-              type="text"
+          <div className="flex-1 w-full">
+            <AdminSearchInput
               placeholder="Master search billers..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-11"
             />
           </div>
         </>

@@ -473,19 +473,19 @@ export function AgentDashboardPage() {
          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-2">
                <label className="text-[10px] font-black text-neutral-text uppercase">Shop Name</label>
-               <input type="text" defaultValue={profile?.shopName ?? ''} className="w-full bg-[#f8fafc] border-none rounded-xl px-4 py-3 text-sm font-bold" />
+               <input type="text" defaultValue={profile?.shopName ?? ''} className="portal-input-base w-full rounded-xl px-4 py-3 text-sm font-bold" />
             </div>
             <div className="space-y-2">
                <label className="text-[10px] font-black text-neutral-text uppercase">Location</label>
-               <input type="text" defaultValue={profile?.shopLocation ?? ''} className="w-full bg-[#f8fafc] border-none rounded-xl px-4 py-3 text-sm font-bold" />
+               <input type="text" defaultValue={profile?.shopLocation ?? ''} className="portal-input-base w-full rounded-xl px-4 py-3 text-sm font-bold" />
             </div>
             <div className="space-y-2">
                <label className="text-[10px] font-black text-neutral-text uppercase">Agent Owner</label>
-               <input type="text" defaultValue={agentName} className="w-full bg-[#f8fafc] border-none rounded-xl px-4 py-3 text-sm font-bold" />
+               <input type="text" defaultValue={agentName} className="portal-input-base w-full rounded-xl px-4 py-3 text-sm font-bold" />
             </div>
             <div className="space-y-2">
                <label className="text-[10px] font-black text-neutral-text uppercase">Mobile Number</label>
-               <input type="tel" defaultValue={profile?.phoneNumber ?? ''} className="w-full bg-[#f8fafc] border-none rounded-xl px-4 py-3 text-sm font-bold" />
+               <input type="tel" defaultValue={profile?.phoneNumber ?? ''} className="portal-input-base w-full rounded-xl px-4 py-3 text-sm font-bold" />
             </div>
          </div>
       </section>
@@ -614,11 +614,11 @@ export function AgentDashboardPage() {
            <div className="space-y-6">
               <div className="space-y-2">
                  <label className="text-[10px] font-black text-neutral-text uppercase tracking-widest">Customer Reference / Mobile</label>
-                 <input type="text" placeholder="e.g. 0771***567" onChange={e => setSellForm({...sellForm, customerRef: e.target.value})} className="w-full bg-[#f8fafc] border-none rounded-xl px-4 py-3 font-bold text-sm" />
+                 <input type="text" placeholder="e.g. 0771***567" onChange={e => setSellForm({...sellForm, customerRef: e.target.value})} className="portal-input-base w-full rounded-xl px-4 py-3 font-bold text-sm" />
               </div>
               <div className="space-y-2">
                  <label className="text-[10px] font-black text-neutral-text uppercase tracking-widest">Amount to Deduct ($)</label>
-                 <input type="number" placeholder="0.00" onChange={e => setSellForm({...sellForm, amount: e.target.value})} className="w-full bg-[#f8fafc] border-none rounded-xl p-5 text-2xl font-black text-primary text-center" />
+                 <input type="number" placeholder="0.00" onChange={e => setSellForm({...sellForm, amount: e.target.value})} className="portal-input-base w-full rounded-xl p-5 text-2xl font-black text-primary text-center" />
               </div>
            </div>
            <div className="p-5 bg-accent-green/10 rounded-lg border border-accent-green/20 flex items-center justify-between">

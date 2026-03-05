@@ -154,7 +154,7 @@ export function DashboardSidebar({
                       collapsed
                         ? 'justify-center px-0 py-2.5'
                         : 'justify-between gap-3 px-3 py-2.5'
-                    } ${
+                    } border border-transparent focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
                       isItemExactActive(item)
                         ? 'bg-white/10 text-white'
                         : isItemActive(item)
@@ -189,9 +189,9 @@ export function DashboardSidebar({
                         <button
                           key={child.id}
                           onClick={() => handleChildClick(child)}
-                          className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                          className={`w-full text-left px-3 py-2 rounded-lg text-sm border border-transparent focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 transition-colors ${
                             activeTab === child.id
-                              ? 'bg-white/10 text-white font-semibold'
+                              ? 'bg-primary/20 text-white font-semibold'
                               : 'text-white/45 hover:text-white hover:bg-white/5'
                           }`}
                         >
