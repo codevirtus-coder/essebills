@@ -4,6 +4,16 @@ import { confirmToast } from '../../../lib/confirmToast'
 import type { AdminGroupDto } from '../dto/admin-api.dto'
 import { createGroup, deleteGroup, getAllGroups, updateGroup } from '../services'
 import { DataTable, type TableColumn } from '../../../components/ui/DataTable'
+import { AdminTableLayout } from './shared/AdminTableLayout'
+import {
+  AdminCreateButton,
+  AdminIconDeleteButton,
+  AdminIconEditButton,
+  AdminInput,
+  AdminPrimaryButton,
+  AdminRefreshButton,
+  AdminTextarea,
+} from './shared/AdminControls'
 
 const AdminUserGroupsPage: React.FC = () => {
   const [groups, setGroups] = useState<AdminGroupDto[]>([])
@@ -154,61 +164,36 @@ const AdminUserGroupsPage: React.FC = () => {
       align: 'center',
       render: (g) => (
         <div className="flex items-center justify-center gap-2">
-          <button
-            type="button"
-            onClick={() => openEditModal(g)}
-            className="h-8 px-3 rounded-lg border border-primary/40 text-primary text-xs font-semibold hover:bg-primary/5 transition-colors"
-          >
-            Edit
-          </button>
-          <button
-            type="button"
-            onClick={() => handleDelete(g)}
-            disabled={isDeletingId === g.id}
-            className="h-8 px-3 rounded-lg border border-red-200 text-red-600 text-xs font-semibold hover:bg-red-50 disabled:opacity-60 transition-colors"
-          >
-            {isDeletingId === g.id ? '...' : 'Delete'}
-          </button>
+          <AdminIconEditButton onClick={() => openEditModal(g)} />
+          <AdminIconDeleteButton onClick={() => handleDelete(g)} disabled={isDeletingId === g.id} />
         </div>
       ),
     },
   ], [isDeletingId])
 
   return (
-    <div className="p-8 space-y-6 animate-in fade-in duration-300">
-      <div>
-        <h2 className="text-xl font-bold text-dark-text">User Groups</h2>
-        <p className="text-sm text-neutral-text mt-1">Manage user groups and permissions</p>
-      </div>
-
-      <DataTable
-        columns={columns}
-        data={groups}
-        rowKey={(g) => String(g.id ?? `${String(g.name ?? 'group')}-${Math.random()}`)}
-        loading={isLoading}
-        emptyMessage="No groups found"
-        emptyIcon="group"
-        filterable
-        filterPlaceholder="Search groups..."
-        header={
-          <div className="px-5 py-3 flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setIsCreateOpen(true)}
-              className="h-8 px-4 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors"
-            >
-              + Create Group
-            </button>
-            <button
-              type="button"
-              onClick={() => void loadGroups()}
-              className="h-8 px-4 rounded-lg border border-neutral-light text-neutral-text text-xs font-semibold hover:bg-neutral-light/50 transition-colors"
-            >
-              Refresh
-            </button>
-          </div>
+    <>
+      <AdminTableLayout
+        title="User Groups"
+        subtitle="Manage user groups and permissions"
+        toolbar={
+          <>
+            <AdminCreateButton onClick={() => setIsCreateOpen(true)}>+ Create Group</AdminCreateButton>
+            <AdminRefreshButton onClick={() => void loadGroups()}>Refresh</AdminRefreshButton>
+          </>
         }
-      />
+      >
+        <DataTable
+          columns={columns}
+          data={groups}
+          rowKey={(g) => String(g.id ?? `${String(g.name ?? 'group')}-${Math.random()}`)}
+          loading={isLoading}
+          emptyMessage="No groups found"
+          emptyIcon="group"
+          filterable
+          filterPlaceholder="Search groups..."
+        />
+      </AdminTableLayout>
 
       {isCreateOpen ? (
         <div className="fixed inset-0 z-[140] flex items-center justify-center p-4">
@@ -223,36 +208,26 @@ const AdminUserGroupsPage: React.FC = () => {
             <form className="mt-5 space-y-4" onSubmit={(event) => void handleCreate(event)}>
               <label className="block">
                 <span className="text-xs font-semibold text-neutral-text uppercase tracking-wider">Name</span>
-                <input
+                <AdminInput
                   value={name}
                   onChange={(event) => setName(event.target.value)}
-                  className="mt-1 w-full h-10 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="mt-1"
                 />
               </label>
               <label className="block">
                 <span className="text-xs font-semibold text-neutral-text uppercase tracking-wider">Description</span>
-                <textarea
+                <AdminTextarea
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
                   rows={3}
-                  className="mt-1 w-full rounded-lg border border-neutral-light px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="mt-1"
                 />
               </label>
               <div className="flex items-center justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsCreateOpen(false)}
-                  className="px-4 py-2 rounded-lg border border-neutral-light text-sm font-semibold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isCreating}
-                  className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold disabled:opacity-60"
-                >
+                <AdminRefreshButton onClick={() => setIsCreateOpen(false)}>Cancel</AdminRefreshButton>
+                <AdminPrimaryButton type="submit" disabled={isCreating}>
                   {isCreating ? 'Creating...' : 'Create'}
-                </button>
+                </AdminPrimaryButton>
               </div>
             </form>
           </div>
@@ -272,44 +247,34 @@ const AdminUserGroupsPage: React.FC = () => {
             <form className="mt-5 space-y-4" onSubmit={(event) => void handleUpdate(event)}>
               <label className="block">
                 <span className="text-xs font-semibold text-neutral-text uppercase tracking-wider">Name</span>
-                <input
+                <AdminInput
                   value={editForm.name}
                   onChange={(event) => setEditForm((prev) => ({ ...prev, name: event.target.value }))}
-                  className="mt-1 w-full h-10 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="mt-1"
                 />
               </label>
               <label className="block">
                 <span className="text-xs font-semibold text-neutral-text uppercase tracking-wider">Description</span>
-                <textarea
+                <AdminTextarea
                   value={editForm.description}
                   onChange={(event) =>
                     setEditForm((prev) => ({ ...prev, description: event.target.value }))
                   }
                   rows={3}
-                  className="mt-1 w-full rounded-lg border border-neutral-light px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="mt-1"
                 />
               </label>
               <div className="flex items-center justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsEditOpen(false)}
-                  className="px-4 py-2 rounded-lg border border-neutral-light text-sm font-semibold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isUpdating}
-                  className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold disabled:opacity-60"
-                >
+                <AdminRefreshButton onClick={() => setIsEditOpen(false)}>Cancel</AdminRefreshButton>
+                <AdminPrimaryButton type="submit" disabled={isUpdating}>
                   {isUpdating ? 'Saving...' : 'Save'}
-                </button>
+                </AdminPrimaryButton>
               </div>
             </form>
           </div>
         </div>
       ) : null}
-    </div>
+    </>
   )
 }
 

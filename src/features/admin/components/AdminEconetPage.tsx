@@ -358,9 +358,6 @@ const AdminEconetPage: React.FC<AdminEconetPageProps> = ({
           />
           <div className="relative w-full max-w-lg bg-white rounded-2xl border border-neutral-light shadow-2xl p-6">
             <h3 className="text-lg font-bold text-dark-text">Create {config.title}</h3>
-            <p className="text-xs text-neutral-text mt-1">
-              Endpoint: <code>{config.createEndpoint}</code>
-            </p>
             <form className="mt-5 space-y-4" onSubmit={(event) => void handleCreate(event)}>
               <label className="block">
                 <span className="text-xs font-semibold text-neutral-text">Name</span>
@@ -409,9 +406,6 @@ const AdminEconetPage: React.FC<AdminEconetPageProps> = ({
           />
           <div className="relative w-full max-w-lg bg-white rounded-2xl border border-neutral-light shadow-2xl p-6">
             <h3 className="text-lg font-bold text-dark-text">Edit {config.title}</h3>
-            <p className="text-xs text-neutral-text mt-1">
-              Endpoint: <code>{config.createEndpoint}/{String(selectedRow?.id ?? '')}</code>
-            </p>
             <form className="mt-5 space-y-4" onSubmit={(event) => void handleUpdate(event)}>
               <label className="block">
                 <span className="text-xs font-semibold text-neutral-text">Name</span>

@@ -1,4 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { AdminTableLayout } from "./shared/AdminTableLayout";
+import {
+  AdminPrimaryButton,
+  AdminRefreshButton,
+  AdminSearchInput,
+  AdminInput,
+} from "./shared/AdminControls";
+import { ADMIN_CARD, ADMIN_SECTION_LABEL } from "./shared/adminUi";
 import toast from "react-hot-toast";
 import {
   connectWhatsApp,
@@ -49,7 +57,9 @@ export default function WhatsAppCenter() {
       setQrDataUrl(status.qrDataUrl);
       setStatusError(status.lastError);
     } catch (error) {
-      setStatusError(error instanceof Error ? error.message : "Failed to load status");
+      setStatusError(
+        error instanceof Error ? error.message : "Failed to load status",
+      );
     }
   };
 
@@ -59,7 +69,9 @@ export default function WhatsAppCenter() {
       setThreads(payload.threads);
       setStatusError(null);
     } catch (error) {
-      setStatusError(error instanceof Error ? error.message : "Failed to load chats");
+      setStatusError(
+        error instanceof Error ? error.message : "Failed to load chats",
+      );
     }
   };
 
@@ -108,7 +120,12 @@ export default function WhatsAppCenter() {
   );
 
   const statusLabel = useMemo(
-    () => (connected ? "Connected" : initializing ? "Initializing..." : "Disconnected"),
+    () =>
+      connected
+        ? "Connected"
+        : initializing
+          ? "Initializing..."
+          : "Disconnected",
     [connected, initializing],
   );
 
@@ -118,7 +135,9 @@ export default function WhatsAppCenter() {
       toast.success("WhatsApp session started. Scan QR to connect.");
       await refreshStatus();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to connect WhatsApp");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to connect WhatsApp",
+      );
     }
   };
 
@@ -129,7 +148,11 @@ export default function WhatsAppCenter() {
       setQrDataUrl(null);
       toast("WhatsApp disconnected");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to disconnect WhatsApp");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to disconnect WhatsApp",
+      );
     }
   };
 
@@ -142,7 +165,9 @@ export default function WhatsAppCenter() {
       await markWhatsAppChatRead(selected.phone);
       await refreshChats();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to mark chat as read");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to mark chat as read",
+      );
     }
   };
 
@@ -170,7 +195,9 @@ export default function WhatsAppCenter() {
       await refreshChats();
       toast.success("Client chat added");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to open chat");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to open chat",
+      );
     }
   };
 
@@ -202,7 +229,9 @@ export default function WhatsAppCenter() {
       toast.success("Message sent");
     } catch (error) {
       await refreshChats();
-      toast.error(error instanceof Error ? error.message : "Failed to send message");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to send message",
+      );
     } finally {
       setSending(false);
     }
@@ -217,7 +246,8 @@ export default function WhatsAppCenter() {
               WhatsApp Call Center
             </h3>
             <p className="text-xs font-bold text-neutral-text mt-2">
-              Open chats per client, send updates, and monitor unread conversations.
+              Open chats per client, send updates, and monitor unread
+              conversations.
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -262,7 +292,11 @@ export default function WhatsAppCenter() {
             <p className="text-[10px] font-black uppercase tracking-widest text-neutral-text mb-3">
               Scan QR in WhatsApp
             </p>
-            <img src={qrDataUrl} alt="WhatsApp QR code" className="w-full rounded-lg" />
+            <img
+              src={qrDataUrl}
+              alt="WhatsApp QR code"
+              className="w-full rounded-lg"
+            />
           </div>
         ) : null}
       </section>
@@ -291,7 +325,10 @@ export default function WhatsAppCenter() {
                   placeholder="26377xxxxxxx"
                   className="w-full bg-white border border-neutral-light rounded-xl px-3 py-2.5 text-sm font-semibold"
                 />
-                <button type="submit" className="button button-primary !px-4 !h-[42px]">
+                <button
+                  type="submit"
+                  className="button button-primary !px-4 !h-[42px]"
+                >
                   Add
                 </button>
               </div>
@@ -366,7 +403,9 @@ export default function WhatsAppCenter() {
               <>
                 <header className="border-b border-neutral-light px-8 py-5 flex items-center justify-between">
                   <div>
-                    <h5 className="text-lg font-black text-dark-text">{activeThread.name}</h5>
+                    <h5 className="text-lg font-black text-dark-text">
+                      {activeThread.name}
+                    </h5>
                     <p className="text-xs font-bold text-neutral-text mt-0.5">
                       +{activeThread.phone}
                     </p>
@@ -394,7 +433,9 @@ export default function WhatsAppCenter() {
                       <div
                         key={chat.id}
                         className={`flex ${
-                          chat.direction === "outgoing" ? "justify-end" : "justify-start"
+                          chat.direction === "outgoing"
+                            ? "justify-end"
+                            : "justify-start"
                         }`}
                       >
                         <div
@@ -404,7 +445,9 @@ export default function WhatsAppCenter() {
                               : "bg-white text-dark-text border border-neutral-light rounded-bl-md"
                           }`}
                         >
-                          <p className="text-sm font-medium leading-relaxed">{chat.text}</p>
+                          <p className="text-sm font-medium leading-relaxed">
+                            {chat.text}
+                          </p>
                           <div className="mt-2 flex items-center gap-2 justify-end">
                             <span
                               className={`text-[10px] font-bold ${
@@ -445,7 +488,9 @@ export default function WhatsAppCenter() {
                       </label>
                       <textarea
                         value={composerText}
-                        onChange={(event) => setComposerText(event.target.value)}
+                        onChange={(event) =>
+                          setComposerText(event.target.value)
+                        }
                         onKeyDown={(event) => {
                           if (event.key === "Enter" && !event.shiftKey) {
                             event.preventDefault();

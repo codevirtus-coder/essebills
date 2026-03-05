@@ -1,183 +1,232 @@
-import React from 'react'
-import toast from 'react-hot-toast'
-import { DataTable, TableColumn } from '../../../components/ui/DataTable'
-import { adminJsonFetch, getEconetTransactionsReport, getEsolutionsTransactionsReport, getNetoneTransactionsReport, getZesaTransactionsReport } from '../services'
+import React from "react";
+import toast from "react-hot-toast";
+import { DataTable, TableColumn } from "../../../components/ui/DataTable";
+import { AdminTableLayout } from "./shared/AdminTableLayout";
+import {
+  AdminPrimaryButton,
+  AdminRefreshButton,
+  AdminSearchInput,
+  AdminInput,
+} from "./shared/AdminControls";
+import { ADMIN_CARD, ADMIN_SECTION_LABEL } from "./shared/adminUi";
+import {
+  adminJsonFetch,
+  getEconetTransactionsReport,
+  getEsolutionsTransactionsReport,
+  getNetoneTransactionsReport,
+  getZesaTransactionsReport,
+} from "../services";
 
-type UnknownRecord = Record<string, unknown>
-type Region = 'zambia' | 'zim'
+type UnknownRecord = Record<string, unknown>;
+type Region = "zambia" | "zim";
 
 interface AdminTransactionsPageProps {
-  region: Region
+  region: Region;
 }
 
 type ZambiaProvider = {
-  label: string
-  slug: string
-}
+  label: string;
+  slug: string;
+};
 
 type ZimProvider = {
-  label: string
-  listPaths: string[]
-  report?: (payload: { startDate: string; endDate: string; format: string }) => Promise<Blob>
-}
+  label: string;
+  listPaths: string[];
+  report?: (payload: {
+    startDate: string;
+    endDate: string;
+    format: string;
+  }) => Promise<Blob>;
+};
 
 const ZAMBIA_PROVIDERS: ZambiaProvider[] = [
-  { label: 'Afribus', slug: 'afribus' },
-  { label: 'Airtel', slug: 'airtel' },
-  { label: 'GoTV', slug: 'gotv' },
-  { label: 'DsTV', slug: 'dstv' },
-  { label: 'Liquid Telecoms', slug: 'liquid-telecom' },
-  { label: 'Madison Life', slug: 'madison-life' },
-  { label: 'MTN', slug: 'mtn' },
-  { label: 'Topstar', slug: 'top-star' },
-  { label: 'Vodafone', slug: 'vodafone' },
-  { label: 'Zamtel', slug: 'zamtel' },
-  { label: 'ZESCO', slug: 'zesco' },
-]
+  { label: "Afribus", slug: "afribus" },
+  { label: "Airtel", slug: "airtel" },
+  { label: "GoTV", slug: "gotv" },
+  { label: "DsTV", slug: "dstv" },
+  { label: "Liquid Telecoms", slug: "liquid-telecom" },
+  { label: "Madison Life", slug: "madison-life" },
+  { label: "MTN", slug: "mtn" },
+  { label: "Topstar", slug: "top-star" },
+  { label: "Vodafone", slug: "vodafone" },
+  { label: "Zamtel", slug: "zamtel" },
+  { label: "ZESCO", slug: "zesco" },
+];
 
 const ZIM_PROVIDERS: ZimProvider[] = [
   {
-    label: 'Econet',
-    listPaths: ['/v1/econet-airtime/transactions/all', '/v1/econet-airtime/transactions'],
+    label: "Econet",
+    listPaths: [
+      "/v1/econet-airtime/transactions/all",
+      "/v1/econet-airtime/transactions",
+    ],
     report: getEconetTransactionsReport,
   },
   {
-    label: 'Netone',
-    listPaths: ['/v1/netone-airtime/transactions/all', '/v1/netone-airtime/transactions'],
+    label: "Netone",
+    listPaths: [
+      "/v1/netone-airtime/transactions/all",
+      "/v1/netone-airtime/transactions",
+    ],
     report: getNetoneTransactionsReport,
   },
   {
-    label: 'Esolutions Airtime',
-    listPaths: ['/v1/esolutions-airtime/transactions/all', '/v1/esolutions-airtime/transactions'],
+    label: "Esolutions Airtime",
+    listPaths: [
+      "/v1/esolutions-airtime/transactions/all",
+      "/v1/esolutions-airtime/transactions",
+    ],
     report: getEsolutionsTransactionsReport,
   },
   {
-    label: 'Zesa',
-    listPaths: ['/v1/zesa/transactions/all', '/v1/zesa/transactions'],
+    label: "Zesa",
+    listPaths: ["/v1/zesa/transactions/all", "/v1/zesa/transactions"],
     report: getZesaTransactionsReport,
   },
-]
+];
 
 function toRows(payload: unknown): UnknownRecord[] {
   if (Array.isArray(payload)) {
-    return payload.filter((item): item is UnknownRecord => typeof item === 'object' && item !== null)
+    return payload.filter(
+      (item): item is UnknownRecord =>
+        typeof item === "object" && item !== null,
+    );
   }
-  if (payload && typeof payload === 'object') {
-    const maybePage = payload as { content?: unknown[] }
+  if (payload && typeof payload === "object") {
+    const maybePage = payload as { content?: unknown[] };
     if (Array.isArray(maybePage.content)) {
       return maybePage.content.filter(
-        (item): item is UnknownRecord => typeof item === 'object' && item !== null,
-      )
+        (item): item is UnknownRecord =>
+          typeof item === "object" && item !== null,
+      );
     }
   }
-  return []
+  return [];
 }
 
 async function fetchFirstWorking(paths: string[]): Promise<UnknownRecord[]> {
   for (const path of paths) {
     try {
-      const payload = await adminJsonFetch<unknown>(path)
-      return toRows(payload)
+      const payload = await adminJsonFetch<unknown>(path);
+      return toRows(payload);
     } catch {
       // try next candidate path
     }
   }
-  throw new Error('Failed to load transactions from configured endpoints')
+  throw new Error("Failed to load transactions from configured endpoints");
 }
 
 function formatDateValue(row: UnknownRecord): string {
-  return String(row.createdDate ?? row.transactionDate ?? row.createdAt ?? row.date ?? '-')
+  return String(
+    row.createdDate ?? row.transactionDate ?? row.createdAt ?? row.date ?? "-",
+  );
 }
 
-const AdminTransactionsPage: React.FC<AdminTransactionsPageProps> = ({ region }) => {
-  const [rows, setRows] = React.useState<UnknownRecord[]>([])
-  const [isLoading, setIsLoading] = React.useState(false)
-  const [selectedZambiaProvider, setSelectedZambiaProvider] = React.useState<string>('afribus')
-  const [selectedZimProvider, setSelectedZimProvider] = React.useState<string>('Econet')
+const AdminTransactionsPage: React.FC<AdminTransactionsPageProps> = ({
+  region,
+}) => {
+  const [rows, setRows] = React.useState<UnknownRecord[]>([]);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [selectedZambiaProvider, setSelectedZambiaProvider] =
+    React.useState<string>("afribus");
+  const [selectedZimProvider, setSelectedZimProvider] =
+    React.useState<string>("Econet");
 
   const activeZimProvider = React.useMemo(
-    () => ZIM_PROVIDERS.find((provider) => provider.label === selectedZimProvider) ?? ZIM_PROVIDERS[0],
+    () =>
+      ZIM_PROVIDERS.find(
+        (provider) => provider.label === selectedZimProvider,
+      ) ?? ZIM_PROVIDERS[0],
     [selectedZimProvider],
-  )
+  );
 
   const loadRows = React.useCallback(async () => {
     try {
-      setIsLoading(true)
-      if (region === 'zambia') {
-        const provider = selectedZambiaProvider
-        const data = await fetchFirstWorking([`/v1/${provider}/transactions/all`, `/v1/${provider}/transactions`])
-        setRows(data)
+      setIsLoading(true);
+      if (region === "zambia") {
+        const provider = selectedZambiaProvider;
+        const data = await fetchFirstWorking([
+          `/v1/${provider}/transactions/all`,
+          `/v1/${provider}/transactions`,
+        ]);
+        setRows(data);
       } else {
-        const data = await fetchFirstWorking(activeZimProvider.listPaths)
-        setRows(data)
+        const data = await fetchFirstWorking(activeZimProvider.listPaths);
+        setRows(data);
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to load transactions')
-      setRows([])
+      toast.error(
+        error instanceof Error ? error.message : "Failed to load transactions",
+      );
+      setRows([]);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [activeZimProvider.listPaths, region, selectedZambiaProvider])
+  }, [activeZimProvider.listPaths, region, selectedZambiaProvider]);
 
   React.useEffect(() => {
-    void loadRows()
-  }, [loadRows])
+    void loadRows();
+  }, [loadRows]);
 
   const handleGetReport = async () => {
     if (!activeZimProvider.report) {
-      toast('No report endpoint configured for this provider')
-      return
+      toast("No report endpoint configured for this provider");
+      return;
     }
 
     try {
-      const now = new Date()
-      const start = new Date()
-      start.setDate(now.getDate() - 30)
+      const now = new Date();
+      const start = new Date();
+      start.setDate(now.getDate() - 30);
 
       const blob = await activeZimProvider.report({
         startDate: start.toISOString().slice(0, 10),
         endDate: now.toISOString().slice(0, 10),
-        format: 'csv',
-      })
+        format: "csv",
+      });
 
-      const url = URL.createObjectURL(blob)
-      const anchor = document.createElement('a')
-      anchor.href = url
-      anchor.download = `${activeZimProvider.label.toLowerCase().replace(/\s+/g, '-')}-transactions.csv`
-      document.body.appendChild(anchor)
-      anchor.click()
-      anchor.remove()
-      URL.revokeObjectURL(url)
-      toast.success('Report downloaded')
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${activeZimProvider.label.toLowerCase().replace(/\s+/g, "-")}-transactions.csv`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Report downloaded");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to download report')
+      toast.error(
+        error instanceof Error ? error.message : "Failed to download report",
+      );
     }
-  }
+  };
 
   return (
     <div className="p-8 space-y-6 animate-in fade-in duration-300">
       <section className="bg-white rounded-xl border border-neutral-light p-6 min-h-[112px]">
         <h2 className="text-4 leading-none font-medium text-dark-text dark:text-white flex items-center gap-3">
-          <span className="material-symbols-outlined text-[28px]">sync_alt</span>
+          <span className="material-symbols-outlined text-[28px]">
+            sync_alt
+          </span>
           Transactions
         </h2>
       </section>
 
       <section className="bg-white rounded-xl border border-neutral-light p-5">
-        {region === 'zambia' ? (
+        {region === "zambia" ? (
           <div className="grid grid-cols-[220px_1fr] gap-8">
             <aside className="pt-4">
               <div className="space-y-2">
                 {ZAMBIA_PROVIDERS.map((provider) => (
-                <button
-                  key={provider.slug}
-                  type="button"
-                  onClick={() => setSelectedZambiaProvider(provider.slug)}
-                  className={`w-full text-left px-3 py-2 rounded-none text-sm transition-colors ${
-                    selectedZambiaProvider === provider.slug
-                      ? 'bg-primary/15 border-l-4 border-primary text-dark-text'
-                      : 'text-neutral-text hover:bg-neutral-light/40'
-                  }`}
+                  <button
+                    key={provider.slug}
+                    type="button"
+                    onClick={() => setSelectedZambiaProvider(provider.slug)}
+                    className={`w-full text-left px-3 py-2 rounded-none text-sm transition-colors ${
+                      selectedZambiaProvider === provider.slug
+                        ? "bg-primary/15 border-l-4 border-primary text-dark-text"
+                        : "text-neutral-text hover:bg-neutral-light/40"
+                    }`}
                   >
                     {provider.label}
                   </button>
@@ -199,28 +248,37 @@ const AdminTransactionsPage: React.FC<AdminTransactionsPageProps> = ({ region })
               <DataTable
                 columns={[
                   {
-                    key: 'amount',
-                    header: 'Amount',
-                    render: (row: UnknownRecord) => String(row.amount ?? row.value ?? '-')
+                    key: "amount",
+                    header: "Amount",
+                    render: (row: UnknownRecord) =>
+                      String(row.amount ?? row.value ?? "-"),
                   },
                   {
-                    key: 'referenceNumber',
-                    header: 'Reference Number',
-                    render: (row: UnknownRecord) => String(row.referenceNumber ?? row.paymentReferenceNumber ?? '-')
+                    key: "referenceNumber",
+                    header: "Reference Number",
+                    render: (row: UnknownRecord) =>
+                      String(
+                        row.referenceNumber ??
+                          row.paymentReferenceNumber ??
+                          "-",
+                      ),
                   },
                   {
-                    key: 'status',
-                    header: 'Transaction Status',
-                    render: (row: UnknownRecord) => String(row.status ?? row.transactionStatus ?? '-')
+                    key: "status",
+                    header: "Transaction Status",
+                    render: (row: UnknownRecord) =>
+                      String(row.status ?? row.transactionStatus ?? "-"),
                   },
                   {
-                    key: 'date',
-                    header: 'Date',
-                    render: (row: UnknownRecord) => formatDateValue(row)
-                  }
+                    key: "date",
+                    header: "Date",
+                    render: (row: UnknownRecord) => formatDateValue(row),
+                  },
                 ]}
                 data={rows}
-                rowKey={(row: UnknownRecord) => String(row.id ?? `txn-${Math.random()}`)}
+                rowKey={(row: UnknownRecord) =>
+                  String(row.id ?? `txn-${Math.random()}`)
+                }
                 loading={isLoading}
                 emptyMessage="No Transactions to display!"
                 emptyIcon="filter_alt_off"
@@ -237,8 +295,8 @@ const AdminTransactionsPage: React.FC<AdminTransactionsPageProps> = ({ region })
                   onClick={() => setSelectedZimProvider(provider.label)}
                   className={`pb-2 text-sm transition-colors border-b-4 ${
                     selectedZimProvider === provider.label
-                      ? 'text-dark-text border-primary'
-                      : 'text-neutral-text border-transparent'
+                      ? "text-dark-text border-primary"
+                      : "text-neutral-text border-transparent"
                   }`}
                 >
                   {provider.label}
@@ -247,7 +305,9 @@ const AdminTransactionsPage: React.FC<AdminTransactionsPageProps> = ({ region })
             </div>
 
             <div className="mb-4">
-              <h3 className="text-2xl font-semibold text-dark-text mb-4">{activeZimProvider.label} Balance :</h3>
+              <h3 className="text-2xl font-semibold text-dark-text mb-4">
+                {activeZimProvider.label} Balance :
+              </h3>
               <div className="flex items-center gap-3">
                 <button
                   type="button"
@@ -269,38 +329,47 @@ const AdminTransactionsPage: React.FC<AdminTransactionsPageProps> = ({ region })
             <DataTable
               columns={[
                 {
-                  key: 'amount',
-                  header: 'Amount',
-                  render: (row: UnknownRecord) => String(row.amount ?? row.value ?? '-')
+                  key: "amount",
+                  header: "Amount",
+                  render: (row: UnknownRecord) =>
+                    String(row.amount ?? row.value ?? "-"),
                 },
                 {
-                  key: 'paymentReferenceNumber',
-                  header: 'Payment Reference Number',
-                  render: (row: UnknownRecord) => String(row.paymentReferenceNumber ?? row.paymentReference ?? '-')
+                  key: "paymentReferenceNumber",
+                  header: "Payment Reference Number",
+                  render: (row: UnknownRecord) =>
+                    String(
+                      row.paymentReferenceNumber ?? row.paymentReference ?? "-",
+                    ),
                 },
                 {
-                  key: 'referenceNumber',
-                  header: 'Reference Number',
-                  render: (row: UnknownRecord) => String(row.referenceNumber ?? '-')
+                  key: "referenceNumber",
+                  header: "Reference Number",
+                  render: (row: UnknownRecord) =>
+                    String(row.referenceNumber ?? "-"),
                 },
                 {
-                  key: 'transactionCategory',
-                  header: 'Transaction Category',
-                  render: (row: UnknownRecord) => String(row.transactionCategory ?? row.category ?? '-')
+                  key: "transactionCategory",
+                  header: "Transaction Category",
+                  render: (row: UnknownRecord) =>
+                    String(row.transactionCategory ?? row.category ?? "-"),
                 },
                 {
-                  key: 'status',
-                  header: 'Transaction Status',
-                  render: (row: UnknownRecord) => String(row.status ?? row.transactionStatus ?? '-')
+                  key: "status",
+                  header: "Transaction Status",
+                  render: (row: UnknownRecord) =>
+                    String(row.status ?? row.transactionStatus ?? "-"),
                 },
                 {
-                  key: 'date',
-                  header: 'Date',
-                  render: (row: UnknownRecord) => formatDateValue(row)
-                }
+                  key: "date",
+                  header: "Date",
+                  render: (row: UnknownRecord) => formatDateValue(row),
+                },
               ]}
               data={rows}
-              rowKey={(row: UnknownRecord) => String(row.id ?? `txn-zim-${Math.random()}`)}
+              rowKey={(row: UnknownRecord) =>
+                String(row.id ?? `txn-zim-${Math.random()}`)
+              }
               loading={isLoading}
               emptyMessage={`${activeZimProvider.label} Transactions`}
               emptyIcon="filter_alt_off"
@@ -309,7 +378,7 @@ const AdminTransactionsPage: React.FC<AdminTransactionsPageProps> = ({ region })
         )}
       </section>
     </div>
-  )
-}
+  );
+};
 
-export default AdminTransactionsPage
+export default AdminTransactionsPage;

@@ -137,7 +137,7 @@ export function DataTable<T>({
   };
 
   return (
-    <div className={`data-table bg-white border border-neutral-light overflow-hidden rounded-lg ${className}`}>
+    <div className={`data-table bg-white border border-neutral-light overflow-hidden rounded-xl shadow-sm ${className}`}>
       {header && (
         <div className="border-b border-neutral-light dark:border-white/5">
           {header}
@@ -145,7 +145,7 @@ export function DataTable<T>({
       )}
 
       {filterable && (
-        <div className="px-4 py-3 border-b border-neutral-light dark:border-white/5">
+        <div className="px-4 py-3 border-b border-neutral-light dark:border-white/5 bg-neutral-light/10">
           <div className="relative max-w-xs">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-text/50 pointer-events-none" />
             <input
@@ -153,7 +153,7 @@ export function DataTable<T>({
               value={filterText}
               onChange={handleFilterChange}
               placeholder={filterPlaceholder}
-              className="w-full h-8 pl-8 pr-3 rounded-lg border border-neutral-light bg-neutral-light/20 text-sm text-dark-text placeholder:text-neutral-text/40 focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full h-10 pl-9 pr-3 rounded-lg border border-neutral-light bg-white text-sm font-semibold text-dark-text placeholder:text-neutral-text/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
           </div>
         </div>
@@ -167,14 +167,14 @@ export function DataTable<T>({
           style={{ tableLayout }}
         >
           <thead>
-            <tr className="bg-neutral-light/20 dark:bg-white/5 border-b border-neutral-light dark:border-white/5">
+            <tr className="bg-primary/5 border-b border-neutral-light">
               {columns.map((col) => (
                 <th
                   key={col.key}
                   scope="col"
                   role="columnheader"
                   onClick={() => handleSort(col)}
-                  className={`px-5 py-3 text-[11px] font-semibold text-neutral-text uppercase tracking-wider select-none ${alignClass(col.align)} ${
+                  className={`px-5 py-3.5 text-[11px] font-bold text-neutral-text uppercase tracking-wider select-none ${alignClass(col.align)} ${
                     col.sortable || col.sortValue ? 'cursor-pointer hover:text-dark-text transition-colors' : ''
                   }`}
                 >
@@ -187,7 +187,7 @@ export function DataTable<T>({
             </tr>
           </thead>
 
-          <tbody className="divide-y divide-neutral-light dark:divide-white/5">
+          <tbody className="divide-y divide-neutral-light">
             {loading ? (
               Array.from({ length: skeletonRows }).map((_, i) => (
                 <tr key={`skeleton-${i}`} className="animate-pulse" role="row">
@@ -214,10 +214,10 @@ export function DataTable<T>({
                 <tr
                   key={rowKey(row)}
                   role="row"
-                  className="hover:bg-neutral-light/10 dark:hover:bg-white/5 transition-colors group focus-within:outline-none"
+                  className="hover:bg-primary/5 transition-colors group focus-within:outline-none"
                 >
                   {columns.map((col) => (
-                    <td key={col.key} role="cell" className={`px-5 py-3.5 ${alignClass(col.align)}`}>
+                    <td key={col.key} role="cell" className={`px-5 py-4 text-[15px] text-dark-text font-semibold ${alignClass(col.align)}`}>
                       {col.render(row, currentPage * activePageSize + index)}
                     </td>
                   ))}
@@ -229,7 +229,7 @@ export function DataTable<T>({
       </div>
 
       {pagination && !loading && processedData.length > 0 && (
-        <div className="flex items-center justify-between px-5 py-3 border-t border-neutral-light dark:border-white/5 bg-neutral-light/10">
+        <div className="flex items-center justify-between px-5 py-3 border-t border-neutral-light bg-neutral-light/10">
           <div className="flex items-center gap-3">
             <span className="text-[11px] text-neutral-text font-medium">
               {processedData.length === 0

@@ -337,9 +337,6 @@ const AdminStyledApiModulePage: React.FC<AdminStyledApiModulePageProps> = ({
           />
           <div className="relative w-full max-w-lg bg-white rounded-2xl border border-neutral-light shadow-2xl p-6">
             <h3 className="text-lg font-bold text-dark-text">Create {title}</h3>
-            <p className="text-xs text-neutral-text mt-1">
-              Endpoint: <code>{createEndpoint ?? '-'}</code>
-            </p>
             <form
               className="mt-5 space-y-4"
               onSubmit={(event) =>

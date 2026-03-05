@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
+import { X } from "lucide-react";
 import type {
   AdminCountryDto,
   AdminCurrencyDto,
@@ -16,6 +17,19 @@ import {
   updateProduct,
 } from "../services";
 import { DataTable, type TableColumn } from "../../../components/ui";
+import { AdminTableLayout } from "./shared/AdminTableLayout";
+import {
+  AdminCreateButton,
+  AdminIconDeleteButton,
+  AdminIconEditButton,
+  AdminInput,
+  AdminPrimaryButton,
+  AdminRefreshButton,
+  AdminSearchInput,
+  AdminSelect,
+  AdminTextarea,
+} from "./shared/AdminControls";
+import { ADMIN_CARD } from "./shared/adminUi";
 
 type ProductStatus = "ACTIVE" | "COMING_SOON" | "DISABLED";
 
@@ -35,6 +49,7 @@ function toDisplayStatus(value?: string) {
 
 const Products: React.FC = () => {
   const formCardRef = React.useRef<HTMLFormElement | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   const columns: TableColumn<AdminProductDto>[] = [
     {
@@ -87,20 +102,8 @@ const Products: React.FC = () => {
       align: 'right',
       render: (product) => (
         <div className="flex justify-end gap-1">
-          <button
-            onClick={() => handleEditProduct(product)}
-            className="w-10 h-10 inline-flex items-center justify-center rounded-xl hover:bg-primary/10 hover:text-primary text-neutral-text transition-all"
-            title="Edit Product"
-          >
-            <span className="material-symbols-outlined text-lg">edit</span>
-          </button>
-          <button
-            onClick={() => void handleDeleteProduct(product.id)}
-            className="w-10 h-10 inline-flex items-center justify-center rounded-xl hover:bg-red-50 hover:text-red-600 text-neutral-text transition-all"
-            title="Delete Product"
-          >
-            <span className="material-symbols-outlined text-lg">delete</span>
-          </button>
+          <AdminIconEditButton onClick={() => handleEditProduct(product)} title="Edit Product" />
+          <AdminIconDeleteButton onClick={() => void handleDeleteProduct(product.id)} title="Delete Product" />
         </div>
       ),
     },
@@ -185,6 +188,11 @@ const Products: React.FC = () => {
     setEditingProductId(null);
   };
 
+  const openCreateModal = () => {
+    resetForm();
+    setIsFormOpen(true);
+  };
+
   const handleCreateProduct = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -235,6 +243,7 @@ const Products: React.FC = () => {
       }
 
       resetForm();
+      setIsFormOpen(false);
       await loadProducts();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to add product");
@@ -280,9 +289,7 @@ const Products: React.FC = () => {
     setProductLogoFileName(String(product.productLogoFileName ?? ""));
     setStatus(normalizeStatus(product.status));
 
-    window.requestAnimationFrame(() => {
-      formCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+    setIsFormOpen(true);
   };
 
   const handleDeleteProduct = async (productId?: string | number) => {
@@ -297,229 +304,163 @@ const Products: React.FC = () => {
   };
 
   return (
-    <div className="p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div>
-          <h2 className="text-2xl font-extrabold text-dark-text dark:text-white">
-            Products
-          </h2>
-          <p className="text-sm text-neutral-text">
-            Manage product catalog and availability for billers.
-          </p>
-        </div>
-        <div className="px-4 py-2 rounded-2xl bg-primary/10 text-primary text-xs font-black uppercase tracking-widest">
+    <AdminTableLayout
+      title="Products"
+      subtitle="Manage product catalog and availability for billers."
+      toolbar={
+        <>
+          <AdminCreateButton onClick={openCreateModal}>+ Create Product</AdminCreateButton>
+          <AdminRefreshButton onClick={() => void loadProducts()}>Refresh</AdminRefreshButton>
+        </>
+      }
+      stats={
+        <div className="px-4 py-2 rounded-2xl bg-primary/10 text-primary text-xs font-black uppercase tracking-widest w-fit">
           Total: {products.length}
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
-        <form
-          ref={formCardRef}
-          onSubmit={(event) => void handleCreateProduct(event)}
-          className="xl:col-span-1 bg-white p-6 rounded-xl border border-neutral-light shadow-sm space-y-4"
-        >
-          <h3 className="text-lg font-extrabold text-dark-text dark:text-white">
-            {editingProductId ? "Update Product" : "Add Product"}
-          </h3>
-
-          <label className="block space-y-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-text">
-              Name
-            </span>
-            <input
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder="e.g. ZESA Prepaid"
-              className="w-full bg-[#f8fafc] border border-neutral-light rounded-xl px-4 py-3 text-sm font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
-            />
-          </label>
-
-          <label className="block space-y-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-text">
-              Code
-            </span>
-            <input
-              value={code}
-              onChange={(event) => setCode(event.target.value)}
-              placeholder="e.g. ZESA_PREPAID"
-              className="w-full bg-[#f8fafc] border border-neutral-light rounded-xl px-4 py-3 text-sm font-semibold uppercase focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
-            />
-          </label>
-
-          <label className="block space-y-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-text">
-              Status
-            </span>
-            <select
-              value={status}
-              onChange={(event) => setStatus(event.target.value as ProductStatus)}
-              className="w-full bg-[#f8fafc] border border-neutral-light rounded-xl px-4 py-3 text-sm font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
-            >
-              <option value="ACTIVE">Active</option>
-              <option value="COMING_SOON">Coming Soon</option>
-              <option value="DISABLED">Disabled</option>
-            </select>
-          </label>
-
-          <label className="block space-y-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-text">
-              Default Currency
-            </span>
-            <select
-              value={defaultCurrencyCode}
-              onChange={(event) => setDefaultCurrencyCode(event.target.value)}
-              className="w-full bg-[#f8fafc] border border-neutral-light rounded-xl px-4 py-3 text-sm font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
-            >
-              <option value="">Select currency</option>
-              {currencies.map((currency) => (
-                <option key={String(currency.id ?? currency.code)} value={String(currency.code ?? "")}>
-                  {String(currency.name ?? currency.code ?? "Unknown")}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="block space-y-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-text">
-              Product Category
-            </span>
-            <select
-              value={categoryId}
-              onChange={(event) => setCategoryId(event.target.value)}
-              className="w-full bg-[#f8fafc] border border-neutral-light rounded-xl px-4 py-3 text-sm font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
-            >
-              <option value="">Select category</option>
-              {productCategories.map((category) => (
-                <option key={String(category.id ?? category.name)} value={String(category.id ?? "")}>
-                  {String(category.displayName ?? category.name ?? "Unknown")}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="block space-y-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-text">
-              Country
-            </span>
-            <select
-              value={countryCode}
-              onChange={(event) => setCountryCode(event.target.value)}
-              className="w-full bg-[#f8fafc] border border-neutral-light rounded-xl px-4 py-3 text-sm font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
-            >
-              <option value="">Select country</option>
-              {countries.map((country) => (
-                <option key={String(country.id ?? country.code)} value={String(country.code ?? "")}>
-                  {String(country.name ?? country.code ?? "Unknown")}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="block space-y-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-text">
-              Minimum Disabling Balance
-            </span>
-            <input
-              type="number"
-              value={minimumDisablingBalance}
-              onChange={(event) => setMinimumDisablingBalance(event.target.value)}
-              placeholder="0"
-              className="w-full bg-[#f8fafc] border border-neutral-light rounded-xl px-4 py-3 text-sm font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
-            />
-          </label>
-
-          <label className="block space-y-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-text">
-              Minimum Purchase Amount
-            </span>
-            <input
-              type="number"
-              value={minimumPurchaseAmount}
-              onChange={(event) => setMinimumPurchaseAmount(event.target.value)}
-              placeholder="0"
-              className="w-full bg-[#f8fafc] border border-neutral-light rounded-xl px-4 py-3 text-sm font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
-            />
-          </label>
-
-          <label className="block space-y-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-text">
-              Product Logo File Name
-            </span>
-            <input
-              value={productLogoFileName}
-              onChange={(event) => setProductLogoFileName(event.target.value)}
-              placeholder="logo.png"
-              className="w-full bg-[#f8fafc] border border-neutral-light rounded-xl px-4 py-3 text-sm font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
-            />
-          </label>
-
-          <label className="block space-y-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-text">
-              Return URL
-            </span>
-            <input
-              value={returnUrl}
-              onChange={(event) => setReturnUrl(event.target.value)}
-              placeholder="https://yourapp.com/callback"
-              className="w-full bg-[#f8fafc] border border-neutral-light rounded-xl px-4 py-3 text-sm font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
-            />
-          </label>
-
-          <label className="block space-y-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-text">
-              Description
-            </span>
-            <textarea
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-              rows={4}
-              placeholder="Describe this product"
-              className="w-full bg-[#f8fafc] border border-neutral-light rounded-xl px-4 py-3 text-sm font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
-            />
-          </label>
-
-          <button
-            type="submit"
-            disabled={isSaving}
-            className="w-full bg-primary text-white px-6 py-3 rounded-lg font-black text-[10px] uppercase tracking-widest hover:bg-opacity-90 transition-all shadow-lg shadow-primary/20 disabled:opacity-60"
-          >
-            {isSaving ? "Saving..." : editingProductId ? "Update Product" : "Add Product"}
-          </button>
-          {editingProductId ? (
-            <button
-              type="button"
-              onClick={resetForm}
-              className="w-full bg-neutral-light text-neutral-text px-6 py-3 rounded-lg font-black text-[10px] uppercase tracking-widest hover:bg-neutral-light/80 transition-all"
-            >
-              Cancel Edit
-            </button>
-          ) : null}
-        </form>
-
-        <div className="xl:col-span-2 space-y-4">
-          <div className="relative">
-            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-neutral-text text-lg">
-              search
-            </span>
-            <input
+      }
+    >
+      <div className="space-y-4">
+        <div className={`p-4 ${ADMIN_CARD}`}>
+          <div className="max-w-xl">
+            <AdminSearchInput
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               placeholder="Search products by name or code..."
-              className="w-full bg-[#f8fafc] border border-neutral-light rounded-xl pl-11 pr-4 py-3 text-sm font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
             />
           </div>
-
-          <DataTable
-            columns={columns}
-            data={filteredProducts}
-            rowKey={(product) => String(product.id ?? `${product.code ?? "product"}`)}
-            loading={isLoading}
-            emptyMessage="No products found"
-            emptyIcon="inventory_2"
-          />
         </div>
+
+        <DataTable
+          columns={columns}
+          data={filteredProducts}
+          rowKey={(product) => String(product.id ?? `${product.code ?? "product"}`)}
+          loading={isLoading}
+          emptyMessage="No products found"
+          emptyIcon="inventory_2"
+        />
       </div>
-    </div>
+
+      {isFormOpen ? (
+        <div className="fixed inset-0 z-[140] flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <button
+            type="button"
+            onClick={() => setIsFormOpen(false)}
+            className="absolute inset-0 bg-slate-900/45"
+            aria-label="Close product form modal"
+          />
+          <div className="relative w-full sm:max-w-4xl bg-white rounded-t-2xl sm:rounded-2xl border border-neutral-light shadow-2xl h-[100dvh] sm:h-auto max-h-[100dvh] sm:max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 z-10 bg-white border-b border-neutral-light px-4 sm:px-6 py-4 flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-bold text-dark-text">
+                  {editingProductId ? "Update Product" : "Add Product"}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsFormOpen(false)}
+                className="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-neutral-light text-neutral-text hover:bg-neutral-light/40"
+                aria-label="Close"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <form
+              ref={formCardRef}
+              onSubmit={(event) => void handleCreateProduct(event)}
+              className="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-2 gap-4"
+            >
+              <label className="block">
+                <span className="text-xs font-semibold text-neutral-text uppercase tracking-wider">Name</span>
+                <AdminInput value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. ZESA Prepaid" className="mt-1" />
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-semibold text-neutral-text uppercase tracking-wider">Code</span>
+                <AdminInput value={code} onChange={(event) => setCode(event.target.value)} placeholder="e.g. ZESA_PREPAID" className="mt-1 uppercase" />
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-semibold text-neutral-text uppercase tracking-wider">Status</span>
+                <AdminSelect value={status} onChange={(event) => setStatus(event.target.value as ProductStatus)} className="mt-1">
+                  <option value="ACTIVE">Active</option>
+                  <option value="COMING_SOON">Coming Soon</option>
+                  <option value="DISABLED">Disabled</option>
+                </AdminSelect>
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-semibold text-neutral-text uppercase tracking-wider">Default Currency</span>
+                <AdminSelect value={defaultCurrencyCode} onChange={(event) => setDefaultCurrencyCode(event.target.value)} className="mt-1">
+                  <option value="">Select currency</option>
+                  {currencies.map((currency) => (
+                    <option key={String(currency.id ?? currency.code)} value={String(currency.code ?? "")}>
+                      {String(currency.name ?? currency.code ?? "Unknown")}
+                    </option>
+                  ))}
+                </AdminSelect>
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-semibold text-neutral-text uppercase tracking-wider">Product Category</span>
+                <AdminSelect value={categoryId} onChange={(event) => setCategoryId(event.target.value)} className="mt-1">
+                  <option value="">Select category</option>
+                  {productCategories.map((category) => (
+                    <option key={String(category.id ?? category.name)} value={String(category.id ?? "")}>
+                      {String(category.displayName ?? category.name ?? "Unknown")}
+                    </option>
+                  ))}
+                </AdminSelect>
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-semibold text-neutral-text uppercase tracking-wider">Country</span>
+                <AdminSelect value={countryCode} onChange={(event) => setCountryCode(event.target.value)} className="mt-1">
+                  <option value="">Select country</option>
+                  {countries.map((country) => (
+                    <option key={String(country.id ?? country.code)} value={String(country.code ?? "")}>
+                      {String(country.name ?? country.code ?? "Unknown")}
+                    </option>
+                  ))}
+                </AdminSelect>
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-semibold text-neutral-text uppercase tracking-wider">Minimum Disabling Balance</span>
+                <AdminInput type="number" value={minimumDisablingBalance} onChange={(event) => setMinimumDisablingBalance(event.target.value)} placeholder="0" className="mt-1" />
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-semibold text-neutral-text uppercase tracking-wider">Minimum Purchase Amount</span>
+                <AdminInput type="number" value={minimumPurchaseAmount} onChange={(event) => setMinimumPurchaseAmount(event.target.value)} placeholder="0" className="mt-1" />
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-semibold text-neutral-text uppercase tracking-wider">Product Logo File Name</span>
+                <AdminInput value={productLogoFileName} onChange={(event) => setProductLogoFileName(event.target.value)} placeholder="logo.png" className="mt-1" />
+              </label>
+
+              <label className="block md:col-span-2">
+                <span className="text-xs font-semibold text-neutral-text uppercase tracking-wider">Return URL</span>
+                <AdminInput value={returnUrl} onChange={(event) => setReturnUrl(event.target.value)} placeholder="https://yourapp.com/callback" className="mt-1" />
+              </label>
+
+              <label className="block md:col-span-2">
+                <span className="text-xs font-semibold text-neutral-text uppercase tracking-wider">Description</span>
+                <AdminTextarea value={description} onChange={(event) => setDescription(event.target.value)} rows={4} placeholder="Describe this product" className="mt-1" />
+              </label>
+
+              <div className="lg:col-span-2 sticky bottom-0 bg-white border-t border-neutral-light -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 flex items-center justify-end gap-2 mt-2">
+                <AdminRefreshButton onClick={() => setIsFormOpen(false)}>Cancel</AdminRefreshButton>
+                <AdminPrimaryButton type="submit" disabled={isSaving}>
+                  {isSaving ? "Saving..." : editingProductId ? "Update Product" : "Add Product"}
+                </AdminPrimaryButton>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+    </AdminTableLayout>
   );
 };
 

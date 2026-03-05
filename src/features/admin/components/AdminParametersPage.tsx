@@ -626,9 +626,6 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
           />
           <div className="relative w-full max-w-lg bg-white rounded-2xl border border-neutral-light shadow-2xl p-6">
             <h3 className="text-lg font-bold text-dark-text">Create {config.title}</h3>
-            <p className="text-xs text-neutral-text mt-1">
-              Endpoint: <code>{config.createEndpoint}</code>
-            </p>
             <form className="mt-5 space-y-4" onSubmit={(event) => void handleCreate(event)}>
               {config.fields.map((field) => (
                 <label key={field.key} className="block">
@@ -689,9 +686,6 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
             <h3 className="text-lg font-bold text-dark-text">
               Edit {recordLabel}
             </h3>
-            <p className="text-xs text-neutral-text mt-1">
-              Endpoint: <code>{editEndpointLabel}</code>
-            </p>
             <form className="mt-5 space-y-4" onSubmit={(event) => void handleUpdate(event)}>
               {config.fields.map((field) => (
                 <label key={`edit-${field.key}`} className="block">

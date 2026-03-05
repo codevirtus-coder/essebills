@@ -77,9 +77,6 @@ const AdminApiModulePage: React.FC<AdminApiModulePageProps> = ({
           <div>
             <h2 className="text-2xl font-extrabold text-dark-text dark:text-white">{title}</h2>
             <p className="text-sm text-neutral-text mt-1">{description}</p>
-            <p className="text-[10px] font-black uppercase tracking-widest text-primary mt-2">
-              Endpoint: {endpoint}
-            </p>
           </div>
           <div className="px-4 py-2 rounded-xl bg-primary/10 text-primary text-xs font-black uppercase tracking-widest">
             Rows: {filteredRows.length}

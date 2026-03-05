@@ -4,6 +4,17 @@ import { confirmToast } from '../../../lib/confirmToast'
 import { DataTable, TableColumn } from '../../../components/ui/DataTable'
 import type { AdminUserDto } from '../dto/admin-api.dto'
 import { changeUserActivationStatus, createUser, getPaginatedUsers, resetUserOtp, updateUser } from '../services'
+import { AdminTableLayout } from './shared/AdminTableLayout'
+import {
+  AdminCreateButton,
+  AdminIconActivateButton,
+  AdminIconDisableButton,
+  AdminIconEditButton,
+  AdminIconOtpButton,
+  AdminInput,
+  AdminPrimaryButton,
+  AdminRefreshButton,
+} from './shared/AdminControls'
 
 const AdminUsersPage: React.FC = () => {
   const [users, setUsers] = useState<AdminUserDto[]>([])
@@ -172,61 +183,48 @@ const AdminUsersPage: React.FC = () => {
   }
 
   return (
-    <div className="p-8 space-y-6 animate-in fade-in duration-300">
-      <div>
-        <h2 className="text-xl font-bold text-dark-text">User Management</h2>
-        <p className="text-sm text-neutral-text mt-1">Users List</p>
-      </div>
-
-      <div>
-        <div className="flex flex-wrap items-center gap-2 mb-3">
-          <button
-            type="button"
-            onClick={() => setIsCreateOpen(true)}
-            className="px-4 py-2 rounded border border-[#7E57C2] text-[#7E57C2] text-lg font-medium uppercase tracking-wide hover:bg-[#7E57C2]/5 transition-colors"
-          >
-            + Create
-          </button>
-          <button
-            type="button"
-            onClick={() => void loadUsers()}
-            className="px-4 py-2 rounded border border-[#7E57C2] text-[#7E57C2] text-lg font-medium uppercase tracking-wide hover:bg-[#7E57C2]/5 transition-colors"
-          >
-            Refresh
-          </button>
-        </div>
-
+    <>
+      <AdminTableLayout
+        title="User Management"
+        subtitle="Users List"
+        toolbar={
+          <>
+            <AdminCreateButton onClick={() => setIsCreateOpen(true)}>+ Create</AdminCreateButton>
+            <AdminRefreshButton onClick={() => void loadUsers()}>Refresh</AdminRefreshButton>
+          </>
+        }
+      >
         <DataTable
           columns={useMemo<TableColumn<AdminUserDto>[]>(() => [
             {
               key: 'username',
               header: 'Username',
-              render: (user) => String(user.username ?? '-')
+              render: (user) => String(user.username ?? '-'),
             },
             {
               key: 'fullName',
               header: 'Full Name',
-              render: (user) => `${String(user.firstName ?? '')} ${String(user.lastName ?? '')}`.trim() || '-'
+              render: (user) => `${String(user.firstName ?? '')} ${String(user.lastName ?? '')}`.trim() || '-',
             },
             {
               key: 'email',
               header: 'Email',
-              render: (user) => String(user.email ?? '-')
+              render: (user) => String(user.email ?? '-'),
             },
             {
               key: 'phoneNumber',
               header: 'Phone',
-              render: (user) => String(user.phoneNumber ?? '-')
+              render: (user) => String(user.phoneNumber ?? '-'),
             },
             {
               key: 'status',
               header: 'Status',
-              render: (user) => user.active === false ? 'Inactive' : 'Active'
+              render: (user) => (user.active === false ? 'Inactive' : 'Active'),
             },
             {
               key: 'createdDate',
               header: 'Created on',
-              render: (user) => String(user.createdDate ?? '-')
+              render: (user) => String(user.createdDate ?? '-'),
             },
             {
               key: 'actions',
@@ -234,37 +232,28 @@ const AdminUsersPage: React.FC = () => {
               align: 'center',
               render: (user) => (
                 <div className="flex items-center justify-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => openEditModal(user)}
-                    className="h-8 px-3 rounded-lg border border-[#7E57C2]/40 text-[#7E57C2] text-xs font-semibold hover:bg-[#7E57C2]/5"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void handleToggleStatus(user)}
-                    disabled={statusLoadingId === user.id}
-                    className={`h-8 px-3 rounded-lg border text-xs font-semibold disabled:opacity-60 ${
-                      user.active === false
-                        ? 'border-green-200 text-green-700 hover:bg-green-50'
-                        : 'border-amber-200 text-amber-700 hover:bg-amber-50'
-                    }`}
-                  >
-                    {statusLoadingId === user.id ? '...' : user.active === false ? 'Activate' : 'Disable'}
-                  </button>
-                  <button
-                    type="button"
+                  <AdminIconEditButton onClick={() => openEditModal(user)} />
+                  {user.active === false ? (
+                    <AdminIconActivateButton
+                      onClick={() => void handleToggleStatus(user)}
+                      disabled={statusLoadingId === user.id}
+                      title={statusLoadingId === user.id ? 'Processing...' : 'Activate'}
+                    />
+                  ) : (
+                    <AdminIconDisableButton
+                      onClick={() => void handleToggleStatus(user)}
+                      disabled={statusLoadingId === user.id}
+                      title={statusLoadingId === user.id ? 'Processing...' : 'Disable'}
+                    />
+                  )}
+                  <AdminIconOtpButton
                     onClick={() => void handleResetOtp(user)}
                     disabled={otpResetLoadingId === user.id}
-                    className="h-8 px-3 rounded-lg border border-blue-200 text-blue-700 text-xs font-semibold hover:bg-blue-50 disabled:opacity-60"
                     title="Reset OTP secret for this user"
-                  >
-                    {otpResetLoadingId === user.id ? '...' : 'OTP'}
-                  </button>
+                  />
                 </div>
-              )
-            }
+              ),
+            },
           ], [statusLoadingId, otpResetLoadingId])}
           data={rows}
           rowKey={(user) => String(user.id ?? `${user.username ?? 'user'}-${Math.random()}`)}
@@ -272,7 +261,7 @@ const AdminUsersPage: React.FC = () => {
           emptyMessage="No users found"
           emptyIcon="filter_alt_off"
         />
-      </div>
+      </AdminTableLayout>
 
       {isCreateOpen ? (
         <div className="fixed inset-0 z-[140] flex items-center justify-center p-4">
@@ -284,66 +273,53 @@ const AdminUsersPage: React.FC = () => {
           />
           <div className="relative w-full max-w-xl bg-white rounded-2xl border border-neutral-light shadow-2xl p-6">
             <h3 className="text-lg font-bold text-dark-text">Create User</h3>
-            <p className="text-xs text-neutral-text mt-1">
-              Endpoint: <code>/v1/users</code>
-            </p>
             <form className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={(event) => void handleCreate(event)}>
               <label className="block md:col-span-2">
                 <span className="text-xs font-semibold text-neutral-text">Username</span>
-                <input
+                <AdminInput
                   value={form.username}
                   onChange={(event) => setForm((prev) => ({ ...prev, username: event.target.value }))}
-                  className="mt-1 w-full h-11 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="mt-1"
                 />
               </label>
               <label className="block">
                 <span className="text-xs font-semibold text-neutral-text">First Name</span>
-                <input
+                <AdminInput
                   value={form.firstName}
                   onChange={(event) => setForm((prev) => ({ ...prev, firstName: event.target.value }))}
-                  className="mt-1 w-full h-11 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="mt-1"
                 />
               </label>
               <label className="block">
                 <span className="text-xs font-semibold text-neutral-text">Last Name</span>
-                <input
+                <AdminInput
                   value={form.lastName}
                   onChange={(event) => setForm((prev) => ({ ...prev, lastName: event.target.value }))}
-                  className="mt-1 w-full h-11 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="mt-1"
                 />
               </label>
               <label className="block md:col-span-2">
                 <span className="text-xs font-semibold text-neutral-text">Email</span>
-                <input
+                <AdminInput
                   type="email"
                   value={form.email}
                   onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
-                  className="mt-1 w-full h-11 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="mt-1"
                 />
               </label>
               <label className="block md:col-span-2">
                 <span className="text-xs font-semibold text-neutral-text">Phone Number</span>
-                <input
+                <AdminInput
                   value={form.phoneNumber}
                   onChange={(event) => setForm((prev) => ({ ...prev, phoneNumber: event.target.value }))}
-                  className="mt-1 w-full h-11 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="mt-1"
                 />
               </label>
               <div className="md:col-span-2 flex items-center justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsCreateOpen(false)}
-                  className="px-4 py-2 rounded-lg border border-neutral-light text-sm font-semibold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isCreating}
-                  className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold disabled:opacity-60"
-                >
+                <AdminRefreshButton onClick={() => setIsCreateOpen(false)}>Cancel</AdminRefreshButton>
+                <AdminPrimaryButton type="submit" disabled={isCreating}>
                   {isCreating ? 'Submitting...' : 'Submit'}
-                </button>
+                </AdminPrimaryButton>
               </div>
             </form>
           </div>
@@ -360,72 +336,59 @@ const AdminUsersPage: React.FC = () => {
           />
           <div className="relative w-full max-w-xl bg-white rounded-2xl border border-neutral-light shadow-2xl p-6">
             <h3 className="text-lg font-bold text-dark-text">Edit User</h3>
-            <p className="text-xs text-neutral-text mt-1">
-              Endpoint: <code>/v1/users/{String(selectedUser.id)}</code>
-            </p>
             <form className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={(event) => void handleUpdate(event)}>
               <label className="block md:col-span-2">
                 <span className="text-xs font-semibold text-neutral-text">Username</span>
-                <input
+                <AdminInput
                   value={editForm.username}
                   onChange={(event) => setEditForm((prev) => ({ ...prev, username: event.target.value }))}
-                  className="mt-1 w-full h-11 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="mt-1"
                 />
               </label>
               <label className="block">
                 <span className="text-xs font-semibold text-neutral-text">First Name</span>
-                <input
+                <AdminInput
                   value={editForm.firstName}
                   onChange={(event) => setEditForm((prev) => ({ ...prev, firstName: event.target.value }))}
-                  className="mt-1 w-full h-11 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="mt-1"
                 />
               </label>
               <label className="block">
                 <span className="text-xs font-semibold text-neutral-text">Last Name</span>
-                <input
+                <AdminInput
                   value={editForm.lastName}
                   onChange={(event) => setEditForm((prev) => ({ ...prev, lastName: event.target.value }))}
-                  className="mt-1 w-full h-11 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="mt-1"
                 />
               </label>
               <label className="block md:col-span-2">
                 <span className="text-xs font-semibold text-neutral-text">Email</span>
-                <input
+                <AdminInput
                   type="email"
                   value={editForm.email}
                   onChange={(event) => setEditForm((prev) => ({ ...prev, email: event.target.value }))}
-                  className="mt-1 w-full h-11 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="mt-1"
                 />
               </label>
               <label className="block md:col-span-2">
                 <span className="text-xs font-semibold text-neutral-text">Phone Number</span>
-                <input
+                <AdminInput
                   value={editForm.phoneNumber}
                   onChange={(event) => setEditForm((prev) => ({ ...prev, phoneNumber: event.target.value }))}
-                  className="mt-1 w-full h-11 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="mt-1"
                 />
               </label>
               <div className="md:col-span-2 flex items-center justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsEditOpen(false)}
-                  className="px-4 py-2 rounded-lg border border-neutral-light text-sm font-semibold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isUpdating}
-                  className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold disabled:opacity-60"
-                >
+                <AdminRefreshButton onClick={() => setIsEditOpen(false)}>Cancel</AdminRefreshButton>
+                <AdminPrimaryButton type="submit" disabled={isUpdating}>
                   {isUpdating ? 'Saving...' : 'Save'}
-                </button>
+                </AdminPrimaryButton>
               </div>
             </form>
           </div>
         </div>
       ) : null}
-    </div>
+    </>
   )
 }
 
