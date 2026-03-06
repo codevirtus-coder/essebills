@@ -70,7 +70,7 @@ export function BillerCtaSection() {
       <div className="container">
         <div className="section-header biller-cta-header">
           <motion.h2
-            className="type-section-title section-animated-title"
+            className="type-section-title section-animated-title landing-shared-heading"
             initial="hidden"
             whileInView={inViewVariant}
             viewport={{ once: false, amount: 0.55 }}
@@ -96,19 +96,19 @@ export function BillerCtaSection() {
                     opacity: 0.2,
                     y: 18,
                     scale: 0.94,
-                    color: '#9ca3af',
+                    color: 'var(--landing-heading-color-muted)',
                   },
                   visible: {
                     opacity: 1,
                     y: 0,
                     scale: 1,
-                    color: '#0f172a',
+                    color: 'var(--landing-heading-color)',
                   },
                   visibleInstant: {
                     opacity: 1,
                     y: 0,
                     scale: 1,
-                    color: '#0f172a',
+                    color: 'var(--landing-heading-color)',
                     transition: { duration: 0 },
                   },
                 }}
@@ -154,10 +154,10 @@ export function BillerCtaSection() {
           variants={cardsContainerVariants}
         >
           <motion.article className="biller-cta-card biller-cta-card-customer" variants={cardVariants}>
-            <motion.h3 className="type-title-md" variants={cardItemVariants}>
+            <motion.h3 className="type-title-md landing-card-heading" variants={cardItemVariants}>
               Become a Customer
             </motion.h3>
-            <motion.p className="type-body" variants={cardItemVariants}>
+            <motion.p className="type-body landing-card-copy" variants={cardItemVariants}>
               Pay your bills instantly, track your spending history, and manage all your accounts from one secure and
               simple dashboard.
             </motion.p>
@@ -177,10 +177,10 @@ export function BillerCtaSection() {
             className="biller-cta-card biller-cta-card-biller"
             variants={cardVariants}
           >
-            <motion.h3 className="type-title-md" variants={cardItemVariants}>
+            <motion.h3 className="type-title-md landing-card-heading" variants={cardItemVariants}>
               Become a Biller
             </motion.h3>
-            <motion.p className="type-body" variants={cardItemVariants}>
+            <motion.p className="type-body landing-card-copy" variants={cardItemVariants}>
               For utility providers, schools, and corporate entities looking to digitize collections and reach more
               customers instantly.
             </motion.p>
@@ -200,10 +200,10 @@ export function BillerCtaSection() {
             className="biller-cta-card biller-cta-card-agent"
             variants={cardVariants}
           >
-            <motion.h3 className="type-title-md" variants={cardItemVariants}>
+            <motion.h3 className="type-title-md landing-card-heading" variants={cardItemVariants}>
               Become an EseAgent
             </motion.h3>
-            <motion.p className="type-body" variants={cardItemVariants}>
+            <motion.p className="type-body landing-card-copy" variants={cardItemVariants}>
               For shop owners and individuals. Sell airtime, water, and electricity tokens to earn attractive
               commissions.
             </motion.p>

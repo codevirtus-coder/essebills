@@ -451,7 +451,7 @@ export function PaymentSection() {
   return (
     <section className="payment" id="pay-now">
       <motion.h2
-        className="payment-animated-title"
+        className="payment-animated-title landing-shared-heading"
         initial="hidden"
         whileInView={inViewVariant}
         viewport={{ once: false, amount: 0.55 }}
@@ -477,19 +477,19 @@ export function PaymentSection() {
                 opacity: 0.18,
                 y: 20,
                 scale: 0.92,
-                color: "#9ca3af",
+                color: "var(--landing-heading-color-muted)",
               },
               visible: {
                 opacity: 1,
                 y: 0,
                 scale: 1,
-                color: "#0f172a",
+                color: "var(--landing-heading-color)",
               },
               visibleInstant: {
                 opacity: 1,
                 y: 0,
                 scale: 1,
-                color: "#0f172a",
+                color: "var(--landing-heading-color)",
                 transition: { duration: 0 },
               },
             }}

@@ -92,7 +92,7 @@ export function AdvantagesSection() {
             The EseBills Advantage
           </motion.p>
           <motion.h2
-            className="type-section-title section-animated-title"
+            className="type-section-title section-animated-title landing-shared-heading"
             initial="hidden"
             whileInView={inViewVariant}
             viewport={{ once: false, amount: 0.55 }}
@@ -118,19 +118,19 @@ export function AdvantagesSection() {
                     opacity: 0.2,
                     y: 18,
                     scale: 0.94,
-                    color: '#9ca3af',
+                    color: 'var(--landing-heading-color-muted)',
                   },
                   visible: {
                     opacity: 1,
                     y: 0,
                     scale: 1,
-                    color: '#0f172a',
+                    color: 'var(--landing-heading-color)',
                   },
                   visibleInstant: {
                     opacity: 1,
                     y: 0,
                     scale: 1,
-                    color: '#0f172a',
+                    color: 'var(--landing-heading-color)',
                     transition: { duration: 0 },
                   },
                 }}
@@ -166,10 +166,10 @@ export function AdvantagesSection() {
               >
                 <Icon name={card.icon} />
               </motion.div>
-              <motion.h3 className="type-title-md" variants={cardContentVariants}>
+              <motion.h3 className="type-title-md landing-card-heading" variants={cardContentVariants}>
                 {card.title}
               </motion.h3>
-              <motion.p className="type-body text-muted" variants={cardContentVariants}>
+              <motion.p className="type-body landing-card-copy" variants={cardContentVariants}>
                 {card.description}
               </motion.p>
             </motion.article>

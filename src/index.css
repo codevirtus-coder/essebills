@@ -473,6 +473,27 @@ html.dark .chip {
   color: #fff;
 }
 
+.hero-reliable-highlight {
+  position: relative;
+  display: inline-block;
+  color: #dceaa0 !important;
+  padding-bottom: 0.16em;
+}
+
+.hero-reliable-highlight::after {
+  content: "";
+  position: absolute;
+  left: 7%;
+  right: 7%;
+  bottom: -0.105em;
+  height: 0.29em;
+  border-top: 0.062em solid #ffffff;
+  border-radius: 50%;
+  transform: rotate(-0.8deg);
+  pointer-events: none;
+  opacity: 1;
+}
+
 .hero p {
   max-width: 34rem;
   margin: 1.2rem 0 2rem;
@@ -768,6 +789,38 @@ html.dark .floating-title {
   padding-bottom: 2rem;
   font-size: var(--fs-h2);
   line-height: 1.08;
+}
+
+.landing-shared-heading {
+  --landing-heading-size: var(--fs-h2);
+  --landing-heading-color: #0f172a;
+  --landing-heading-color-muted: #9ca3af;
+  font-size: var(--landing-heading-size);
+  color: var(--landing-heading-color);
+}
+
+html.dark .landing-shared-heading {
+  --landing-heading-color: #f8fbff;
+  --landing-heading-color-muted: #94a3b8;
+}
+
+.landing-card-heading {
+  --landing-card-heading-size: clamp(1.7rem, 2.5vw, 2.25rem);
+  --landing-card-heading-color: inherit;
+  font-size: var(--landing-card-heading-size);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  font-weight: var(--fw-extrabold);
+  color: var(--landing-card-heading-color);
+}
+
+.landing-card-copy {
+  margin: 0;
+  max-width: var(--landing-card-copy-max-width, 38ch);
+  font-size: var(--landing-card-copy-size, var(--fs-body));
+  line-height: var(--landing-card-copy-line-height, 1.6);
+  font-weight: var(--landing-card-copy-weight, var(--fw-semibold));
+  color: var(--landing-card-copy-color, #64748b);
 }
 
 .payment-animated-word {
@@ -1140,9 +1193,11 @@ html.dark .advantage-card {
 }
 
 .advantage-card p {
-  margin: 0;
-  max-width: 38ch;
-  color: #64748b;
+  --landing-card-copy-max-width: 38ch;
+  --landing-card-copy-size: var(--fs-body);
+  --landing-card-copy-line-height: 1.65;
+  --landing-card-copy-weight: var(--fw-semibold);
+  --landing-card-copy-color: #64748b;
 }
 
 html.dark .section-kicker {
@@ -1158,7 +1213,7 @@ html.dark .advantage-card h3 {
 }
 
 html.dark .advantage-card p {
-  color: #b9c6da;
+  --landing-card-copy-color: #b9c6da;
 }
 
 html.dark .advantage-icon.primary,
@@ -1284,10 +1339,11 @@ html.dark .logo-placeholder {
 
 .biller-cta-card > p:not(.biller-cta-link) {
   margin: 0.95rem auto 0;
-  max-width: 36ch;
-  font-size: var(--fs-body-lg);
-  line-height: 1.6;
-  color: rgb(234 238 252 / 90%);
+  --landing-card-copy-max-width: 36ch;
+  --landing-card-copy-size: var(--fs-body-lg);
+  --landing-card-copy-line-height: 1.6;
+  --landing-card-copy-weight: var(--fw-semibold);
+  --landing-card-copy-color: rgb(234 238 252 / 90%);
 }
 
 .biller-cta-card-customer {
