@@ -59,16 +59,16 @@ export default function NotificationMenu({ onReplenishFloat }: { onReplenishFloa
       </button>
 
       {isOpen && (
-        <div className="absolute top-14 right-0 w-96 bg-white rounded-xl shadow-2xl border border-neutral-light/50 dark:border-white/5 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-200 z-[100]">
-          <div className="p-6 border-b border-neutral-light/30 dark:border-white/5 flex items-center justify-between">
-            <h4 className="text-xs font-black uppercase tracking-widest text-dark-text/40 dark:text-white/40">INBOX</h4>
+        <div className="absolute top-14 right-0 w-96 bg-white rounded-xl shadow-2xl border border-gray-300 dark:border-gray-700 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-200 z-[100]">
+          <div className="p-6 border-b border-gray-300 dark:border-gray-700 flex items-center justify-between">
+            <h4 className="text-[11px] font-black uppercase tracking-widest text-dark-text/40 dark:text-white/40">INBOX</h4>
             <div className="flex gap-4">
               {unreadCount > 0 && (
-                <button onClick={markAllRead} className="text-xs font-bold text-primary hover:underline">
+                <button onClick={markAllRead} className="text-[11px] font-bold text-primary hover:underline">
                   Mark read
                 </button>
               )}
-              <button onClick={clearNotifs} className="text-xs font-bold text-red-500 hover:underline">
+              <button onClick={clearNotifs} className="text-[11px] font-bold text-red-500 hover:underline">
                 Clear
               </button>
             </div>
@@ -81,7 +81,7 @@ export default function NotificationMenu({ onReplenishFloat }: { onReplenishFloa
                   <div
                     key={n.id}
                     onClick={() => toggleRead(n.id)}
-                    className="p-6 border-b border-neutral-light/30 dark:border-white/5 last:border-0 hover:bg-neutral-light/20 dark:hover:bg-white/5 transition-colors relative cursor-pointer"
+                    className="p-6 border-b border-gray-300 dark:border-gray-700 last:border-0 hover:bg-neutral-light/20 dark:hover:bg-white/5 transition-colors relative cursor-pointer"
                   >
                     <div className="flex gap-4 items-start">
                       <div
@@ -93,10 +93,10 @@ export default function NotificationMenu({ onReplenishFloat }: { onReplenishFloa
                       </div>
                       <div className="flex-1 min-w-0 pr-6">
                         <div className="flex items-center justify-between gap-2">
-                          <p className="text-base font-black text-dark-text dark:text-white tracking-tight">{n.title}</p>
+                          <p className="text-[13px] font-black text-dark-text dark:text-white tracking-tight">{n.title}</p>
                           {!n.isRead && <div className="absolute right-6 top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-primary rounded-full shadow-sm"></div>}
                         </div>
-                        <p className="text-sm text-neutral-text dark:text-gray-400 mt-1 line-clamp-2 leading-tight font-medium">{n.message}</p>
+                        <p className="text-[12px] text-neutral-text dark:text-gray-400 mt-1 line-clamp-2 leading-tight font-medium">{n.message}</p>
                         <p className="text-[10px] font-black text-neutral-text/30 dark:text-white/20 uppercase mt-2 tracking-widest">{n.time}</p>
                       </div>
                     </div>
@@ -108,9 +108,9 @@ export default function NotificationMenu({ onReplenishFloat }: { onReplenishFloa
                             e.stopPropagation()
                             onReplenishFloat?.()
                           }}
-                          className="bg-primary text-white px-10 py-4 rounded-full font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 w-full max-w-[280px]"
+                          className="bg-primary text-white px-6 py-2 rounded-full font-black text-[8px] uppercase tracking-[0.1em] shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1.5 w-full max-w-[200px]"
                         >
-                          <Icon name="add_circle" size={16} />
+                          <Icon name="add_circle" size={12} />
                           REPLENISH FLOAT
                         </button>
                       </div>
@@ -127,7 +127,7 @@ export default function NotificationMenu({ onReplenishFloat }: { onReplenishFloa
           </div>
 
           {notifications.length > 0 && (
-            <button className="w-full py-5 text-xs font-black uppercase tracking-[0.2em] text-primary bg-neutral-light/10 dark:bg-white/5 border-t border-neutral-light/30 dark:border-white/5 hover:bg-primary/5 transition-all">
+            <button className="w-full py-3 text-[9px] font-black uppercase tracking-[0.12em] text-primary bg-neutral-light/10 dark:bg-white/5 border-t border-gray-300 dark:border-gray-700 hover:bg-primary/5 transition-all">
               VIEW ALL NOTIFICATIONS
             </button>
           )}

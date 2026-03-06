@@ -10,6 +10,7 @@ import { getCurrentUserProfile } from '../../auth/auth.service';
 import type { UserProfileDto } from '../../auth/dto/auth.dto';
 import { getAgentWalletBalance, getAgentWalletHistory, type WalletHistoryEntry } from '../services/agent.service';
 import Logo from '../../../components/ui/Logo';
+import { Icon } from '../../../components/ui/Icon';
 import '../styles/agent-dashboard.css';
 
 interface Sale {
@@ -319,15 +320,15 @@ export function AgentDashboardPage() {
                      }`}
                    >
                      {isRequestingPayout ? (
-                        <span className="material-symbols-outlined animate-spin text-sm">sync</span>
+                        <Icon name="sync" size={14} className="animate-spin" />
                      ) : payoutRequested ? (
-                        <span className="material-symbols-outlined text-sm">check_circle</span>
+                        <Icon name="check_circle" size={14} />
                      ) : null}
                      {isRequestingPayout ? 'Processing...' : payoutRequested ? 'Payout Success' : 'Request Payout'}
                    </button>
                 </div>
                 <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center border border-white/30 backdrop-blur-md">
-                   <span className="material-symbols-outlined text-3xl">account_balance_wallet</span>
+                   <Icon name="account_balance_wallet" size={30} />
                 </div>
              </div>
           </div>
@@ -357,7 +358,7 @@ export function AgentDashboardPage() {
           <div className="flex items-center justify-between">
              <h4 className="text-lg font-black text-dark-text tracking-tight">Commission Ledger</h4>
              <button className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-1 hover:underline">
-                <span className="material-symbols-outlined text-sm">download</span> Export Ledger
+                <Icon name="download" size={14} /> Export Ledger
              </button>
           </div>
           <DataTable
@@ -384,7 +385,7 @@ export function AgentDashboardPage() {
             <div key={cat.id} className="bg-white p-8 rounded-xl border border-neutral-light shadow-sm flex items-center justify-between group hover:border-primary/30 transition-all">
               <div className="flex items-center gap-6">
                 <div className="w-14 h-14 rounded-lg bg-background-light flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
-                  <span className="material-symbols-outlined text-3xl">{cat.icon}</span>
+                  <Icon name={cat.icon} size={30} />
                 </div>
                 <div>
                    <h4 className="text-lg font-black text-dark-text">{cat.label}</h4>
@@ -423,14 +424,14 @@ export function AgentDashboardPage() {
              <p className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-2">Active Float Balance</p>
              {floatLoading ? (
                <div className="flex items-center gap-3">
-                 <span className="material-symbols-outlined text-2xl animate-spin text-white/50">sync</span>
+                 <Icon name="sync" size={20} className="animate-spin text-white/50" />
                  <span className="text-white/50 font-bold text-lg">Loading...</span>
                </div>
              ) : (
                <h3 className="text-6xl font-black tracking-tighter">${(floatBalance || 0).toFixed(2)}</h3>
              )}
              <p className="text-xs font-bold text-accent-green mt-4 flex items-center gap-1">
-                <span className="material-symbols-outlined text-sm">bolt</span>
+                <Icon name="bolt" size={14} />
                 Ready for instant sales
              </p>
           </div>
@@ -438,7 +439,7 @@ export function AgentDashboardPage() {
              onClick={onAddFloat}
              className="relative z-10 bg-primary px-10 py-5 rounded-lg font-black text-xs uppercase tracking-widest shadow-2xl shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
           >
-             <span className="material-symbols-outlined text-lg">add_circle</span>
+             <Icon name="add_circle" size={18} />
              Replenish Float
           </button>
        </div>
@@ -462,7 +463,7 @@ export function AgentDashboardPage() {
       {updateFeedback && (
         <div className="fixed bottom-10 right-10 z-[100] animate-in slide-in-from-right-10">
            <div className="bg-dark-text text-white px-8 py-4 rounded-xl shadow-2xl flex items-center gap-3 border border-white/10">
-              <span className="material-symbols-outlined text-accent-green">check_circle</span>
+              <Icon name="check_circle" size={18} className="text-accent-green" />
               <span className="text-sm font-bold tracking-tight">{updateFeedback}</span>
            </div>
         </div>
@@ -526,7 +527,7 @@ export function AgentDashboardPage() {
            disabled={isUpdatingProfile}
            className="bg-primary text-white px-12 py-5 rounded-lg font-black text-xs uppercase tracking-widest shadow-2xl shadow-primary/20 hover:scale-[1.02] transition-all flex items-center gap-2"
          >
-            {isUpdatingProfile && <span className="material-symbols-outlined animate-spin text-sm">sync</span>}
+            {isUpdatingProfile && <Icon name="sync" size={14} className="animate-spin" />}
             {isUpdatingProfile ? 'Updating Profile...' : 'Update Profile'}
          </button>
       </div>
@@ -586,7 +587,7 @@ export function AgentDashboardPage() {
                onClick={onBulkSale}
                className="bg-accent-green text-dark-text px-8 py-3 rounded-lg font-black text-[11px] uppercase tracking-widest flex items-center gap-2 hover:scale-105 transition-all shadow-xl shadow-accent-green/10"
              >
-               <span className="material-symbols-outlined text-lg">batch_prediction</span>
+               <Icon name="table_chart" size={18} />
                BULK SALE
              </button>
            </div>
@@ -597,7 +598,7 @@ export function AgentDashboardPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 animate-in slide-in-from-bottom-4">
            {billers.map(b => (
               <button key={b.id} onClick={() => { setSellForm({...sellForm, billerId: b.id, billerName: b.name, catId: b.catId}); setSellStep('details'); }} className="bg-white p-8 rounded-xl border border-neutral-light hover:border-primary hover:shadow-2xl transition-all group flex flex-col items-center gap-4">
-                 <div className={`w-16 h-16 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 ${b.color}`}><span className="material-symbols-outlined text-3xl">{b.icon}</span></div>
+                 <div className={`w-16 h-16 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 ${b.color}`}><Icon name={b.icon} size={30} /></div>
                  <h4 className="text-sm font-black text-dark-text">{b.name}</h4>
                  <p className="text-[10px] font-black text-accent-green uppercase tracking-widest">Earn {getCommissionRate(b.catId)}%</p>
               </button>
@@ -626,7 +627,7 @@ export function AgentDashboardPage() {
                  <p className="text-[10px] font-black text-neutral-text uppercase tracking-widest">Estimated Commission</p>
                  <p className="text-xl font-black text-accent-green">+${( (parseFloat(sellForm.amount) || 0) * (getCommissionRate(sellForm.catId)/100)).toFixed(2)}</p>
               </div>
-              <span className="material-symbols-outlined text-accent-green text-3xl">savings</span>
+              <Icon name="account_balance_wallet" size={30} className="text-accent-green" />
            </div>
            <div className="grid grid-cols-2 gap-4">
               <button onClick={() => setSellStep('select')} className="py-4 rounded-lg border border-neutral-light font-black text-[10px] uppercase">Cancel</button>
@@ -643,7 +644,7 @@ export function AgentDashboardPage() {
                     {[...Array(20)].map((_, i) => <div key={i} className="w-4 h-4 rounded-full bg-dark-text"></div>)}
                  </div>
                  <div className="w-20 h-20 bg-accent-green text-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl">
-                    <span className="material-symbols-outlined text-4xl font-black">check</span>
+                    <Icon name="check_circle" size={34} />
                  </div>
                  <h3 className="text-3xl font-black text-dark-text tracking-tight">Payment Successful</h3>
                  <p className="text-neutral-text font-bold text-xs uppercase tracking-[0.2em] mt-2">Authorization ID: {lastSale?.id}</p>
@@ -692,22 +693,22 @@ export function AgentDashboardPage() {
 
                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6">
                     <button onClick={() => handleFulfillAction('Thermal Receipt')} className="flex flex-col items-center justify-center p-6 bg-background-light rounded-lg hover:bg-neutral-light transition-all gap-2 group">
-                       <span className="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">print</span>
+                       <Icon name="print" size={18} className="text-primary group-hover:scale-110 transition-transform" />
                        <span className="text-[10px] font-black uppercase tracking-widest">Thermal Print</span>
                     </button>
                     <button onClick={() => handleFulfillAction('WhatsApp Message')} className="flex flex-col items-center justify-center p-6 bg-background-light rounded-lg hover:bg-neutral-light transition-all gap-2 group">
-                       <span className="material-symbols-outlined text-green-600 group-hover:scale-110 transition-transform">share</span>
+                       <Icon name="share" size={18} className="text-green-600 group-hover:scale-110 transition-transform" />
                        <span className="text-[10px] font-black uppercase tracking-widest">WhatsApp</span>
                     </button>
                     <button onClick={() => handleFulfillAction('SMS Confirmation')} className="flex flex-col items-center justify-center p-6 bg-background-light rounded-lg hover:bg-neutral-light transition-all gap-2 group">
-                       <span className="material-symbols-outlined text-blue-600 group-hover:scale-110 transition-transform">sms</span>
+                       <Icon name="sms" size={18} className="text-blue-600 group-hover:scale-110 transition-transform" />
                        <span className="text-[10px] font-black uppercase tracking-widest">Send SMS</span>
                     </button>
                  </div>
 
                  <div className="pt-8 flex flex-col gap-4">
                     <button onClick={() => setSellStep('select')} className="w-full bg-dark-text text-white py-5 rounded-lg font-black text-xs uppercase tracking-widest shadow-xl hover:bg-primary transition-all flex items-center justify-center gap-3">
-                       <span className="material-symbols-outlined">add_circle</span>
+                       <Icon name="add_circle" size={18} />
                        New Transaction
                     </button>
                     <button onClick={() => setTab('overview')} className="w-full py-4 text-neutral-text font-black text-[10px] uppercase tracking-widest hover:text-dark-text transition-colors">

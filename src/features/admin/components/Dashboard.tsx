@@ -10,6 +10,7 @@ import {
 } from "recharts";
 import StatCard from "../../../components/ui/StatCard";
 import { DataTable, type TableColumn } from "../../../components/ui/DataTable";
+import { Icon } from "../../../components/ui/Icon";
 import {
   MOCK_STATS,
   BILLER_PERFORMANCE,
@@ -126,7 +127,7 @@ const Dashboard: React.FC = () => {
       align: "right",
       render: () => (
         <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/10 rounded-xl transition-all text-neutral-text">
-          <span className="material-symbols-outlined text-lg">more_vert</span>
+          <Icon name="more_vert" size={18} />
         </button>
       ),
     },
@@ -192,9 +193,7 @@ const Dashboard: React.FC = () => {
             </div>
             <div className="flex gap-2">
               <button className="bg-neutral-light/50 dark:bg-white/5 p-2 rounded-xl text-neutral-text hover:text-primary transition-colors">
-                <span className="material-symbols-outlined text-lg">
-                  download
-                </span>
+                <Icon name="download" size={18} />
               </button>
               <select className="bg-neutral-light/50 dark:bg-white/5 border-none rounded-xl text-[10px] font-black uppercase tracking-widest py-2 px-4 focus:ring-1 focus:ring-primary">
                 <option>Last 6 Months</option>
@@ -294,9 +293,7 @@ const Dashboard: React.FC = () => {
             </h4>
             <div className="flex gap-4">
               <button className="flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest hover:underline">
-                <span className="material-symbols-outlined text-sm">
-                  download
-                </span>
+                <Icon name="download" size={14} />
                 Export Report
               </button>
             </div>

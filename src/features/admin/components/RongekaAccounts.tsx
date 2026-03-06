@@ -9,14 +9,15 @@ import {
   createRongekaAccount,
 } from "../services/adminModules.service";
 import { DataTable, TableColumn } from "../../../components/ui/DataTable";
-import { AdminTableLayout } from "./shared/AdminTableLayout";
 import {
-  AdminPrimaryButton,
+  AdminCreateButton,
   AdminRefreshButton,
   AdminSearchInput,
   AdminInput,
+  AdminStatusBadge,
+  statusVariant,
 } from "./shared/AdminControls";
-import { ADMIN_CARD, ADMIN_SECTION_LABEL } from "./shared/adminUi";
+import { Icon } from "../../../components/ui/Icon";
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -138,17 +139,12 @@ const RongekaAccounts: React.FC = () => {
         key: "status",
         header: "Status",
         align: "center",
-        render: (a) => (
-          <span
-            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-bold ${
-              String(a.status ?? a.active ?? "").toLowerCase() === "active"
-                ? "bg-green-100 text-green-700 border border-green-200"
-                : "bg-gray-100 text-gray-700 border border-gray-200"
-            }`}
-          >
-            {String(a.status ?? a.active ?? "INACTIVE").toUpperCase()}
-          </span>
-        ),
+        render: (a) => {
+          const value = String(a.status ?? a.active ?? "INACTIVE").toUpperCase();
+          return (
+            <AdminStatusBadge variant={statusVariant(value)}>{value}</AdminStatusBadge>
+          );
+        },
       },
       {
         key: "actions",
@@ -157,14 +153,10 @@ const RongekaAccounts: React.FC = () => {
         render: () => (
           <div className="flex items-center justify-end gap-1">
             <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/10 rounded-lg transition-colors">
-              <span className="material-symbols-outlined text-lg text-neutral-text">
-                edit
-              </span>
+              <Icon name="edit" size={18} className="text-neutral-text" />
             </button>
             <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/10 rounded-lg transition-colors">
-              <span className="material-symbols-outlined text-lg text-neutral-text">
-                more_vert
-              </span>
+              <Icon name="more_vert" size={18} className="text-neutral-text" />
             </button>
           </div>
         ),
@@ -186,20 +178,14 @@ const RongekaAccounts: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-3">
-          <button
-            onClick={() => void loadAccounts()}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-neutral-light dark:border-white/5 rounded-xl text-sm font-bold text-neutral-text hover:bg-neutral-light dark:hover:bg-white/10 transition-all"
-          >
-            <span className="material-symbols-outlined text-lg">refresh</span>
+          <AdminRefreshButton onClick={() => void loadAccounts()}>
+            <Icon name="refresh" size={16} />
             Refresh
-          </button>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:bg-opacity-90 transition-all"
-          >
-            <span className="material-symbols-outlined text-lg">add</span>
+          </AdminRefreshButton>
+          <AdminCreateButton onClick={() => setShowAddModal(true)}>
+            <Icon name="add" size={16} />
             Add Account
-          </button>
+          </AdminCreateButton>
         </div>
       </div>
 
@@ -243,16 +229,11 @@ const RongekaAccounts: React.FC = () => {
 
       {/* Search */}
       <div className="bg-white rounded-2xl border border-neutral-light dark:border-white/5 p-4">
-        <div className="relative max-w-md">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-neutral-text text-xl">
-            search
-          </span>
-          <input
-            type="text"
+        <div className="max-w-md">
+          <AdminSearchInput
             placeholder="Search by account number, name, or phone..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-neutral-light/30 dark:bg-white/5 border-none rounded-xl pl-10 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20"
           />
         </div>
       </div>
@@ -281,7 +262,7 @@ const RongekaAccounts: React.FC = () => {
                 <label className="block text-sm font-bold text-neutral-text mb-1">
                   Account Number
                 </label>
-                <input
+                <AdminInput
                   type="text"
                   value={String(newAccount.accountNumber ?? "")}
                   onChange={(e) =>
@@ -290,7 +271,7 @@ const RongekaAccounts: React.FC = () => {
                       accountNumber: e.target.value,
                     })
                   }
-                  className="w-full bg-neutral-light/30 dark:bg-white/5 border-none rounded-xl px-4 py-2.5 text-sm"
+                  className="w-full"
                   required
                 />
               </div>
@@ -298,7 +279,7 @@ const RongekaAccounts: React.FC = () => {
                 <label className="block text-sm font-bold text-neutral-text mb-1">
                   Account Name
                 </label>
-                <input
+                <AdminInput
                   type="text"
                   value={String(newAccount.accountName ?? "")}
                   onChange={(e) =>
@@ -307,7 +288,7 @@ const RongekaAccounts: React.FC = () => {
                       accountName: e.target.value,
                     })
                   }
-                  className="w-full bg-neutral-light/30 dark:bg-white/5 border-none rounded-xl px-4 py-2.5 text-sm"
+                  className="w-full"
                   required
                 />
               </div>
@@ -315,7 +296,7 @@ const RongekaAccounts: React.FC = () => {
                 <label className="block text-sm font-bold text-neutral-text mb-1">
                   Phone Number
                 </label>
-                <input
+                <AdminInput
                   type="text"
                   value={String(newAccount.phoneNumber ?? "")}
                   onChange={(e) =>
@@ -324,20 +305,20 @@ const RongekaAccounts: React.FC = () => {
                       phoneNumber: e.target.value,
                     })
                   }
-                  className="w-full bg-neutral-light/30 dark:bg-white/5 border-none rounded-xl px-4 py-2.5 text-sm"
+                  className="w-full"
                 />
               </div>
               <div>
                 <label className="block text-sm font-bold text-neutral-text mb-1">
                   Email
                 </label>
-                <input
+                <AdminInput
                   type="email"
                   value={String(newAccount.email ?? "")}
                   onChange={(e) =>
                     setNewAccount({ ...newAccount, email: e.target.value })
                   }
-                  className="w-full bg-neutral-light/30 dark:bg-white/5 border-none rounded-xl px-4 py-2.5 text-sm"
+                  className="w-full"
                 />
               </div>
               <div className="flex gap-3 pt-2">

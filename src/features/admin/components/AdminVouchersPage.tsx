@@ -2,6 +2,9 @@ import React from 'react'
 import toast from 'react-hot-toast'
 import { adminJsonFetch } from '../services'
 import { DataTable, type TableColumn } from '../../../components/ui/DataTable'
+import { AdminTableLayout } from './shared/AdminTableLayout'
+import { AdminRefreshButton } from './shared/AdminControls'
+import { Icon } from '../../../components/ui/Icon'
 
 type UnknownRecord = Record<string, unknown>
 type VoucherRegion = 'zambia' | 'zim'
@@ -102,23 +105,25 @@ const AdminVouchersPage: React.FC<AdminVouchersPageProps> = ({ region }) => {
   ]
 
   return (
-    <div className="p-8 space-y-6 animate-in fade-in duration-300">
-      <section className="bg-white rounded-xl border border-neutral-light p-6 min-h-[112px]">
-        <h2 className="text-4 leading-none font-medium text-dark-text dark:text-white flex items-center gap-3">
-          <span className="material-symbols-outlined text-[28px]">sync_alt</span>
-          vouchers
-        </h2>
-      </section>
-
-      <div className="grid grid-cols-[220px_1fr] gap-8">
-        <aside className="bg-white rounded-lg border border-neutral-light p-4">
+    <AdminTableLayout
+      title="Vouchers"
+      subtitle="Manage voucher inventory by provider."
+      toolbar={
+        <AdminRefreshButton onClick={() => void loadRows()}>
+          <Icon name="refresh" size={16} />
+          Refresh
+        </AdminRefreshButton>
+      }
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-6">
+        <aside className="bg-white rounded-xl border border-neutral-light p-4">
           <div className="space-y-2">
             {providers.map((provider) => (
               <button
                 key={provider.slug}
                 type="button"
                 onClick={() => setSelectedProvider(provider.slug)}
-                className={`w-full text-left px-3 py-2 rounded-none text-[30px] transition-colors ${
+                className={`w-full text-left px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
                   selectedProvider === provider.slug
                     ? 'bg-primary/15 border-l-4 border-primary text-dark-text'
                     : 'text-neutral-text hover:bg-neutral-light/40'
@@ -137,20 +142,11 @@ const AdminVouchersPage: React.FC<AdminVouchersPageProps> = ({ region }) => {
           loading={isLoading}
           emptyMessage="No vouchers found"
           emptyIcon="filter_alt_off"
-          header={
-            <div className="px-5 py-3 flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => void loadRows()}
-                className="px-4 py-2 rounded border border-[#7E57C2] text-[#7E57C2] text-lg font-medium uppercase tracking-wide hover:bg-[#7E57C2]/5 transition-colors"
-              >
-                Refresh
-              </button>
-            </div>
-          }
+          filterable
+          filterPlaceholder="Search vouchers..."
         />
       </div>
-    </div>
+    </AdminTableLayout>
   )
 }
 

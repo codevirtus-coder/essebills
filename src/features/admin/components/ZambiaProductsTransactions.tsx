@@ -6,14 +6,13 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import toast from "react-hot-toast";
 import { adminJsonFetch } from "../services";
 import { DataTable, TableColumn } from "../../../components/ui/DataTable";
-import { AdminTableLayout } from "./shared/AdminTableLayout";
+import { Icon } from "../../../components/ui/Icon";
 import {
   AdminPrimaryButton,
   AdminRefreshButton,
   AdminSearchInput,
-  AdminInput,
+  AdminSelect,
 } from "./shared/AdminControls";
-import { ADMIN_CARD, ADMIN_SECTION_LABEL } from "./shared/adminUi";
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -168,9 +167,7 @@ const ZambiaProductsTransactions: React.FC = () => {
         align: "right",
         render: () => (
           <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/10 rounded-lg transition-colors">
-            <span className="material-symbols-outlined text-lg text-neutral-text">
-              more_vert
-            </span>
+            <Icon name="more_vert" size={18} className="text-neutral-text" />
           </button>
         ),
       },
@@ -230,17 +227,14 @@ const ZambiaProductsTransactions: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-3">
-          <button
-            onClick={() => void loadTransactions()}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-neutral-light dark:border-white/5 rounded-xl text-sm font-bold text-neutral-text hover:bg-neutral-light dark:hover:bg-white/10 transition-all"
-          >
-            <span className="material-symbols-outlined text-lg">refresh</span>
+          <AdminRefreshButton onClick={() => void loadTransactions()}>
+            <Icon name="refresh" size={16} />
             Refresh
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:bg-opacity-90 transition-all">
-            <span className="material-symbols-outlined text-lg">download</span>
+          </AdminRefreshButton>
+          <AdminPrimaryButton>
+            <Icon name="download" size={16} />
             Export CSV
-          </button>
+          </AdminPrimaryButton>
         </div>
       </div>
 
@@ -322,28 +316,21 @@ const ZambiaProductsTransactions: React.FC = () => {
 
           {/* Search & Filter */}
           <div className="flex gap-2 lg:w-96">
-            <div className="relative flex-1">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-neutral-text text-xl">
-                search
-              </span>
-              <input
-                type="text"
-                placeholder="Search transactions..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-neutral-light/30 dark:bg-white/5 border-none rounded-xl pl-10 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
-            <select
+            <AdminSearchInput
+              placeholder="Search transactions..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <AdminSelect
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-neutral-light/30 dark:bg-white/5 border-none rounded-xl px-3 py-2.5 text-sm font-bold"
+              className="max-w-[140px]"
             >
               <option value="ALL">All Status</option>
               <option value="SUCCESS">Success</option>
               <option value="PENDING">Pending</option>
               <option value="FAILED">Failed</option>
-            </select>
+            </AdminSelect>
           </div>
         </div>
       </div>
@@ -379,13 +366,13 @@ const ZambiaProductsTransactions: React.FC = () => {
               className="p-2 text-neutral-text hover:bg-neutral-light rounded-lg disabled:opacity-30"
               disabled
             >
-              <span className="material-symbols-outlined">chevron_left</span>
+              <Icon name="chevron_left" size={16} />
             </button>
             <button className="w-8 h-8 text-xs font-bold bg-primary text-white rounded-lg">
               1
             </button>
             <button className="p-2 text-neutral-text hover:bg-neutral-light rounded-lg">
-              <span className="material-symbols-outlined">chevron_right</span>
+              <Icon name="chevron_right" size={16} />
             </button>
           </div>
         </div>

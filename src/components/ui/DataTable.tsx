@@ -153,7 +153,7 @@ export function DataTable<T>({
               value={filterText}
               onChange={handleFilterChange}
               placeholder={filterPlaceholder}
-              className="w-full h-10 pl-9 pr-3 rounded-lg border border-neutral-light bg-white text-sm font-semibold text-dark-text placeholder:text-neutral-text/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="portal-input-base portal-search-input w-full h-10 pl-9 pr-3 rounded-lg border border-neutral-light bg-white text-sm font-semibold text-dark-text placeholder:text-neutral-text/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
           </div>
         </div>

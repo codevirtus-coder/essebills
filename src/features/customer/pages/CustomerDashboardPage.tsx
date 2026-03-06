@@ -4,6 +4,7 @@ import UserProfile from '../../admin/components/UserProfile';
 import { getPayments } from '../../../services/payments.service';
 import type { PaymentTransaction } from '../../../types';
 import { DataTable, type TableColumn } from '../../../components/ui';
+import { Icon } from '../../../components/ui/Icon';
 
 export function CustomerDashboardPage() {
   const { tab: urlTab } = useParams();
@@ -95,7 +96,7 @@ export function CustomerDashboardPage() {
         </div>
         {transactions === null ? (
           <div className="p-12 flex items-center justify-center gap-3">
-            <span className="material-symbols-outlined animate-spin text-neutral-text">sync</span>
+            <Icon name="sync" size={18} className="animate-spin text-neutral-text" />
             <span className="text-xs font-bold text-neutral-text uppercase tracking-widest">Loading transactions...</span>
           </div>
         ) : (

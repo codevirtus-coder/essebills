@@ -9,6 +9,7 @@ import {
 import { DashboardHeader } from "./DashboardHeader";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { useCurrentUser } from "../features/auth/hooks/useCurrentUser";
+import { Icon } from "../components/ui/Icon";
 
 export function DashboardLayout() {
   const { group } = useCurrentUser();
@@ -78,7 +79,7 @@ export function DashboardLayout() {
                 className="w-9 h-9 rounded-xl bg-neutral-light text-neutral-text flex items-center justify-center"
                 aria-label="Close menu"
               >
-                <span className="material-symbols-outlined text-lg">close</span>
+                <Icon name="close" size={18} />
               </button>
             </div>
             <div className="pt-4">
