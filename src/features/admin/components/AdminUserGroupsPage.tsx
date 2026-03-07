@@ -2,18 +2,11 @@ import React, { useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import { confirmToast } from '../../../lib/confirmToast'
 import type { AdminGroupDto } from '../dto/admin-api.dto'
-import { createGroup, deleteGroup, getAllGroups, updateGroup } from '../services'
-import { DataTable, type TableColumn } from '../../../components/ui/DataTable'
-import { AdminTableLayout } from './shared/AdminTableLayout'
-import {
-  AdminCreateButton,
-  AdminIconDeleteButton,
-  AdminIconEditButton,
-  AdminInput,
-  AdminPrimaryButton,
-  AdminRefreshButton,
-  AdminTextarea,
-} from './shared/AdminControls'
+import { createGroup, deleteGroup, getPaginatedGroups, updateGroup } from '../services'
+import CRUDLayout, { type CRUDColumn } from '../../shared/components/CRUDLayout'
+import CRUDModal from '../../shared/components/CRUDModal'
+import { AdminInput, AdminTextarea } from './shared/AdminControls'
+import { Users, FileText, Calendar, User, Edit2, Trash2 } from 'lucide-react'
 
 const AdminUserGroupsPage: React.FC = () => {
   const [groups, setGroups] = useState<AdminGroupDto[]>([])
@@ -22,7 +15,7 @@ const AdminUserGroupsPage: React.FC = () => {
   const [isCreating, setIsCreating] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
-  const [isDeletingId, setIsDeletingId] = useState<string | number | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
   const [selectedGroup, setSelectedGroup] = useState<AdminGroupDto | null>(null)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
@@ -31,8 +24,8 @@ const AdminUserGroupsPage: React.FC = () => {
   const loadGroups = React.useCallback(async () => {
     try {
       setIsLoading(true)
-      const response = await getAllGroups()
-      setGroups(Array.isArray(response) ? response : [])
+      const response = await getPaginatedGroups()
+      setGroups(Array.isArray(response?.content) ? response.content : [])
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to load groups')
     } finally {
@@ -44,6 +37,14 @@ const AdminUserGroupsPage: React.FC = () => {
     void loadGroups()
   }, [loadGroups])
 
+  const filteredGroups = useMemo(() => {
+    const term = searchTerm.toLowerCase()
+    return groups.filter(group => 
+      (group.name ?? '').toLowerCase().includes(term) ||
+      (group.description ?? '').toLowerCase().includes(term)
+    )
+  }, [groups, searchTerm])
+
   const openEditModal = (group: AdminGroupDto) => {
     setSelectedGroup(group)
     setEditForm({
@@ -53,8 +54,7 @@ const AdminUserGroupsPage: React.FC = () => {
     setIsEditOpen(true)
   }
 
-  const handleCreate = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+  const handleCreate = async () => {
     const trimmedName = name.trim()
     if (!trimmedName) {
       toast.error('Group name is required')
@@ -75,8 +75,7 @@ const AdminUserGroupsPage: React.FC = () => {
     }
   }
 
-  const handleUpdate = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+  const handleUpdate = async () => {
     if (!selectedGroup?.id) {
       toast.error('Group ID is missing')
       return
@@ -105,14 +104,9 @@ const AdminUserGroupsPage: React.FC = () => {
     }
   }
 
-  const handleDelete = (group: AdminGroupDto) => {
-    if (!group.id) {
-      toast.error('Group ID is missing')
-      return
-    }
-    confirmToast(`Delete group "${String(group.name ?? group.id)}"?`, () => {
-      setIsDeletingId(group.id!)
-      deleteGroup(group.id!)
+  const handleDelete = (id: string | number) => {
+    confirmToast(`Delete this group?`, () => {
+      deleteGroup(id)
         .then(() => {
           toast.success('Group deleted')
           return loadGroups()
@@ -120,161 +114,153 @@ const AdminUserGroupsPage: React.FC = () => {
         .catch((error: unknown) => {
           toast.error(error instanceof Error ? error.message : 'Failed to delete group')
         })
-        .finally(() => {
-          setIsDeletingId(null)
-        })
     })
   }
 
-  const columns = useMemo<TableColumn<AdminGroupDto>[]>(() => [
+  const columns: CRUDColumn<AdminGroupDto>[] = [
     {
       key: 'name',
-      header: 'Name',
-      sortable: true,
-      sortValue: (g) => String(g.name ?? ''),
-      filterValue: (g) => String(g.name ?? ''),
-      render: (g) => <span className="font-semibold text-dark-text text-sm">{String(g.name ?? '—')}</span>,
+      header: 'Group Name',
+      render: (g) => (
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+            <Users size={18} className="text-slate-600 dark:text-slate-400" />
+          </div>
+          <span className="font-bold text-slate-900 dark:text-slate-100">{String(g.name ?? '—')}</span>
+        </div>
+      ),
     },
     {
       key: 'description',
       header: 'Description',
-      filterValue: (g) => String(g.description ?? ''),
-      render: (g) => <span className="text-sm text-neutral-text">{String(g.description ?? '—')}</span>,
+      render: (g) => (
+        <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+          <FileText size={14} />
+          <span className="text-sm">{String(g.description ?? '—')}</span>
+        </div>
+      ),
     },
     {
       key: 'createdBy',
       header: 'Created By',
-      render: (g) => <span className="text-sm text-neutral-text">{String(g.createdBy ?? '—')}</span>,
+      render: (g) => (
+        <div className="flex items-center gap-2 text-slate-500 text-xs font-medium">
+          <User size={12} />
+          {String(g.createdBy ?? '—')}
+        </div>
+      ),
     },
     {
       key: 'createdDate',
       header: 'Created On',
-      sortable: true,
-      sortValue: (g) => String(g.createdDate ?? ''),
-      render: (g) => <span className="text-sm text-neutral-text">{String(g.createdDate ?? '—')}</span>,
-    },
-    {
-      key: 'lastModifiedBy',
-      header: 'Last Modified By',
-      render: (g) => <span className="text-sm text-neutral-text">{String(g.lastModifiedBy ?? '—')}</span>,
-    },
-    {
-      key: 'actions',
-      header: 'Actions',
-      align: 'center',
       render: (g) => (
-        <div className="flex items-center justify-center gap-2">
-          <AdminIconEditButton onClick={() => openEditModal(g)} />
-          <AdminIconDeleteButton onClick={() => handleDelete(g)} disabled={isDeletingId === g.id} />
+        <div className="flex items-center gap-2 text-slate-500 text-xs font-medium">
+          <Calendar size={12} />
+          {String(g.createdDate ?? '—')}
         </div>
       ),
     },
-  ], [isDeletingId])
+  ]
 
   return (
-    <>
-      <AdminTableLayout
-        title="User Groups"
-        subtitle="Manage user groups and permissions"
-        toolbar={
-          <>
-            <AdminCreateButton onClick={() => setIsCreateOpen(true)}>+ Create Group</AdminCreateButton>
-            <AdminRefreshButton onClick={() => void loadGroups()}>Refresh</AdminRefreshButton>
-          </>
-        }
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="glass-card p-6 border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">User Groups</h2>
+          <p className="text-sm text-slate-500 font-medium mt-1">Manage user groups and permissions</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center gap-2">
+            <Users size={16} className="text-slate-600 dark:text-slate-400" />
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest">{groups.length} Groups</span>
+          </div>
+        </div>
+      </div>
+
+      <CRUDLayout
+        title=""
+        columns={columns}
+        data={filteredGroups}
+        loading={isLoading}
+        pageable={{ page: 1, size: filteredGroups.length, totalElements: filteredGroups.length, totalPages: 1 }}
+        onPageChange={() => {}}
+        onSizeChange={() => {}}
+        onSearch={setSearchTerm}
+        onRefresh={loadGroups}
+        onAdd={() => {
+          setName('')
+          setDescription('')
+          setIsCreateOpen(true)
+        }}
+        addButtonText="Create Group"
+        actions={{
+          onEdit: openEditModal,
+          onDelete: (item) => handleDelete(item.id!)
+        }}
+      />
+
+      <CRUDModal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        title="Create User Group"
+        onSubmit={handleCreate}
+        isSubmitting={isCreating}
+        submitLabel="Create Group"
       >
-        <DataTable
-          columns={columns}
-          data={groups}
-          rowKey={(g) => String(g.id ?? `${String(g.name ?? 'group')}-${Math.random()}`)}
-          loading={isLoading}
-          emptyMessage="No groups found"
-          emptyIcon="group"
-          filterable
-          filterPlaceholder="Search groups..."
-        />
-      </AdminTableLayout>
-
-      {isCreateOpen ? (
-        <div className="fixed inset-0 z-[140] flex items-center justify-center p-4">
-          <button
-            type="button"
-            onClick={() => setIsCreateOpen(false)}
-            className="absolute inset-0 bg-slate-900/45"
-            aria-label="Close create modal"
-          />
-          <div className="relative w-full max-w-lg bg-white rounded-xl border border-neutral-light shadow-2xl p-6">
-            <h3 className="text-lg font-bold text-dark-text">Create Group</h3>
-            <form className="mt-5 space-y-4" onSubmit={(event) => void handleCreate(event)}>
-              <label className="block">
-                <span className="text-xs font-semibold text-neutral-text uppercase tracking-wider">Name</span>
-                <AdminInput
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  className="mt-1"
-                />
-              </label>
-              <label className="block">
-                <span className="text-xs font-semibold text-neutral-text uppercase tracking-wider">Description</span>
-                <AdminTextarea
-                  value={description}
-                  onChange={(event) => setDescription(event.target.value)}
-                  rows={3}
-                  className="mt-1"
-                />
-              </label>
-              <div className="flex items-center justify-end gap-2 pt-2">
-                <AdminRefreshButton onClick={() => setIsCreateOpen(false)}>Cancel</AdminRefreshButton>
-                <AdminPrimaryButton type="submit" disabled={isCreating}>
-                  {isCreating ? 'Creating...' : 'Create'}
-                </AdminPrimaryButton>
-              </div>
-            </form>
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Group Name</label>
+            <AdminInput
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full"
+              placeholder="e.g. Administrators"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Description</label>
+            <AdminTextarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              className="w-full"
+              placeholder="Describe the group's purpose..."
+            />
           </div>
         </div>
-      ) : null}
+      </CRUDModal>
 
-      {isEditOpen && selectedGroup ? (
-        <div className="fixed inset-0 z-[140] flex items-center justify-center p-4">
-          <button
-            type="button"
-            onClick={() => setIsEditOpen(false)}
-            className="absolute inset-0 bg-slate-900/45"
-            aria-label="Close edit modal"
-          />
-          <div className="relative w-full max-w-lg bg-white rounded-xl border border-neutral-light shadow-2xl p-6">
-            <h3 className="text-lg font-bold text-dark-text">Edit Group</h3>
-            <form className="mt-5 space-y-4" onSubmit={(event) => void handleUpdate(event)}>
-              <label className="block">
-                <span className="text-xs font-semibold text-neutral-text uppercase tracking-wider">Name</span>
-                <AdminInput
-                  value={editForm.name}
-                  onChange={(event) => setEditForm((prev) => ({ ...prev, name: event.target.value }))}
-                  className="mt-1"
-                />
-              </label>
-              <label className="block">
-                <span className="text-xs font-semibold text-neutral-text uppercase tracking-wider">Description</span>
-                <AdminTextarea
-                  value={editForm.description}
-                  onChange={(event) =>
-                    setEditForm((prev) => ({ ...prev, description: event.target.value }))
-                  }
-                  rows={3}
-                  className="mt-1"
-                />
-              </label>
-              <div className="flex items-center justify-end gap-2 pt-2">
-                <AdminRefreshButton onClick={() => setIsEditOpen(false)}>Cancel</AdminRefreshButton>
-                <AdminPrimaryButton type="submit" disabled={isUpdating}>
-                  {isUpdating ? 'Saving...' : 'Save'}
-                </AdminPrimaryButton>
-              </div>
-            </form>
+      <CRUDModal
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        title="Edit User Group"
+        onSubmit={handleUpdate}
+        isSubmitting={isUpdating}
+        submitLabel="Update Group"
+      >
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Group Name</label>
+            <AdminInput
+              value={editForm.name}
+              onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))}
+              className="w-full"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Description</label>
+            <AdminTextarea
+              value={editForm.description}
+              onChange={(event) =>
+                setEditForm((prev) => ({ ...prev, description: event.target.value }))
+              }
+              rows={3}
+              className="w-full"
+            />
           </div>
         </div>
-      ) : null}
-    </>
+      </CRUDModal>
+    </div>
   )
 }
 

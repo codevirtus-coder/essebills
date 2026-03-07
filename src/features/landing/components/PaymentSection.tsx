@@ -5,8 +5,9 @@ import { Icon } from "../../../components/ui/Icon";
 import { useScrollDirection } from "../../../hooks/useScrollDirection";
 import { ROUTE_PATHS } from "../../../router/paths";
 import {
-  getAllProducts,
+  getProducts,
   getProductCategories,
+  getProductsByCategory,
 } from "../../../services/products.service";
 import type { Product, ProductCategory } from "../../../types/products";
 
@@ -231,16 +232,18 @@ function fieldsByProduct(
   return DEFAULT_FIELDS;
 }
 
-async function fetchProductsAndCategories(): Promise<{
+async function fetchProductsAndCategories(categoryId?: string): Promise<{
   products: Product[];
   categories: ProductCategory[];
 }> {
-  const [products, categories] = await Promise.all([
-    getAllProducts(),
+  const [productsPage, categories] = await Promise.all([
+    categoryId
+      ? getProductsByCategory(categoryId, { size: 50 })
+      : getProducts({ size: 50 }),
     getProductCategories(),
   ]);
   return {
-    products: Array.isArray(products) ? products : [],
+    products: Array.isArray(productsPage?.content) ? productsPage.content : [],
     categories: Array.isArray(categories) ? categories : [],
   };
 }
@@ -311,8 +314,8 @@ export function PaymentSection() {
   const [formValues, setFormValues] = useState<Record<string, string>>({});
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["products", "all", "categories", "all"],
-    queryFn: fetchProductsAndCategories,
+    queryKey: ["products", "categories", activeCategory],
+    queryFn: () => fetchProductsAndCategories(activeCategory),
   });
 
   const categoryTabs: CategoryTab[] = useMemo(() => {

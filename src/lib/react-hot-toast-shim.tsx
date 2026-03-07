@@ -27,7 +27,9 @@ const toastShim = Object.assign(
   },
 ) as ReactHotToastLike
 
-type ToasterProps = {
+export const toast = toastShim
+
+export type ToasterProps = {
   position?: React.ComponentProps<typeof GoeyToaster>['position']
   toastOptions?: {
     duration?: number
@@ -46,4 +48,3 @@ export function Toaster({ position = 'top-right', toastOptions }: ToasterProps) 
 }
 
 export default toastShim
-

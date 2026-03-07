@@ -1,76 +1,30 @@
 import { adminJsonFetch, adminVoidFetch } from './adminApi.client'
 import { ADMIN_ENDPOINTS } from './admin.endpoints'
+import type { PageDto, QueryFilters } from '../dto/admin-api.dto'
 
 type UnknownRecord = Record<string, unknown>
 
-export async function getAllRongekaAccounts() {
-  return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.rongekaAccounts.all)
+// Banks
+export async function getPaginatedBanks(filters?: QueryFilters) {
+  return adminJsonFetch<PageDto<UnknownRecord>>(ADMIN_ENDPOINTS.banks.root, { filters })
 }
 
-export async function getAllProductCategories() {
-  return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.productCategories.all)
+export async function createBank(payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.banks.root, { method: 'POST', body: payload })
 }
 
-export async function createProductCategory(payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.productCategories.root, {
-    method: 'POST',
-    body: payload,
-  })
-}
-
-export async function updateProductCategory(id: string | number, payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.productCategories.byId(id), {
+export async function updateBank(bankId: string | number, payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.banks.byId(bankId), {
     method: 'PUT',
     body: payload,
   })
 }
 
-export async function deleteProductCategory(id: string | number) {
-  return adminVoidFetch(ADMIN_ENDPOINTS.productCategories.byId(id), {
-    method: 'DELETE',
-  })
+export async function deleteBank(bankId: string | number) {
+  return adminVoidFetch(ADMIN_ENDPOINTS.banks.byId(bankId), { method: 'DELETE' })
 }
 
-export async function createRongekaAccount(payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.rongekaAccounts.root, {
-    method: 'POST',
-    body: payload,
-  })
-}
-
-export async function getAllZambiaVouchers() {
-  return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.vouchers.zambiaProducts.all)
-}
-
-export async function createZambiaVoucher(payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.vouchers.zambiaProducts.root, {
-    method: 'POST',
-    body: payload,
-  })
-}
-
-export async function getAllZimVouchers() {
-  return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.vouchers.zimProducts.all)
-}
-
-export async function createZimVoucher(payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.vouchers.zimProducts.root, {
-    method: 'POST',
-    body: payload,
-  })
-}
-
-export async function getAllBanks() {
-  return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.banks.all)
-}
-
-export async function createBank(payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.banks.root, {
-    method: 'POST',
-    body: payload,
-  })
-}
-
+// Holidays
 export async function getAllHolidays() {
   return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.holidays.root)
 }
@@ -83,337 +37,91 @@ export async function createHoliday(date: string) {
   })
 }
 
-export async function updateHoliday(id: string | number, date: string) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.holidays.byId(id), {
-    method: 'PUT',
-    body: {},
-    filters: { date },
-  })
+// EseBills Accounts
+export async function getPaginatedEsebillsAccounts(filters?: QueryFilters) {
+  return adminJsonFetch<PageDto<UnknownRecord>>(ADMIN_ENDPOINTS.esebillsAccounts.root, { filters })
 }
 
-export async function deleteHoliday(id: string | number) {
-  return adminVoidFetch(ADMIN_ENDPOINTS.holidays.byId(id), {
-    method: 'DELETE',
-  })
-}
-
-export async function getAllParameterCurrencies() {
-  return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.currencies.all)
-}
-
-export async function createCurrency(payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.currencies.root, {
+export async function createEsebillsAccount(payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.esebillsAccounts.root, {
     method: 'POST',
     body: payload,
   })
 }
 
-export async function updateCurrency(currencyId: string | number, payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.currencies.byId(currencyId), {
+export async function updateEsebillsAccount(accountId: string | number, payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.esebillsAccounts.byId(accountId), {
     method: 'PUT',
     body: payload,
   })
 }
 
-export async function deleteCurrency(currencyId: string | number) {
-  return adminVoidFetch(ADMIN_ENDPOINTS.currencies.byId(currencyId), {
-    method: 'DELETE',
-  })
+export async function deleteEsebillsAccount(accountId: string | number) {
+  return adminVoidFetch(ADMIN_ENDPOINTS.esebillsAccounts.byId(accountId), { method: 'DELETE' })
 }
 
-export async function getAllParameterCountries() {
-  return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.countries.all)
+// Providers (ESOLUTIONS, ECONET_DIRECT, NETONE_DIRECT, ZESA_DIRECT)
+export type ProviderCode = 'ESOLUTIONS' | 'ECONET_DIRECT' | 'NETONE_DIRECT' | 'ZESA_DIRECT'
+
+export async function enableProvider(provider: ProviderCode) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.providers.enable(provider), { method: 'POST' })
 }
 
-export async function createCountry(payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.countries.root, {
-    method: 'POST',
-    body: payload,
-  })
+export async function disableProvider(provider: ProviderCode) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.providers.disable(provider), { method: 'POST' })
 }
 
-export async function updateCountry(id: string | number, payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.countries.byId(id), {
-    method: 'PUT',
-    body: payload,
-  })
-}
-
-export async function deleteCountry(id: string | number) {
-  return adminVoidFetch(ADMIN_ENDPOINTS.countries.byId(id), {
-    method: 'DELETE',
-  })
-}
-
-export async function updateBank(bankId: string | number, payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.banks.byId(bankId), {
-    method: 'PUT',
-    body: payload,
-  })
-}
-
-export async function deleteBank(bankId: string | number) {
-  return adminVoidFetch(ADMIN_ENDPOINTS.banks.byId(bankId), {
-    method: 'DELETE',
-  })
-}
-
-export async function getAllSmsMessages() {
-  return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.sms.root)
-}
-
-export async function createSmsMessage(payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.sms.root, {
-    method: 'POST',
-    body: payload,
-  })
-}
-
-export async function getAllSmsCharges() {
-  return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.sms.charges)
-}
-
-export async function createSmsCharge(payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.sms.charges, {
-    method: 'POST',
-    body: payload,
-  })
-}
-
-export async function getAllEconetBundlePlanTypes() {
-  return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.econet.bundlePlanTypes.all)
-}
-
-export async function createEconetBundlePlanType(payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.econet.bundlePlanTypes.root, {
-    method: 'POST',
-    body: payload,
-  })
-}
-
-export async function updateEconetBundlePlanType(id: string | number, payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.econet.bundlePlanTypes.byId(id), {
-    method: 'PUT',
-    body: payload,
-  })
-}
-
-export async function deleteEconetBundlePlanType(id: string | number) {
-  return adminVoidFetch(ADMIN_ENDPOINTS.econet.bundlePlanTypes.byId(id), {
-    method: 'DELETE',
-  })
-}
-
-export async function changeEconetBundlePlanTypeStatus(id: string | number, active: boolean) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.econet.bundlePlanTypes.changeStatus(id), {
-    method: 'GET',
-    filters: { active },
-  })
-}
-
-export async function getAllEconetDataBundleTypes() {
-  return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.econet.dataBundleTypes.all)
-}
-
-export async function createEconetDataBundleType(payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.econet.dataBundleTypes.root, {
-    method: 'POST',
-    body: payload,
-  })
-}
-
-export async function updateEconetDataBundleType(id: string | number, payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.econet.dataBundleTypes.byId(id), {
-    method: 'PUT',
-    body: payload,
-  })
-}
-
-export async function deleteEconetDataBundleType(id: string | number) {
-  return adminVoidFetch(ADMIN_ENDPOINTS.econet.dataBundleTypes.byId(id), {
-    method: 'DELETE',
-  })
-}
-
-export async function changeEconetDataBundleTypeStatus(id: string | number, active: boolean) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.econet.dataBundleTypes.changeStatus(id), {
-    method: 'GET',
-    filters: { active },
-  })
-}
-
-export async function getAllNetoneBundlePlans() {
-  return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.netone.bundlePlans.all)
-}
-
-export async function createNetoneBundlePlan(payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.netone.bundlePlans.root, {
-    method: 'POST',
-    body: payload,
-  })
-}
-
-export async function updateNetoneBundlePlan(id: string | number, payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.netone.bundlePlans.byId(id), {
-    method: 'PUT',
-    body: payload,
-  })
-}
-
-export async function deleteNetoneBundlePlan(id: string | number) {
-  return adminVoidFetch(ADMIN_ENDPOINTS.netone.bundlePlans.byId(id), {
-    method: 'DELETE',
-  })
-}
-
-export async function changeNetoneBundlePlanStatus(id: string | number, active: boolean) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.netone.bundlePlans.changeStatus(id), {
-    method: 'GET',
-    filters: { active },
-  })
-}
-
-export async function getAllNetoneDataBundleTypes() {
-  return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.netone.dataBundleTypes.all)
-}
-
-export async function createNetoneDataBundleType(payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.netone.dataBundleTypes.root, {
-    method: 'POST',
-    body: payload,
-  })
-}
-
-export async function updateNetoneDataBundleType(id: string | number, payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.netone.dataBundleTypes.byId(id), {
-    method: 'PUT',
-    body: payload,
-  })
-}
-
-export async function deleteNetoneDataBundleType(id: string | number) {
-  return adminVoidFetch(ADMIN_ENDPOINTS.netone.dataBundleTypes.byId(id), {
-    method: 'DELETE',
-  })
-}
-
-export async function changeNetoneDataBundleTypeStatus(id: string | number, active: boolean) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.netone.dataBundleTypes.changeStatus(id), {
-    method: 'GET',
-    filters: { active },
-  })
-}
-
-export async function getAllPesepayCredentials() {
-  return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.credentials.pesepay.all)
+// Pesepay Credentials
+export async function getPaginatedPesepayCredentials(filters?: QueryFilters) {
+  return adminJsonFetch<PageDto<UnknownRecord>>(ADMIN_ENDPOINTS.pesepayCredentials.root, { filters })
 }
 
 export async function createPesepayCredentials(payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.credentials.pesepay.root, {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.pesepayCredentials.root, {
     method: 'POST',
     body: payload,
   })
 }
 
-export async function getAllCgrateCredentials() {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.credentials.cgrate.root)
+export async function updatePesepayCredentials(id: string | number, payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.pesepayCredentials.byId(id), {
+    method: 'PUT',
+    body: payload,
+  })
 }
 
-export async function createCgrateCredentials(payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.credentials.cgrate.root, {
+export async function deletePesepayCredentials(id: string | number) {
+  return adminVoidFetch(ADMIN_ENDPOINTS.pesepayCredentials.byId(id), { method: 'DELETE' })
+}
+
+// Agent Commission Rates
+export async function getAgentCommissionRates(agentId: string | number) {
+  return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.agentCommission.rates(agentId))
+}
+
+export async function createAgentCommissionRate(agentId: string | number, payload: UnknownRecord) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.agentCommission.rates(agentId), {
     method: 'POST',
     body: payload,
   })
 }
 
-export async function getAllZesaCredentials() {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.credentials.zesa.root)
-}
-
-export async function createZesaCredentials(payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.credentials.zesa.root, {
-    method: 'POST',
+export async function updateAgentCommissionRate(
+  agentId: string | number,
+  rateId: string | number,
+  payload: UnknownRecord,
+) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.agentCommission.rateById(agentId, rateId), {
+    method: 'PUT',
     body: payload,
   })
 }
 
-export async function getAllEconetCredentials() {
-  return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.econet.credentials.all)
+// WhatsApp (via backend API spec)
+export async function getWhatsappSessions(filters?: QueryFilters) {
+  return adminJsonFetch<PageDto<UnknownRecord>>(ADMIN_ENDPOINTS.whatsapp.sessions, { filters })
 }
 
-export async function createEconetCredentials(payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.econet.credentials.root, {
-    method: 'POST',
-    body: payload,
-  })
-}
-
-export async function getAllEsolutionsSmsCredentials() {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.credentials.esolutionsSms.root)
-}
-
-export async function createEsolutionsSmsCredentials(payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.credentials.esolutionsSms.root, {
-    method: 'POST',
-    body: payload,
-  })
-}
-
-export async function getAllNetoneEvdCredentials() {
-  return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.netone.credentials.all)
-}
-
-export async function createNetoneEvdCredentials(payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.netone.credentials.root, {
-    method: 'POST',
-    body: payload,
-  })
-}
-
-export async function getAllEsolutionsAirtimeCredentials() {
-  return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.credentials.esolutionsAirtime.all)
-}
-
-export async function createEsolutionsAirtimeCredentials(payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.credentials.esolutionsAirtime.root, {
-    method: 'POST',
-    body: payload,
-  })
-}
-
-export async function getAllTuitionTransactions() {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.tuition.transactions.all)
-}
-
-export async function getAllTuitionInstitutions() {
-  return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.tuition.institutions.all)
-}
-
-export async function createTuitionInstitution(payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.tuition.institutions.root, {
-    method: 'POST',
-    body: payload,
-  })
-}
-
-export async function getAllTuitionFeeTypes() {
-  return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.tuition.feeTypes.all)
-}
-
-export async function createTuitionFeeType(payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.tuition.feeTypes.root, {
-    method: 'POST',
-    body: payload,
-  })
-}
-
-export async function getAllTuitionProcessingFees() {
-  return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.tuition.processingFees.all)
-}
-
-export async function createTuitionProcessingFee(payload: UnknownRecord) {
-  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.tuition.processingFees.root, {
-    method: 'POST',
-    body: payload,
-  })
+export async function getWhatsappMessages(filters?: QueryFilters) {
+  return adminJsonFetch<PageDto<UnknownRecord>>(ADMIN_ENDPOINTS.whatsapp.messages, { filters })
 }

@@ -38,8 +38,12 @@ export function DashboardLayout() {
   const basePath = "/" + location.pathname.split("/").filter(Boolean)[0];
 
   const handleTabChange = (tab: string) => {
-    // Navigate to absolute base path with tab as query param to avoid stale URL param conflicts
-    navigate(`${basePath}?tab=${tab}`, { replace: true });
+    // Navigate to absolute path with tab as path parameter
+    if (tab === 'dashboard' || tab === 'overview') {
+      navigate(basePath, { replace: true });
+    } else {
+      navigate(`${basePath}/${tab}`, { replace: true });
+    }
     setIsMobileNavOpen(false);
   };
 
@@ -48,7 +52,7 @@ export function DashboardLayout() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background-light dark:bg-background-dark">
+    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
       {/* Desktop Sidebar */}
       <div className="hidden md:flex">
         <DashboardSidebar
@@ -100,8 +104,10 @@ export function DashboardLayout() {
           isMobileNavOpen={isMobileNavOpen}
         />
 
-        <main className="flex-1 overflow-y-auto">
-          <Outlet />
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10">
+          <div className="max-w-[1600px] mx-auto">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

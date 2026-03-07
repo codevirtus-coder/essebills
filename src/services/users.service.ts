@@ -33,11 +33,6 @@ export async function getUserById(userId: string | number): Promise<User> {
   return apiFetch<User>(API_ENDPOINTS.users.byId(userId))
 }
 
-/** Get all users (non-paginated) */
-export async function getAllUsers(): Promise<User[]> {
-  return apiFetch<User[]>(API_ENDPOINTS.users.all)
-}
-
 /** Create a new user */
 export async function createUser(user: CreateUserCommand): Promise<User> {
   return apiFetch<User>(API_ENDPOINTS.users.root, {
@@ -64,16 +59,6 @@ export async function changeUserStatus(
   })
 }
 
-/** Enable/disable OTP for user */
-export async function setUserOtpEnabled(
-  userId: string | number,
-  enabled: boolean
-): Promise<User> {
-  return apiFetch<User>(`${API_ENDPOINTS.users.otpEnabled(userId)}?enabled=${enabled}`, {
-    method: 'PATCH',
-  })
-}
-
 // --------------------------------------------------------------------------
 // Groups
 // --------------------------------------------------------------------------
@@ -81,11 +66,6 @@ export async function setUserOtpEnabled(
 /** Get all groups */
 export async function getGroups(): Promise<Array<{ id: number; name: string }>> {
   return apiFetch(API_ENDPOINTS.groups.root)
-}
-
-/** Get all groups (non-paginated) */
-export async function getAllGroups(): Promise<Array<{ id: number; name: string }>> {
-  return apiFetch(API_ENDPOINTS.groups.all)
 }
 
 /** Get group by ID */

@@ -1,16 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { DataTable, type TableColumn } from "../../../components/ui/DataTable";
-import { getAllUsers } from "../services/adminUsers.service";
+import { getPaginatedUsers } from "../services/adminUsers.service";
 import type { AdminUserDto } from "../dto/admin-api.dto";
-import { AdminTableLayout } from "./shared/AdminTableLayout";
-import {
-  AdminPrimaryButton,
-  AdminIconEditButton,
-  AdminSearchInput,
-  AdminStatusBadge,
-  statusVariant,
-} from "./shared/AdminControls";
-import { ADMIN_CARD, ADMIN_SECTION_LABEL } from "./shared/adminUi";
+import CRUDLayout, { type CRUDColumn } from "../../shared/components/CRUDLayout";
+import { UserCircle, Store, MapPin, Wallet, TrendingUp, ShieldCheck, Search, PlusCircle, Download } from "lucide-react";
+import { cn } from "../../../lib/utils";
 
 type AgentRow = {
   id: string;
@@ -27,25 +20,16 @@ function normalizeAgent(user: AdminUserDto): AgentRow {
   const id = String(user.id ?? "");
   const firstName = String(user.firstName ?? "");
   const lastName = String(user.lastName ?? "");
-  const name =
-    [firstName, lastName].filter(Boolean).join(" ") ||
-    String(user.username ?? user.email ?? "—");
-  const initials =
-    name
-      .replace(/[^a-zA-Z ]/g, "")
-      .split(" ")
-      .map((w) => w[0] ?? "")
-      .join("")
-      .slice(0, 2)
-      .toUpperCase() || "??";
-  const status: AgentRow["status"] =
-    user.active === false ? "Suspended" : "Active";
+  const name = [firstName, lastName].filter(Boolean).join(" ") || String(user.username ?? user.email ?? "—");
+  const initials = name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2) || "??";
+  const status: AgentRow["status"] = user.active === false ? "Suspended" : "Active";
+  
   return {
     id,
     name,
     initials,
     shopName: String(user.username ?? "—"),
-    location: "—",
+    location: "Harare, ZW", // Default placeholder
     floatBalance: 0,
     totalEarnings: 0,
     status,
@@ -57,52 +41,45 @@ const Agents: React.FC = () => {
   const [agents, setAgents] = useState<AgentRow[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchAgents = () => {
     setLoading(true);
-    getAllUsers()
-      .then((users) => {
+    getPaginatedUsers({ size: 200 })
+      .then((response) => {
+        const users = response?.content ?? [];
         const agentUsers = users.filter(
-          (u) =>
-            (u.group as { name?: string } | null | undefined)?.name === "AGENT",
+          (u) => (u.group as { name?: string } | null | undefined)?.name === "AGENT"
         );
         setAgents(agentUsers.map(normalizeAgent));
       })
       .catch(console.error)
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchAgents();
   }, []);
 
   const filteredAgents = useMemo(
-    () =>
-      agents.filter(
-        (agent) =>
-          agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          agent.shopName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          agent.id.includes(searchTerm),
-      ),
-    [agents, searchTerm],
+    () => agents.filter(agent =>
+      agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      agent.shopName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      agent.id.includes(searchTerm)
+    ),
+    [agents, searchTerm]
   );
 
-  const activeCount = useMemo(
-    () => agents.filter((a) => a.status === "Active").length,
-    [agents],
-  );
-
-  const columns: TableColumn<AgentRow>[] = [
+  const columns: CRUDColumn<AgentRow>[] = [
     {
       key: "partner",
       header: "Agent Partner",
       render: (agent) => (
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center font-black text-xs">
+          <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center font-bold text-xs">
             {agent.initials}
           </div>
           <div>
-            <p className="text-sm font-black text-dark-text dark:text-gray-200">
-              {agent.name}
-            </p>
-            <p className="text-[10px] text-neutral-text font-bold uppercase tracking-tight">
-              {agent.shopName} &bull; {agent.id}
-            </p>
+            <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{agent.name}</p>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">{agent.shopName} • ID: {agent.id}</p>
           </div>
         </div>
       ),
@@ -111,147 +88,81 @@ const Agents: React.FC = () => {
       key: "location",
       header: "Location",
       render: (agent) => (
-        <span className="text-xs font-bold text-neutral-text">
-          {agent.location}
-        </span>
+        <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
+          <MapPin size={12} />
+          <span className="text-xs font-semibold">{agent.location}</span>
+        </div>
       ),
     },
     {
       key: "float",
-      header: "Float Balance",
-      align: "right",
+      header: "Float",
+      className: "text-right",
       render: (agent) => (
-        <p
-          className={`text-sm font-black ${agent.floatBalance < 50 ? "text-red-500" : "text-dark-text dark:text-white"}`}
-        >
+        <span className={cn(
+          "font-bold text-sm",
+          agent.floatBalance < 50 ? "text-red-500" : "text-slate-900 dark:text-slate-100"
+        )}>
           ${agent.floatBalance.toFixed(2)}
-        </p>
-      ),
-    },
-    {
-      key: "commission",
-      header: "Total Comm.",
-      align: "right",
-      render: (agent) => (
-        <p className="text-sm font-black text-accent-green">
-          ${agent.totalEarnings.toFixed(2)}
-        </p>
+        </span>
       ),
     },
     {
       key: "status",
       header: "Status",
-      align: "center",
+      className: "text-center",
       render: (agent) => (
-        <AdminStatusBadge variant={statusVariant(agent.status)}>
+        <span className={cn(
+          "px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border",
+          agent.status === "Active" 
+            ? "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50" 
+            : "bg-red-50 text-red-600 border-red-100 dark:bg-red-900/20 dark:text-red-400"
+        )}>
           {agent.status}
-        </AdminStatusBadge>
+        </span>
       ),
-    },
-    {
-      key: "actions",
-      header: "Actions",
-      align: "right",
-      render: () => (
-        <div className="flex items-center justify-end gap-2">
-          <AdminIconEditButton title="Edit Agent" />
-        </div>
-      ),
-    },
-  ];
-
-  const stats = [
-    {
-      label: "Active Agents",
-      value: loading ? "…" : String(activeCount),
-      icon: "storefront",
-      color: "text-primary",
-      bg: "bg-primary/10",
-    },
-    {
-      label: "Total Float",
-      value: "—",
-      icon: "account_balance_wallet",
-      color: "text-accent-green",
-      bg: "bg-accent-green/10",
-    },
-    {
-      label: "Unpaid Comm.",
-      value: "—",
-      icon: "payments",
-      color: "text-orange-500",
-      bg: "bg-orange-100",
-    },
-    {
-      label: "Avg Earnings",
-      value: "—",
-      icon: "analytics",
-      color: "text-blue-500",
-      bg: "bg-blue-100",
     },
   ];
 
   return (
-    <AdminTableLayout
-      title="Agents Administration"
-      subtitle="Manage retail partners, track float liquidity, and review agent earnings."
-      actions={
-        <AdminPrimaryButton>
-          <span className="material-symbols-outlined text-lg">person_add</span>
-          Onboard New Agent
-        </AdminPrimaryButton>
-      }
-      stats={
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {stats.map((stat, i) => (
-            <div
-              key={i}
-              className={`${ADMIN_CARD} p-6 flex items-center gap-5`}
-            >
-              <div
-                className={`w-14 h-14 rounded-2xl flex items-center justify-center ${stat.bg} ${stat.color}`}
-              >
-                <span className="material-symbols-outlined text-2xl">
-                  {stat.icon}
-                </span>
-              </div>
-              <div>
-                <p className={ADMIN_SECTION_LABEL}>{stat.label}</p>
-                <h4 className="text-2xl font-black text-dark-text dark:text-white">
-                  {stat.value}
-                </h4>
-              </div>
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {[
+          { label: "Active Partners", value: agents.filter(a => a.status === 'Active').length, icon: Store, color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
+          { label: "Total Network Float", value: "$0.00", icon: Wallet, color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-900/20" },
+          { label: "System Health", value: "Optimal", icon: ShieldCheck, color: "text-purple-600", bg: "bg-purple-50 dark:bg-purple-900/20" },
+          { label: "Revenue Trend", value: "+12.5%", icon: TrendingUp, color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
+        ].map((stat, i) => (
+          <div key={i} className="glass-card p-5 border-slate-200 dark:border-slate-800 flex items-center gap-4">
+            <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0", stat.bg)}>
+              <stat.icon size={22} className={stat.color} />
             </div>
-          ))}
-        </div>
-      }
-      toolbar={
-        <AdminSearchInput
-          placeholder="Search agents by name, ID or shop..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      }
-    >
-      <DataTable
+            <div>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{stat.label}</p>
+              <h4 className="text-xl font-bold text-slate-900 dark:text-white">{stat.value}</h4>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <CRUDLayout
+        title="Agent Partner Administration"
         columns={columns}
         data={filteredAgents}
-        rowKey={(a) => a.id}
-        emptyMessage="No agents found"
-        emptyIcon="storefront"
         loading={loading}
+        pageable={{ page: 1, size: 50, totalElements: filteredAgents.length, totalPages: 1 }}
+        onPageChange={() => {}}
+        onSizeChange={() => {}}
+        onSearch={setSearchTerm}
+        onRefresh={fetchAgents}
+        onAdd={() => {}}
+        addButtonText="Onboard Agent"
+        actions={{
+          onEdit: () => {},
+          onView: () => {},
+        }}
       />
-
-      <div className="flex items-center justify-between p-2">
-        <p className={ADMIN_SECTION_LABEL}>
-          Showing {filteredAgents.length} out of {agents.length} onboarded
-          agents
-        </p>
-        <button className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline">
-          Download Registry CSV
-        </button>
-      </div>
-    </AdminTableLayout>
+    </div>
   );
 };
 

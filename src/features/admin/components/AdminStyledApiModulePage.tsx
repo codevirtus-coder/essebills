@@ -1,6 +1,9 @@
 import React, { useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
-import { DataTable, TableColumn } from '../../../components/ui/DataTable'
+import CRUDLayout, { type CRUDColumn } from '../../shared/components/CRUDLayout'
+import CRUDModal from '../../shared/components/CRUDModal'
+import { KeyRound, Shield, Calendar, Trash2, Edit, Plus, Info } from 'lucide-react'
+import { cn } from '../../../lib/utils'
 
 type UnknownRecord = Record<string, unknown>
 
@@ -21,6 +24,8 @@ interface AdminStyledApiModulePageProps {
   columns?: Array<{ key: string; label: string }>
   emptyLabel?: string
   createFields?: Array<{ key: string; label: string; type?: 'text' | 'number' | 'checkbox' }>
+  onUpdate?: (id: string | number, payload: UnknownRecord) => Promise<unknown>
+  onDelete?: (id: string | number) => Promise<unknown>
 }
 
 function normalizeRows(payload: unknown): UnknownRecord[] {
@@ -46,18 +51,15 @@ const AdminStyledApiModulePage: React.FC<AdminStyledApiModulePageProps> = ({
   description,
   endpoint,
   loadData,
-  icon = 'vpn_key',
-  createEndpoint,
   createData,
   showCreateButton = true,
-  showRefreshButton = true,
-  showEndpointLabel = true,
   tableMode = 'credentials',
   createMode = 'credentials',
   createJsonTemplate = {},
   columns,
   emptyLabel,
   createFields = [],
+  onDelete,
 }) => {
   const [rows, setRows] = useState<UnknownRecord[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -89,62 +91,30 @@ const AdminStyledApiModulePage: React.FC<AdminStyledApiModulePageProps> = ({
 
   const columnKeys = useMemo(() => {
     if (columns?.length) {
-      return columns.map((column) => column.label)
+      return columns.map((column) => column.key)
     }
-
-    if (tableMode === 'credentials') {
-      return ['Integration Key', 'Encryption Key', 'Created on']
-    }
-
     const keySet = new Set<string>()
     rows.slice(0, 20).forEach((row) => {
       Object.keys(row).forEach((key) => keySet.add(key))
     })
     return Array.from(keySet).slice(0, 6)
-  }, [rows, tableMode])
+  }, [rows, columns])
 
-  const mapIntegrationKey = (row: UnknownRecord) =>
-    String(
-      row.integrationKey ??
-        row.apiKey ??
-        row.clientId ??
-        row.username ??
-        row.name ??
-        '-',
-    )
-
-  const mapEncryptionKey = (row: UnknownRecord) =>
-    String(
-      row.encryptionKey ??
-        row.secretKey ??
-        row.secret ??
-        row.password ??
-        row.token ??
-        '-',
-    )
-
-  const mapCreatedOn = (row: UnknownRecord) =>
-    String(row.createdDate ?? row.createdOn ?? row.createdAt ?? '-')
-
-  const handleCreateFields = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+  const handleCreateFields = async () => {
     if (!createData || !createFields.length) return
 
     const payload: UnknownRecord = {}
-
     for (const field of createFields) {
       const rawValue = fieldValues[field.key]
       if (field.type === 'checkbox') {
         payload[field.key] = Boolean(rawValue)
         continue
       }
-
       const textValue = String(rawValue ?? '').trim()
       if (!textValue) {
         toast.error(`${field.label} is required`)
         return
       }
-
       payload[field.key] = field.type === 'number' ? Number(textValue) : textValue
     }
 
@@ -162,10 +132,8 @@ const AdminStyledApiModulePage: React.FC<AdminStyledApiModulePageProps> = ({
     }
   }
 
-  const handleCreate = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+  const handleCreate = async () => {
     if (!createData) return
-
     const trimmedIntegrationKey = integrationKey.trim()
     const trimmedEncryptionKey = encryptionKey.trim()
 
@@ -197,17 +165,11 @@ const AdminStyledApiModulePage: React.FC<AdminStyledApiModulePageProps> = ({
     }
   }
 
-  const handleCreateJson = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+  const handleCreateJson = async () => {
     if (!createData) return
-
     let parsedPayload: UnknownRecord
     try {
       const parsed = JSON.parse(payloadText)
-      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-        toast.error('Payload must be a JSON object')
-        return
-      }
       parsedPayload = parsed as UnknownRecord
     } catch {
       toast.error('Invalid JSON payload')
@@ -227,220 +189,206 @@ const AdminStyledApiModulePage: React.FC<AdminStyledApiModulePageProps> = ({
     }
   }
 
+  const crudColumns: CRUDColumn<UnknownRecord>[] = useMemo(() => {
+    const cols: CRUDColumn<UnknownRecord>[] = []
+    
+    if (columns?.length) {
+      cols.push(...columns.map(col => ({
+        key: col.key,
+        header: col.label,
+        render: (row: UnknownRecord) => {
+          const value = getValueByPath(row, col.key)
+          return (
+            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+              {value === null || value === undefined ? '-' : String(value)}
+            </span>
+          )
+        }
+      })))
+    } else if (tableMode === 'credentials') {
+      cols.push(
+        {
+          key: 'integrationKey',
+          header: 'Integration Key',
+          render: (row) => (
+            <div className="flex items-center gap-2">
+              <KeyRound size={14} className="text-emerald-500" />
+              <span className="font-mono text-xs font-bold text-slate-900 dark:text-slate-100">
+                {String(row.integrationKey ?? row.apiKey ?? row.clientId ?? row.username ?? row.name ?? '-')}
+              </span>
+            </div>
+          )
+        },
+        {
+          key: 'encryptionKey',
+          header: 'Encryption Key',
+          render: (row) => (
+            <div className="flex items-center gap-2">
+              <Shield size={14} className="text-slate-400" />
+              <span className="font-mono text-[10px] text-slate-500">
+                {String(row.encryptionKey ?? row.secretKey ?? row.secret ?? '••••••••')}
+              </span>
+            </div>
+          )
+        },
+        {
+          key: 'createdDate',
+          header: 'Created On',
+          render: (row) => (
+            <div className="flex items-center gap-2 text-slate-500">
+              <Calendar size={14} />
+              <span className="text-xs font-medium">
+                {String(row.createdDate ?? row.createdOn ?? row.createdAt ?? '-')}
+              </span>
+            </div>
+          )
+        }
+      )
+    } else {
+      cols.push(...columnKeys.map(key => ({
+        key,
+        header: key.charAt(0).toUpperCase() + key.slice(1),
+        render: (row: UnknownRecord) => (
+          <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+            {String(row[key] ?? '-')}
+          </span>
+        )
+      })))
+    }
+    return cols
+  }, [columns, columnKeys, tableMode])
+
   return (
-    <div className="p-8 space-y-6 animate-in fade-in duration-300">
-      <div className="mb-2">
-        <h2 className="text-4 leading-none font-medium text-dark-text dark:text-white flex items-center gap-3">
-          <span className="material-symbols-outlined text-[28px]">{icon}</span>
-          {title}
-        </h2>
-        {description.trim() ? <p className="text-sm text-neutral-text mt-8">{description}</p> : null}
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="glass-card p-6 border-slate-200 dark:border-slate-800 flex items-start gap-4">
+         <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center shrink-0">
+            <Info className="text-emerald-600" size={24} />
+         </div>
+         <div>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{title}</h2>
+            <p className="text-sm text-slate-500 font-medium mt-1">{description}</p>
+            <div className="mt-3 flex items-center gap-2">
+               <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] font-mono font-bold text-slate-500 uppercase tracking-tighter">
+                  ENDPOINT: {endpoint}
+               </span>
+            </div>
+         </div>
       </div>
 
-      <DataTable
-          header={
-            <div className="px-5 py-3 flex flex-wrap items-center gap-2">
-              {showCreateButton ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!createData) {
-                      toast('Create endpoint is not configured for this credentials module yet.')
-                      return
-                    }
-                    setIsCreateOpen(true)
-                  }}
-                  className="px-4 py-2 rounded border border-[#7E57C2] text-[#7E57C2] text-lg font-medium uppercase tracking-wide hover:bg-[#7E57C2]/5 transition-colors"
-                >
-                  + Create
-                </button>
-              ) : null}
-              {showRefreshButton ? (
-                <button
-                  type="button"
-                  onClick={() => void loadRows()}
-                  className="px-4 py-2 rounded border border-[#7E57C2] text-[#7E57C2] text-lg font-medium uppercase tracking-wide hover:bg-[#7E57C2]/5 transition-colors"
-                >
-                  Refresh
-                </button>
-              ) : null}
-              {showEndpointLabel ? (
-                <span className="ml-auto text-xs text-neutral-text">
-                  List: <code>{endpoint}</code>
-                </span>
-              ) : null}
-            </div>
-          }
-          columns={useMemo<TableColumn<UnknownRecord>[]>(() => {
-            if (columns?.length) {
-              return columns.map(col => ({
-                key: col.key,
-                header: col.label,
-                render: (row) => {
-                  const value = getValueByPath(row, col.key)
-                  return value === null || value === undefined
-                    ? '-'
-                    : typeof value === 'object'
-                      ? JSON.stringify(value)
-                      : String(value)
-                }
-              }))
+      <CRUDLayout
+        title=""
+        columns={crudColumns}
+        data={rows}
+        loading={isLoading}
+        pageable={{ page: 1, size: 50, totalElements: rows.length, totalPages: 1 }}
+        onPageChange={() => {}}
+        onSizeChange={() => {}}
+        onRefresh={() => void loadRows()}
+        onAdd={showCreateButton ? () => setIsCreateOpen(true) : undefined}
+        addButtonText="Create New"
+        actions={{
+          onDelete: onDelete ? (item) => {
+            if (window.confirm('Are you sure you want to delete this item?')) {
+              void onDelete(item.id as string | number).then(() => void loadRows())
             }
-            
-            if (tableMode === 'credentials') {
-              return [
-                {
-                  key: 'integrationKey',
-                  header: 'Integration Key',
-                  render: mapIntegrationKey
-                },
-                {
-                  key: 'encryptionKey',
-                  header: 'Encryption Key',
-                  render: mapEncryptionKey
-                },
-                {
-                  key: 'createdOn',
-                  header: 'Created On',
-                  render: mapCreatedOn
-                }
-              ]
-            }
-            
-            return columnKeys.map(key => ({
-              key,
-              header: key,
-              render: (row) => {
-                const value = row[key]
-                return value === null || value === undefined
-                  ? '-'
-                  : typeof value === 'object'
-                    ? JSON.stringify(value)
-                    : String(value)
-              }
-            }))
-          }, [columns, columnKeys, tableMode])}
-          data={rows}
-          rowKey={(row) => String(row.id ?? `row-${Math.random()}`)}
-          loading={isLoading}
-          emptyMessage={emptyLabel ?? 'No records found'}
-          emptyIcon="filter_alt_off"
-        />
+          } : undefined
+        }}
+      />
 
-      {isCreateOpen ? (
-        <div className="fixed inset-0 z-[140] flex items-center justify-center p-4">
-          <button
-            type="button"
-            onClick={() => setIsCreateOpen(false)}
-            className="absolute inset-0 bg-slate-900/45"
-            aria-label="Close create modal"
-          />
-          <div className="relative w-full max-w-lg bg-white rounded-2xl border border-neutral-light shadow-2xl p-6">
-            <h3 className="text-lg font-bold text-dark-text">Create {title}</h3>
-            <form
-              className="mt-5 space-y-4"
-              onSubmit={(event) =>
-                void (createMode === 'credentials'
-                  ? handleCreate(event)
-                  : createMode === 'fields'
-                    ? handleCreateFields(event)
-                    : handleCreateJson(event))
-              }
-            >
-              {createMode === 'credentials' ? (
-                <>
-                  <label className="block">
-                    <span className="text-xs font-semibold text-neutral-text">Integration Key</span>
-                    <input
-                      value={integrationKey}
-                      onChange={(event) => setIntegrationKey(event.target.value)}
-                      className="mt-1 w-full h-11 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    />
-                  </label>
-                  <label className="block">
-                    <span className="text-xs font-semibold text-neutral-text">Encryption Key</span>
-                    <input
-                      value={encryptionKey}
-                      onChange={(event) => setEncryptionKey(event.target.value)}
-                      className="mt-1 w-full h-11 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    />
-                  </label>
-                  <label className="inline-flex items-center gap-2">
+      <CRUDModal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        title={`Add ${title}`}
+        onSubmit={() => {
+          if (createMode === 'credentials') void handleCreate()
+          else if (createMode === 'fields') void handleCreateFields()
+          else void handleCreateJson()
+        }}
+        isSubmitting={isCreating}
+        submitLabel="Create Item"
+      >
+        <div className="space-y-5">
+          {createMode === 'credentials' ? (
+            <>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Integration Key</label>
+                <input
+                  value={integrationKey}
+                  onChange={(event) => setIntegrationKey(event.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  placeholder="e.g. PK_LIVE_..."
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Encryption Key</label>
+                <input
+                  value={encryptionKey}
+                  onChange={(event) => setEncryptionKey(event.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  placeholder="e.g. SK_LIVE_..."
+                />
+              </div>
+              <label className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={active}
+                  onChange={(event) => setActive(event.target.checked)}
+                  className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                />
+                <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Set as Active Credentials</span>
+              </label>
+            </>
+          ) : createMode === 'fields' ? (
+            createFields.map((field) => (
+              <div key={field.key} className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">{field.label}</label>
+                {field.type === 'checkbox' ? (
+                  <div className="mt-1">
                     <input
                       type="checkbox"
-                      checked={active}
-                      onChange={(event) => setActive(event.target.checked)}
+                      checked={Boolean(fieldValues[field.key])}
+                      onChange={(event) =>
+                        setFieldValues((prev) => ({ ...prev, [field.key]: event.target.checked }))
+                      }
+                      className="w-5 h-5 rounded border-slate-300 text-emerald-600"
                     />
-                    <span className="text-sm text-neutral-text">Active</span>
-                  </label>
-                </>
-              ) : createMode === 'fields' ? (
-                createFields.map((field) => (
-                  <label key={field.key} className="block">
-                    <span className="text-xs font-semibold text-neutral-text">{field.label}</span>
-                    {field.type === 'checkbox' ? (
-                      <div className="mt-2">
-                        <input
-                          type="checkbox"
-                          checked={Boolean(fieldValues[field.key])}
-                          onChange={(event) =>
-                            setFieldValues((prev) => ({ ...prev, [field.key]: event.target.checked }))
-                          }
-                        />
-                      </div>
-                    ) : (
-                      <input
-                        type={field.type === 'number' ? 'number' : 'text'}
-                        value={String(fieldValues[field.key] ?? '')}
-                        onChange={(event) =>
-                          setFieldValues((prev) => ({ ...prev, [field.key]: event.target.value }))
-                        }
-                        className="mt-1 w-full h-11 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                      />
-                    )}
-                  </label>
-                ))
-              ) : (
-                <label className="block">
-                  <span className="text-xs font-semibold text-neutral-text">Payload (JSON)</span>
-                  <textarea
-                    value={payloadText}
-                    onChange={(event) => setPayloadText(event.target.value)}
-                    rows={10}
-                    className="mt-1 w-full rounded-lg border border-neutral-light px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  </div>
+                ) : (
+                  <input
+                    type={field.type === 'number' ? 'number' : 'text'}
+                    value={String(fieldValues[field.key] ?? '')}
+                    onChange={(event) =>
+                      setFieldValues((prev) => ({ ...prev, [field.key]: event.target.value }))
+                    }
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                   />
-                </label>
-              )}
-              <div className="flex items-center justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsCreateOpen(false)}
-                  className="px-4 py-2 rounded-lg border border-neutral-light text-sm font-semibold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isCreating}
-                  className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold disabled:opacity-60"
-                >
-                  {isCreating ? 'Submitting...' : 'Submit'}
-                </button>
+                )}
               </div>
-            </form>
-          </div>
+            ))
+          ) : (
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Payload (JSON)</label>
+              <textarea
+                value={payloadText}
+                onChange={(event) => setPayloadText(event.target.value)}
+                rows={10}
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              />
+            </div>
+          )}
         </div>
-      ) : null}
+      </CRUDModal>
     </div>
   )
 }
 
 export default AdminStyledApiModulePage
-  const getValueByPath = (row: UnknownRecord, path: string): unknown => {
-    return path.split('.').reduce<unknown>((current, key) => {
-      if (current && typeof current === 'object' && key in (current as UnknownRecord)) {
-        return (current as UnknownRecord)[key]
-      }
-      return undefined
-    }, row)
-  }
+
+const getValueByPath = (row: UnknownRecord, path: string): unknown => {
+  return path.split('.').reduce<unknown>((current, key) => {
+    if (current && typeof current === 'object' && key in (current as UnknownRecord)) {
+      return (current as UnknownRecord)[key]
+    }
+    return undefined
+  }, row)
+}

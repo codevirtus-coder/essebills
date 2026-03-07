@@ -17,9 +17,6 @@ export * from './payments.service'
 // Transactions Service
 export * from './transactions.service'
 
-// Institutions Service
-export * from './institutions.service'
-
 // Integrations Service
 export * from './integrations.service'
 

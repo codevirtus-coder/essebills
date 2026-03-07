@@ -1,5 +1,18 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  ChevronDown, 
+  LogOut, 
+  UserCircle,
+  LayoutDashboard,
+  Settings,
+  HelpCircle,
+  Menu as MenuIcon,
+  X
+} from 'lucide-react'
 import { getMenuByGroup, ADMIN_PREFERENCE_ITEMS, type MenuItem } from '../features/portal/menuConfig'
 import Logo from '../components/ui/Logo'
 import { Icon } from '../components/ui/Icon'
@@ -7,6 +20,7 @@ import { ROUTE_PATHS } from '../router/paths'
 import type { UserGroup } from '../features/auth/dto/auth.dto'
 import { clearAuthSession } from '../features/auth/auth.storage'
 import { useCurrentUser } from '../features/auth/hooks/useCurrentUser'
+import { cn } from '../lib/utils'
 
 interface DashboardSidebarProps {
   group: UserGroup
@@ -15,6 +29,8 @@ interface DashboardSidebarProps {
   className?: string
   /** When true, hides the collapse toggle (e.g. in the mobile overlay) */
   disableCollapse?: boolean
+  isMobile?: boolean
+  onClose?: () => void
 }
 
 export function DashboardSidebar({
@@ -23,15 +39,19 @@ export function DashboardSidebar({
   onTabChange,
   className = '',
   disableCollapse = false,
+  isMobile = false,
+  onClose,
 }: DashboardSidebarProps) {
   const navigate = useNavigate()
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({})
   const { profile, group: userGroup } = useCurrentUser()
+  const navRef = useRef<HTMLElement>(null)
 
   const [collapsed, setCollapsed] = useState<boolean>(() => {
-    if (disableCollapse) return false
+    if (disableCollapse || isMobile) return false
     try { return localStorage.getItem('sidebar-collapsed') === 'true' } catch { return false }
   })
+
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({})
 
   const toggleCollapsed = () => {
     setCollapsed((prev) => {
@@ -43,57 +63,46 @@ export function DashboardSidebar({
 
   const menuSections = useMemo(() => getMenuByGroup(group), [group])
 
-  const effectiveExpandedGroups = useMemo(() => {
-    const defaults: Record<string, boolean> = {}
-    menuSections.forEach((section) => {
-      section.items.forEach((item) => {
-        if (item.children?.length) {
-          defaults[item.id] = true
-        }
+  // Scrolling effect for sidebar
+  useEffect(() => {
+    const el = navRef.current
+    if (!el) return
+    let timer: ReturnType<typeof setTimeout>
+    const onScroll = () => {
+      el.classList.add('is-scrolling')
+      clearTimeout(timer)
+      timer = setTimeout(() => el.classList.remove('is-scrolling'), 800)
+    }
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => { el.removeEventListener('scroll', onScroll); clearTimeout(timer) }
+  }, [])
+
+  // Auto-collapse sections when sidebar is collapsed
+  useEffect(() => {
+    if (collapsed) {
+      const allCollapsed: Record<string, boolean> = {}
+      menuSections.forEach(section => {
+        allCollapsed[section.id] = true
       })
-    })
-    return { ...defaults, ...expandedGroups }
-  }, [menuSections, expandedGroups])
+      setCollapsedSections(allCollapsed)
+    }
+  }, [collapsed, menuSections])
 
-  const isItemActive = (item: MenuItem): boolean => {
-    if (item.id === activeTab) return true
-    if (!item.children) return false
-    return item.children.some((child) => child.id === activeTab)
+  const toggleSection = (sectionId: string) => {
+    setCollapsedSections(prev => ({
+      ...prev,
+      [sectionId]: !prev[sectionId]
+    }))
   }
 
-  const isItemExactActive = (item: MenuItem): boolean => item.id === activeTab
-
-  const toggleGroup = (groupId: string) => {
-    setExpandedGroups((prev) => ({ ...prev, [groupId]: !effectiveExpandedGroups[groupId] }))
-  }
-
-  const handlePrimaryItemClick = (item: MenuItem) => {
+  const handleItemClick = (item: MenuItem) => {
     if (item.path) {
       navigate(item.path)
-      return
-    }
-    if (item.children?.length) {
-      setExpandedGroups((prev) => ({ ...prev, [item.id]: true }))
-      const firstChild = item.children[0]
-      if (onTabChange) {
-        onTabChange(firstChild.id)
-      }
-      if (firstChild.path) {
-        navigate(firstChild.path)
-      }
-      return
-    }
-    if (onTabChange) {
+    } else if (onTabChange) {
       onTabChange(item.id)
     }
-  }
-
-  const handleChildClick = (child: MenuItem) => {
-    if (onTabChange) {
-      onTabChange(child.id)
-    }
-    if (child.path) {
-      navigate(child.path)
+    if (isMobile && onClose) {
+      onClose()
     }
   }
 
@@ -111,168 +120,181 @@ export function DashboardSidebar({
   const displayRole = userGroup ?? group
 
   return (
-    <aside
-      className={`${collapsed ? 'w-16' : 'w-64'} transition-[width] duration-300 ease-in-out bg-[#13102b] border-r border-white/5 flex flex-col h-full shrink-0 overflow-hidden ${className}`}
+    <motion.aside
+      initial={false}
+      animate={{ width: collapsed ? 80 : 260 }}
+      className={cn(
+        "flex flex-col h-full bg-slate-900 text-white transition-all duration-300 relative z-50 border-r border-slate-800",
+        collapsed ? "items-center" : "items-stretch",
+        isMobile && "fixed left-0 top-0 bottom-0 w-72 shadow-2xl",
+        className
+      )}
     >
-      {/* Logo + collapse toggle */}
-      <div className={`flex items-center ${collapsed ? 'justify-center px-2 py-4' : 'justify-between px-4 py-4'}`}>
-        {!collapsed && (
-          <Link to={ROUTE_PATHS.home} aria-label="Go to home page" className="inline-flex">
-            <Logo className="h-10" />
+      {/* Logo Area */}
+      <div className={cn("p-4 mb-2 flex items-center", collapsed ? "justify-center" : "justify-between")}>
+        {!collapsed ? (
+          <Link to={ROUTE_PATHS.home} className="flex items-center gap-2 overflow-hidden">
+             <Logo className="h-9 w-auto brightness-0 invert opacity-95" />
           </Link>
+        ) : (
+          <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-900/20">
+             <LayoutDashboard size={20} className="text-white" />
+          </div>
         )}
-        {!disableCollapse && (
-          <button
-            onClick={toggleCollapsed}
-            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            className="w-7 h-7 rounded-lg flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-colors shrink-0"
-          >
-            <Icon name={collapsed ? 'chevron_right' : 'chevron_left'} size={16} />
+        
+        {isMobile && onClose && (
+          <button onClick={onClose} className="p-2 text-slate-400 hover:text-white lg:hidden">
+            <X size={20} />
           </button>
         )}
       </div>
 
-      <nav className="flex-1 px-2 space-y-5 overflow-y-auto hide-scrollbar pt-1">
-        {menuSections.map((section) => (
-          <div key={section.id}>
-            {/* Section title — hidden when collapsed */}
-            {section.title && !collapsed ? (
-              <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-widest text-white/25">
-                {section.title}
-              </p>
-            ) : section.title && collapsed ? (
-              <div className="pb-2 border-t border-white/10 mt-1" />
-            ) : null}
-
-            <div className="space-y-0.5">
-              {section.items.map((item) => (
-                <div key={item.id}>
+      {/* Navigation Scroll Area */}
+      <nav ref={navRef} className="flex-1 px-3 py-2 overflow-y-auto sidenav-scroll space-y-6">
+        {menuSections.map((section) => {
+          const isSectionCollapsed = collapsedSections[section.id]
+          
+          return (
+            <div key={section.id} className="space-y-1">
+              {/* Section Header */}
+              {section.title && (
+                collapsed ? (
+                  <div className="flex justify-center py-2 mb-1 border-b border-white/5 opacity-20" />
+                ) : (
                   <button
-                    onClick={() => handlePrimaryItemClick(item)}
-                    title={collapsed ? item.label : undefined}
-                    className={`w-full flex items-center rounded-lg text-sm font-medium transition-colors ${
-                      collapsed
-                        ? 'justify-center px-0 py-2.5'
-                        : 'justify-between gap-3 px-3 py-2.5'
-                    } ${
-                      isItemExactActive(item)
-                        ? 'bg-white/10 text-white'
-                        : isItemActive(item)
-                          ? 'text-primary'
-                          : 'text-white/55 hover:text-white hover:bg-white/5'
-                    }`}
+                    onClick={() => toggleSection(section.id)}
+                    className="w-full px-3 pb-2 mb-1 text-[10px] font-bold text-emerald-500 uppercase tracking-widest flex items-center justify-between hover:text-emerald-400 transition-colors"
                   >
-                    <span className={`flex items-center ${collapsed ? '' : 'gap-3'}`}>
-                      <Icon name={item.icon} size={collapsed ? 20 : 16} />
-                      {!collapsed && item.label}
-                    </span>
-                    {!collapsed && item.children?.length ? (
-                      <span
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          toggleGroup(item.id)
-                        }}
-                        className="cursor-pointer"
-                      >
-                        <Icon
-                          name={effectiveExpandedGroups[item.id] ? 'expand_less' : 'expand_more'}
-                          size={16}
-                        />
-                      </span>
-                    ) : null}
+                    {section.title}
+                    <ChevronDown size={12} className={cn("transition-transform duration-200", isSectionCollapsed && "-rotate-90")} />
                   </button>
-
-                  {/* Child items — hidden when collapsed */}
-                  {!collapsed && item.children?.length && effectiveExpandedGroups[item.id] ? (
-                    <div className="ml-7 mt-0.5 space-y-0.5">
-                      {item.children.map((child) => (
-                        <button
-                          key={child.id}
-                          onClick={() => handleChildClick(child)}
-                          className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                            activeTab === child.id
-                              ? 'bg-white/10 text-white font-semibold'
-                              : 'text-white/45 hover:text-white hover:bg-white/5'
-                          }`}
-                        >
-                          {child.label}
-                        </button>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-
-        {group === 'ADMIN' && (
-          <>
-            <div className="pt-2 pb-1">
-              {!collapsed && (
-                <p className="px-3 text-[10px] font-bold uppercase tracking-widest text-white/25">Preferences</p>
+                )
               )}
-              {collapsed && <div className="border-t border-white/10" />}
+              
+              <AnimatePresence initial={false}>
+                {!isSectionCollapsed && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="space-y-1 overflow-hidden"
+                  >
+                    {section.items.map((item) => {
+                      const isActive = activeTab === item.id || (item.path && window.location.pathname.includes(item.path))
+                      
+                      return (
+                        <div key={item.id}>
+                          <button
+                            onClick={() => handleItemClick(item)}
+                            className={cn(
+                              "sidebar-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+                              isActive 
+                                ? "bg-emerald-600 text-white shadow-lg shadow-emerald-900/20" 
+                                : "text-slate-400 hover:text-emerald-400 hover:bg-slate-800/50",
+                              collapsed && "justify-center px-0"
+                            )}
+                            title={collapsed ? item.label : undefined}
+                          >
+                            <Icon name={item.icon} size={20} className={isActive ? "text-white" : ""} />
+                            {!collapsed && <span className="flex-1 text-left">{item.label}</span>}
+                          </button>
+                          
+                          {/* Nested Items */}
+                          {!collapsed && item.children && (
+                            <div className="ml-9 mt-1 space-y-1 border-l border-slate-800 pl-3">
+                              {item.children.map(child => (
+                                <button
+                                  key={child.id}
+                                  onClick={() => handleItemClick(child)}
+                                  className={cn(
+                                    "w-full text-left py-1.5 px-2 rounded-lg text-xs transition-colors",
+                                    activeTab === child.id 
+                                      ? "text-emerald-400 font-semibold" 
+                                      : "text-slate-500 hover:text-slate-300"
+                                  )}
+                                >
+                                  {child.label}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-            {ADMIN_PREFERENCE_ITEMS.map((item) => (
-              <button
-                key={item.id}
-                title={collapsed ? item.label : undefined}
-                onClick={() => item.path ? navigate(item.path) : (onTabChange ? onTabChange(item.id) : null)}
-                className={`w-full flex items-center rounded-lg text-sm font-medium transition-colors ${
-                  collapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5'
-                } ${
-                  activeTab === item.id
-                    ? 'bg-white/10 text-white'
-                    : 'text-white/55 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Icon name={item.icon} size={collapsed ? 20 : 16} />
-                {!collapsed && item.label}
-              </button>
-            ))}
-          </>
+          )
+        })}
+
+        {/* Preferences Section for Admin */}
+        {group === 'ADMIN' && !collapsed && (
+          <div className="pt-4 space-y-1">
+             <div className="px-3 pb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Preferences</div>
+             {ADMIN_PREFERENCE_ITEMS.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => handleItemClick(item)}
+                  className={cn(
+                    "sidebar-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+                    activeTab === item.id ? "bg-slate-800 text-white" : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/30"
+                  )}
+                >
+                  <Icon name={item.icon} size={20} />
+                  <span>{item.label}</span>
+                </button>
+             ))}
+          </div>
         )}
       </nav>
 
-      {/* Bottom user card */}
-      <div className="border-t border-white/10 px-2 py-3">
-        {collapsed ? (
-          /* Collapsed: avatar + sign-out stacked */
-          <div className="flex flex-col items-center gap-2">
-            <div
-              title={displayName}
-              className="w-8 h-8 rounded-full bg-primary/30 text-primary text-xs font-bold flex items-center justify-center shrink-0"
-            >
-              {initials}
-            </div>
-            <button
-              onClick={handleSignOut}
-              title="Sign out"
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-            >
-              <Icon name="logout" size={15} />
-            </button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-primary/30 text-primary text-xs font-bold flex items-center justify-center shrink-0">
-              {initials}
+      {/* User & Footer Actions */}
+      <div className="p-4 border-t border-slate-800 bg-slate-900/50 space-y-3">
+        {!collapsed ? (
+          <div className="flex items-center gap-3 px-2 py-1">
+            <div className="w-10 h-10 rounded-xl bg-emerald-600/10 flex items-center justify-center border border-emerald-500/20">
+               <UserCircle className="text-emerald-500" size={24} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-white truncate">{displayName}</p>
-              <p className="text-[10px] text-white/40 uppercase tracking-wider">{displayRole}</p>
+              <p className="text-sm font-bold text-slate-100 truncate">{displayName}</p>
+              <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-wider">{displayRole}</p>
             </div>
-            <button
-              onClick={handleSignOut}
-              title="Sign out"
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors shrink-0"
-            >
-              <Icon name="logout" size={15} />
-            </button>
+          </div>
+        ) : (
+          <div className="flex justify-center">
+            <div className="w-10 h-10 rounded-xl bg-emerald-600/10 flex items-center justify-center border border-emerald-500/20" title={displayName}>
+               <UserCircle className="text-emerald-500" size={24} />
+            </div>
           </div>
         )}
+
+        <div className="space-y-1">
+          <button 
+            onClick={handleSignOut}
+            className={cn(
+              "sidebar-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all",
+              collapsed && "justify-center px-0"
+            )}
+            title={collapsed ? "Logout" : undefined}
+          >
+            <LogOut size={20} />
+            {!collapsed && <span>Logout</span>}
+          </button>
+        </div>
       </div>
-    </aside>
+
+      {/* Floating Toggle Button (Desktop) */}
+      {!isMobile && !disableCollapse && (
+        <button
+          onClick={toggleCollapsed}
+          className="absolute -right-3 top-20 w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-emerald-900/40 border-2 border-slate-900 hover:scale-110 transition-transform z-50"
+          title={collapsed ? "Expand" : "Collapse"}
+        >
+          {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+        </button>
+      )}
+    </motion.aside>
   )
 }

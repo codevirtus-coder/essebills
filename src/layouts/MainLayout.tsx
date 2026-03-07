@@ -23,9 +23,11 @@ export function MainLayout() {
     pathname.startsWith("/reset-password");
 
   return (
-    <div className="app-shell">
+    <div className="flex flex-col min-h-screen overflow-hidden">
       {!isPortalRoute ? <Navbar /> : null}
-      <Outlet />
+      <main className="flex-1">
+        <Outlet />
+      </main>
       {!isPortalRoute ? <Footer /> : null}
     </div>
   );

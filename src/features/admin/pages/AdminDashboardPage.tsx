@@ -1,340 +1,161 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams, useParams } from "react-router-dom";
-import Dashboard from "../components/Dashboard";
-import UserProfile from "../components/UserProfile";
-import Reports from "../components/Reports";
-import Billers from "../components/Billers";
-import Products from "../components/Products";
-import Agents from "../components/Agents";
-import AdminUsersPage from "../components/AdminUsersPage";
-import AdminEconetPage from "../components/AdminEconetPage";
-import AdminStyledApiModulePage from "../components/AdminStyledApiModulePage";
-import AdminVouchersPage from "../components/AdminVouchersPage";
-import AdminTransactionsPage from "../components/AdminTransactionsPage";
-import AdminParametersPage from "../components/AdminParametersPage";
-import AdminUserGroupsPage from "../components/AdminUserGroupsPage";
-import Settings from "../components/Settings";
-import Support from "../components/Support";
-import Messaging from "../components/Messaging";
-import WhatsAppCenter from "../components/WhatsAppCenter";
-// New custom pages for missing features
-import ZambiaProductsTransactions from "../components/ZambiaProductsTransactions";
-import ZimProductsTransactions from "../components/ZimProductsTransactions";
-import RongekaAccounts from "../components/RongekaAccounts";
-import NetoneBundlePlans from "../components/NetoneBundlePlans";
-import NetoneDataBundles from "../components/NetoneDataBundles";
-import TuitionInstitutions from "../components/TuitionInstitutions";
-import TuitionFeeTypes from "../components/TuitionFeeTypes";
-import TuitionProcessingFees from "../components/TuitionProcessingFees";
+import { useNavigate, useParams } from 'react-router-dom'
+import Dashboard from '../components/Dashboard'
+import UserProfile from '../components/UserProfile'
+import Billers from '../components/Billers'
+import Products from '../components/Products'
+import Agents from '../components/Agents'
+import AdminUsersPage from '../components/AdminUsersPage'
+import AdminUserGroupsPage from '../components/AdminUserGroupsPage'
+import AdminTransactionsPage from '../components/AdminTransactionsPage'
+import AdminParametersPage from '../components/AdminParametersPage'
+import AdminStyledApiModulePage from '../components/AdminStyledApiModulePage'
+import Settings from '../components/Settings'
+import Commissions from '../components/Commissions'
+import Support from '../components/Support'
+import WhatsAppCenter from '../components/WhatsAppCenter'
+import AdminFeaturePlaceholder from '../components/AdminFeaturePlaceholder'
 import {
-  createSmsCharge,
-  createSmsMessage,
-  createCgrateCredentials,
-  createEconetCredentials,
-  createEsolutionsAirtimeCredentials,
-  createEsolutionsSmsCredentials,
-  createNetoneEvdCredentials,
   createPesepayCredentials,
-  createZesaCredentials,
-  getAllCgrateCredentials,
-  getAllEconetCredentials,
-  getAllEsolutionsAirtimeCredentials,
-  getAllNetoneEvdCredentials,
-  getAllPesepayCredentials,
-  getAllSmsCharges,
-  getAllSmsMessages,
-  getAllZesaCredentials,
-  getAllEsolutionsSmsCredentials,
-  getAllTuitionTransactions,
-} from "../services";
-import { INITIAL_FAQS } from "../data/constants";
-import type { FAQItem } from "../data/types";
-import { ROUTE_PATHS } from "../../../router/paths";
-import "../styles/admin-dashboard.css";
+  getPaginatedPesepayCredentials,
+  getPaginatedEsebillsAccounts,
+  createEsebillsAccount,
+  updateEsebillsAccount,
+  deleteEsebillsAccount,
+} from '../services'
+import { ROUTE_PATHS } from '../../../router/paths'
+import '../styles/admin-dashboard.css'
 
-type AdminTab = string;
-const ADMIN_ACTIVE_TAB_STORAGE_KEY = "admin_active_tab";
+type AdminTab = string
 
 export function AdminDashboardPage() {
-  const navigate = useNavigate();
-  const { tab: urlTab } = useParams();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [settingsInitialTab, setSettingsInitialTab] = useState<string>("commissions");
-  const [faqs, setFaqs] = useState<FAQItem[]>(INITIAL_FAQS);
+  const navigate = useNavigate()
+  const { tab: urlTab } = useParams()
 
-  // Support both URL params and query params for backwards compatibility
-  const activeTab: AdminTab = urlTab || searchParams.get("tab") || "dashboard";
-
-  useEffect(() => {
-    // Sync URL params if coming from old routing
-    if (!urlTab && !searchParams.get("tab")) {
-      const next = new URLSearchParams(searchParams);
-      next.set("tab", activeTab);
-      setSearchParams(next, { replace: true });
-    }
-  }, [activeTab, searchParams, setSearchParams, urlTab]);
+  const activeTab: AdminTab = urlTab ?? 'dashboard'
 
   const handleTabChange = (tab: AdminTab) => {
-    if (tab === "settings") {
-      setSettingsInitialTab("commissions");
-    }
-    window.localStorage.setItem(ADMIN_ACTIVE_TAB_STORAGE_KEY, tab);
-    
-    // Navigate with URL params
-    if (tab === "dashboard") {
-      navigate("/portal-admin");
+    if (tab === 'dashboard') {
+      navigate(ROUTE_PATHS.portalAdmin)
     } else {
-      navigate(`/portal-admin/${tab}`);
+      navigate(`${ROUTE_PATHS.portalAdmin}/${tab}`)
     }
-  };
+  }
 
   const renderContent = () => {
     switch (activeTab) {
-      case "dashboard":
-        return <Dashboard />;
-      case "profile":
-        return <UserProfile />;
-      case "reports":
-        return <Reports />;
-      case "transactions":
-        return <AdminTransactionsPage region="zambia" />;
-      case "transactionsZambiaProducts":
-        return <ZambiaProductsTransactions />;
-      case "transactionsZimProducts":
-        return <ZimProductsTransactions />;
-      case "vouchersZambiaProducts":
-        return <AdminVouchersPage region="zambia" />;
-      case "vouchersZimProducts":
-        return <AdminVouchersPage region="zim" />;
-      case "rongekaAccounts":
-        return <RongekaAccounts />;
-      case "billers":
+      case 'dashboard':
+        return <Dashboard />
+      case 'profile':
+        return <UserProfile />
+      case 'notifications':
+        return <NotificationsPage />
+      case 'transactions':
+      case 'transactionsZambiaProducts':
+      case 'transactionsZimProducts':
+        return <AdminTransactionsPage />
+      case 'vouchersZambiaProducts':
+        return <AdminFeaturePlaceholder title="Zambia Vouchers" description="Manage and distribute digital vouchers for the Zambian market." />
+      case 'vouchersZimProducts':
+        return <AdminFeaturePlaceholder title="Zim Vouchers" description="Manage and distribute digital vouchers for the Zimbabwean market." />
+      case 'rongekaAccounts':
+        return (
+          <AdminStyledApiModulePage
+            key="rongekaAccounts"
+            title="Rongeka Accounts"
+            description="Manage Rongeka integration bank accounts and settlement parameters."
+            endpoint="/v1/rongeka-accounts"
+            loadData={getPaginatedEsebillsAccounts} // Fallback or dedicated service
+            tableMode="auto"
+          />
+        )
+      case 'tuitionTransactions':
+        return <AdminTransactionsPage />
+      case 'tuitionInstitutions':
+        return <AdminFeaturePlaceholder title="Tuition Institutions" description="Configure educational institutions for tuition fee collections." />
+      case 'billers':
         return (
           <Billers
             onOnboard={() => {
-              setSettingsInitialTab("categories");
-              handleTabChange("settings");
+              handleTabChange('parametersProductCategories')
             }}
           />
-        );
-      case "products":
-        return <Products />;
-      case "agents":
-        return <Agents />;
-      case "users":
-      case "userSettingsUsers":
-        return <AdminUsersPage />;
-      case "userSettingsGroups":
-        return <AdminUserGroupsPage />;
-      case "messaging":
-        return <Messaging />;
-      case "smsCharges":
-        return (
-          <AdminStyledApiModulePage
-            key="smsCharges"
-            title="SMS Charges"
-            description="SMS charge configuration pulled from the backend."
-            endpoint="/v1/sms-charges"
-            createEndpoint="/v1/sms-charges"
-            createData={createSmsCharge}
-            tableMode="auto"
-            createMode="fields"
-            columns={[
-              { key: "name", label: "Name" },
-              { key: "amount", label: "Amount" },
-              { key: "createdDate", label: "Created on" },
-            ]}
-            createFields={[
-              { key: "name", label: "Name", type: "text" },
-              { key: "amount", label: "Amount", type: "number" },
-              { key: "active", label: "Active", type: "checkbox" },
-            ]}
-            emptyLabel="SmsCharges"
-            loadData={getAllSmsCharges}
-          />
-        );
-      case "whatsapp":
-        return <WhatsAppCenter />;
-      case "parametersCurrencies":
-        return <AdminParametersPage module="currencies" />;
-      case "parametersCountries":
-        return <AdminParametersPage module="countries" />;
-      case "parametersHolidays":
-        return <AdminParametersPage module="holidays" />;
-      case "parametersBanks":
-        return <AdminParametersPage module="banks" />;
-      case "parametersProductCategories":
-        return <AdminParametersPage module="productCategories" />;
-      case "econetBundlePlanTypes":
-        return <AdminEconetPage provider="econet" module="bundlePlanTypes" />;
-      case "econetDataBundleTypes":
-        return <AdminEconetPage provider="econet" module="dataBundleTypes" />;
-      case "netoneBundlePlanTypes":
-        return <NetoneBundlePlans />;
-      case "netoneDataBundleTypes":
-        return <NetoneDataBundles />;
-      case "credentialsPesepay":
+        )
+      case 'products':
+        return <Products />
+      case 'agents':
+        return <Agents />
+      case 'users':
+      case 'userSettingsUsers':
+        return <AdminUsersPage />
+      case 'userSettingsGroups':
+        return <AdminUserGroupsPage />
+      case 'whatsapp':
+        return <WhatsAppCenter />
+      case 'parametersCurrencies':
+        return <AdminParametersPage module="currencies" />
+      case 'parametersCountries':
+        return <AdminParametersPage module="countries" />
+      case 'parametersHolidays':
+        return <AdminParametersPage module="holidays" />
+      case 'parametersBanks':
+        return <AdminParametersPage module="banks" />
+      case 'parametersProductCategories':
+        return <AdminParametersPage module="productCategories" />
+      case 'credentialsPesepay':
         return (
           <AdminStyledApiModulePage
             key="credentialsPesepay"
             title="Pesepay Credentials"
-            description="Live Pesepay integration credential records."
-            endpoint="/v1/pesepay-integration-credentials/all"
+            description="Pesepay integration credential records."
+            endpoint="/v1/pesepay-integration-credentials"
             createEndpoint="/v1/pesepay-integration-credentials"
             createData={createPesepayCredentials}
-            loadData={getAllPesepayCredentials}
+            loadData={getPaginatedPesepayCredentials}
           />
-        );
-      case "credentialsCgrate":
+        )
+      case 'esebillsAccounts':
         return (
           <AdminStyledApiModulePage
-            key="credentialsCgrate"
-            title="Cgrate Credentials"
-            description="Live Cgrate credentials endpoint."
-            endpoint="/v1/cgrate/credentials"
-            createEndpoint="/v1/cgrate/credentials"
-            createData={createCgrateCredentials}
-            loadData={getAllCgrateCredentials}
-          />
-        );
-      case "credentialsZesa":
-        return (
-          <AdminStyledApiModulePage
-            key="credentialsZesa"
-            title="Zesa Credentials"
-            description="Live Zesa Esolutions credentials endpoint."
-            endpoint="/v1/zesa-esolutions"
-            createEndpoint="/v1/zesa-esolutions"
-            createData={createZesaCredentials}
-            loadData={getAllZesaCredentials}
-          />
-        );
-      case "credentialsEconet":
-        return (
-          <AdminStyledApiModulePage
-            key="credentialsEconet"
-            title="Econet Credentials"
-            description="Live Econet EVD credentials endpoint."
-            endpoint="/v1/econet-evd-integration-credentials/all"
-            createEndpoint="/v1/econet-evd-integration-credentials"
-            createData={createEconetCredentials}
-            loadData={getAllEconetCredentials}
-          />
-        );
-      case "credentialsEsolutionsSms":
-        return (
-          <AdminStyledApiModulePage
-            key="credentialsEsolutionsSms"
-            title="Esolutions SMS Credentials"
-            description="Live Esolutions SMS account credentials endpoint."
-            endpoint="/v1/esolutions-sms-account"
-            createEndpoint="/v1/esolutions-sms-account"
-            createData={createEsolutionsSmsCredentials}
-            loadData={getAllEsolutionsSmsCredentials}
-          />
-        );
-      case "credentialsNetoneEvd":
-        return (
-          <AdminStyledApiModulePage
-            key="credentialsNetoneEvd"
-            title="Netone EVD Credentials"
-            description="Live Netone EVD credentials endpoint."
-            endpoint="/v1/netone-evd-integration-credentials/all"
-            createEndpoint="/v1/netone-evd-integration-credentials"
-            createData={createNetoneEvdCredentials}
-            loadData={getAllNetoneEvdCredentials}
-          />
-        );
-      case "credentialsEsolutionsAirtime":
-        return (
-          <AdminStyledApiModulePage
-            key="credentialsEsolutionsAirtime"
-            title="Esolutions Airtime Credentials"
-            description="Live Esolutions airtime integration credentials endpoint."
-            endpoint="/v1/esolution-airtime-integration-credentials/all"
-            createEndpoint="/v1/esolution-airtime-integration-credentials"
-            createData={createEsolutionsAirtimeCredentials}
-            loadData={getAllEsolutionsAirtimeCredentials}
-          />
-        );
-      case "smsMessages":
-        return (
-          <AdminStyledApiModulePage
-            key="smsMessages"
-            title="SMSes"
-            description="Live outbound SMS records endpoint."
-            endpoint="/v1/sms"
-            createEndpoint="/v1/sms"
-            createData={createSmsMessage}
+            key="esebillsAccounts"
+            title="EseBills Accounts"
+            description="Platform bank accounts used for settlement."
+            endpoint="/v1/esebills-accounts"
+            createEndpoint="/v1/esebills-accounts"
+            createData={createEsebillsAccount}
+            loadData={getPaginatedEsebillsAccounts}
             tableMode="auto"
             createMode="fields"
             columns={[
-              { key: "phoneNumber", label: "Phone Number" },
-              { key: "message", label: "Message" },
-              { key: "createdDate", label: "Created on" },
+              { key: 'bank', label: 'Bank' },
+              { key: 'accountNumber', label: 'Account Number' },
+              { key: 'accountName', label: 'Account Name' },
             ]}
             createFields={[
-              { key: "phoneNumber", label: "Phone Number", type: "text" },
-              { key: "message", label: "Message", type: "text" },
+              { key: 'bank', label: 'Bank', type: 'text' },
+              { key: 'accountNumber', label: 'Account Number', type: 'text' },
+              { key: 'accountName', label: 'Account Name', type: 'text' },
             ]}
-            emptyLabel="Smses"
-            loadData={getAllSmsMessages}
+            emptyLabel="EseBillsAccounts"
+            onUpdate={updateEsebillsAccount}
+            onDelete={deleteEsebillsAccount}
           />
-        );
-      case "tuition":
-      case "tuitionTransactions":
-        return (
-          <AdminStyledApiModulePage
-            key="tuitionTransactions"
-            title="Tuition"
-            icon="shopping_bag"
-            description="Tuition Transaction"
-            endpoint="/v1/institution-transactions"
-            showCreateButton={false}
-            columns={[
-              { key: "amount", label: "Name" },
-              { key: "institution.name", label: "InstitutionName" },
-              { key: "beneficiaryName", label: "BeneficiaryName" },
-              { key: "paymentTransaction.paymentStatus", label: "Status" },
-              { key: "createdDate", label: "Created on" },
-            ]}
-            emptyLabel="TuitionTransactions"
-            loadData={getAllTuitionTransactions}
-          />
-        );
-      case "tuitionInstitutions":
-        return <TuitionInstitutions />;
-      case "tuitionFeeTypes":
-        return <TuitionFeeTypes />;
-      case "tuitionProcessingFees":
-        return <TuitionProcessingFees />;
-      case "commissions":
-        return (
-          <Settings
-            faqs={faqs}
-            setFaqs={setFaqs}
-            initialTab="commissions"
-          />
-        );
-      case "settings":
-        return (
-          <Settings
-            faqs={faqs}
-            setFaqs={setFaqs}
-            initialTab={settingsInitialTab}
-          />
-        );
-      case "support":
-        return <Support />;
+        )
+      case 'providers':
+        return <AdminFeaturePlaceholder title="Providers" description="Enable or disable payment providers (ESOLUTIONS, ECONET_DIRECT, NETONE_DIRECT, ZESA_DIRECT)." />
+      case 'commissions':
+        return <Commissions />
+      case 'settings':
+        return <Settings initialTab="commissions" />
+      case 'support':
+        return <Support />
       default:
-        return <Dashboard />;
+        return <Dashboard />
     }
-  };
+  }
 
-  // Only render content - the shell is now provided by DashboardLayout
   return (
     <div className="animate-in fade-in duration-500">
       {renderContent()}
     </div>
-  );
+  )
 }

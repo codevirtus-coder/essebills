@@ -1,5 +1,5 @@
 import { PortalRegister, type PortalRegisterSubmitPayload } from '../components/PortalRegister'
-import { registerBiller } from '../biller-auth.service'
+import { registerBiller } from '../portal-auth.service'
 import { ROUTE_PATHS } from '../../../router/paths'
 
 async function submitBillerRegistration(payload: PortalRegisterSubmitPayload) {
@@ -27,8 +27,10 @@ export function BillerRegisterPage() {
       loginPath={ROUTE_PATHS.loginBiller}
       registerNote="Biller application submitted. Continue to biller login."
       showCompanyField
+      companyFieldPlaceholder="Organization name"
       includePasswordFields
       registerAction={submitBillerRegistration}
+      bgImage="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?q=80&w=2000&auto=format&fit=crop"
     />
   )
 }

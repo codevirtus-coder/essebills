@@ -1,153 +1,73 @@
 export const ADMIN_ENDPOINTS = {
   auth: {
+    login: '/authenticate',
+    verifyOtp: '/authenticate/verify-otp',
+    refresh: '/v1/auth/refresh',
     forgotPassword: '/v1/users/forgot-password',
     resetPassword: '/v1/users/reset-password',
+    updatePassword: '/v1/users/update-password',
   },
   users: {
     root: '/v1/users',
-    all: '/v1/users/all',
-    profile: '/v1/users/profile',
     myAccount: '/v1/users/my-account',
     byId: (userId: string | number) => `/v1/users/${userId}`,
-    status: (userId: string | number) => `/v1/users/${userId}/status`,
-    resetOtp: (userId: string | number) => `/v1/users/${userId}/reset-otp`,
-    updateOtp: (userId: string | number) => `/v1/users/${userId}/otp`,
   },
   groups: {
     root: '/v1/groups',
-    all: '/v1/groups/all',
     byId: (groupId: string | number) => `/v1/groups/${groupId}`,
   },
   products: {
     root: '/v1/products',
-    all: '/v1/products/all',
-    allActive: '/v1/products/all/active',
     byId: (productId: string | number) => `/v1/products/${productId}`,
-    vendorBalance: '/v1/products/vendor-balance',
+  },
+  productFields: {
+    root: '/v1/product-fields',
+    byId: (id: string | number) => `/v1/product-fields/${id}`,
   },
   productCategories: {
     root: '/v1/product-categories',
-    all: '/v1/product-categories/all',
-    allActive: '/v1/product-categories/all/active',
     byId: (id: string | number) => `/v1/product-categories/${id}`,
   },
-  countries: {
-    root: '/v1/countries',
-    all: '/v1/countries/all',
-    byId: (id: string | number) => `/v1/countries/${id}`,
+  paymentTransactions: {
+    root: '/v1/payment-transactions',
+    byId: (id: string | number) => `/v1/payment-transactions/${id}`,
+  },
+  productPayment: {
+    process: '/v1/product-payment',
   },
   currencies: {
     root: '/v1/currencies',
-    all: '/v1/currencies/all',
     byId: (currencyId: string | number) => `/v1/currencies/${currencyId}`,
+  },
+  countries: {
+    root: '/v1/countries',
+    byId: (id: string | number) => `/v1/countries/${id}`,
+  },
+  countryCurrencies: {
+    root: '/v1/country-currencies',
   },
   banks: {
     root: '/v1/banks',
-    all: '/v1/banks/all',
     byId: (bankId: string | number) => `/v1/banks/${bankId}`,
   },
   holidays: {
     root: '/v1/holidays',
-    byId: (id: string | number) => `/v1/holidays/${id}`,
   },
-  rongekaAccounts: {
-    root: '/v1/rongeka-accounts',
-    all: '/v1/rongeka-accounts/all',
+  esebillsAccounts: {
+    root: '/v1/esebills-accounts',
+    byId: (accountId: string | number) => `/v1/esebills-accounts/${accountId}`,
   },
-  vouchers: {
-    zambiaProducts: {
-      root: '/v1/zesco/vouchers',
-      all: '/v1/zesco/vouchers/all',
-    },
-    zimProducts: {
-      root: '/v1/zesa/vouchers',
-      all: '/v1/zesa/vouchers/all',
-    },
+  providers: {
+    enable: (provider: string) => `/v1/providers/${provider}/enable`,
+    disable: (provider: string) => `/v1/providers/${provider}/disable`,
   },
-  sms: {
-    root: '/v1/sms',
-    charges: '/v1/sms-charges',
+  pesepayCredentials: {
+    root: '/v1/pesepay-integration-credentials',
+    byId: (id: string | number) => `/v1/pesepay-integration-credentials/${id}`,
   },
-  econet: {
-    bundlePlanTypes: {
-      root: '/v1/bundle-plan-types',
-      all: '/v1/bundle-plan-types/all',
-      byId: (id: string | number) => `/v1/bundle-plan-types/${id}`,
-      changeStatus: (id: string | number) => `/v1/bundle-plan-types/${id}/change-status`,
-    },
-    dataBundleTypes: {
-      root: '/v1/data-bundle-types',
-      all: '/v1/data-bundle-types/all',
-      byId: (id: string | number) => `/v1/data-bundle-types/${id}`,
-      changeStatus: (id: string | number) => `/v1/data-bundle-types/${id}/change-status`,
-    },
-    credentials: {
-      root: '/v1/econet-evd-integration-credentials',
-      all: '/v1/econet-evd-integration-credentials/all',
-    },
-  },
-  netone: {
-    bundlePlans: {
-      root: '/v1/netone-bundle-plans',
-      all: '/v1/netone-bundle-plans/all',
-      byId: (id: string | number) => `/v1/netone-bundle-plans/${id}`,
-      changeStatus: (id: string | number) => `/v1/netone-bundle-plans/${id}/change-status`,
-    },
-    dataBundleTypes: {
-      root: '/v1/netone-data-bundle-types',
-      all: '/v1/netone-data-bundle-types/all',
-      byId: (id: string | number) => `/v1/netone-data-bundle-types/${id}`,
-      changeStatus: (id: string | number) => `/v1/netone-data-bundle-types/${id}/change-status`,
-    },
-    credentials: {
-      root: '/v1/netone-evd-integration-credentials',
-      all: '/v1/netone-evd-integration-credentials/all',
-    },
-  },
-  credentials: {
-    pesepay: {
-      root: '/v1/pesepay-integration-credentials',
-      all: '/v1/pesepay-integration-credentials/all',
-    },
-    cgrate: {
-      root: '/v1/cgrate/credentials',
-    },
-    zesa: {
-      root: '/v1/zesa-esolutions',
-    },
-    esolutionsSms: {
-      root: '/v1/esolutions-sms-account',
-    },
-    esolutionsAirtime: {
-      root: '/v1/esolution-airtime-integration-credentials',
-      all: '/v1/esolution-airtime-integration-credentials/all',
-    },
-  },
-  tuition: {
-    transactions: {
-      root: '/v1/institution-transactions',
-      all: '/v1/institution-transactions',
-    },
-    institutions: {
-      root: '/v1/institutions',
-      all: '/v1/institutions/all',
-    },
-    feeTypes: {
-      root: '/v1/fee-types',
-      all: '/v1/fee-types/all',
-    },
-    processingFees: {
-      root: '/v1/tuition-processing-fees',
-      all: '/v1/tuition-processing-fees/all',
-    },
-  },
-  reports: {
-    econetAirtime: '/v1/econet-airtime/reports',
-    netoneAirtime: '/v1/netone-airtime/reports',
-    zesa: '/v1/zesa/reports',
-    telecelAirtime: '/v1/telecel-airtime/reports',
-    esolutionsAirtime: (format: string) =>
-      `/v1/esolutions-airtime/reports/${format}`,
+  pesepayPayments: {
+    updateTransaction: (paymentTransactionId: string | number) =>
+      `/v1/pesepay/payments/transactions/${paymentTransactionId}`,
   },
   accessControl: {
     authorities: {
@@ -157,26 +77,39 @@ export const ADMIN_ENDPOINTS = {
     userAuthorities: {
       root: '/v1/access-control/user-authorities',
       bundled: '/v1/access-control/user-authorities/bundled',
-      byUser: (userId: string | number) => `/v1/access-control/user-authorities/by-user/${userId}`,
-      byUserAll: (userId: string | number) => `/v1/access-control/user-authorities/by-user/${userId}/all`,
-      unassigned: (userId: string | number) => `/v1/access-control/user-authorities/unassigned/${userId}`,
+      byUser: (userId: string | number) =>
+        `/v1/access-control/user-authorities/by-user/${userId}`,
+      byUserAll: (userId: string | number) =>
+        `/v1/access-control/user-authorities/by-user/${userId}/all`,
+      unassigned: (userId: string | number) =>
+        `/v1/access-control/user-authorities/unassigned/${userId}`,
     },
     groupAuthorities: {
       root: '/v1/access-control/group-authorities',
       bundled: '/v1/access-control/group-authorities/bundled',
-      byGroup: (groupId: string | number) => `/v1/access-control/group-authorities/by-group/${groupId}`,
-      byGroupAll: (groupId: string | number) => `/v1/access-control/group-authorities/by-group/${groupId}/all`,
-      unassigned: (groupId: string | number) => `/v1/access-control/group-authorities/unassigned/${groupId}`,
+      byGroup: (groupId: string | number) =>
+        `/v1/access-control/group-authorities/by-group/${groupId}`,
+      byGroupAll: (groupId: string | number) =>
+        `/v1/access-control/group-authorities/by-group/${groupId}/all`,
+      unassigned: (groupId: string | number) =>
+        `/v1/access-control/group-authorities/unassigned/${groupId}`,
     },
-  },
-  audits: {
-    root: '/v1/audits',
-    byId: (id: string | number) => `/v1/audits/${id}`,
-    myAudits: '/v1/my-audits/period',
-    byPerformerPeriod: '/v1/audits/by-performer/period',
   },
   agentCommission: {
     rates: (agentId: string | number) => `/v1/admin/agents/${agentId}/commission-rates`,
-    rateById: (agentId: string | number, id: string | number) => `/v1/admin/agents/${agentId}/commission-rates/${id}`,
+    rateById: (agentId: string | number, id: string | number) =>
+      `/v1/admin/agents/${agentId}/commission-rates/${id}`,
+  },
+  registration: {
+    customer: '/v1/register/customer',
+    biller: '/v1/register/biller',
+    agent: '/v1/register/agent',
+  },
+  otp: {
+    verify: '/v1/otp/verify',
+  },
+  whatsapp: {
+    sessions: '/v1/whatsapp/sessions',
+    messages: '/v1/whatsapp/messages',
   },
 } as const

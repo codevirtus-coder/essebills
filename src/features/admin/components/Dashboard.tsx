@@ -9,21 +9,32 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import StatCard from "../../../components/ui/StatCard";
-import { DataTable, type TableColumn } from "../../../components/ui/DataTable";
+import CRUDLayout, { type CRUDColumn } from "../../shared/components/CRUDLayout";
 import {
   MOCK_STATS,
   BILLER_PERFORMANCE,
   REVENUE_DATA,
   MOCK_AGENTS,
 } from "../data/constants";
-import { TransactionStatus } from "../data/types";
 import {
   getRecentPaymentTransactions,
   getUsersCount,
   type DashboardTransaction,
 } from "../services/adminDashboard.service";
-import { AdminStatusBadge, statusVariant } from "./shared/AdminControls";
-import { ADMIN_LAYOUT_SHELL } from "./shared/adminUi";
+import { 
+  TrendingUp, 
+  Users, 
+  Activity, 
+  Wallet, 
+  Download, 
+  ArrowUpRight, 
+  Clock, 
+  CheckCircle, 
+  XCircle,
+  MoreVertical,
+  Layers
+} from "lucide-react";
+import { cn } from "../../../lib/utils";
 
 const Dashboard: React.FC = () => {
   const [transactions, setTransactions] = useState<DashboardTransaction[]>([]);
@@ -53,19 +64,19 @@ const Dashboard: React.FC = () => {
     };
   }, []);
 
-  const txColumns: TableColumn<DashboardTransaction>[] = [
+  const txColumns: CRUDColumn<DashboardTransaction>[] = [
     {
       key: "date",
       header: "Transaction Time",
       render: (tx) => (
-        <>
-          <p className="text-sm font-black text-dark-text dark:text-gray-200">
+        <div>
+          <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
             {tx.date ?? "—"}
           </p>
-          <p className="text-[10px] font-bold text-neutral-text uppercase tracking-tighter">
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
             {tx.time ?? ""}
           </p>
-        </>
+        </div>
       ),
     },
     {
@@ -80,10 +91,10 @@ const Dashboard: React.FC = () => {
             "--");
         return (
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-primary/10 text-primary rounded-xl flex items-center justify-center text-[10px] font-black">
+            <div className="w-8 h-8 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-lg flex items-center justify-center text-[10px] font-black border border-emerald-100 dark:border-emerald-800/50">
               {customerInitials}
             </div>
-            <p className="text-sm font-bold text-dark-text dark:text-gray-300">
+            <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
               {tx.customerName ?? "—"}
             </p>
           </div>
@@ -94,7 +105,7 @@ const Dashboard: React.FC = () => {
       key: "biller",
       header: "Service Biller",
       render: (tx) => (
-        <span className="text-xs font-bold text-neutral-text">
+        <span className="text-xs font-bold text-slate-600 dark:text-slate-400">
           {tx.biller ?? "—"}
         </span>
       ),
@@ -102,38 +113,40 @@ const Dashboard: React.FC = () => {
     {
       key: "amount",
       header: "Settled Amount",
+      className: "text-right",
       render: (tx) => (
-        <p className="text-sm font-black text-dark-text dark:text-white">
+        <p className="text-sm font-black text-slate-900 dark:text-white">
           ${(Number(tx.amount) || 0).toFixed(2)}
         </p>
       ),
     },
     {
       key: "status",
-      header: "Fulfillment Status",
+      header: "Fulfillment",
+      className: "text-center",
       render: (tx) => {
-        const status = String(tx.status ?? "");
+        const status = String(tx.status ?? "").toUpperCase();
+        const isSuccess = status === "SUCCESS" || status === "COMPLETED" || status === "APPROVED";
+        const isPending = status === "PENDING" || status === "PROCESSING";
+        
         return (
-          <AdminStatusBadge variant={statusVariant(status)}>
-            {status || "—"}
-          </AdminStatusBadge>
+          <span className={cn(
+            "px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border",
+            isSuccess 
+              ? "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50" 
+              : isPending
+              ? "bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/50"
+              : "bg-red-50 text-red-600 border-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800/50"
+          )}>
+            {tx.status || "—"}
+          </span>
         );
       },
-    },
-    {
-      key: "action",
-      header: "Action",
-      align: "right",
-      render: () => (
-        <button className="p-2 hover:bg-neutral-light dark:hover:bg-white/10 rounded-xl transition-all text-neutral-text">
-          <span className="material-symbols-outlined text-lg">more_vert</span>
-        </button>
-      ),
     },
   ];
 
   return (
-    <div className={ADMIN_LAYOUT_SHELL}>
+    <div className="space-y-8 animate-in fade-in duration-500">
       {/* Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
@@ -141,69 +154,66 @@ const Dashboard: React.FC = () => {
           value={`$${MOCK_STATS.totalRevenue.toLocaleString()}.00`}
           change={MOCK_STATS.revenueChange}
           icon="payments"
-          iconBg="bg-primary/10"
-          iconColor="text-primary"
+          iconBg="bg-emerald-50 dark:bg-emerald-900/20"
+          iconColor="text-emerald-600 dark:text-emerald-400"
           chartPath="M0 25 Q 20 10, 40 20 T 80 5 T 100 15"
-          strokeColor="#7e56c2"
+          strokeColor="#10b981"
         />
         <StatCard
           label="Total Transactions"
           value={totalTransactions.toLocaleString()}
           change={MOCK_STATS.transactionsChange}
           icon="sync_alt"
-          iconBg="bg-blue-100"
-          iconColor="text-blue-600"
+          iconBg="bg-blue-50 dark:bg-blue-900/20"
+          iconColor="text-blue-600 dark:text-blue-400"
           chartPath="M0 20 Q 25 25, 50 10 T 100 5"
-          strokeColor="#7e56c2"
+          strokeColor="#3b82f6"
         />
         <StatCard
           label="Active Users"
           value={usersCount.toLocaleString()}
           change={MOCK_STATS.usersChange}
           icon="person_check"
-          iconBg="bg-accent-green/10"
-          iconColor="text-accent-green"
+          iconBg="bg-purple-50 dark:bg-purple-900/20"
+          iconColor="text-purple-600 dark:text-purple-400"
           chartPath="M0 25 L 20 15 L 40 22 L 60 8 L 80 12 L 100 2"
-          strokeColor="#a3e635"
+          strokeColor="#a855f7"
         />
         <StatCard
           label="Agent Earnings"
           value={`$${MOCK_AGENTS.reduce((acc, curr) => acc + curr.totalEarnings, 0).toLocaleString()}`}
           change="+8.4% vs ytd"
           icon="storefront"
-          iconBg="bg-purple-100"
-          iconColor="text-purple-600"
+          iconBg="bg-amber-50 dark:bg-amber-900/20"
+          iconColor="text-amber-600 dark:text-amber-400"
           chartPath="M0 15 Q 50 5, 100 25"
-          strokeColor="#7e56c2"
+          strokeColor="#f59e0b"
         />
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 min-w-0 bg-white p-8 rounded-xl shadow-sm border border-neutral-light dark:border-white/5">
-          <div className="flex items-center justify-between mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 glass-card p-8 border-slate-200 dark:border-slate-800">
+          <div className="flex items-center justify-between mb-10">
             <div>
-              <h4 className="text-xl font-black text-dark-text dark:text-white">
+              <h4 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
                 Revenue Pulse
               </h4>
-              <p className="text-xs font-bold text-neutral-text uppercase tracking-widest mt-1">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">
                 Global performance metrics
               </p>
             </div>
-            <div className="flex gap-2">
-              <button className="bg-neutral-light/50 dark:bg-white/5 p-2 rounded-xl text-neutral-text hover:text-primary transition-colors">
-                <span className="material-symbols-outlined text-lg">
-                  download
-                </span>
+            <div className="flex gap-3">
+              <button className="p-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-500 hover:text-emerald-600 transition-colors">
+                <Download size={18} />
               </button>
-              <select className="bg-neutral-light/50 dark:bg-white/5 border-none rounded-xl text-[10px] font-black uppercase tracking-widest py-2 px-4 focus:ring-1 focus:ring-primary">
+              <select className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[10px] font-bold uppercase tracking-widest py-2 px-4 text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
                 <option>Last 6 Months</option>
                 <option>Year to Date</option>
               </select>
             </div>
           </div>
-          {/* Fixed height container for Recharts to prevent width/height -1 error */}
-          <div className="h-[300px] w-full">
+          <div className="h-[320px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
                 data={REVENUE_DATA}
@@ -211,20 +221,20 @@ const Dashboard: React.FC = () => {
               >
                 <defs>
                   <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#7e56c2" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#7e56c2" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid
                   vertical={false}
-                  stroke="#eceaf1"
+                  stroke="#e2e8f0"
                   strokeDasharray="3 3"
                 />
                 <XAxis
                   dataKey="month"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 10, fontWeight: 800, fill: "#6d5d89" }}
+                  tick={{ fontSize: 10, fontWeight: 700, fill: "#64748b" }}
                 />
                 <YAxis hide />
                 <Tooltip
@@ -233,12 +243,14 @@ const Dashboard: React.FC = () => {
                     border: "none",
                     boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
                     fontWeight: "bold",
+                    backgroundColor: "#1e293b",
+                    color: "#fff"
                   }}
                 />
                 <Area
                   type="monotone"
                   dataKey="revenue"
-                  stroke="#7e56c2"
+                  stroke="#10b981"
                   strokeWidth={4}
                   fillOpacity={1}
                   fill="url(#colorRev)"
@@ -248,60 +260,57 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Top Billers List */}
-        <div className="bg-white p-8 rounded-xl shadow-sm border border-neutral-light dark:border-white/5 flex flex-col min-w-0">
-          <h4 className="text-xl font-black text-dark-text dark:text-white mb-8">
-            Top Billers
-          </h4>
+        <div className="glass-card p-8 border-slate-200 dark:border-slate-800 flex flex-col">
+          <div className="flex items-center justify-between mb-8">
+             <h4 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+               Top Billers
+             </h4>
+             <Layers size={18} className="text-slate-400" />
+          </div>
           <div className="space-y-6 flex-1">
             {BILLER_PERFORMANCE.map((biller) => (
               <div key={biller.name} className="space-y-2 group">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs font-black text-neutral-text uppercase tracking-tighter group-hover:text-primary transition-colors">
+                <div className="flex justify-between items-center px-1">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight group-hover:text-emerald-600 transition-colors">
                     {biller.name}
                   </span>
-                  <span className="text-xs font-black text-dark-text dark:text-white">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white">
                     ${biller.amount.toLocaleString()}
                   </span>
                 </div>
-                <div className="h-2 bg-neutral-light/50 dark:bg-white/5 rounded-full overflow-hidden">
+                <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-primary rounded-full transition-all duration-1000 group-hover:bg-accent-green"
+                    className="h-full bg-emerald-500 rounded-full transition-all duration-1000 group-hover:bg-emerald-400"
                     style={{ width: `${biller.percentage}%` }}
                   ></div>
                 </div>
               </div>
             ))}
           </div>
-          <button className="mt-8 w-full bg-neutral-light/30 dark:bg-white/5 text-[10px] font-black uppercase tracking-[0.2em] py-4 rounded-lg hover:bg-primary hover:text-white transition-all">
-            Full Biller Audit
+          <button className="mt-8 w-full bg-slate-900 dark:bg-emerald-600 text-white text-[10px] font-bold uppercase tracking-widest py-4 rounded-xl shadow-lg shadow-emerald-900/20 hover:scale-[1.02] transition-all">
+            Full Audit Report
           </button>
         </div>
       </div>
 
       {/* Transactions Section */}
-      <DataTable
+      <CRUDLayout
+        title="Live Ecosystem Activity"
         columns={txColumns}
         data={transactions}
-        rowKey={(tx) => tx.id}
         loading={isLoading}
-        emptyMessage="No transactions found"
-        emptyIcon="receipt_long"
-        header={
-          <div className="p-8 flex items-center justify-between">
-            <h4 className="text-xl font-black text-dark-text dark:text-white">
-              Live Transactions
-            </h4>
-            <div className="flex gap-4">
-              <button className="flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest hover:underline">
-                <span className="material-symbols-outlined text-sm">
-                  download
-                </span>
-                Export Report
-              </button>
-            </div>
-          </div>
-        }
+        pageable={{ page: 1, size: 10, totalElements: transactions.length, totalPages: 1 }}
+        onPageChange={() => {}}
+        onSizeChange={() => {}}
+        onRefresh={() => {}}
+        searchable={false}
+        actions={{
+          renderCustom: () => (
+            <button className="p-1.5 text-slate-400 hover:text-emerald-600 transition-colors">
+              <MoreVertical size={16} />
+            </button>
+          )
+        }}
       />
     </div>
   );

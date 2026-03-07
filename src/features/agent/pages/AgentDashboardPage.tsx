@@ -1,15 +1,17 @@
-
 import React, { useEffect, useMemo, useState } from 'react';
 import StatCard from '../../../components/ui/StatCard';
-import { DataTable, type TableColumn } from '../../../components/ui';
 import { INITIAL_CATEGORIES } from '../constants';
-import { useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import UserProfile from '../../admin/components/UserProfile';
+import { NotificationsPage } from '../../../pages/NotificationsPage';
 import { getAuthSession, saveAuthSession } from '../../auth/auth.storage';
 import { getCurrentUserProfile } from '../../auth/auth.service';
 import type { UserProfileDto } from '../../auth/dto/auth.dto';
 import { getAgentWalletBalance, getAgentWalletHistory, type WalletHistoryEntry } from '../services/agent.service';
 import Logo from '../../../components/ui/Logo';
+import CRUDLayout, { type CRUDColumn, type PageableState } from '../../shared/components/CRUDLayout';
+import CRUDModal from '../../shared/components/CRUDModal';
+import { Bolt, Antenna, Droplets, Landmark, History, PlusCircle, CheckCircle, Smartphone, Share2, Printer, ShoppingCart, Wallet, ArrowRight } from 'lucide-react';
 import '../styles/agent-dashboard.css';
 
 interface Sale {
@@ -36,112 +38,10 @@ const FALLBACK_FLOAT_HISTORY: WalletHistoryEntry[] = [
   { id: 'FL-9912', date: 'May 15, 2024', amount: 1000.00, method: 'Bank Transfer', status: 'Approved' },
 ];
 
-// Commission Ledger table columns
-const commissionColumns: TableColumn<Sale>[] = [
-  {
-    key: 'time',
-    header: 'Time',
-    render: (sale) => <span className="text-xs font-bold text-neutral-text">{sale.time}</span>,
-  },
-  {
-    key: 'service',
-    header: 'Service',
-    render: (sale) => (
-      <div>
-        <p className="text-sm font-black text-dark-text">{sale.biller}</p>
-        <p className="text-[10px] font-bold text-neutral-text uppercase">{sale.customer}</p>
-      </div>
-    ),
-  },
-  {
-    key: 'saleAmount',
-    header: 'Sale Amount',
-    align: 'right',
-    render: (sale) => <span className="font-bold text-neutral-text">${(Number(sale.amount) || 0).toFixed(2)}</span>,
-  },
-  {
-    key: 'myCut',
-    header: 'My Cut',
-    align: 'right',
-    render: (sale) => <span className="font-black text-accent-green">+${(Number(sale.commission) || 0).toFixed(2)}</span>,
-  },
-  {
-    key: 'status',
-    header: 'Status',
-    align: 'center',
-    render: () => (
-      <span className="px-3 py-1 bg-accent-green/10 text-accent-green rounded-full text-[9px] font-black uppercase tracking-widest">Accrued</span>
-    ),
-  },
-];
-
-// Float History table columns
-const floatHistoryColumns: TableColumn<WalletHistoryEntry>[] = [
-  {
-    key: 'date',
-    header: 'Date',
-    render: (f) => <span className="text-sm font-bold text-dark-text">{String(f.date ?? '—')}</span>,
-  },
-  {
-    key: 'reference',
-    header: 'Reference',
-    render: (f) => <span className="text-xs font-mono font-bold text-primary">{String(f.id ?? '—')}</span>,
-  },
-  {
-    key: 'method',
-    header: 'Method',
-    render: (f) => <span className="text-sm text-neutral-text font-medium">{String(f.method ?? '—')}</span>,
-  },
-  {
-    key: 'amount',
-    header: 'Amount',
-    align: 'right',
-    render: (f) => <span className="font-black text-dark-text">${(Number(f.amount) || 0).toFixed(2)}</span>,
-  },
-  {
-    key: 'status',
-    header: 'Status',
-    align: 'center',
-    render: (f) => (
-      <span className="px-3 py-1 bg-accent-green/10 text-accent-green rounded-full text-[9px] font-black uppercase tracking-widest">{String(f.status ?? '—')}</span>
-    ),
-  },
-];
-
-// Recent Sales table columns
-const recentSalesColumns: TableColumn<Sale>[] = [
-  {
-    key: 'time',
-    header: 'Time',
-    render: (sale) => <span className="text-xs font-bold text-neutral-text">{sale.time}</span>,
-  },
-  {
-    key: 'customer',
-    header: 'Customer',
-    render: (sale) => <span className="text-sm font-bold text-dark-text">{sale.customer}</span>,
-  },
-  {
-    key: 'service',
-    header: 'Service',
-    render: (sale) => <span className="text-xs font-bold text-neutral-text">{sale.biller}</span>,
-  },
-  {
-    key: 'amount',
-    header: 'Amount',
-    align: 'right',
-    render: (sale) => <span className="font-black text-dark-text">${(Number(sale.amount) || 0).toFixed(2)}</span>,
-  },
-  {
-    key: 'commission',
-    header: 'Comm.',
-    align: 'right',
-    render: (sale) => <span className="font-black text-accent-green">+${(Number(sale.commission) || 0).toFixed(2)}</span>,
-  },
-];
-
 export function AgentDashboardPage() {
+  const { tab: urlTab } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = searchParams.get('tab') || 'overview';
+  const activeTab = urlTab || searchParams.get('tab') || 'overview';
 
   const session = getAuthSession();
   const [profile, setProfile] = useState<UserProfileDto | null>(session?.profile ?? null);
@@ -152,13 +52,14 @@ export function AgentDashboardPage() {
   }, [profile]);
 
   const setTab = (tab: string) => {
-    setSearchParams({ tab });
-    setSellStep('select');
-  };
-
-  const onAddFloat = () => setTab('float');
-  const onBulkSale = () => {
-    setTab('sell');
+    const basePath = '/portal-agent';
+    if (tab === 'overview') {
+      window.history.replaceState(null, '', basePath);
+      setSearchParams({});
+    } else {
+      window.history.replaceState(null, '', `${basePath}/${tab}`);
+      setSearchParams({});
+    }
     setSellStep('select');
   };
 
@@ -167,8 +68,8 @@ export function AgentDashboardPage() {
   const [commissionBalance, setCommissionBalance] = useState(24.40);
   const [recentSales, setRecentSales] = useState<Sale[]>(INITIAL_SALES);
 
-  // Float history — null means "not yet fetched"
-  const [floatHistory, setFloatHistory] = useState<WalletHistoryEntry[] | null>(null);
+  const [floatHistory, setFloatHistory] = useState<WalletHistoryEntry[]>([]);
+  const [loadingFloatHistory, setLoadingFloatHistory] = useState(false);
 
   // Sale Logic
   const [sellStep, setSellStep] = useState<'select' | 'details' | 'confirm' | 'success'>('select');
@@ -179,14 +80,6 @@ export function AgentDashboardPage() {
   // Payout Logic
   const [isRequestingPayout, setIsRequestingPayout] = useState(false);
   const [payoutRequested, setPayoutRequested] = useState(false);
-
-  // Settings Logic
-  const [settingsConfig, setSettingsConfig] = useState({
-    lowFloatAlerts: true,
-    dailyEarningsSms: false
-  });
-  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
-  const [updateFeedback, setUpdateFeedback] = useState<string | null>(null);
 
   // Fulfillment Interaction Logic
   const [fulfillmentStatus, setFulfillmentStatus] = useState<string | null>(null);
@@ -204,42 +97,44 @@ export function AgentDashboardPage() {
     return () => { mounted = false; };
   }, [profile, session]);
 
-  // Fetch wallet balance on mount
   useEffect(() => {
     let mounted = true;
     getAgentWalletBalance()
       .then((data) => {
         if (mounted) setFloatBalance(data.balance ?? 452.10);
       })
-      .catch(() => { /* keep fallback */ })
+      .catch(() => { })
       .finally(() => { if (mounted) setFloatLoading(false); });
     return () => { mounted = false; };
   }, []);
 
-  // Fetch wallet history when float tab is visited (first visit only)
   useEffect(() => {
-    if (activeTab !== 'float' || floatHistory !== null) return;
-    let mounted = true;
+    if (activeTab !== 'float') return;
+    setLoadingFloatHistory(true);
     getAgentWalletHistory()
       .then((data) => {
-        if (mounted) setFloatHistory(data.length > 0 ? data : FALLBACK_FLOAT_HISTORY);
+        setFloatHistory(data.length > 0 ? data : FALLBACK_FLOAT_HISTORY);
       })
-      .catch(() => { if (mounted) setFloatHistory(FALLBACK_FLOAT_HISTORY); });
-    return () => { mounted = false; };
-  }, [activeTab, floatHistory]);
+      .catch(() => { 
+        setFloatHistory(FALLBACK_FLOAT_HISTORY); 
+      })
+      .finally(() => {
+        setLoadingFloatHistory(false);
+      });
+  }, [activeTab]);
 
   const billers = [
-    { id: 'zesa', name: 'ZESA Electricity', icon: 'bolt', color: 'bg-orange-50 text-orange-600', catId: 'util' },
-    { id: 'econet', name: 'Econet Airtime', icon: 'cell_tower', color: 'bg-red-50 text-red-600', catId: 'air' },
-    { id: 'netone', name: 'NetOne Airtime', icon: 'signal_cellular_alt', color: 'bg-orange-50 text-orange-600', catId: 'air' },
-    { id: 'telone', name: 'TelOne Internet', icon: 'wifi', color: 'bg-indigo-50 text-indigo-600', catId: 'net' },
+    { id: 'zesa', name: 'ZESA Electricity', icon: <Bolt size={24} />, color: 'bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400', catId: 'util' },
+    { id: 'econet', name: 'Econet Airtime', icon: <Antenna size={24} />, color: 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400', catId: 'air' },
+    { id: 'netone', name: 'NetOne Airtime', icon: <Smartphone size={24} />, color: 'bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400', catId: 'air' },
+    { id: 'telone', name: 'TelOne Internet', icon: <Share2 size={24} />, color: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400', catId: 'net' },
   ];
 
   const getCommissionRate = (catId: string) => INITIAL_CATEGORIES.find(c => c.id === catId)?.agentRate || 2.0;
 
   const handleProcess = () => {
     const amt = parseFloat(sellForm.amount) || 0;
-    if (amt > floatBalance) return alert("Insufficient Float!");
+    if (amt > floatBalance) return toast.error("Insufficient Float Balance!");
     setIsProcessing(true);
     setTimeout(() => {
       const comm = amt * (getCommissionRate(sellForm.catId) / 100);
@@ -251,7 +146,7 @@ export function AgentDashboardPage() {
         amount: amt,
         commission: comm,
         time: 'Just now',
-        icon: billers.find(b => b.id === sellForm.billerId)?.icon || 'payments',
+        icon: 'payments',
         token: isUtility ? `${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}` : undefined,
         units: isUtility ? `${(amt * 2.2).toFixed(1)} kWh` : undefined
       };
@@ -283,452 +178,341 @@ export function AgentDashboardPage() {
     }, 1500);
   };
 
-  const toggleSetting = (key: keyof typeof settingsConfig) => {
-    setSettingsConfig(prev => {
-      const newVal = !prev[key];
-      const label = key === 'dailyEarningsSms' ? 'Daily SMS report' : 'Low float alerts';
-      setUpdateFeedback(`${label} ${newVal ? 'enabled' : 'disabled'}`);
-      setTimeout(() => setUpdateFeedback(null), 3000);
-      return { ...prev, [key]: newVal };
-    });
-  };
+  // --------------------------------------------------------------------------
+  // Tables
+  // --------------------------------------------------------------------------
 
-  const handleUpdateProfile = () => {
-    setIsUpdatingProfile(true);
-    setTimeout(() => {
-      setIsUpdatingProfile(false);
-      setUpdateFeedback('Shop profile updated successfully!');
-      setTimeout(() => setUpdateFeedback(null), 4000);
-    }, 1500);
-  };
+  const salesColumns: CRUDColumn<Sale>[] = [
+    {
+      key: 'time',
+      header: 'Time',
+      render: (sale) => <span className="text-xs font-semibold text-slate-500">{sale.time}</span>,
+    },
+    {
+      key: 'service',
+      header: 'Service',
+      render: (sale) => (
+        <div>
+          <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{sale.biller}</p>
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{sale.customer}</p>
+        </div>
+      ),
+    },
+    {
+      key: 'amount',
+      header: 'Amount',
+      className: 'text-right',
+      render: (sale) => <span className="font-bold text-slate-700 dark:text-slate-300">${sale.amount.toFixed(2)}</span>,
+    },
+    {
+      key: 'commission',
+      header: 'Comm.',
+      className: 'text-right',
+      render: (sale) => <span className="font-bold text-emerald-600">+${sale.commission.toFixed(2)}</span>,
+    },
+  ];
 
-  const renderCommissions = () => (
+  const floatColumns: CRUDColumn<WalletHistoryEntry>[] = [
+    {
+      key: 'date',
+      header: 'Date',
+      render: (f) => <span className="font-semibold text-slate-900 dark:text-slate-100">{String(f.date ?? '—')}</span>,
+    },
+    {
+      key: 'reference',
+      header: 'Reference',
+      render: (f) => <span className="text-xs font-mono font-bold text-emerald-600">{String(f.id ?? '—')}</span>,
+    },
+    {
+      key: 'method',
+      header: 'Method',
+      render: (f) => <span className="text-sm text-slate-600 dark:text-slate-400">{String(f.method ?? '—')}</span>,
+    },
+    {
+      key: 'amount',
+      header: 'Amount',
+      className: 'text-right',
+      render: (f) => <span className="font-bold text-slate-900 dark:text-slate-100">${(Number(f.amount) || 0).toFixed(2)}</span>,
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      className: 'text-center',
+      render: (f) => (
+        <span className="px-2.5 py-1 bg-emerald-50 text-emerald-600 border border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50 rounded-full text-[10px] font-bold uppercase tracking-wider">
+          {String(f.status ?? '—')}
+        </span>
+      ),
+    },
+  ];
+
+  // --------------------------------------------------------------------------
+  // Sections
+  // --------------------------------------------------------------------------
+
+  const renderOverview = () => (
     <div className="space-y-8 animate-in fade-in duration-500">
        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="bg-accent-green p-10 rounded-xl text-dark-text relative overflow-hidden shadow-2xl">
-             <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, #131118 1px, transparent 0)', backgroundSize: '30px 30px' }}></div>
-             <div className="relative z-10 flex justify-between items-start">
-                <div>
-                   <p className="text-[10px] font-black uppercase tracking-widest text-dark-text/40 mb-2">Unpaid Earnings</p>
-                   <h3 className="text-5xl font-black tracking-tighter">${(commissionBalance || 0).toFixed(2)}</h3>
-                   <button
-                     onClick={handleRequestPayout}
-                     disabled={isRequestingPayout || payoutRequested || commissionBalance <= 0}
-                     className={`mt-8 px-8 py-3 rounded-lg font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all flex items-center gap-2 ${
-                        payoutRequested ? 'bg-white text-accent-green border border-accent-green' : 'bg-dark-text text-white'
-                     }`}
-                   >
-                     {isRequestingPayout ? (
-                        <span className="material-symbols-outlined animate-spin text-sm">sync</span>
-                     ) : payoutRequested ? (
-                        <span className="material-symbols-outlined text-sm">check_circle</span>
-                     ) : null}
-                     {isRequestingPayout ? 'Processing...' : payoutRequested ? 'Payout Success' : 'Request Payout'}
-                   </button>
-                </div>
-                <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center border border-white/30 backdrop-blur-md">
-                   <span className="material-symbols-outlined text-3xl">account_balance_wallet</span>
-                </div>
-             </div>
-          </div>
-
-          <div className="bg-white p-8 rounded-xl border border-neutral-light shadow-sm flex flex-col justify-center gap-6">
-             <h4 className="text-[10px] font-black text-neutral-text uppercase tracking-widest">Earning Breakdown</h4>
-             <div className="space-y-4">
-                {INITIAL_CATEGORIES.map(cat => {
-                  const rate = Number(cat.agentRate) || 0;
-                  return (
-                    <div key={cat.id} className="flex items-center justify-between">
-                       <span className="text-xs font-bold text-neutral-text">{cat.label}</span>
-                       <div className="flex items-center gap-4 flex-1 mx-4">
-                          <div className="h-1.5 bg-neutral-light flex-1 rounded-full overflow-hidden">
-                             <div style={{ width: `${Math.min(100, rate * 10)}%` }} className="bg-accent-green h-full"></div>
-                          </div>
-                       </div>
-                       <span className="text-xs font-black text-dark-text">{rate.toFixed(1)}%</span>
-                    </div>
-                  );
-                })}
-             </div>
-          </div>
+          <StatCard
+            label="Total Sales Today"
+            value={`$${(recentSales.reduce((a, b) => a + (Number(b.amount) || 0), 0) || 0).toFixed(2)}`}
+            change="+12.4% vs yesterday"
+            icon="shopping_cart"
+            iconBg="bg-emerald-50 dark:bg-emerald-900/20"
+            iconColor="text-emerald-600 dark:text-emerald-400"
+            chartPath="M0 25 L 50 10 L 100 20"
+            strokeColor="#10b981"
+          />
+          <StatCard
+            label="Current Float"
+            value={floatLoading ? 'Loading...' : `$${(floatBalance || 0).toFixed(2)}`}
+            change="Instant available"
+            icon="account_balance_wallet"
+            iconBg="bg-slate-100 dark:bg-slate-800"
+            iconColor="text-slate-600 dark:text-slate-300"
+            chartPath="M0 20 Q 50 5, 100 15"
+            strokeColor="#64748b"
+          />
        </div>
 
-       <div className="space-y-2">
+       <div className="space-y-4">
           <div className="flex items-center justify-between">
-             <h4 className="text-lg font-black text-dark-text tracking-tight">Commission Ledger</h4>
-             <button className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-1 hover:underline">
-                <span className="material-symbols-outlined text-sm">download</span> Export Ledger
-             </button>
+             <h4 className="text-lg font-bold text-slate-800 dark:text-slate-100">Recent Activity</h4>
+             <button onClick={() => setTab('sell')} className="text-xs font-bold text-emerald-600 uppercase tracking-widest hover:underline">New Sale</button>
           </div>
-          <DataTable
-             columns={commissionColumns}
-             data={recentSales}
-             rowKey={(sale) => sale.id}
-             emptyMessage="No commissions yet"
-             emptyIcon="account_balance"
+          <CRUDLayout
+            title=""
+            columns={salesColumns}
+            data={recentSales.slice(0, 5)}
+            loading={false}
+            pageable={{ page: 1, size: 5, totalElements: recentSales.length, totalPages: 1 }}
+            onPageChange={() => {}}
+            onSizeChange={() => {}}
+            searchable={false}
           />
        </div>
     </div>
   );
 
-  const renderSchedule = () => (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-20">
-      <div className="max-w-4xl mx-auto space-y-8">
-        <div className="bg-white p-10 rounded-xl border border-neutral-light shadow-sm text-center space-y-4">
-           <h3 className="text-3xl font-black text-dark-text tracking-tight">Your Earning Potential</h3>
-           <p className="text-neutral-text font-medium">Earn attractive commissions on every utility, airtime and fee payment you process.</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {INITIAL_CATEGORIES.map((cat) => (
-            <div key={cat.id} className="bg-white p-8 rounded-xl border border-neutral-light shadow-sm flex items-center justify-between group hover:border-primary/30 transition-all">
-              <div className="flex items-center gap-6">
-                <div className="w-14 h-14 rounded-lg bg-background-light flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
-                  <span className="material-symbols-outlined text-3xl">{cat.icon}</span>
-                </div>
-                <div>
-                   <h4 className="text-lg font-black text-dark-text">{cat.label}</h4>
-                   <p className="text-[10px] font-black text-neutral-text uppercase tracking-widest">Instant Settlement</p>
-                </div>
-              </div>
-              <div className="text-right">
-                 <p className="text-[9px] font-black text-neutral-text uppercase tracking-widest mb-1">Your Commission</p>
-                 <p className="text-3xl font-black text-accent-green tracking-tighter">{cat.agentRate}%</p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="bg-[#1e293b] p-10 rounded-xl text-white relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-12">
-          <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '40px 40px' }}></div>
-          <div className="relative z-10 space-y-4 max-w-xl">
-             <h3 className="text-2xl font-black tracking-tight">Maximize Your Earnings</h3>
-             <p className="text-slate-400 text-sm leading-relaxed">
-               Did you know you can increase your daily payout by reaching <span className="text-accent-green font-bold">Elite Agent</span> status? Process more than 100 transactions monthly to unlock premium rates.
-             </p>
-          </div>
-          <button className="relative z-10 bg-primary text-white px-10 py-4 rounded-lg font-black text-[10px] uppercase tracking-widest shadow-2xl shadow-primary/20 hover:scale-105 transition-all">
-             View Achievements
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderFloat = () => (
-    <div className="space-y-8 animate-in fade-in duration-500">
-       <div className="bg-[#1e293b] p-10 rounded-xl text-white relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-8">
-          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '40px 40px' }}></div>
-          <div className="relative z-10">
-             <p className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-2">Active Float Balance</p>
-             {floatLoading ? (
-               <div className="flex items-center gap-3">
-                 <span className="material-symbols-outlined text-2xl animate-spin text-white/50">sync</span>
-                 <span className="text-white/50 font-bold text-lg">Loading...</span>
-               </div>
-             ) : (
-               <h3 className="text-6xl font-black tracking-tighter">${(floatBalance || 0).toFixed(2)}</h3>
-             )}
-             <p className="text-xs font-bold text-accent-green mt-4 flex items-center gap-1">
-                <span className="material-symbols-outlined text-sm">bolt</span>
-                Ready for instant sales
-             </p>
-          </div>
-          <button
-             onClick={onAddFloat}
-             className="relative z-10 bg-primary px-10 py-5 rounded-lg font-black text-xs uppercase tracking-widest shadow-2xl shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
-          >
-             <span className="material-symbols-outlined text-lg">add_circle</span>
-             Replenish Float
-          </button>
-       </div>
-
-       <div className="space-y-2">
-          <h4 className="text-lg font-black text-dark-text tracking-tight">Float History</h4>
-          <DataTable
-            columns={floatHistoryColumns}
-            data={floatHistory ?? []}
-            rowKey={(f) => String(f.id)}
-            loading={floatHistory === null}
-            emptyMessage="No float history"
-            emptyIcon="history"
-          />
-       </div>
-    </div>
-  );
-
-  const renderSettings = () => (
-    <div className="max-w-3xl space-y-10 animate-in fade-in duration-500 relative">
-      {updateFeedback && (
-        <div className="fixed bottom-10 right-10 z-[100] animate-in slide-in-from-right-10">
-           <div className="bg-dark-text text-white px-8 py-4 rounded-xl shadow-2xl flex items-center gap-3 border border-white/10">
-              <span className="material-symbols-outlined text-accent-green">check_circle</span>
-              <span className="text-sm font-bold tracking-tight">{updateFeedback}</span>
-           </div>
-        </div>
-      )}
-
-      <section className="bg-white p-8 rounded-xl border border-neutral-light shadow-sm space-y-8">
-         <h4 className="text-[10px] font-black text-neutral-text uppercase tracking-widest border-b border-neutral-light pb-2">Business Information</h4>
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-2">
-               <label className="text-[10px] font-black text-neutral-text uppercase">Shop Name</label>
-               <input type="text" defaultValue={profile?.shopName ?? ''} className="w-full bg-[#f8fafc] border-none rounded-xl px-4 py-3 text-sm font-bold" />
-            </div>
-            <div className="space-y-2">
-               <label className="text-[10px] font-black text-neutral-text uppercase">Location</label>
-               <input type="text" defaultValue={profile?.shopLocation ?? ''} className="w-full bg-[#f8fafc] border-none rounded-xl px-4 py-3 text-sm font-bold" />
-            </div>
-            <div className="space-y-2">
-               <label className="text-[10px] font-black text-neutral-text uppercase">Agent Owner</label>
-               <input type="text" defaultValue={agentName} className="w-full bg-[#f8fafc] border-none rounded-xl px-4 py-3 text-sm font-bold" />
-            </div>
-            <div className="space-y-2">
-               <label className="text-[10px] font-black text-neutral-text uppercase">Mobile Number</label>
-               <input type="tel" defaultValue={profile?.phoneNumber ?? ''} className="w-full bg-[#f8fafc] border-none rounded-xl px-4 py-3 text-sm font-bold" />
-            </div>
-         </div>
-      </section>
-
-      <section className="bg-white p-8 rounded-xl border border-neutral-light shadow-sm space-y-8">
-         <h4 className="text-[10px] font-black text-neutral-text uppercase tracking-widest border-b border-neutral-light pb-2">Preferences</h4>
-         <div className="space-y-6">
-            <div className="flex items-center justify-between p-5 bg-[#f8fafc] rounded-lg group transition-all">
-               <div>
-                  <p className="text-sm font-bold text-dark-text">Low Float Alerts</p>
-                  <p className="text-[10px] text-neutral-text font-medium">Notify when float falls below $50.</p>
-               </div>
-               <button
-                 onClick={() => toggleSetting('lowFloatAlerts')}
-                 className={`w-12 h-6 rounded-full relative transition-all duration-300 ${settingsConfig.lowFloatAlerts ? 'bg-primary' : 'bg-neutral-light'}`}
-               >
-                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${settingsConfig.lowFloatAlerts ? 'right-1' : 'left-1'}`}></div>
-               </button>
-            </div>
-            <div className="flex items-center justify-between p-5 bg-[#f8fafc] rounded-lg group transition-all">
-               <div>
-                  <p className="text-sm font-bold text-dark-text">Daily Earnings SMS</p>
-                  <p className="text-[10px] text-neutral-text font-medium">Receive a summary of today's commissions.</p>
-               </div>
-               <button
-                 onClick={() => toggleSetting('dailyEarningsSms')}
-                 className={`w-12 h-6 rounded-full relative transition-all duration-300 ${settingsConfig.dailyEarningsSms ? 'bg-primary' : 'bg-neutral-light'}`}
-               >
-                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${settingsConfig.dailyEarningsSms ? 'right-1' : 'left-1'}`}></div>
-               </button>
-            </div>
-         </div>
-      </section>
-
-      <div className="flex justify-end pt-4">
-         <button
-           onClick={handleUpdateProfile}
-           disabled={isUpdatingProfile}
-           className="bg-primary text-white px-12 py-5 rounded-lg font-black text-xs uppercase tracking-widest shadow-2xl shadow-primary/20 hover:scale-[1.02] transition-all flex items-center gap-2"
-         >
-            {isUpdatingProfile && <span className="material-symbols-outlined animate-spin text-sm">sync</span>}
-            {isUpdatingProfile ? 'Updating Profile...' : 'Update Profile'}
-         </button>
-      </div>
-    </div>
-  );
-
-  return (
-    <div className="p-8 space-y-8 font-display text-dark-text">
-      {activeTab === 'overview' && (
-        <div className="space-y-8 animate-in fade-in duration-500">
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <StatCard
-                label="Total Sales Today"
-                value={`$${(recentSales.reduce((a, b) => a + (Number(b.amount) || 0), 0) || 0).toFixed(2)}`}
-                change="+12.4% vs ytd"
-                icon="shopping_cart"
-                iconBg="bg-blue-100"
-                iconColor="text-blue-600"
-                chartPath="M0 25 L 50 10 L 100 20"
-                strokeColor="#3b82f6"
-              />
-              <StatCard
-                label="Float Balance"
-                value={floatLoading ? 'Loading...' : `$${(floatBalance || 0).toFixed(2)}`}
-                change="Active Float"
-                icon="account_balance_wallet"
-                iconBg="bg-primary/10"
-                iconColor="text-primary"
-                chartPath="M0 20 Q 50 5, 100 15"
-                strokeColor="#7e56c2"
-              />
-           </div>
-
-           {/* Recent Sales Table Snippet */}
-           <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                 <h4 className="text-lg font-black tracking-tight">Recent Sales Activity</h4>
-                 <button onClick={() => setTab('sell')} className="text-xs font-black text-primary uppercase tracking-widest hover:underline">New Sale</button>
-              </div>
-              <DataTable
-                 columns={recentSalesColumns}
-                 data={recentSales.slice(0, 3)}
-                 rowKey={(sale) => sale.id}
-                 emptyMessage="No recent sales"
-                 emptyIcon="point_of_sale"
-              />
-              <button
-                onClick={() => setTab('float')}
-                className="w-full text-xs font-black text-primary uppercase tracking-widest hover:underline py-2"
-              >
-                View Float Wallet
-              </button>
-           </div>
-
-           <div className="flex gap-4">
-             <button
-               onClick={onBulkSale}
-               className="bg-accent-green text-dark-text px-8 py-3 rounded-lg font-black text-[11px] uppercase tracking-widest flex items-center gap-2 hover:scale-105 transition-all shadow-xl shadow-accent-green/10"
-             >
-               <span className="material-symbols-outlined text-lg">batch_prediction</span>
-               BULK SALE
-             </button>
-           </div>
-        </div>
-      )}
-
-      {activeTab === 'sell' && sellStep === 'select' && (
+  const renderSell = () => (
+    <div className="space-y-8">
+      {sellStep === 'select' && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 animate-in slide-in-from-bottom-4">
            {billers.map(b => (
-              <button key={b.id} onClick={() => { setSellForm({...sellForm, billerId: b.id, billerName: b.name, catId: b.catId}); setSellStep('details'); }} className="bg-white p-8 rounded-xl border border-neutral-light hover:border-primary hover:shadow-2xl transition-all group flex flex-col items-center gap-4">
-                 <div className={`w-16 h-16 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 ${b.color}`}><span className="material-symbols-outlined text-3xl">{b.icon}</span></div>
-                 <h4 className="text-sm font-black text-dark-text">{b.name}</h4>
-                 <p className="text-[10px] font-black text-accent-green uppercase tracking-widest">Earn {getCommissionRate(b.catId)}%</p>
+              <button 
+                key={b.id} 
+                onClick={() => { setSellForm({...sellForm, billerId: b.id, billerName: b.name, catId: b.catId}); setSellStep('details'); }} 
+                className="glass-card p-8 hover:border-emerald-500/50 hover:shadow-xl transition-all group flex flex-col items-center gap-4 border-slate-200 dark:border-slate-800"
+              >
+                 <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110", b.color)}>
+                    {b.icon}
+                 </div>
+                 <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">{b.name}</h4>
+                 <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Earn {getCommissionRate(b.catId)}%</p>
               </button>
            ))}
         </div>
       )}
 
-      {activeTab === 'sell' && sellStep === 'details' && (
-        <div className="max-w-2xl mx-auto bg-white p-10 rounded-xl border border-neutral-light shadow-sm space-y-8 animate-in zoom-in-95">
+      {sellStep === 'details' && (
+        <div className="max-w-2xl mx-auto glass-card p-10 border-slate-200 dark:border-slate-800 space-y-8 animate-in zoom-in-95">
            <div className="text-center space-y-2">
-              <h3 className="text-3xl font-black text-dark-text tracking-tight">Confirm Authorization</h3>
-              <p className="text-neutral-text font-medium">Verify customer information before authorizing float deduction.</p>
+              <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Authorize Sale</h3>
+              <p className="text-slate-500 dark:text-slate-400">Verify customer details before proceeding with payment.</p>
            </div>
+           
            <div className="space-y-6">
               <div className="space-y-2">
-                 <label className="text-[10px] font-black text-neutral-text uppercase tracking-widest">Customer Reference / Mobile</label>
-                 <input type="text" placeholder="e.g. 0771***567" onChange={e => setSellForm({...sellForm, customerRef: e.target.value})} className="w-full bg-[#f8fafc] border-none rounded-xl px-4 py-3 font-bold text-sm" />
+                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Customer Reference / Mobile</label>
+                 <input 
+                   type="text" 
+                   placeholder="e.g. 0771 000 000" 
+                   onChange={e => setSellForm({...sellForm, customerRef: e.target.value})} 
+                   className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3.5 font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20" 
+                 />
               </div>
               <div className="space-y-2">
-                 <label className="text-[10px] font-black text-neutral-text uppercase tracking-widest">Amount to Deduct ($)</label>
-                 <input type="number" placeholder="0.00" onChange={e => setSellForm({...sellForm, amount: e.target.value})} className="w-full bg-[#f8fafc] border-none rounded-xl p-5 text-2xl font-black text-primary text-center" />
+                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Payment Amount ($)</label>
+                 <input 
+                   type="number" 
+                   placeholder="0.00" 
+                   onChange={e => setSellForm({...sellForm, amount: e.target.value})} 
+                   className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 text-3xl font-bold text-emerald-600 text-center focus:outline-none focus:ring-2 focus:ring-emerald-500/20" 
+                 />
               </div>
            </div>
-           <div className="p-5 bg-accent-green/10 rounded-lg border border-accent-green/20 flex items-center justify-between">
+           
+           <div className="p-5 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800/50 flex items-center justify-between">
               <div>
-                 <p className="text-[10px] font-black text-neutral-text uppercase tracking-widest">Estimated Commission</p>
-                 <p className="text-xl font-black text-accent-green">+${( (parseFloat(sellForm.amount) || 0) * (getCommissionRate(sellForm.catId)/100)).toFixed(2)}</p>
+                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Your Commission</p>
+                 <p className="text-2xl font-bold text-emerald-600">+${((parseFloat(sellForm.amount) || 0) * (getCommissionRate(sellForm.catId)/100)).toFixed(2)}</p>
               </div>
-              <span className="material-symbols-outlined text-accent-green text-3xl">savings</span>
+              <div className="w-12 h-12 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center shadow-sm">
+                 <CheckCircle className="text-emerald-500" size={24} />
+              </div>
            </div>
-           <div className="grid grid-cols-2 gap-4">
-              <button onClick={() => setSellStep('select')} className="py-4 rounded-lg border border-neutral-light font-black text-[10px] uppercase">Cancel</button>
-              <button onClick={handleProcess} disabled={isProcessing} className="py-4 bg-primary text-white rounded-lg font-black text-[10px] uppercase shadow-xl">{isProcessing ? 'Authorizing...' : 'Confirm Sale'}</button>
+
+           <div className="grid grid-cols-2 gap-4 pt-2">
+              <button onClick={() => setSellStep('select')} className="py-4 rounded-xl border border-slate-200 dark:border-slate-800 font-bold text-[11px] text-slate-600 dark:text-slate-400 uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Cancel</button>
+              <button 
+                onClick={handleProcess} 
+                disabled={isProcessing} 
+                className="py-4 bg-emerald-600 text-white rounded-xl font-bold text-[11px] uppercase tracking-widest shadow-lg shadow-emerald-900/20 hover:bg-emerald-700 transition-all disabled:opacity-50"
+              >
+                {isProcessing ? 'Processing...' : 'Confirm Payment'}
+              </button>
            </div>
         </div>
       )}
 
-      {activeTab === 'sell' && sellStep === 'success' && (
+      {sellStep === 'success' && (
         <div className="max-w-2xl mx-auto animate-in zoom-in duration-500 pb-20">
-           <div className="bg-white rounded-xl shadow-2xl border border-neutral-light overflow-hidden">
-              <div className="bg-primary/5 p-12 text-center border-b border-dashed border-neutral-light relative">
-                 <div className="absolute -bottom-2 left-0 w-full flex justify-around opacity-10">
-                    {[...Array(20)].map((_, i) => <div key={i} className="w-4 h-4 rounded-full bg-dark-text"></div>)}
+           <div className="glass-card overflow-hidden border-slate-200 dark:border-slate-800">
+              <div className="bg-emerald-50/50 dark:bg-emerald-900/10 p-12 text-center border-b border-dashed border-slate-200 dark:border-slate-800">
+                 <div className="w-20 h-20 bg-emerald-600 text-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-emerald-900/20">
+                    <CheckCircle size={40} />
                  </div>
-                 <div className="w-20 h-20 bg-accent-green text-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl">
-                    <span className="material-symbols-outlined text-4xl font-black">check</span>
-                 </div>
-                 <h3 className="text-3xl font-black text-dark-text tracking-tight">Payment Successful</h3>
-                 <p className="text-neutral-text font-bold text-xs uppercase tracking-[0.2em] mt-2">Authorization ID: {lastSale?.id}</p>
+                 <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Payment Successful</h3>
+                 <p className="text-slate-500 dark:text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em] mt-2">Auth ID: {lastSale?.id}</p>
               </div>
 
               {lastSale?.token && (
-                 <div className="p-10 bg-slate-50 text-center space-y-4">
-                    <p className="text-[10px] font-black text-neutral-text uppercase tracking-widest">Voucher Token</p>
-                    <div className="bg-white border-2 border-primary/20 rounded-xl p-8 shadow-inner">
-                       <p className="text-3xl md:text-4xl font-black text-dark-text tracking-tighter font-mono">{lastSale.token}</p>
+                 <div className="p-10 bg-slate-50/50 dark:bg-slate-900/50 text-center space-y-4">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Voucher Code</p>
+                    <div className="bg-white dark:bg-slate-950 border-2 border-emerald-500/20 rounded-2xl p-8 shadow-inner">
+                       <p className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white tracking-tighter font-mono">{lastSale.token}</p>
                     </div>
                     <div className="flex justify-center gap-4">
-                       <div className="px-4 py-2 bg-white rounded-full border border-neutral-light text-[10px] font-black text-neutral-text uppercase">Units: {lastSale.units}</div>
-                       <div className="px-4 py-2 bg-white rounded-full border border-neutral-light text-[10px] font-black text-neutral-text uppercase">Biller: ZESA</div>
+                       <div className="px-4 py-2 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">Units: {lastSale.units}</div>
+                       <div className="px-4 py-2 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">Service: ZESA</div>
                     </div>
                  </div>
               )}
 
-              <div className="p-12 space-y-8 relative">
-                 {fulfillmentStatus && (
-                    <div className="absolute top-0 left-0 w-full flex justify-center -translate-y-6">
-                       <div className="bg-dark-text text-white px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest shadow-2xl border border-white/10 animate-in slide-in-from-bottom-2">
-                          {fulfillmentStatus}
-                       </div>
-                    </div>
-                 )}
-
+              <div className="p-12 space-y-8">
                  <div className="space-y-4">
-                    <div className="flex justify-between items-center text-sm">
-                       <span className="text-neutral-text font-bold uppercase tracking-widest text-[10px]">Merchant</span>
-                       <span className="text-dark-text font-black">{agentName}</span>
+                    <div className="flex justify-between items-center">
+                       <span className="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest text-[9px]">Authorized By</span>
+                       <span className="text-slate-900 dark:text-white font-bold text-sm">{agentName}</span>
                     </div>
-                    <div className="flex justify-between items-center text-sm">
-                       <span className="text-neutral-text font-bold uppercase tracking-widest text-[10px]">Customer Ref</span>
-                       <span className="text-dark-text font-black">{lastSale?.customer}</span>
+                    <div className="flex justify-between items-center">
+                       <span className="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest text-[9px]">Customer Reference</span>
+                       <span className="text-slate-900 dark:text-white font-bold text-sm">{lastSale?.customer}</span>
                     </div>
-                    <div className="flex justify-between items-center text-sm">
-                       <span className="text-neutral-text font-bold uppercase tracking-widest text-[10px]">Date / Time</span>
-                       <span className="text-dark-text font-black">{new Date().toLocaleDateString()} {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                    </div>
-                    <div className="pt-4 border-t border-neutral-light flex justify-between items-center">
-                       <span className="text-dark-text font-black uppercase tracking-widest text-xs">Total Amount Paid</span>
-                       <span className="text-3xl font-black text-primary tracking-tighter">${(Number(lastSale?.amount) || 0).toFixed(2)}</span>
+                    <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                       <span className="text-slate-900 dark:text-white font-bold uppercase tracking-widest text-[10px]">Total Paid</span>
+                       <span className="text-3xl font-bold text-emerald-600 tracking-tighter">${(Number(lastSale?.amount) || 0).toFixed(2)}</span>
                     </div>
                  </div>
 
-                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6">
-                    <button onClick={() => handleFulfillAction('Thermal Receipt')} className="flex flex-col items-center justify-center p-6 bg-background-light rounded-lg hover:bg-neutral-light transition-all gap-2 group">
-                       <span className="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">print</span>
-                       <span className="text-[10px] font-black uppercase tracking-widest">Thermal Print</span>
+                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                    <button onClick={() => handleFulfillAction('Print')} className="flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-slate-900 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all gap-2 group">
+                       <Printer size={20} className="text-slate-600 dark:text-slate-400 group-hover:text-emerald-500 transition-colors" />
+                       <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Thermal Print</span>
                     </button>
-                    <button onClick={() => handleFulfillAction('WhatsApp Message')} className="flex flex-col items-center justify-center p-6 bg-background-light rounded-lg hover:bg-neutral-light transition-all gap-2 group">
-                       <span className="material-symbols-outlined text-green-600 group-hover:scale-110 transition-transform">share</span>
-                       <span className="text-[10px] font-black uppercase tracking-widest">WhatsApp</span>
+                    <button onClick={() => handleFulfillAction('WhatsApp')} className="flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-slate-900 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all gap-2 group">
+                       <Share2 size={20} className="text-slate-600 dark:text-slate-400 group-hover:text-emerald-500 transition-colors" />
+                       <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">WhatsApp</span>
                     </button>
-                    <button onClick={() => handleFulfillAction('SMS Confirmation')} className="flex flex-col items-center justify-center p-6 bg-background-light rounded-lg hover:bg-neutral-light transition-all gap-2 group">
-                       <span className="material-symbols-outlined text-blue-600 group-hover:scale-110 transition-transform">sms</span>
-                       <span className="text-[10px] font-black uppercase tracking-widest">Send SMS</span>
+                    <button onClick={() => handleFulfillAction('SMS')} className="flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-slate-900 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all gap-2 group">
+                       <PlusCircle size={20} className="text-slate-600 dark:text-slate-400 group-hover:text-emerald-500 transition-colors" />
+                       <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Send SMS</span>
                     </button>
                  </div>
 
-                 <div className="pt-8 flex flex-col gap-4">
-                    <button onClick={() => setSellStep('select')} className="w-full bg-dark-text text-white py-5 rounded-lg font-black text-xs uppercase tracking-widest shadow-xl hover:bg-primary transition-all flex items-center justify-center gap-3">
-                       <span className="material-symbols-outlined">add_circle</span>
+                 <div className="pt-6 flex flex-col gap-4">
+                    <button onClick={() => setSellStep('select')} className="w-full bg-slate-900 dark:bg-emerald-600 text-white py-5 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl transition-all flex items-center justify-center gap-3">
+                       <PlusCircle size={18} />
                        New Transaction
                     </button>
-                    <button onClick={() => setTab('overview')} className="w-full py-4 text-neutral-text font-black text-[10px] uppercase tracking-widest hover:text-dark-text transition-colors">
+                    <button onClick={() => setTab('overview')} className="w-full py-4 text-slate-500 dark:text-slate-400 font-bold text-[10px] uppercase tracking-widest hover:text-slate-900 dark:hover:text-white transition-colors">
                        Return to Dashboard
                     </button>
                  </div>
               </div>
            </div>
+        </div>
+      )}
+    </div>
+  );
 
-           <div className="mt-8 flex items-center justify-center gap-3 opacity-30">
-              <Logo className="h-5 grayscale" />
-              <div className="w-1 h-1 rounded-full bg-dark-text"></div>
-              <span className="text-[9px] font-black uppercase tracking-widest">Blockchain Verified Receipt</span>
+  return (
+    <div className="space-y-8 font-sans">
+      {activeTab === 'overview' && renderOverview()}
+      {activeTab === 'sell' && renderSell()}
+      {activeTab === 'notifications' && <NotificationsPage />}
+      
+      {activeTab === 'commissions' && (
+        <div className="space-y-8">
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="bg-emerald-600 p-10 rounded-2xl text-white relative overflow-hidden shadow-2xl">
+                 <div className="relative z-10">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-white/70 mb-2">Unpaid Commissions</p>
+                    <h3 className="text-5xl font-bold tracking-tighter">${(commissionBalance || 0).toFixed(2)}</h3>
+                    <button
+                      onClick={handleRequestPayout}
+                      disabled={isRequestingPayout || payoutRequested || commissionBalance <= 0}
+                      className={cn(
+                        "mt-8 px-8 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all flex items-center gap-2",
+                        payoutRequested ? "bg-white text-emerald-600" : "bg-white/20 hover:bg-white hover:text-emerald-600 backdrop-blur-md"
+                      )}
+                    >
+                      {isRequestingPayout ? <Loader2 className="animate-spin" size={14} /> : payoutRequested ? <CheckCircle size={14} /> : null}
+                      {isRequestingPayout ? 'Processing...' : payoutRequested ? 'Payout Success' : 'Request Payout'}
+                    </button>
+                 </div>
+              </div>
+              <div className="glass-card p-8 border-slate-200 dark:border-slate-800 flex flex-col justify-center">
+                 <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-6">Commission Breakdown</h4>
+                 <div className="space-y-4">
+                    {INITIAL_CATEGORIES.map(cat => (
+                      <div key={cat.id} className="flex items-center justify-between">
+                         <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">{cat.label}</span>
+                         <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{cat.agentRate}%</span>
+                      </div>
+                    ))}
+                 </div>
+              </div>
            </div>
+           
+           <CRUDLayout
+             title="Earning Ledger"
+             columns={salesColumns}
+             data={recentSales}
+             loading={false}
+             pageable={{ page: 1, size: 10, totalElements: recentSales.length, totalPages: 1 }}
+             onPageChange={() => {}}
+             onSizeChange={() => {}}
+             onRefresh={() => {}}
+           />
         </div>
       )}
 
-      {activeTab === 'commissions' && renderCommissions()}
-      {activeTab === 'schedule' && renderSchedule()}
-      {activeTab === 'float' && renderFloat()}
-      {activeTab === 'settings' && renderSettings()}
+      {activeTab === 'float' && (
+        <div className="space-y-8">
+           <div className="bg-slate-900 p-10 rounded-2xl text-white relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-8 shadow-2xl">
+              <div className="relative z-10">
+                 <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Available Float</p>
+                 <h3 className="text-6xl font-bold tracking-tighter">${(floatBalance || 0).toFixed(2)}</h3>
+              </div>
+              <button className="bg-emerald-600 px-10 py-5 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-emerald-900/20 hover:bg-emerald-700 transition-all flex items-center gap-2">
+                 <PlusCircle size={18} />
+                 Replenish Float
+              </button>
+           </div>
+           <CRUDLayout
+             title="Wallet History"
+             columns={floatColumns}
+             data={floatHistory}
+             loading={loadingFloatHistory}
+             pageable={{ page: 1, size: 10, totalElements: floatHistory.length, totalPages: 1 }}
+             onPageChange={() => {}}
+             onSizeChange={() => {}}
+             onRefresh={() => {}}
+           />
+        </div>
+      )}
+
       {activeTab === 'profile' && (
         <div className="animate-in fade-in duration-300">
           <UserProfile />
@@ -736,4 +520,25 @@ export function AgentDashboardPage() {
       )}
     </div>
   );
+}
+
+const Loader2 = ({ className, size }: { className?: string, size?: number }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width={size || 24} 
+    height={size || 24} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={cn("animate-spin", className)}
+  >
+    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+  </svg>
+)
+
+function cn(...inputs: any[]) {
+  return inputs.filter(Boolean).join(' ');
 }

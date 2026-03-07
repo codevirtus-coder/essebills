@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { PortalRegister, type PortalRegisterSubmitPayload } from '../components/PortalRegister'
 import { registerAgent, registerBiller, registerCustomer } from '../portal-auth.service'
 import { ROUTE_PATHS } from '../../../router/paths'
+import { cn } from '../../../lib/utils'
 
 type RegisterPortal = 'customer' | 'agent' | 'biller'
 
@@ -17,6 +18,7 @@ type RegisterPortalConfig = {
   registerNote: string
   showCompanyField: boolean
   companyFieldPlaceholder?: string
+  bgImage: string
 }
 
 const REGISTER_CONFIGS: Record<RegisterPortal, RegisterPortalConfig> = {
@@ -32,6 +34,7 @@ const REGISTER_CONFIGS: Record<RegisterPortal, RegisterPortalConfig> = {
     loginPath: ROUTE_PATHS.login,
     registerNote: 'Customer account created. Continue to login.',
     showCompanyField: false,
+    bgImage: "https://images.unsplash.com/photo-1512428559087-560fa5ceab42?q=80&w=2000&auto=format&fit=crop"
   },
   agent: {
     label: 'Agent',
@@ -46,6 +49,7 @@ const REGISTER_CONFIGS: Record<RegisterPortal, RegisterPortalConfig> = {
     registerNote: 'Agent account submitted. Continue to agent login.',
     showCompanyField: true,
     companyFieldPlaceholder: 'Shop name',
+    bgImage: "https://images.unsplash.com/photo-1556155092-490a1ba16284?q=80&w=2000&auto=format&fit=crop"
   },
   biller: {
     label: 'Biller',
@@ -60,6 +64,7 @@ const REGISTER_CONFIGS: Record<RegisterPortal, RegisterPortalConfig> = {
     registerNote: 'Biller application submitted. Continue to biller login.',
     showCompanyField: true,
     companyFieldPlaceholder: 'Organization name',
+    bgImage: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?q=80&w=2000&auto=format&fit=crop"
   },
 }
 
@@ -107,7 +112,11 @@ export function RegisterPage() {
 
   const headerExtra = useMemo(
     () => (
-      <div className="rounded-2xl bg-[#eef2f7] p-1 flex gap-1">
+      <div className="rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm">
+        <p className="px-2 pb-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+          Register As
+        </p>
+        <div className="grid grid-cols-3 gap-1">
         {(Object.keys(REGISTER_CONFIGS) as RegisterPortal[]).map((key) => {
           const item = REGISTER_CONFIGS[key]
           const active = key === portal
@@ -116,17 +125,19 @@ export function RegisterPage() {
               key={key}
               type="button"
               onClick={() => setPortal(key)}
-              className={`flex-1 rounded-xl px-4 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all ${
+              className={cn(
+                "rounded-xl px-3 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all",
                 active
-                  ? 'bg-white text-primary shadow-sm'
-                  : 'text-neutral-text hover:bg-white/60'
-              }`}
+                  ? "bg-slate-900 text-white shadow-md"
+                  : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+              )}
               aria-pressed={active}
             >
               {item.label}
             </button>
           )
         })}
+        </div>
       </div>
     ),
     [portal],
@@ -148,6 +159,7 @@ export function RegisterPage() {
       includePasswordFields
       registerAction={(payload) => submitByPortal(portal, payload)}
       headerExtra={headerExtra}
+      bgImage={config.bgImage}
     />
   )
 }

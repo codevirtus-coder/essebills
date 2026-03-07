@@ -1,16 +1,9 @@
-import type {
-  AdminProductDto,
-  PageDto,
-  ProductVendorBalanceDto,
-  QueryFilters,
-} from '../dto/admin-api.dto'
-import { adminJsonFetch } from './adminApi.client'
+import type { AdminProductDto, PageDto, QueryFilters } from '../dto/admin-api.dto'
+import { adminJsonFetch, adminVoidFetch } from './adminApi.client'
 import { ADMIN_ENDPOINTS } from './admin.endpoints'
 
 export async function getPaginatedProducts(filters?: QueryFilters) {
-  return adminJsonFetch<PageDto<AdminProductDto>>(ADMIN_ENDPOINTS.products.root, {
-    filters,
-  })
+  return adminJsonFetch<PageDto<AdminProductDto>>(ADMIN_ENDPOINTS.products.root, { filters })
 }
 
 export async function getProductById(productId: string | number) {
@@ -25,10 +18,7 @@ export async function createProduct(product: AdminProductDto) {
 }
 
 export async function updateProduct(product: AdminProductDto) {
-  if (!product.id) {
-    throw new Error('Cannot update product without id')
-  }
-
+  if (!product.id) throw new Error('Cannot update product without id')
   return adminJsonFetch<AdminProductDto>(ADMIN_ENDPOINTS.products.byId(product.id), {
     method: 'PUT',
     body: product,
@@ -36,21 +26,51 @@ export async function updateProduct(product: AdminProductDto) {
 }
 
 export async function deleteProduct(productId: string | number) {
-  return adminJsonFetch<void>(ADMIN_ENDPOINTS.products.byId(productId), {
-    method: 'DELETE',
+  return adminVoidFetch(ADMIN_ENDPOINTS.products.byId(productId), { method: 'DELETE' })
+}
+
+// Product Fields
+export async function createProductFields(productId: string | number, fields: Record<string, unknown>[]) {
+  return adminJsonFetch<Record<string, unknown>[]>(ADMIN_ENDPOINTS.productFields.root, {
+    method: 'POST',
+    body: fields,
+    filters: { productId },
   })
 }
 
-export async function getAllProducts() {
-  return adminJsonFetch<AdminProductDto[]>(ADMIN_ENDPOINTS.products.all)
-}
-
-export async function getAllActiveProducts() {
-  return adminJsonFetch<AdminProductDto[]>(ADMIN_ENDPOINTS.products.allActive)
-}
-
-export async function getProductVendorBalance(productCode: string) {
-  return adminJsonFetch<ProductVendorBalanceDto>(ADMIN_ENDPOINTS.products.vendorBalance, {
-    filters: { productCode },
+export async function updateProductField(fieldId: string | number, payload: Record<string, unknown>) {
+  return adminJsonFetch<Record<string, unknown>>(ADMIN_ENDPOINTS.productFields.byId(fieldId), {
+    method: 'PUT',
+    body: payload,
   })
+}
+
+export async function deleteProductFields(fieldIds: number[]) {
+  return adminJsonFetch<void>(ADMIN_ENDPOINTS.productFields.root, {
+    method: 'PATCH',
+    body: fieldIds,
+  })
+}
+
+// Product Categories
+export async function getAllProductCategories() {
+  return adminJsonFetch<Record<string, unknown>[]>(ADMIN_ENDPOINTS.productCategories.root)
+}
+
+export async function createProductCategory(payload: Record<string, unknown>) {
+  return adminJsonFetch<Record<string, unknown>>(ADMIN_ENDPOINTS.productCategories.root, {
+    method: 'POST',
+    body: payload,
+  })
+}
+
+export async function updateProductCategory(id: string | number, payload: Record<string, unknown>) {
+  return adminJsonFetch<Record<string, unknown>>(ADMIN_ENDPOINTS.productCategories.byId(id), {
+    method: 'PUT',
+    body: payload,
+  })
+}
+
+export async function deleteProductCategory(id: string | number) {
+  return adminVoidFetch(ADMIN_ENDPOINTS.productCategories.byId(id), { method: 'DELETE' })
 }

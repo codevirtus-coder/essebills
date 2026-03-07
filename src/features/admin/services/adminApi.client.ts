@@ -1,8 +1,6 @@
 import { apiFetch, voidFetch, fileFetch } from '../../../api/apiClient'
 import type { QueryFilters } from '../dto/admin-api.dto'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'https://api.test.rongeka.com'
-
 type JsonRequestOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
   body?: unknown

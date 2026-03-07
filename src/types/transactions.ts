@@ -3,6 +3,7 @@
 // ============================================================================
 
 import type { BaseEntity, BasicCustomerDetails, Pageable, PaymentStatus, TransactionCompletionStatus } from './common'
+import type { Currency, Product } from './products'
 
 // --------------------------------------------------------------------------
 // Payment Transaction Types
@@ -60,8 +61,9 @@ export interface ProductPaymentContext {
   paymentMethodCode: string
   paymentMethodRequiredFields?: Record<string, string>
   productRequiredFields?: Record<string, string>
-  currencyCode?: Record<string, unknown>
-  productCode?: Record<string, unknown>
+  productMetadata?: string
+  currencyCode: Currency
+  productCode: Product
 }
 
 /** Product payment response */

@@ -3,7 +3,8 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import UserProfile from '../../admin/components/UserProfile';
 import { getPayments } from '../../../services/payments.service';
 import type { PaymentTransaction } from '../../../types';
-import { DataTable, type TableColumn } from '../../../components/ui';
+import { NotificationsPage } from '../../../pages/NotificationsPage';
+import CRUDLayout, { type CRUDColumn, type PageableState } from '../../shared/components/CRUDLayout';
 
 export function CustomerDashboardPage() {
   const { tab: urlTab } = useParams();
@@ -11,10 +12,16 @@ export function CustomerDashboardPage() {
 
   const activeTab = urlTab || searchParams.get('tab') || 'overview';
 
-  // Transactions state — null = not yet fetched
-  const [transactions, setTransactions] = useState<PaymentTransaction[] | null>(null);
+  const [transactions, setTransactions] = useState<PaymentTransaction[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [pageable, setPageable] = useState<PageableState>({
+    page: 1,
+    size: 10,
+    totalElements: 0,
+    totalPages: 0,
+  });
 
-  const columns: TableColumn<PaymentTransaction>[] = [
+  const columns: CRUDColumn<PaymentTransaction>[] = [
     {
       key: 'date',
       header: 'Date',
@@ -22,7 +29,7 @@ export function CustomerDashboardPage() {
         const date = tx.dateTimeOfTransaction
           ? new Date(tx.dateTimeOfTransaction).toLocaleDateString()
           : '—';
-        return <span className="text-sm font-bold text-dark-text">{date}</span>;
+        return <span className="font-semibold text-slate-900 dark:text-slate-100">{date}</span>;
       },
     },
     {
@@ -30,35 +37,37 @@ export function CustomerDashboardPage() {
       header: 'Reference',
       render: (tx) => {
         const ref = tx.productReferenceNumber ?? tx.pesepayReferenceNumber ?? String(tx.id);
-        return <span className="text-xs font-mono text-neutral-text">{ref}</span>;
+        return <span className="text-xs font-mono text-slate-500 dark:text-slate-400">{ref}</span>;
       },
     },
     {
       key: 'service',
       header: 'Service',
-      render: (tx) => <span className="text-sm text-neutral-text">{tx.productName ?? '—'}</span>,
+      render: (tx) => <span className="text-slate-600 dark:text-slate-300">{tx.productName ?? '—'}</span>,
     },
     {
       key: 'amount',
       header: 'Amount',
-      align: 'right',
-      render: (tx) => <span className="font-black text-dark-text">${(Number(tx.amount) || 0).toFixed(2)}</span>,
+      className: 'text-right',
+      render: (tx) => <span className="font-bold text-slate-900 dark:text-slate-100">${(Number(tx.amount) || 0).toFixed(2)}</span>,
     },
     {
       key: 'status',
       header: 'Status',
-      align: 'center',
+      className: 'text-center',
       render: (tx) => {
         const status = tx.paymentStatus ?? '—';
-        const isSuccess = String(status).toLowerCase().includes('success') || String(status).toLowerCase().includes('paid');
-        const isPending = String(status).toLowerCase().includes('pending');
+        const statusLower = String(status).toLowerCase();
+        const isSuccess = statusLower.includes('success') || statusLower.includes('paid');
+        const isPending = statusLower.includes('pending');
+        
         return (
-          <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
+          <span className={ `px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
             isSuccess
-              ? 'bg-accent-green/10 text-accent-green'
+              ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50'
               : isPending
-              ? 'bg-yellow-50 text-yellow-600'
-              : 'bg-red-50 text-red-500'
+              ? 'bg-amber-50 text-amber-600 border border-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/50'
+              : 'bg-red-50 text-red-600 border border-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800/50'
           }`}>
             {status}
           </span>
@@ -67,20 +76,35 @@ export function CustomerDashboardPage() {
     },
   ];
 
-  useEffect(() => {
-    if (activeTab !== 'transactions' || transactions !== null) return;
-    let mounted = true;
-    getPayments({ size: 50 })
+  const fetchTransactions = (page = 1, size = 10) => {
+    setLoading(true);
+    getPayments({ page: page - 1, size })
       .then((data) => {
-        if (mounted) setTransactions(data.content ?? []);
+        setTransactions(data.content ?? []);
+        setPageable({
+          page: (data.number ?? 0) + 1,
+          size: data.size ?? size,
+          totalElements: data.totalElements ?? 0,
+          totalPages: data.totalPages ?? 0,
+        });
       })
-      .catch(() => { if (mounted) setTransactions([]); });
-    return () => { mounted = false; };
-  }, [activeTab, transactions]);
+      .catch(() => { 
+        setTransactions([]); 
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    if (activeTab === 'transactions') {
+      fetchTransactions(pageable.page, pageable.size);
+    }
+  }, [activeTab]);
 
   if (activeTab === 'profile') {
     return (
-      <div className="animate-in fade-in duration-300">
+      <div>
         <UserProfile />
       </div>
     );
@@ -88,37 +112,33 @@ export function CustomerDashboardPage() {
 
   if (activeTab === 'transactions') {
     return (
-      <div className="p-8 space-y-4 animate-in fade-in duration-500">
-        <div>
-          <h3 className="text-xl font-black text-dark-text tracking-tight">My Transactions</h3>
-          <p className="text-[10px] font-bold text-neutral-text uppercase tracking-widest mt-1">Payment history</p>
-        </div>
-        {transactions === null ? (
-          <div className="p-12 flex items-center justify-center gap-3">
-            <span className="material-symbols-outlined animate-spin text-neutral-text">sync</span>
-            <span className="text-xs font-bold text-neutral-text uppercase tracking-widest">Loading transactions...</span>
-          </div>
-        ) : (
-          <DataTable
-            columns={columns}
-            data={transactions}
-            rowKey={(tx) => tx.id ?? Math.random()}
-            loading={transactions === null}
-            emptyMessage="No transactions found"
-            emptyIcon="receipt_long"
-          />
-        )}
+      <div className="space-y-6">
+        <CRUDLayout
+          title="My Transactions"
+          columns={columns}
+          data={transactions}
+          loading={loading}
+          pageable={pageable}
+          onPageChange={(page) => fetchTransactions(page, pageable.size)}
+          onSizeChange={(size) => fetchTransactions(1, size)}
+          onRefresh={() => fetchTransactions(pageable.page, pageable.size)}
+        />
       </div>
     );
   }
 
-  // Default: overview/dashboard content
+  if (activeTab === 'notifications') {
+    return <NotificationsPage />;
+  }
+
   return (
-    <div className="p-8">
-      <div className="bg-white border border-neutral-light rounded-xl shadow-sm p-8">
-        <p className="text-[10px] uppercase tracking-widest text-neutral-text/60 font-bold">Customer Portal</p>
-        <h2 className="text-2xl font-extrabold text-dark-text mt-2">Dashboard Coming Soon</h2>
-        <p className="text-sm text-neutral-text mt-3">This space is ready for your customer dashboard content.</p>
+    <div>
+      <div className="glass-card p-10 border-slate-200 dark:border-slate-800">
+        <p className="text-[10px] uppercase tracking-widest text-emerald-600 dark:text-emerald-500 font-bold">Customer Portal</p>
+        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white mt-2 tracking-tight">Welcome to your Dashboard</h2>
+        <p className="text-slate-600 dark:text-slate-400 mt-4 max-w-lg leading-relaxed">
+          Manage your payments, track your transaction history, and keep your profile up to date all in one place.
+        </p>
       </div>
     </div>
   );

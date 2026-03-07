@@ -1,19 +1,22 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { TransactionStatus } from "../data/types";
-import { DataTable, TableColumn } from "../../../components/ui/DataTable";
 import {
   getRecentPaymentTransactions,
   type DashboardTransaction,
 } from "../services/adminDashboard.service";
-import { AdminTableLayout } from "./shared/AdminTableLayout";
-import {
-  AdminPrimaryButton,
-  AdminSearchInput,
-  AdminSelect,
-  AdminStatusBadge,
-  statusVariant,
-} from "./shared/AdminControls";
-import { ADMIN_CARD, ADMIN_SECTION_LABEL } from "./shared/adminUi";
+import CRUDLayout, { type CRUDColumn } from "../../shared/components/CRUDLayout";
+import { 
+  CreditCard, 
+  CheckCircle, 
+  XCircle, 
+  Clock, 
+  Download, 
+  Calendar, 
+  Receipt,
+  Search,
+  ArrowRight
+} from "lucide-react";
+import { cn } from "../../../lib/utils";
 
 const Transactions: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -46,252 +49,178 @@ const Transactions: React.FC = () => {
     [transactions, searchTerm, statusFilter],
   );
 
-  const stats = useMemo(() => {
-    const total = transactions.length;
-    if (total === 0)
-      return { successPct: "—", pendingCount: 0, failurePct: "—" };
-    const success = transactions.filter(
-      (tx) => tx.status === TransactionStatus.SUCCESS,
-    ).length;
-    const pending = transactions.filter(
-      (tx) => tx.status === TransactionStatus.PENDING,
-    ).length;
-    const failed = transactions.filter(
-      (tx) => tx.status === TransactionStatus.FAILED,
-    ).length;
-    return {
-      successPct: ((success / total) * 100).toFixed(1) + "%",
-      pendingCount: pending,
-      failurePct: ((failed / total) * 100).toFixed(1) + "%",
-    };
-  }, [transactions]);
-
-  const columns: TableColumn<DashboardTransaction>[] = useMemo(
-    () => [
-      {
-        key: "id",
-        header: "Transaction ID",
-        render: (tx) => (
-          <span className="text-xs font-mono font-bold text-primary">
-            #EB-{String(tx.id ?? "").padStart(6, "0")}
-          </span>
-        ),
-      },
-      {
-        key: "datetime",
-        header: "Date & Time",
-        render: (tx) => (
-          <>
-            <p className="text-sm font-bold text-dark-text dark:text-gray-200">
-              {tx.date ?? "—"}
-            </p>
-            <p className="text-[10px] text-neutral-text uppercase tracking-tighter">
-              {tx.time ?? ""}
-            </p>
-          </>
-        ),
-      },
-      {
-        key: "customer",
-        header: "Customer",
-        render: (tx) => (
-          <div className="flex items-center gap-3">
-            <div
-              className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-black shadow-inner ${
-                tx.status === TransactionStatus.SUCCESS
-                  ? "bg-primary/10 text-primary"
-                  : tx.status === TransactionStatus.PENDING
-                    ? "bg-yellow-50 text-yellow-600"
-                    : "bg-red-50 text-red-600"
-              }`}
-            >
-              {tx.customerInitials ?? "??"}
-            </div>
-            <p className="text-sm font-bold text-dark-text dark:text-gray-200">
-              {tx.customerName ?? "—"}
-            </p>
-          </div>
-        ),
-      },
-      {
-        key: "biller",
-        header: "Biller",
-        render: (tx) => (
-          <span className="text-xs font-bold text-neutral-text">
-            {tx.biller ?? "—"}
-          </span>
-        ),
-      },
-      {
-        key: "amount",
-        header: "Amount",
-        align: "right",
-        render: (tx) => (
-          <p className="text-sm font-black text-dark-text dark:text-white">
-            ${(tx.amount ?? 0).toFixed(2)}
+  const columns: CRUDColumn<DashboardTransaction>[] = [
+    {
+      key: "id",
+      header: "Transaction ID",
+      render: (tx) => (
+        <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
+          #EB-{String(tx.id ?? "").padStart(6, "0")}
+        </span>
+      ),
+    },
+    {
+      key: "datetime",
+      header: "Date & Time",
+      render: (tx) => (
+        <div>
+          <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
+            {tx.date ?? "—"}
           </p>
-        ),
-      },
-      {
-        key: "status",
-        header: "Status",
-        align: "center",
-        render: (tx) => (
-          <AdminStatusBadge variant={statusVariant(tx.status ?? "")}>
-            {tx.status ?? "—"}
-          </AdminStatusBadge>
-        ),
-      },
-      {
-        key: "actions",
-        header: "Actions",
-        align: "right",
-        render: () => (
-          <div className="flex items-center justify-end gap-2">
-            <button
-              className="w-8 h-8 flex items-center justify-center hover:bg-neutral-light dark:hover:bg-white/10 rounded-lg text-neutral-text transition-colors"
-              title="View Receipt"
-            >
-              <span className="material-symbols-outlined text-lg">
-                receipt_long
-              </span>
-            </button>
+          <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
+            {tx.time ?? ""}
+          </p>
+        </div>
+      ),
+    },
+    {
+      key: "customer",
+      header: "Customer",
+      render: (tx) => (
+        <div className="flex items-center gap-3">
+          <div
+            className={cn(
+              "w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black border",
+              tx.status === TransactionStatus.SUCCESS
+                ? "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50"
+                : tx.status === TransactionStatus.PENDING
+                  ? "bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/50"
+                  : "bg-red-50 text-red-600 border-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800/50"
+            )}
+          >
+            {tx.customerInitials ?? "??"}
           </div>
-        ),
-      },
-    ],
-    [],
-  );
-
-  const summaryCards = [
-    {
-      label: "Successful",
-      value: stats.successPct,
-      icon: "check_circle",
-      color: "text-accent-green",
-      bg: "bg-accent-green/10",
+          <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
+            {tx.customerName ?? "—"}
+          </p>
+        </div>
+      ),
     },
     {
-      label: "Processing",
-      value: String(stats.pendingCount),
-      icon: "pending",
-      color: "text-yellow-600",
-      bg: "bg-yellow-100",
+      key: "biller",
+      header: "Biller",
+      render: (tx) => (
+        <span className="text-xs font-bold text-slate-600 dark:text-slate-400">
+          {tx.biller ?? "—"}
+        </span>
+      ),
     },
     {
-      label: "Failures",
-      value: stats.failurePct,
-      icon: "error",
-      color: "text-red-600",
-      bg: "bg-red-100",
+      key: "amount",
+      header: "Amount",
+      className: "text-right",
+      render: (tx) => (
+        <p className="text-sm font-black text-slate-900 dark:text-white">
+          ${(tx.amount ?? 0).toFixed(2)}
+        </p>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      className: "text-center",
+      render: (tx) => (
+        <span className={cn(
+          "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border",
+          tx.status === TransactionStatus.SUCCESS
+            ? "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50"
+            : tx.status === TransactionStatus.PENDING
+              ? "bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/50"
+              : "bg-red-50 text-red-600 border-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800/50"
+        )}>
+          {tx.status === TransactionStatus.SUCCESS ? <CheckCircle size={12} /> : 
+           tx.status === TransactionStatus.PENDING ? <Clock size={12} /> : 
+           <XCircle size={12} />}
+          {tx.status ?? "—"}
+        </span>
+      ),
     },
   ];
 
   return (
-    <AdminTableLayout
-      title="Transactions History"
-      subtitle="Monitor and manage all customer payments across the platform."
-      actions={
-        <div className="flex gap-3">
-          <button className="flex items-center gap-2 px-4 h-10 bg-white border border-neutral-light dark:border-white/5 rounded-lg text-sm font-bold text-neutral-text hover:bg-neutral-light transition-all">
-            <span className="material-symbols-outlined text-lg">
-              calendar_month
-            </span>
-            Last 30 Days
-          </button>
-          <AdminPrimaryButton>
-            <span className="material-symbols-outlined text-lg">download</span>
-            Export CSV
-          </AdminPrimaryButton>
-        </div>
-      }
-      stats={
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {summaryCards.map((card, i) => (
-            <div
-              key={i}
-              className={`${ADMIN_CARD} p-6 flex items-center gap-4`}
-            >
-              <div
-                className={`w-12 h-12 ${card.bg} ${card.color} rounded-2xl flex items-center justify-center`}
-              >
-                <span className="material-symbols-outlined">{card.icon}</span>
-              </div>
-              <div>
-                <p className={ADMIN_SECTION_LABEL}>{card.label}</p>
-                <h4 className="text-xl font-extrabold text-dark-text dark:text-white">
-                  {card.value}
-                </h4>
-              </div>
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {[
+          { 
+            label: "Successful", 
+            value: `${((transactions.filter(t => t.status === TransactionStatus.SUCCESS).length / (transactions.length || 1)) * 100).toFixed(1)}%`, 
+            icon: CheckCircle, 
+            color: "text-emerald-600", 
+            bg: "bg-emerald-50 dark:bg-emerald-900/20" 
+          },
+          { 
+            label: "Processing", 
+            value: transactions.filter(t => t.status === TransactionStatus.PENDING).length, 
+            icon: Clock, 
+            color: "text-amber-600", 
+            bg: "bg-amber-50 dark:bg-amber-900/20" 
+          },
+          { 
+            label: "Failures", 
+            value: `${((transactions.filter(t => t.status === TransactionStatus.FAILED).length / (transactions.length || 1)) * 100).toFixed(1)}%`, 
+            icon: XCircle, 
+            color: "text-red-600", 
+            bg: "bg-red-50 dark:bg-red-900/20" 
+          },
+        ].map((stat, i) => (
+          <div key={i} className="glass-card p-5 border-slate-200 dark:border-slate-800 flex items-center gap-4">
+            <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0", stat.bg)}>
+              <stat.icon size={22} className={stat.color} />
             </div>
-          ))}
-        </div>
-      }
-      toolbar={
-        <>
-          <AdminSearchInput
+            <div>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{stat.label}</p>
+              <h4 className="text-xl font-bold text-slate-900 dark:text-white">{stat.value}</h4>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+        <div className="relative w-full sm:w-96">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+          <input
+            type="text"
             placeholder="Search by customer, biller or transaction ID..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
           />
-          <AdminSelect
+        </div>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full md:w-40"
+            className="px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-sm font-bold text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
           >
             <option value="ALL">All Status</option>
             <option value={TransactionStatus.SUCCESS}>Successful</option>
             <option value={TransactionStatus.PENDING}>Pending</option>
             <option value={TransactionStatus.FAILED}>Failed</option>
-          </AdminSelect>
-        </>
-      }
-    >
-      <DataTable
-        columns={columns}
-        data={filteredTransactions}
-        rowKey={(r) => String(r.id)}
-        emptyMessage="No transactions found matching your filters."
-        loading={loading}
-      />
-
-      <div className="p-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-neutral-light dark:border-white/5">
-        <p className="text-xs text-neutral-text font-bold">
-          Showing{" "}
-          <span className="text-dark-text dark:text-white">
-            {filteredTransactions.length}
-          </span>{" "}
-          of{" "}
-          <span className="text-dark-text dark:text-white">
-            {transactions.length}
-          </span>{" "}
-          results
-        </p>
-        <div className="flex items-center gap-1">
-          <button
-            className="p-2 text-neutral-text hover:bg-neutral-light dark:hover:bg-white/10 rounded-lg disabled:opacity-30"
-            disabled
-          >
-            <span className="material-symbols-outlined">chevron_left</span>
-          </button>
-          {[1, 2, 3, "...", 45].map((page, i) => (
-            <button
-              key={i}
-              className={`w-9 h-9 text-xs font-black rounded-lg transition-all ${
-                page === 1
-                  ? "bg-primary text-white shadow-lg shadow-primary/20"
-                  : "text-neutral-text hover:bg-neutral-light dark:hover:bg-white/10"
-              }`}
-            >
-              {page}
-            </button>
-          ))}
-          <button className="p-2 text-neutral-text hover:bg-neutral-light dark:hover:bg-white/10 rounded-lg">
-            <span className="material-symbols-outlined">chevron_right</span>
+          </select>
+          <button className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+            <Download size={16} /> Export
           </button>
         </div>
       </div>
-    </AdminTableLayout>
+
+      <CRUDLayout
+        title="Transactions History"
+        columns={columns}
+        data={filteredTransactions}
+        loading={loading}
+        pageable={{ page: 1, size: 50, totalElements: filteredTransactions.length, totalPages: 1 }}
+        onPageChange={() => {}}
+        onSizeChange={() => {}}
+        searchable={false}
+        actions={{
+          renderCustom: () => (
+            <button className="p-1.5 text-slate-400 hover:text-emerald-600 transition-colors" title="View Receipt">
+              <Receipt size={16} />
+            </button>
+          )
+        }}
+      />
+    </div>
   );
 };
 

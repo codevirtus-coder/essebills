@@ -4,7 +4,12 @@
 
 import { apiFetch } from '../api/client'
 import { API_ENDPOINTS } from '../api/endpoints'
-import type { PaymentTransaction, PageResponse } from '../types'
+import type { 
+  PaymentTransaction, 
+  PageResponse, 
+  ProductPaymentContext, 
+  ProductPaymentResponse 
+} from '../types'
 
 // --------------------------------------------------------------------------
 // Query Parameters
@@ -59,5 +64,13 @@ export async function createPayment(payment: Partial<PaymentTransaction>): Promi
 export async function deletePayment(paymentId: string | number): Promise<void> {
   return apiFetch(API_ENDPOINTS.payments.byId(paymentId), {
     method: 'DELETE',
+  })
+}
+
+/** Process product payment */
+export async function processProductPayment(context: ProductPaymentContext): Promise<ProductPaymentResponse> {
+  return apiFetch<ProductPaymentResponse>(API_ENDPOINTS.payments.productPayment, {
+    method: 'POST',
+    body: context,
   })
 }

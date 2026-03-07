@@ -1,0 +1,306 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import toast from 'react-hot-toast';
+import { motion } from 'framer-motion';
+import CRUDLayout, { type CRUDColumn } from '../../shared/components/CRUDLayout';
+import CRUDModal from '../../shared/components/CRUDModal';
+import { 
+  getAgentCommissionRates, 
+  createAgentCommissionRate, 
+  updateAgentCommissionRate 
+} from '../../../services/agentCommission.service';
+import { getPaginatedUsers } from '../services/adminUsers.service';
+import { INITIAL_CATEGORIES } from '../data/constants';
+import { 
+  Percent, 
+  UserCircle, 
+  Settings, 
+  TrendingUp, 
+  Layers, 
+  Info, 
+  Plus, 
+  Edit2, 
+  Search,
+  CheckCircle2,
+  DollarSign
+} from 'lucide-react';
+import { cn } from '../../../lib/utils';
+
+type TabId = 'agent-rates' | 'revenue-split';
+
+export default function Commissions() {
+  const [activeTab, setActiveCategory] = useState<TabId>('agent-rates');
+  const [loading, setLoading] = useState(false);
+  
+  // Agent Rates State
+  const [agents, setAgents] = useState<any[]>([]);
+  const [selectedAgentId, setSelectedAgentId] = useState<string>('');
+  const [commissionRates, setCommissionRates] = useState<any[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [editingRate, setEditingRate] = useState<any>(null);
+
+  // Revenue Split State (Categories)
+  const [categories, setCategories] = useState(INITIAL_CATEGORIES);
+
+  const tabs = [
+    { id: 'agent-rates', label: 'Agent Commission Rates', icon: UserCircle },
+    { id: 'revenue-split', label: 'Service Revenue Split', icon: Percent },
+  ];
+
+  // Load Agents for selection
+  useEffect(() => {
+    getPaginatedUsers({ size: 100 }).then(res => {
+      const filtered = (res?.content ?? []).filter((u: any) => u.group?.name === 'AGENT');
+      setAgents(filtered);
+      if (filtered.length > 0) setSelectedAgentId(String(filtered[0].id));
+    });
+  }, []);
+
+  // Load rates when agent changes
+  const loadRates = React.useCallback(async () => {
+    if (!selectedAgentId) return;
+    try {
+      setLoading(true);
+      const data = await getAgentCommissionRates(selectedAgentId);
+      setCommissionRates(data);
+    } catch (error) {
+      toast.error("Failed to load commission rates");
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedAgentId]);
+
+  useEffect(() => {
+    void loadRates();
+  }, [loadRates]);
+
+  const agentRateColumns: CRUDColumn<any>[] = [
+    {
+      key: 'product',
+      header: 'Product / Service',
+      render: (r) => (
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+            <Settings size={14} />
+          </div>
+          <span className="text-sm font-bold text-slate-900 dark:text-slate-100">{r.productName || r.product?.name || 'All Products'}</span>
+        </div>
+      )
+    },
+    {
+      key: 'rate',
+      header: 'Commission Rate',
+      className: 'text-right',
+      render: (r) => <span className="font-bold text-emerald-600 dark:text-emerald-400">{r.rate || r.commissionRate}%</span>
+    },
+    {
+      key: 'type',
+      header: 'Type',
+      render: (r) => (
+        <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500 uppercase tracking-widest border border-slate-200 dark:border-slate-700">
+          {r.type || 'PERCENTAGE'}
+        </span>
+      )
+    }
+  ];
+
+  const splitColumns: CRUDColumn<any>[] = [
+    {
+      key: 'category',
+      header: 'Service Category',
+      render: (cat) => (
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+            <Layers size={18} />
+          </div>
+          <span className="text-sm font-bold text-slate-900 dark:text-slate-100">{cat.label}</span>
+        </div>
+      )
+    },
+    {
+      key: 'agentRate',
+      header: 'Agent (%)',
+      className: 'text-right',
+      render: (cat) => <span className="font-bold text-slate-700 dark:text-slate-300">{cat.agentRate}%</span>
+    },
+    {
+      key: 'platformRate',
+      header: 'Platform (%)',
+      className: 'text-right',
+      render: (cat) => <span className="font-bold text-blue-600 dark:text-blue-400">{cat.platformRate}%</span>
+    },
+    {
+      key: 'total',
+      header: 'Total Fee',
+      className: 'text-right',
+      render: (cat) => <span className="font-bold text-slate-900 dark:text-white">{(cat.agentRate + cat.platformRate).toFixed(1)}%</span>
+    }
+  ];
+
+  const handleSaveRate = async () => {
+    if (!selectedAgentId || !editingRate?.rate) return;
+    try {
+      setIsSaving(true);
+      if (editingRate.id) {
+        await updateAgentCommissionRate(selectedAgentId, editingRate.id, editingRate);
+      } else {
+        await createAgentCommissionRate(selectedAgentId, editingRate);
+      }
+      toast.success("Commission rate saved");
+      setIsModalOpen(false);
+      await loadRates();
+    } catch (error) {
+      toast.error("Failed to save rate");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-8 animate-in fade-in duration-500">
+      {/* Header Stat Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {[
+          { label: "Active Agents", value: agents.length, icon: UserCircle, color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
+          { label: "Avg. Agent Rate", value: "3.2%", icon: TrendingUp, color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-900/20" },
+          { label: "Platform Yield", value: "1.8%", icon: DollarSign, color: "text-purple-600", bg: "bg-purple-50 dark:bg-purple-900/20" },
+          { label: "Revenue Node", value: "Optimal", icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
+        ].map((stat, i) => (
+          <div key={i} className="glass-card p-5 border-slate-200 dark:border-slate-800 flex items-center gap-4 text-slate-900 dark:text-white">
+            <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0", stat.bg)}>
+              <stat.icon size={22} className={stat.color} />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{stat.label}</p>
+              <h4 className="text-xl font-bold">{stat.value}</h4>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Horizontal Tabs */}
+      <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800 pb-px">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveCategory(tab.id as TabId)}
+            className={cn(
+              "flex items-center gap-2 px-6 py-4 text-xs font-bold uppercase tracking-widest transition-all relative",
+              activeTab === tab.id
+                ? "text-emerald-600 dark:text-emerald-400"
+                : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-300"
+            )}
+          >
+            <tab.icon size={18} />
+            {tab.label}
+            {activeTab === tab.id && (
+              <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 w-full h-0.5 bg-emerald-600 dark:bg-emerald-500 rounded-t-full" />
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab Content */}
+      <div className="space-y-6">
+        {activeTab === 'agent-rates' && (
+          <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
+            <div className="flex flex-col sm:flex-row items-center gap-4 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+               <div className="flex items-center gap-3 shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500">
+                     <Search size={18} />
+                  </div>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Select Agent:</label>
+               </div>
+               <select
+                 value={selectedAgentId}
+                 onChange={(e) => setSelectedAgentId(e.target.value)}
+                 className="flex-1 min-w-[200px] bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+               >
+                 {agents.map(a => (
+                   <option key={a.id} value={a.id}>{a.firstName} {a.lastName} ({a.username})</option>
+                 ))}
+               </select>
+            </div>
+
+            <CRUDLayout
+              title="Individual Agent Exceptions"
+              columns={agentRateColumns}
+              data={commissionRates}
+              loading={loading}
+              pageable={{ page: 1, size: 50, totalElements: commissionRates.length, totalPages: 1 }}
+              onPageChange={() => {}}
+              onSizeChange={() => {}}
+              onRefresh={loadRates}
+              onAdd={() => { setEditingRate({ rate: '' }); setIsModalOpen(true); }}
+              addButtonText="Add Exception"
+              actions={{
+                onEdit: (r) => { setEditingRate(r); setIsModalOpen(true); },
+              }}
+            />
+          </div>
+        )}
+
+        {activeTab === 'revenue-split' && (
+          <div className="animate-in slide-in-from-bottom-4 duration-300">
+            <CRUDLayout
+              title="Global Service Policies"
+              columns={splitColumns}
+              data={categories}
+              loading={false}
+              pageable={{ page: 1, size: categories.length, totalElements: categories.length, totalPages: 1 }}
+              onPageChange={() => {}}
+              onSizeChange={() => {}}
+              actions={{
+                onEdit: () => toast("Revenue Split editing restricted to master policy."),
+              }}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Commission Modal */}
+      <CRUDModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={editingRate?.id ? "Update Rate" : "New Rate Exception"}
+        onSubmit={handleSaveRate}
+        isSubmitting={isSaving}
+        submitLabel="Commit Policy"
+      >
+        {editingRate && (
+          <div className="space-y-5">
+            <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800/50 flex items-start gap-3">
+               <Info className="text-emerald-600 shrink-0" size={18} />
+               <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
+                  Custom rates for an individual agent will override global category defaults for the selected product.
+               </p>
+            </div>
+            
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Rate Percentage (%)</label>
+              <input
+                type="number"
+                step="0.1"
+                value={editingRate.rate}
+                onChange={(e) => setEditingRate({ ...editingRate, rate: e.target.value })}
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                placeholder="e.g. 2.5"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Rate Type</label>
+              <select
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 dark:text-white focus:outline-none"
+                defaultValue="PERCENTAGE"
+              >
+                <option value="PERCENTAGE">Percentage</option>
+                <option value="FIXED">Fixed Amount</option>
+              </select>
+            </div>
+          </div>
+        )}
+      </CRUDModal>
+    </div>
+  );
+}

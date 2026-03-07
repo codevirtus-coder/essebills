@@ -9,7 +9,8 @@ import type { ErrorMessage } from '../types'
 // Configuration
 // --------------------------------------------------------------------------
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'https://api.test.rongeka.com'
+// Use explicit API base URL when configured; otherwise use same-origin relative requests.
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() || undefined
 
 // --------------------------------------------------------------------------
 // Storage (lazy import to avoid circular dependencies)
@@ -77,7 +78,7 @@ export function isValidationError(err: unknown): boolean {
 // Axios Instance Creation
 // --------------------------------------------------------------------------
 
-function createAxiosInstance(baseURL: string): AxiosInstance {
+function createAxiosInstance(baseURL?: string): AxiosInstance {
   const instance = axios.create({
     baseURL,
     headers: {

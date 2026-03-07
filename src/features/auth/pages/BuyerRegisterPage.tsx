@@ -1,11 +1,8 @@
-import {
-  PortalRegister,
-  type PortalRegisterSubmitPayload,
-} from '../components/PortalRegister'
+import { PortalRegister, type PortalRegisterSubmitPayload } from '../components/PortalRegister'
 import { registerCustomer } from '../portal-auth.service'
 import { ROUTE_PATHS } from '../../../router/paths'
 
-async function submitBuyerRegistration(payload: PortalRegisterSubmitPayload) {
+async function submitCustomerRegistration(payload: PortalRegisterSubmitPayload) {
   return registerCustomer({
     firstName: payload.firstName,
     lastName: payload.lastName,
@@ -20,16 +17,17 @@ async function submitBuyerRegistration(payload: PortalRegisterSubmitPayload) {
 export function BuyerRegisterPage() {
   return (
     <PortalRegister
-      title="Create Buyer Account"
-      subtitle="Create your customer wallet account to pay bills and track transactions."
-      asideTitle="Your Wallet,"
-      asideAccent="Simplified"
-      asideDescription="Register as a customer to pay bills instantly, manage your wallet, and track payment history across services."
+      title="Create Account"
+      subtitle="Join thousands of users and businesses."
+      asideTitle="Join the"
+      asideAccent="Ecosystem"
+      asideDescription="Unlock instant payments, financial tracking, and rewarding commissions for your business."
       submitLabel="Create Account"
-      loginPath={ROUTE_PATHS.buyer}
-      registerNote="Buyer account created. Continue to login."
+      loginPath={ROUTE_PATHS.login}
+      registerNote="Customer account created. Continue to login."
       includePasswordFields
-      registerAction={submitBuyerRegistration}
+      registerAction={submitCustomerRegistration}
+      bgImage="https://images.unsplash.com/photo-1512428559087-560fa5ceab42?q=80&w=2000&auto=format&fit=crop"
     />
   )
 }

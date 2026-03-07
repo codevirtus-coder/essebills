@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useCallback, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { confirmToast } from '../../../lib/confirmToast'
-import { DataTable, TableColumn } from '../../../components/ui/DataTable'
+import CRUDLayout, { type CRUDColumn } from '../../shared/components/CRUDLayout'
+import CRUDModal from '../../shared/components/CRUDModal'
 import {
   createBank,
   createCountry,
@@ -11,19 +12,31 @@ import {
   deleteBank,
   deleteCountry,
   deleteCurrency,
-  deleteHoliday,
   deleteProductCategory,
-  getAllBanks,
+  getPaginatedBanks,
   getAllHolidays,
-  getAllParameterCountries,
-  getAllParameterCurrencies,
+  getPaginatedCountries,
+  getPaginatedCurrencies,
   getAllProductCategories,
   updateBank,
   updateCountry,
   updateCurrency,
-  updateHoliday,
   updateProductCategory,
 } from '../services'
+import { 
+  Globe, 
+  DollarSign, 
+  Calendar, 
+  Landmark, 
+  Layers, 
+  Plus, 
+  Edit2, 
+  Trash2, 
+  Info,
+  CheckCircle2,
+  Activity
+} from 'lucide-react'
+import { cn } from '../../../lib/utils'
 
 type ParameterModule = 'currencies' | 'countries' | 'holidays' | 'banks' | 'productCategories'
 type UnknownRecord = Record<string, unknown>
@@ -42,7 +55,7 @@ type ColumnConfig = {
 type ModuleConfig = {
   title: string
   subtitle: string
-  icon: string
+  icon: any
   listEndpoint: string
   createEndpoint: string
   list: () => Promise<UnknownRecord[]>
@@ -56,11 +69,11 @@ type ModuleConfig = {
 const MODULE_CONFIGS: Record<ParameterModule, ModuleConfig> = {
   currencies: {
     title: 'Currencies',
-    subtitle: 'Currencies List',
-    icon: 'account_balance',
-    listEndpoint: '/v1/currencies/all',
+    subtitle: 'Manage global settlement and display currencies.',
+    icon: DollarSign,
+    listEndpoint: '/v1/currencies',
     createEndpoint: '/v1/currencies',
-    list: getAllParameterCurrencies,
+    list: async () => { const r = await getPaginatedCurrencies(); return r?.content ?? [] },
     create: createCurrency,
     fields: [
       { key: 'name', label: 'Name' },
@@ -71,7 +84,6 @@ const MODULE_CONFIGS: Record<ParameterModule, ModuleConfig> = {
     columns: [
       { key: 'name', label: 'Name' },
       { key: 'code', label: 'Code' },
-      { key: 'createdBy', label: 'Created By' },
       { key: 'createdDate', label: 'Created On' },
     ],
     detailFields: [
@@ -81,18 +93,16 @@ const MODULE_CONFIGS: Record<ParameterModule, ModuleConfig> = {
       { key: 'description', label: 'Description' },
       { key: 'createdBy', label: 'Created By' },
       { key: 'createdDate', label: 'Created Date' },
-      { key: 'lastModifiedBy', label: 'Last Modified By' },
-      { key: 'lastModifiedDate', label: 'Last Modified Date' },
     ],
-    detailsTitle: 'Currencies Details',
+    detailsTitle: 'Currency Policy Details',
   },
   countries: {
     title: 'Countries',
-    subtitle: 'Countries List',
-    icon: 'account_balance',
-    listEndpoint: '/v1/countries/all',
+    subtitle: 'Define regional operational boundaries.',
+    icon: Globe,
+    listEndpoint: '/v1/countries',
     createEndpoint: '/v1/countries',
-    list: getAllParameterCountries,
+    list: async () => { const r = await getPaginatedCountries(); return r?.content ?? [] },
     create: createCountry,
     fields: [
       { key: 'name', label: 'Name' },
@@ -101,7 +111,6 @@ const MODULE_CONFIGS: Record<ParameterModule, ModuleConfig> = {
     columns: [
       { key: 'name', label: 'Name' },
       { key: 'code', label: 'Country Code' },
-      { key: 'createdBy', label: 'Created By' },
       { key: 'createdDate', label: 'Created On' },
     ],
     detailFields: [
@@ -109,15 +118,13 @@ const MODULE_CONFIGS: Record<ParameterModule, ModuleConfig> = {
       { key: 'code', label: 'Country Code' },
       { key: 'createdBy', label: 'Created By' },
       { key: 'createdDate', label: 'Created Date' },
-      { key: 'lastModifiedBy', label: 'Last Modified By' },
-      { key: 'lastModifiedDate', label: 'Last Modified Date' },
     ],
-    detailsTitle: 'Countries Details',
+    detailsTitle: 'Country Details',
   },
   holidays: {
     title: 'Holidays',
-    subtitle: 'Holidays List',
-    icon: 'target',
+    subtitle: 'Configure non-settlement bank holidays.',
+    icon: Calendar,
     listEndpoint: '/v1/holidays',
     createEndpoint: '/v1/holidays?date=YYYY-MM-DD',
     list: getAllHolidays,
@@ -125,25 +132,22 @@ const MODULE_CONFIGS: Record<ParameterModule, ModuleConfig> = {
     fields: [{ key: 'date', label: 'Date', type: 'date' }],
     columns: [
       { key: 'date', label: 'Date' },
-      { key: 'createdBy', label: 'Created By' },
       { key: 'createdDate', label: 'Created On' },
     ],
     detailFields: [
       { key: 'date', label: 'Date' },
       { key: 'createdBy', label: 'Created By' },
       { key: 'createdDate', label: 'Created Date' },
-      { key: 'lastModifiedBy', label: 'Last Modified By' },
-      { key: 'lastModifiedDate', label: 'Last Modified Date' },
     ],
-    detailsTitle: 'Holidays Details',
+    detailsTitle: 'Holiday Policy',
   },
   banks: {
     title: 'Registry',
-    subtitle: 'Financial Institutions List',
-    icon: 'business_center',
-    listEndpoint: '/v1/banks/all',
+    subtitle: 'Settlement financial institutions list.',
+    icon: Landmark,
+    listEndpoint: '/v1/banks',
     createEndpoint: '/v1/banks',
-    list: getAllBanks,
+    list: async () => { const r = await getPaginatedBanks(); return r?.content ?? [] },
     create: createBank,
     fields: [
       { key: 'name', label: 'Name' },
@@ -152,7 +156,6 @@ const MODULE_CONFIGS: Record<ParameterModule, ModuleConfig> = {
     columns: [
       { key: 'name', label: 'Name' },
       { key: 'code', label: 'Code' },
-      { key: 'createdBy', label: 'Created By' },
       { key: 'createdDate', label: 'Created On' },
     ],
     detailFields: [
@@ -160,15 +163,13 @@ const MODULE_CONFIGS: Record<ParameterModule, ModuleConfig> = {
       { key: 'code', label: 'Code' },
       { key: 'createdBy', label: 'Created By' },
       { key: 'createdDate', label: 'Created Date' },
-      { key: 'lastModifiedBy', label: 'Last Modified By' },
-      { key: 'lastModifiedDate', label: 'Last Modified Date' },
     ],
-    detailsTitle: 'Registry Details',
+    detailsTitle: 'Institution Details',
   },
   productCategories: {
     title: 'Product Categories',
-    subtitle: 'Product Categories List',
-    icon: 'category',
+    subtitle: 'Global grouping for platform services.',
+    icon: Layers,
     listEndpoint: '/v1/product-categories/all',
     createEndpoint: '/v1/product-categories',
     list: getAllProductCategories,
@@ -176,14 +177,13 @@ const MODULE_CONFIGS: Record<ParameterModule, ModuleConfig> = {
     fields: [
       { key: 'name', label: 'Name' },
       { key: 'displayName', label: 'Display Name' },
-      { key: 'emoji', label: 'Icon Name (Lucide)' },
+      { key: 'emoji', label: 'Icon Name' },
       { key: 'sortOrder', label: 'Sort Order', type: 'number' },
       { key: 'active', label: 'Active', type: 'checkbox' },
     ],
     columns: [
       { key: 'name', label: 'Name' },
       { key: 'displayName', label: 'Display Name' },
-      { key: 'createdBy', label: 'Created By' },
       { key: 'createdDate', label: 'Created On' },
     ],
     detailFields: [
@@ -192,12 +192,9 @@ const MODULE_CONFIGS: Record<ParameterModule, ModuleConfig> = {
       { key: 'emoji', label: 'Emoji' },
       { key: 'sortOrder', label: 'Sort Order' },
       { key: 'active', label: 'Active' },
-      { key: 'createdBy', label: 'Created By' },
       { key: 'createdDate', label: 'Created Date' },
-      { key: 'lastModifiedBy', label: 'Last Modified By' },
-      { key: 'lastModifiedDate', label: 'Last Modified Date' },
     ],
-    detailsTitle: 'Product Category Details',
+    detailsTitle: 'Category Policy Details',
   },
 }
 
@@ -207,67 +204,36 @@ interface AdminParametersPageProps {
 
 const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => {
   const config = MODULE_CONFIGS[module]
-  const [rows, setRows] = React.useState<UnknownRecord[]>([])
-  const [isLoading, setIsLoading] = React.useState(false)
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [rows, setRows] = useState<UnknownRecord[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [form, setForm] = useState<Record<string, string | boolean>>({})
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [editForm, setEditForm] = useState<Record<string, string | boolean>>({})
   const [isUpdating, setIsUpdating] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [selectedRowId, setSelectedRowId] = useState<string | null>(null)
-  const canEdit =
-    module === 'currencies' || module === 'countries' || module === 'banks' || module === 'holidays' || module === 'productCategories'
-  const canDelete =
-    module === 'currencies' || module === 'countries' || module === 'banks' || module === 'holidays' || module === 'productCategories'
-  const recordLabel =
-    module === 'currencies'
-      ? 'Currency'
-      : module === 'countries'
-        ? 'Country'
-        : module === 'holidays'
-          ? 'Holiday'
-          : module === 'productCategories'
-            ? 'Product Category'
-            : 'Bank'
+  const [selectedRow, setSelectedRow] = useState<UnknownRecord | null>(null)
+  
+  const canEdit = module !== 'holidays'
+  const canDelete = module !== 'holidays'
 
-  const getRowId = React.useCallback(
-    (row: UnknownRecord, index: number) => String(row.id ?? row.code ?? row.name ?? index),
-    [],
-  )
-
-  const load = React.useCallback(async () => {
+  const load = useCallback(async () => {
     try {
       setIsLoading(true)
       const response = await config.list()
-      const nextRows = Array.isArray(response) ? response : []
-      setRows(nextRows)
-      if (nextRows.length === 0) {
-        setSelectedRowId(null)
-      }
+      setRows(Array.isArray(response) ? response : [])
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to load data')
     } finally {
       setIsLoading(false)
     }
-  }, [config, getRowId])
+  }, [config])
 
-  React.useEffect(() => {
+  useEffect(() => {
     void load()
-  }, [load])
+  }, [load, module])
 
-  const tableRows = useMemo(() => rows, [rows])
-  const selectedRow = useMemo(() => {
-    if (!selectedRowId) return null
-    const rowIndex = tableRows.findIndex((row, index) => getRowId(row, index) === selectedRowId)
-    if (rowIndex < 0) return null
-    return tableRows[rowIndex]
-  }, [tableRows, selectedRowId, getRowId])
-
-  const handleCreate = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-
+  const handleCreate = async () => {
     for (const field of config.fields) {
       if (field.type === 'checkbox') continue
       if (!String(form[field.key] ?? '').trim()) {
@@ -300,105 +266,29 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
     }
   }
 
-  const openEditModal = () => {
-    if (!selectedRow) return
-    const nextForm: Record<string, string | boolean> = {}
-    config.fields.forEach((field) => {
-      if (field.type === 'checkbox') {
-        nextForm[field.key] = Boolean(selectedRow[field.key])
-      } else {
-        nextForm[field.key] = String(selectedRow[field.key] ?? '')
-      }
-    })
-    setEditForm(nextForm)
-    setIsEditOpen(true)
-  }
-
-  const handleCurrencyUpdate = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    if (!selectedRow || module !== 'currencies') return
-
-    for (const field of config.fields) {
-      if (field.type === 'checkbox') continue
-      if (!String(editForm[field.key] ?? '').trim()) {
-        toast.error(`${field.label} is required`)
-        return
-      }
-    }
-
-    const currencyId = Number(selectedRow.id)
-    if (!Number.isFinite(currencyId)) {
-      toast.error('Currency ID is missing')
-      return
-    }
-
-    const rateToDefault = Number(editForm.rateToDefault)
-    if (!Number.isFinite(rateToDefault)) {
-      toast.error('Rate To Default must be a valid number')
-      return
-    }
-
-    try {
-      setIsUpdating(true)
-      await updateCurrency(currencyId, {
-        id: currencyId,
-        name: String(editForm.name ?? ''),
-        code: String(editForm.code ?? ''),
-        description: String(editForm.description ?? ''),
-        rateToDefault,
-        ...(typeof selectedRow.active === 'boolean' ? { active: selectedRow.active } : {}),
-        ...(typeof selectedRow.defaultCurrency === 'boolean'
-          ? { defaultCurrency: selectedRow.defaultCurrency }
-          : {}),
-      })
-      toast.success('Currency updated')
-      setIsEditOpen(false)
-      await load()
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update currency')
-    } finally {
-      setIsUpdating(false)
-    }
-  }
-
-  const handleUpdate = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+  const handleUpdate = async () => {
     if (!selectedRow || !canEdit) return
 
-    if (module === 'currencies') {
-      await handleCurrencyUpdate(event)
-      return
-    }
-
-    for (const field of config.fields) {
-      if (!String(editForm[field.key] ?? '').trim()) {
-        toast.error(`${field.label} is required`)
-        return
-      }
-    }
-
     const id = Number(selectedRow.id)
-    if (!Number.isFinite(id)) {
+    if (!Number.isFinite(id) && module !== 'holidays') {
       toast.error('Record ID is missing')
       return
     }
 
     try {
       setIsUpdating(true)
-
-      if (module === 'countries') {
-        await updateCountry(id, {
+      if (module === 'currencies') {
+        await updateCurrency(id, {
           id,
           name: String(editForm.name ?? ''),
           code: String(editForm.code ?? ''),
+          description: String(editForm.description ?? ''),
+          rateToDefault: Number(editForm.rateToDefault || 1),
         })
+      } else if (module === 'countries') {
+        await updateCountry(id, { id, name: String(editForm.name ?? ''), code: String(editForm.code ?? '') })
       } else if (module === 'banks') {
-        await updateBank(id, {
-          name: String(editForm.name ?? ''),
-          code: String(editForm.code ?? ''),
-        })
-      } else if (module === 'holidays') {
-        await updateHoliday(id, String(editForm.date ?? ''))
+        await updateBank(id, { name: String(editForm.name ?? ''), code: String(editForm.code ?? '') })
       } else if (module === 'productCategories') {
         await updateProductCategory(id, {
           name: String(editForm.name ?? ''),
@@ -409,7 +299,7 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
         })
       }
 
-      toast.success(`${recordLabel} updated`)
+      toast.success('Record updated')
       setIsEditOpen(false)
       await load()
     } catch (error) {
@@ -419,320 +309,138 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
     }
   }
 
-  const handleCurrencyDelete = () => {
-    if (!selectedRow || module !== 'currencies') return
+  const handleDelete = (row: UnknownRecord) => {
+    if (!canDelete) return
+    const id = Number(row.id)
+    const name = String(row.name ?? row.code ?? row.date ?? `#${id}`)
+    
+    confirmToast(`Delete ${name}?`, () => {
+      let action: Promise<any>
+      if (module === 'currencies') action = deleteCurrency(id)
+      else if (module === 'countries') action = deleteCountry(id)
+      else if (module === 'banks') action = deleteBank(id)
+      else if (module === 'productCategories') action = deleteProductCategory(id)
+      else return
 
-    const currencyId = Number(selectedRow.id)
-    if (!Number.isFinite(currencyId)) {
-      toast.error('Currency ID is missing')
-      return
-    }
-
-    const currencyName = String(selectedRow.name ?? selectedRow.code ?? `#${currencyId}`)
-    confirmToast(`Delete currency "${currencyName}"?`, () => {
-      setIsDeleting(true)
-      deleteCurrency(currencyId)
-        .then(() => {
-          toast.success('Currency deleted')
-          setSelectedRowId(null)
-          return load()
-        })
-        .catch((error: unknown) => {
-          toast.error(error instanceof Error ? error.message : 'Failed to delete currency')
-        })
-        .finally(() => {
-          setIsDeleting(false)
-        })
+      action.then(() => {
+        toast.success('Deleted successfully')
+        return load()
+      }).catch(err => toast.error(err.message))
     })
   }
 
-  const handleDelete = () => {
-    if (!selectedRow || !canDelete) return
-
-    if (module === 'currencies') {
-      handleCurrencyDelete()
-      return
-    }
-
-    const id = Number(selectedRow.id)
-    if (!Number.isFinite(id)) {
-      toast.error('Record ID is missing')
-      return
-    }
-
-    const recordName = String(selectedRow.name ?? selectedRow.code ?? selectedRow.date ?? `#${id}`)
-    confirmToast(`Delete ${recordLabel.toLowerCase()} "${recordName}"?`, () => {
-      setIsDeleting(true)
-      ;(async () => {
-        try {
-          if (module === 'countries') {
-            await deleteCountry(id)
-          } else if (module === 'banks') {
-            await deleteBank(id)
-          } else if (module === 'holidays') {
-            await deleteHoliday(id)
-          } else if (module === 'productCategories') {
-            await deleteProductCategory(id)
-          }
-          toast.success(`${recordLabel} deleted`)
-          setSelectedRowId(null)
-          await load()
-        } catch (error) {
-          toast.error(error instanceof Error ? error.message : 'Failed to delete')
-        } finally {
-          setIsDeleting(false)
-        }
-      })()
-    })
-  }
-
-  const editEndpointLabel = (() => {
-    if (!selectedRow) return ''
-    if (module === 'currencies') return `/v1/currencies/${String(selectedRow.id ?? '')}`
-    if (module === 'countries') return `/v1/countries/${String(selectedRow.id ?? '')}`
-    if (module === 'banks') return `/v1/banks/${String(selectedRow.id ?? '')}`
-    if (module === 'holidays')
-      return `/v1/holidays/${String(selectedRow.id ?? '')}?date=${String(selectedRow.date ?? '')}`
-    if (module === 'productCategories')
-      return `/v1/product-categories/${String(selectedRow.id ?? '')}`
-    return ''
-  })()
+  const crudColumns: CRUDColumn<UnknownRecord>[] = useMemo(() => [
+    ...config.columns.map(col => ({
+      key: col.key,
+      header: col.label,
+      render: (row: UnknownRecord) => (
+        <span className="text-sm font-bold text-slate-900 dark:text-slate-100">{String(row[col.key] ?? '—')}</span>
+      )
+    }))
+  ], [config])
 
   return (
-    <div className="p-8 space-y-6 animate-in fade-in duration-300">
-      <div>
-        <h2 className="text-xl font-bold text-dark-text">{config.title}</h2>
-        <p className="text-sm text-neutral-text mt-1">{config.subtitle}</p>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="glass-card p-6 border-slate-200 dark:border-slate-800 flex items-start gap-4">
+         <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center shrink-0">
+            <config.icon className="text-emerald-600" size={24} />
+         </div>
+         <div>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{config.title}</h2>
+            <p className="text-sm text-slate-500 font-medium mt-1">{config.subtitle}</p>
+         </div>
       </div>
 
-      <div>
-        <div className="flex flex-wrap items-center gap-2 mb-3">
-          <button
-            type="button"
-            onClick={() => setIsCreateOpen(true)}
-            className="px-4 py-2 rounded border border-[#7E57C2] text-[#7E57C2] text-lg font-medium uppercase tracking-wide hover:bg-[#7E57C2]/5 transition-colors"
-          >
-            + Create
-          </button>
-          <button
-            type="button"
-            onClick={() => void load()}
-            className="px-4 py-2 rounded border border-[#7E57C2] text-[#7E57C2] text-lg font-medium uppercase tracking-wide hover:bg-[#7E57C2]/5 transition-colors"
-          >
-            Refresh
-          </button>
-        </div>
+      <CRUDLayout
+        title=""
+        columns={crudColumns}
+        data={rows}
+        loading={isLoading}
+        pageable={{ page: 1, size: 50, totalElements: rows.length, totalPages: 1 }}
+        onPageChange={() => {}}
+        onSizeChange={() => {}}
+        onRefresh={load}
+        onAdd={() => { setForm({}); setIsCreateOpen(true); }}
+        addButtonText={`Add ${config.title.slice(0, -1)}`}
+        actions={{
+          onEdit: canEdit ? (row) => {
+            setSelectedRow(row)
+            const nextForm: any = {}
+            config.fields.forEach(f => nextForm[f.key] = f.type === 'checkbox' ? Boolean(row[f.key]) : String(row[f.key] ?? ''))
+            setEditForm(nextForm)
+            setIsEditOpen(true)
+          } : undefined,
+          onDelete: canDelete ? handleDelete : undefined
+        }}
+      />
 
-        {!selectedRow ? (
-          <DataTable
-            columns={[
-              ...config.columns.map(col => ({
-                key: col.key,
-                header: col.label,
-                render: (row: UnknownRecord) => String(row[col.key] ?? '-')
-              })),
-              {
-                key: 'actions',
-                header: 'View',
-                align: 'center',
-                render: (row: UnknownRecord, rowIndex: number) => {
-                  const rowId = getRowId(row, rowIndex)
-                  return (
-                    <div className="flex items-center justify-center bg-white">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedRowId(rowId)}
-                        className="w-9 h-9 rounded-lg border transition-colors flex items-center justify-center bg-white text-neutral-text border-neutral-light hover:border-primary/40 hover:text-primary"
-                        title="View details"
-                        aria-label="View details"
-                      >
-                        <span className="material-symbols-outlined text-lg">visibility</span>
-                      </button>
-                    </div>
-                  )
-                }
-              }
-            ]}
-            data={tableRows}
-            rowKey={(row: UnknownRecord) => getRowId(row, 0)}
-            loading={isLoading}
-            emptyMessage="No records found"
-            emptyIcon="filter_alt_off"
-          />
-        ) : (
-          <div className="border border-neutral-light rounded overflow-hidden bg-white">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-light bg-[#7E57C2] text-white">
-              <h3 className="text-lg font-semibold text-white">{config.detailsTitle}</h3>
-              <div className="flex items-center gap-2">
-                {canEdit || canDelete ? (
-                  <>
-                    {canEdit ? (
-                      <button
-                        type="button"
-                        onClick={openEditModal}
-                        className="h-9 px-3 rounded-lg border border-white/30 text-white hover:bg-white/10 transition-colors flex items-center justify-center text-sm font-semibold"
-                        title={`Edit ${recordLabel.toLowerCase()}`}
-                      >
-                        Edit
-                      </button>
-                    ) : null}
-                    {canDelete ? (
-                      <button
-                        type="button"
-                        onClick={() => void handleDelete()}
-                        disabled={isDeleting}
-                        className="h-9 px-3 rounded-lg border border-red-200/60 text-white hover:bg-red-500/20 transition-colors flex items-center justify-center text-sm font-semibold disabled:opacity-60"
-                        title={`Delete ${recordLabel.toLowerCase()}`}
-                      >
-                        {isDeleting ? 'Deleting...' : 'Delete'}
-                      </button>
-                    ) : null}
-                  </>
-                ) : null}
-                <button
-                  type="button"
-                  onClick={() => setSelectedRowId(null)}
-                  className="w-9 h-9 rounded-lg border border-white/30 text-white hover:bg-white/10 transition-colors flex items-center justify-center"
-                  title="Back to table"
-                  aria-label="Back to table"
-                >
-                  <span className="material-symbols-outlined text-lg">table_rows</span>
-                </button>
-              </div>
-            </div>
-            <div className="divide-y divide-neutral-light bg-white">
-              {config.detailFields.map((field) => (
-                <div key={field.key} className="grid grid-cols-2 bg-white">
-                  <div className="px-4 py-3 text-sm font-semibold text-neutral-text border-r border-neutral-light bg-white">
-                    {field.label}
-                  </div>
-                  <div className="px-4 py-3 text-sm text-dark-text bg-white">
-                    {String(selectedRow[field.key] ?? '-')}
-                  </div>
+      <CRUDModal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        title={`New ${config.title.slice(0, -1)}`}
+        onSubmit={handleCreate}
+        isSubmitting={isSubmitting}
+        submitLabel="Create Policy"
+      >
+        <div className="space-y-5">
+          {config.fields.map((field) => (
+            <div key={field.key} className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">{field.label}</label>
+              {field.type === 'checkbox' ? (
+                <div className="mt-1">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(form[field.key])}
+                    onChange={(e) => setForm(p => ({ ...p, [field.key]: e.target.checked }))}
+                    className="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                  />
                 </div>
-              ))}
+              ) : (
+                <input
+                  type={field.type ?? 'text'}
+                  value={String(form[field.key] ?? '')}
+                  onChange={(e) => setForm(p => ({ ...p, [field.key]: e.target.value }))}
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                />
+              )}
             </div>
-          </div>
-        )}
-      </div>
-
-      {isCreateOpen ? (
-        <div className="fixed inset-0 z-[140] flex items-center justify-center p-4">
-          <button
-            type="button"
-            onClick={() => setIsCreateOpen(false)}
-            className="absolute inset-0 bg-slate-900/45"
-            aria-label="Close create modal"
-          />
-          <div className="relative w-full max-w-lg bg-white rounded-2xl border border-neutral-light shadow-2xl p-6">
-            <h3 className="text-lg font-bold text-dark-text">Create {config.title}</h3>
-            <form className="mt-5 space-y-4" onSubmit={(event) => void handleCreate(event)}>
-              {config.fields.map((field) => (
-                <label key={field.key} className="block">
-                  <span className="text-xs font-semibold text-neutral-text">{field.label}</span>
-                  {field.type === 'checkbox' ? (
-                    <label className="mt-2 inline-flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={Boolean(form[field.key])}
-                        onChange={(event) =>
-                          setForm((prev) => ({ ...prev, [field.key]: event.target.checked }))
-                        }
-                      />
-                      <span className="text-sm text-dark-text">Enabled</span>
-                    </label>
-                  ) : (
-                    <input
-                      type={field.type ?? 'text'}
-                      value={String(form[field.key] ?? '')}
-                      onChange={(event) =>
-                        setForm((prev) => ({ ...prev, [field.key]: event.target.value }))
-                      }
-                      className="mt-1 w-full h-11 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    />
-                  )}
-                </label>
-              ))}
-              <div className="flex items-center justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsCreateOpen(false)}
-                  className="px-4 py-2 rounded-lg border border-neutral-light text-sm font-semibold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold disabled:opacity-60"
-                >
-                  {isSubmitting ? 'Submitting...' : 'Submit'}
-                </button>
-              </div>
-            </form>
-          </div>
+          ))}
         </div>
-      ) : null}
+      </CRUDModal>
 
-      {isEditOpen && canEdit && selectedRow ? (
-        <div className="fixed inset-0 z-[140] flex items-center justify-center p-4">
-          <button
-            type="button"
-            onClick={() => setIsEditOpen(false)}
-            className="absolute inset-0 bg-slate-900/45"
-            aria-label="Close edit modal"
-          />
-          <div className="relative w-full max-w-lg bg-white rounded-2xl border border-neutral-light shadow-2xl p-6">
-            <h3 className="text-lg font-bold text-dark-text">
-              Edit {recordLabel}
-            </h3>
-            <form className="mt-5 space-y-4" onSubmit={(event) => void handleUpdate(event)}>
-              {config.fields.map((field) => (
-                <label key={`edit-${field.key}`} className="block">
-                  <span className="text-xs font-semibold text-neutral-text">{field.label}</span>
-                  {field.type === 'checkbox' ? (
-                    <label className="mt-2 inline-flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={Boolean(editForm[field.key])}
-                        onChange={(event) =>
-                          setEditForm((prev) => ({ ...prev, [field.key]: event.target.checked }))
-                        }
-                      />
-                      <span className="text-sm text-dark-text">Enabled</span>
-                    </label>
-                  ) : (
-                    <input
-                      type={field.type ?? 'text'}
-                      value={String(editForm[field.key] ?? '')}
-                      onChange={(event) =>
-                        setEditForm((prev) => ({ ...prev, [field.key]: event.target.value }))
-                      }
-                      className="mt-1 w-full h-11 rounded-lg border border-neutral-light px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    />
-                  )}
-                </label>
-              ))}
-              <div className="flex items-center justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsEditOpen(false)}
-                  className="px-4 py-2 rounded-lg border border-neutral-light text-sm font-semibold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isUpdating}
-                  className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold disabled:opacity-60"
-                >
-                  {isUpdating ? 'Saving...' : 'Save'}
-                </button>
-              </div>
-            </form>
-          </div>
+      <CRUDModal
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        title={`Update ${config.title.slice(0, -1)}`}
+        onSubmit={handleUpdate}
+        isSubmitting={isUpdating}
+        submitLabel="Save Changes"
+      >
+        <div className="space-y-5">
+          {config.fields.map((field) => (
+            <div key={`edit-${field.key}`} className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">{field.label}</label>
+              {field.type === 'checkbox' ? (
+                <div className="mt-1">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(editForm[field.key])}
+                    onChange={(e) => setEditForm(p => ({ ...p, [field.key]: e.target.checked }))}
+                    className="w-5 h-5 rounded border-slate-300 text-emerald-600"
+                  />
+                </div>
+              ) : (
+                <input
+                  type={field.type ?? 'text'}
+                  value={String(editForm[field.key] ?? '')}
+                  onChange={(e) => setEditForm(p => ({ ...p, [field.key]: e.target.value }))}
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                />
+              )}
+            </div>
+          ))}
         </div>
-      ) : null}
+      </CRUDModal>
     </div>
   )
 }

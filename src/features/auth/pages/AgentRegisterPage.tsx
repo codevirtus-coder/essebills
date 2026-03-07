@@ -30,6 +30,7 @@ export function AgentRegisterPage() {
       companyFieldPlaceholder="Shop name"
       includePasswordFields
       registerAction={submitAgentRegistration}
+      bgImage="https://images.unsplash.com/photo-1556155092-490a1ba16284?q=80&w=2000&auto=format&fit=crop"
     />
   )
 }

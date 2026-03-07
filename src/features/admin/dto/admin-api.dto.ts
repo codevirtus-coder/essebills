@@ -18,6 +18,19 @@ export type AdminUserDto = {
   email?: string
   phoneNumber?: string
   active?: boolean
+  enabled?: boolean
+  gender?: string
+  title?: string
+  initials?: string
+  nationality?: string
+  dateOfBirth?: string
+  nationalIdentificationNumber?: string
+  organisationName?: string
+  shopName?: string
+  shopLocation?: string
+  otpEnabled?: boolean
+  authorities?: string[]
+  group?: AdminGroupDto | null
 } & Record<string, unknown>
 
 export type AdminGroupDto = {
@@ -50,6 +63,14 @@ export type AdminProductCategoryDto = {
   active?: boolean
 } & Record<string, unknown>
 
+export type AdminProductFieldDto = {
+  id?: number | string
+  name?: string
+  fieldType?: string
+  required?: boolean
+  sortOrder?: number
+} & Record<string, unknown>
+
 export type AdminCountryDto = {
   id?: number | string
   code?: string
@@ -60,12 +81,64 @@ export type AdminCurrencyDto = {
   id?: number | string
   code?: string
   name?: string
+  description?: string
+  rateToDefault?: number
   active?: boolean
+  defaultCurrency?: boolean
 } & Record<string, unknown>
 
-export type ProductVendorBalanceDto = {
+export type AdminBankDto = {
+  id?: number | string
+  name?: string
+  code?: string
+} & Record<string, unknown>
+
+export type AdminEsebillsAccountDto = {
+  id?: number | string
+  bank?: string
+  accountNumber?: string
+  accountName?: string
+} & Record<string, unknown>
+
+export type AdminPesepayCredentialsDto = {
+  id?: number | string
+  encryptionKey?: string
+  integrationKey?: string
+} & Record<string, unknown>
+
+export type AdminPaymentTransactionDto = {
+  id?: number | string
+  amount?: number
+  totalAmount?: number
+  paymentStatus?: string
+  productName?: string
+  productReferenceNumber?: string
+  customerEmail?: string
+  customerPhoneNumber?: string
+  dateTimeOfTransaction?: string
+  currencyCode?: string
+} & Record<string, unknown>
+
+export type AdminAuthorityDto = {
+  id?: number | string
+  name?: string
+  description?: string
+} & Record<string, unknown>
+
+export type AdminAgentCommissionRateDto = {
+  id?: number | string
   productCode?: string
-  balance?: number
+  commissionRate?: number
+} & Record<string, unknown>
+
+export type AdminWhatsAppSessionDto = {
+  id?: number | string
+  phoneNumber?: string
+  currentFlow?: string
+  currentStep?: string
+  status?: string
+  linkedUserId?: number
+  lastInteractionAt?: string
 } & Record<string, unknown>
 
 export type ForgotPasswordRequestDto = {
@@ -79,9 +152,3 @@ export type ResetPasswordRequestDto = {
   password: string
   confirmPassword?: string
 } & Record<string, unknown>
-
-export type ReportRequestDto = {
-  startDate: string
-  endDate: string
-  format: string
-}

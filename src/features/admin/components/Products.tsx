@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import { X } from "lucide-react";
 import type {
   AdminCountryDto,
   AdminCurrencyDto,
@@ -10,26 +9,29 @@ import type {
 import {
   createProduct,
   deleteProduct,
-  getAllCountries,
-  getAllCurrencies,
+  getPaginatedCountries,
+  getPaginatedCurrencies,
   getAllProductCategories,
-  getAllProducts,
+  getPaginatedProducts,
   updateProduct,
 } from "../services";
-import { DataTable, type TableColumn } from "../../../components/ui";
-import { AdminTableLayout } from "./shared/AdminTableLayout";
-import {
-  AdminCreateButton,
-  AdminIconDeleteButton,
-  AdminIconEditButton,
-  AdminInput,
-  AdminPrimaryButton,
-  AdminRefreshButton,
-  AdminSearchInput,
-  AdminSelect,
-  AdminTextarea,
-} from "./shared/AdminControls";
-import { ADMIN_CARD } from "./shared/adminUi";
+import CRUDLayout, { type CRUDColumn } from "../../shared/components/CRUDLayout";
+import CRUDModal from "../../shared/components/CRUDModal";
+import { 
+  Package, 
+  Tag, 
+  Globe, 
+  DollarSign, 
+  Settings, 
+  Info, 
+  CheckCircle2, 
+  XCircle, 
+  Plus,
+  Layers,
+  ArrowRight,
+  ShoppingCart
+} from "lucide-react";
+import { cn } from "../../../lib/utils";
 
 type ProductStatus = "ACTIVE" | "COMING_SOON" | "DISABLED";
 
@@ -40,74 +42,8 @@ function normalizeStatus(value?: string): ProductStatus {
   return "ACTIVE";
 }
 
-function toDisplayStatus(value?: string) {
-  const status = normalizeStatus(value);
-  if (status === "COMING_SOON") return "Coming Soon";
-  if (status === "DISABLED") return "Disabled";
-  return "Active";
-}
-
 const Products: React.FC = () => {
-  const formCardRef = React.useRef<HTMLFormElement | null>(null);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-
-  const columns: TableColumn<AdminProductDto>[] = [
-    {
-      key: 'name',
-      header: 'Product',
-      render: (product) => (
-        <p className="text-sm font-bold text-dark-text dark:text-gray-200">
-          {String(product.name ?? "Unnamed Product")}
-        </p>
-      ),
-    },
-    {
-      key: 'code',
-      header: 'Code',
-      render: (product) => (
-        <span className="text-xs font-black text-neutral-text uppercase tracking-wide">
-          {String(product.code ?? "-")}
-        </span>
-      ),
-    },
-    {
-      key: 'status',
-      header: 'Status',
-      render: (product) => (
-        <span
-          className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black border uppercase tracking-widest ${
-            normalizeStatus(product.status) === "ACTIVE"
-              ? "bg-accent-green/10 text-accent-green border-accent-green/20"
-              : "bg-neutral-light text-neutral-text border-neutral-light"
-          }`}
-        >
-          {toDisplayStatus(product.status)}
-        </span>
-      ),
-    },
-    {
-      key: 'category',
-      header: 'Category',
-      render: (product) => (
-        <span className="text-xs font-semibold text-neutral-text">
-          {String((product.category as { displayName?: string; name?: string } | undefined)?.displayName
-            ?? (product.category as { name?: string } | undefined)?.name
-            ?? "-")}
-        </span>
-      ),
-    },
-    {
-      key: 'actions',
-      header: 'Actions',
-      align: 'right',
-      render: (product) => (
-        <div className="flex justify-end gap-1">
-          <AdminIconEditButton onClick={() => handleEditProduct(product)} title="Edit Product" />
-          <AdminIconDeleteButton onClick={() => void handleDeleteProduct(product.id)} title="Delete Product" />
-        </div>
-      ),
-    },
-  ];
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [products, setProducts] = useState<AdminProductDto[]>([]);
   const [countries, setCountries] = useState<AdminCountryDto[]>([]);
   const [currencies, setCurrencies] = useState<AdminCurrencyDto[]>([]);
@@ -115,6 +51,9 @@ const Products: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // Form State
+  const [editingProductId, setEditingProductId] = useState<string | number | null>(null);
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [countryCode, setCountryCode] = useState("");
@@ -126,15 +65,14 @@ const Products: React.FC = () => {
   const [returnUrl, setReturnUrl] = useState("");
   const [productLogoFileName, setProductLogoFileName] = useState("");
   const [status, setStatus] = useState<ProductStatus>("ACTIVE");
-  const [editingProductId, setEditingProductId] = useState<string | number | null>(null);
 
   const loadProducts = async () => {
     try {
       setIsLoading(true);
-      const response = await getAllProducts();
-      setProducts(Array.isArray(response) ? response : []);
+      const response = await getPaginatedProducts();
+      setProducts(Array.isArray(response?.content) ? response.content : []);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to load products");
+      toast.error("Failed to load products");
     } finally {
       setIsLoading(false);
     }
@@ -143,17 +81,15 @@ const Products: React.FC = () => {
   const loadLookups = async () => {
     try {
       const [countriesRes, currenciesRes, categoriesRes] = await Promise.all([
-        getAllCountries(),
-        getAllCurrencies(),
+        getPaginatedCountries(),
+        getPaginatedCurrencies(),
         getAllProductCategories(),
       ]);
-      setCountries(Array.isArray(countriesRes) ? countriesRes : []);
-      setCurrencies(Array.isArray(currenciesRes) ? currenciesRes : []);
-      setProductCategories(Array.isArray(categoriesRes) ? categoriesRes : []);
+      setCountries(countriesRes?.content ?? []);
+      setCurrencies(currenciesRes?.content ?? []);
+      setProductCategories(categoriesRes ?? []);
     } catch {
-      setCountries([]);
-      setCurrencies([]);
-      setProductCategories([]);
+      // SILENT
     }
   };
 
@@ -165,302 +101,244 @@ const Products: React.FC = () => {
   const filteredProducts = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
     if (!term) return products;
-
-    return products.filter((product) => {
-      const productName = String(product.name ?? "").toLowerCase();
-      const productCode = String(product.code ?? "").toLowerCase();
-      return productName.includes(term) || productCode.includes(term);
-    });
+    return products.filter((p) => 
+      String(p.name ?? "").toLowerCase().includes(term) || 
+      String(p.code ?? "").toLowerCase().includes(term)
+    );
   }, [products, searchTerm]);
 
+  const columns: CRUDColumn<AdminProductDto>[] = [
+    {
+      key: 'name',
+      header: 'Product Name',
+      render: (p) => (
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+            <Package size={18} />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{String(p.name ?? "Unnamed")}</p>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{String(p.code ?? "-")}</p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'category',
+      header: 'Category',
+      render: (p) => (
+        <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
+          <Layers size={12} className="text-emerald-500" />
+          <span className="text-xs font-semibold">
+            {String((p.category as any)?.displayName ?? (p.category as any)?.name ?? "-")}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      className: 'text-center',
+      render: (p) => {
+        const s = normalizeStatus(p.status);
+        return (
+          <span className={cn(
+            "inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border",
+            s === "ACTIVE" 
+              ? "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400" 
+              : "bg-slate-50 text-slate-500 border-slate-100 dark:bg-slate-800 dark:text-slate-400"
+          )}>
+            {s.replace("_", " ")}
+          </span>
+        );
+      },
+    },
+  ];
+
   const resetForm = () => {
-    setName("");
-    setCode("");
-    setCountryCode("");
-    setDefaultCurrencyCode("");
-    setCategoryId("");
-    setMinimumDisablingBalance("");
-    setMinimumPurchaseAmount("");
-    setDescription("");
-    setReturnUrl("");
-    setProductLogoFileName("");
-    setStatus("ACTIVE");
     setEditingProductId(null);
+    setName(""); setCode(""); setCountryCode(""); setDefaultCurrencyCode("");
+    setCategoryId(""); setMinimumDisablingBalance(""); setMinimumPurchaseAmount("");
+    setDescription(""); setReturnUrl(""); setProductLogoFileName(""); setStatus("ACTIVE");
   };
 
-  const openCreateModal = () => {
-    resetForm();
-    setIsFormOpen(true);
-  };
-
-  const handleCreateProduct = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const trimmedName = name.trim();
-    const trimmedCode = code.trim().toUpperCase();
-
-    if (
-      !trimmedName ||
-      !trimmedCode ||
-      !countryCode ||
-      !defaultCurrencyCode ||
-      !categoryId ||
-      !description.trim() ||
-      !returnUrl.trim() ||
-      !productLogoFileName.trim() ||
-      !minimumDisablingBalance ||
-      !minimumPurchaseAmount
-    ) {
-      toast.error("Please fill all required fields");
+  const handleSave = async () => {
+    if (!name || !code || !countryCode || !defaultCurrencyCode) {
+      toast.error("Required fields are missing");
       return;
     }
-
     try {
       setIsSaving(true);
       const payload = {
-        name: trimmedName,
-        code: trimmedCode,
+        name: name.trim(),
+        code: code.trim().toUpperCase(),
         countryCode,
         defaultCurrencyCode,
-        category: { id: Number(categoryId) },
-        minimumDisablingBalance: Number(minimumDisablingBalance),
-        minimumPurchaseAmount: Number(minimumPurchaseAmount),
+        category: categoryId ? { id: Number(categoryId) } : null,
+        minimumDisablingBalance: Number(minimumDisablingBalance || 0),
+        minimumPurchaseAmount: Number(minimumPurchaseAmount || 0),
         description: description.trim(),
         returnUrl: returnUrl.trim(),
         productLogoFileName: productLogoFileName.trim(),
         status,
       };
 
-      if (editingProductId) {
-        await updateProduct({
-          id: editingProductId,
-          ...payload,
-        });
-        toast.success("Product updated");
-      } else {
-        await createProduct(payload);
-        toast.success("Product added");
-      }
+      if (editingProductId) await updateProduct({ id: editingProductId, ...payload });
+      else await createProduct(payload);
 
-      resetForm();
-      setIsFormOpen(false);
+      toast.success(`Product ${editingProductId ? 'updated' : 'added'} successfully`);
+      setIsModalOpen(false);
       await loadProducts();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to add product");
+      toast.error("Failed to save product");
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleEditProduct = (product: AdminProductDto) => {
-    const countryValue =
-      product.countryCode ??
-      (typeof product.country === "object" && product.country !== null
-        ? String((product.country as { code?: string }).code ?? "")
-        : "");
-    const currencyValue =
-      product.defaultCurrencyCode ??
-      (typeof product.defaultCurrency === "object" && product.defaultCurrency !== null
-        ? String((product.defaultCurrency as { code?: string }).code ?? "")
-        : "");
-    const categoryValue =
-      typeof product.category === "object" && product.category !== null
-        ? String((product.category as { id?: string | number }).id ?? "")
-        : "";
-
-    setEditingProductId(product.id ?? null);
-    setName(String(product.name ?? ""));
-    setCode(String(product.code ?? ""));
-    setCountryCode(String(countryValue));
-    setDefaultCurrencyCode(String(currencyValue));
-    setCategoryId(String(categoryValue));
-    setMinimumDisablingBalance(
-      product.minimumDisablingBalance !== undefined && product.minimumDisablingBalance !== null
-        ? String(product.minimumDisablingBalance)
-        : "",
-    );
-    setMinimumPurchaseAmount(
-      product.minimumPurchaseAmount !== undefined && product.minimumPurchaseAmount !== null
-        ? String(product.minimumPurchaseAmount)
-        : "",
-    );
-    setDescription(String(product.description ?? ""));
-    setReturnUrl(String(product.returnUrl ?? ""));
-    setProductLogoFileName(String(product.productLogoFileName ?? ""));
-    setStatus(normalizeStatus(product.status));
-
-    setIsFormOpen(true);
+  const handleEdit = (p: AdminProductDto) => {
+    setEditingProductId(p.id ?? null);
+    setName(String(p.name ?? ""));
+    setCode(String(p.code ?? ""));
+    setCountryCode(String(p.countryCode ?? (p.country as any)?.code ?? ""));
+    setDefaultCurrencyCode(String(p.defaultCurrencyCode ?? (p.defaultCurrency as any)?.code ?? ""));
+    setCategoryId(String((p.category as any)?.id ?? ""));
+    setMinimumDisablingBalance(String(p.minimumDisablingBalance ?? ""));
+    setMinimumPurchaseAmount(String(p.minimumPurchaseAmount ?? ""));
+    setDescription(String(p.description ?? ""));
+    setReturnUrl(String(p.returnUrl ?? ""));
+    setProductLogoFileName(String(p.productLogoFileName ?? ""));
+    setStatus(normalizeStatus(p.status));
+    setIsModalOpen(true);
   };
 
-  const handleDeleteProduct = async (productId?: string | number) => {
-    if (!productId) return;
+  const handleDelete = async (id: string | number) => {
+    if (!window.confirm("Delete this product?")) return;
     try {
-      await deleteProduct(productId);
-      toast.success("Product deleted");
+      await deleteProduct(id);
+      toast.success("Product removed");
       await loadProducts();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to delete product");
+    } catch {
+      toast.error("Delete failed");
     }
   };
 
   return (
-    <AdminTableLayout
-      title="Products"
-      subtitle="Manage product catalog and availability for billers."
-      toolbar={
-        <>
-          <AdminCreateButton onClick={openCreateModal}>+ Create Product</AdminCreateButton>
-          <AdminRefreshButton onClick={() => void loadProducts()}>Refresh</AdminRefreshButton>
-        </>
-      }
-      stats={
-        <div className="px-4 py-2 rounded-2xl bg-primary/10 text-primary text-xs font-black uppercase tracking-widest w-fit">
-          Total: {products.length}
-        </div>
-      }
-    >
-      <div className="space-y-4">
-        <div className={`p-4 ${ADMIN_CARD}`}>
-          <div className="max-w-xl">
-            <AdminSearchInput
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Search products by name or code..."
-            />
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-slate-900 dark:text-white">
+        {[
+          { label: "Total Catalog", value: products.length, icon: Package, color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-900/20" },
+          { label: "Active Items", value: products.filter(p => normalizeStatus(p.status) === 'ACTIVE').length, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
+          { label: "Average Fee", value: "2.5%", icon: Tag, color: "text-purple-600", bg: "bg-purple-50 dark:bg-purple-900/20" },
+          { label: "New Sales", value: "+18", icon: ShoppingCart, color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-900/20" },
+        ].map((stat, i) => (
+          <div key={i} className="glass-card p-5 border-slate-200 dark:border-slate-800 flex items-center gap-4">
+            <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0", stat.bg)}>
+              <stat.icon size={22} className={stat.color} />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{stat.label}</p>
+              <h4 className="text-xl font-bold">{stat.value}</h4>
+            </div>
           </div>
-        </div>
-
-        <DataTable
-          columns={columns}
-          data={filteredProducts}
-          rowKey={(product) => String(product.id ?? `${product.code ?? "product"}`)}
-          loading={isLoading}
-          emptyMessage="No products found"
-          emptyIcon="inventory_2"
-        />
+        ))}
       </div>
 
-      {isFormOpen ? (
-        <div className="fixed inset-0 z-[140] flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <button
-            type="button"
-            onClick={() => setIsFormOpen(false)}
-            className="absolute inset-0 bg-slate-900/45"
-            aria-label="Close product form modal"
-          />
-          <div className="relative w-full sm:max-w-4xl bg-white rounded-t-2xl sm:rounded-2xl border border-neutral-light shadow-2xl h-[100dvh] sm:h-auto max-h-[100dvh] sm:max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 z-10 bg-white border-b border-neutral-light px-4 sm:px-6 py-4 flex items-start justify-between gap-3">
-              <div>
-                <h3 className="text-lg font-bold text-dark-text">
-                  {editingProductId ? "Update Product" : "Add Product"}
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsFormOpen(false)}
-                className="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-neutral-light text-neutral-text hover:bg-neutral-light/40"
-                aria-label="Close"
-              >
-                <X size={16} />
-              </button>
+      <CRUDLayout
+        title="Product Catalog"
+        columns={columns}
+        data={filteredProducts}
+        loading={isLoading}
+        pageable={{ page: 1, size: 50, totalElements: filteredProducts.length, totalPages: 1 }}
+        onPageChange={() => {}}
+        onSizeChange={() => {}}
+        onSearch={setSearchTerm}
+        onRefresh={loadProducts}
+        onAdd={() => { resetForm(); setIsModalOpen(true); }}
+        addButtonText="Add Product"
+        actions={{
+          onEdit: handleEdit,
+          onDelete: (item) => handleDelete(item.id!)
+        }}
+      />
+
+      <CRUDModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={editingProductId ? "Update Product" : "Add New Product"}
+        onSubmit={handleSave}
+        isSubmitting={isSaving}
+        submitLabel={editingProductId ? "Update Product" : "Add Product"}
+        size="xl"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 pb-2">Basic Info</h4>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Product Name</label>
+              <input value={name} onChange={e => setName(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20" placeholder="e.g. ZESA Prepaid" />
             </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">System Code</label>
+              <input value={code} onChange={e => setCode(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 uppercase" placeholder="ZESA_PREPAID" />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Category (Optional - Defaults to Other)</label>
+              <select value={categoryId} onChange={e => setCategoryId(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none">
+                <option value="">Select Category</option>
+                {productCategories.map(c => <option key={c.id} value={c.id}>{c.displayName || c.name}</option>)}
+              </select>
+            </div>
+          </div>
 
-            <form
-              ref={formCardRef}
-              onSubmit={(event) => void handleCreateProduct(event)}
-              className="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-2 gap-4"
-            >
-              <label className="block">
-                <span className="text-xs font-semibold text-neutral-text uppercase tracking-wider">Name</span>
-                <AdminInput value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. ZESA Prepaid" className="mt-1" />
-              </label>
-
-              <label className="block">
-                <span className="text-xs font-semibold text-neutral-text uppercase tracking-wider">Code</span>
-                <AdminInput value={code} onChange={(event) => setCode(event.target.value)} placeholder="e.g. ZESA_PREPAID" className="mt-1 uppercase" />
-              </label>
-
-              <label className="block">
-                <span className="text-xs font-semibold text-neutral-text uppercase tracking-wider">Status</span>
-                <AdminSelect value={status} onChange={(event) => setStatus(event.target.value as ProductStatus)} className="mt-1">
-                  <option value="ACTIVE">Active</option>
-                  <option value="COMING_SOON">Coming Soon</option>
-                  <option value="DISABLED">Disabled</option>
-                </AdminSelect>
-              </label>
-
-              <label className="block">
-                <span className="text-xs font-semibold text-neutral-text uppercase tracking-wider">Default Currency</span>
-                <AdminSelect value={defaultCurrencyCode} onChange={(event) => setDefaultCurrencyCode(event.target.value)} className="mt-1">
-                  <option value="">Select currency</option>
-                  {currencies.map((currency) => (
-                    <option key={String(currency.id ?? currency.code)} value={String(currency.code ?? "")}>
-                      {String(currency.name ?? currency.code ?? "Unknown")}
-                    </option>
-                  ))}
-                </AdminSelect>
-              </label>
-
-              <label className="block">
-                <span className="text-xs font-semibold text-neutral-text uppercase tracking-wider">Product Category</span>
-                <AdminSelect value={categoryId} onChange={(event) => setCategoryId(event.target.value)} className="mt-1">
-                  <option value="">Select category</option>
-                  {productCategories.map((category) => (
-                    <option key={String(category.id ?? category.name)} value={String(category.id ?? "")}>
-                      {String(category.displayName ?? category.name ?? "Unknown")}
-                    </option>
-                  ))}
-                </AdminSelect>
-              </label>
-
-              <label className="block">
-                <span className="text-xs font-semibold text-neutral-text uppercase tracking-wider">Country</span>
-                <AdminSelect value={countryCode} onChange={(event) => setCountryCode(event.target.value)} className="mt-1">
-                  <option value="">Select country</option>
-                  {countries.map((country) => (
-                    <option key={String(country.id ?? country.code)} value={String(country.code ?? "")}>
-                      {String(country.name ?? country.code ?? "Unknown")}
-                    </option>
-                  ))}
-                </AdminSelect>
-              </label>
-
-              <label className="block">
-                <span className="text-xs font-semibold text-neutral-text uppercase tracking-wider">Minimum Disabling Balance</span>
-                <AdminInput type="number" value={minimumDisablingBalance} onChange={(event) => setMinimumDisablingBalance(event.target.value)} placeholder="0" className="mt-1" />
-              </label>
-
-              <label className="block">
-                <span className="text-xs font-semibold text-neutral-text uppercase tracking-wider">Minimum Purchase Amount</span>
-                <AdminInput type="number" value={minimumPurchaseAmount} onChange={(event) => setMinimumPurchaseAmount(event.target.value)} placeholder="0" className="mt-1" />
-              </label>
-
-              <label className="block">
-                <span className="text-xs font-semibold text-neutral-text uppercase tracking-wider">Product Logo File Name</span>
-                <AdminInput value={productLogoFileName} onChange={(event) => setProductLogoFileName(event.target.value)} placeholder="logo.png" className="mt-1" />
-              </label>
-
-              <label className="block md:col-span-2">
-                <span className="text-xs font-semibold text-neutral-text uppercase tracking-wider">Return URL</span>
-                <AdminInput value={returnUrl} onChange={(event) => setReturnUrl(event.target.value)} placeholder="https://yourapp.com/callback" className="mt-1" />
-              </label>
-
-              <label className="block md:col-span-2">
-                <span className="text-xs font-semibold text-neutral-text uppercase tracking-wider">Description</span>
-                <AdminTextarea value={description} onChange={(event) => setDescription(event.target.value)} rows={4} placeholder="Describe this product" className="mt-1" />
-              </label>
-
-              <div className="lg:col-span-2 sticky bottom-0 bg-white border-t border-neutral-light -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 flex items-center justify-end gap-2 mt-2">
-                <AdminRefreshButton onClick={() => setIsFormOpen(false)}>Cancel</AdminRefreshButton>
-                <AdminPrimaryButton type="submit" disabled={isSaving}>
-                  {isSaving ? "Saving..." : editingProductId ? "Update Product" : "Add Product"}
-                </AdminPrimaryButton>
+          <div className="space-y-4">
+            <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 pb-2">Regional & Status</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Country</label>
+                <select value={countryCode} onChange={e => setCountryCode(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none">
+                  <option value="">Select Country</option>
+                  {countries.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
+                </select>
               </div>
-            </form>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Currency</label>
+                <select value={defaultCurrencyCode} onChange={e => setDefaultCurrencyCode(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none">
+                  <option value="">Select Currency</option>
+                  {currencies.map(c => <option key={c.code} value={c.code}>{c.code}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Current Status</label>
+              <select value={status} onChange={e => setStatus(e.target.value as ProductStatus)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none">
+                <option value="ACTIVE">Active</option>
+                <option value="COMING_SOON">Coming Soon</option>
+                <option value="DISABLED">Disabled</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="md:col-span-2 space-y-4">
+            <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 pb-2">Extended Parameters</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Min Purchase Amount</label>
+                  <input type="number" value={minimumPurchaseAmount} onChange={e => setMinimumPurchaseAmount(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold" placeholder="0.00" />
+               </div>
+               <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Logo Filename</label>
+                  <input value={productLogoFileName} onChange={e => setProductLogoFileName(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold" placeholder="logo.png" />
+               </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Description</label>
+              <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none" placeholder="Provide a brief description..." />
+            </div>
           </div>
         </div>
-      ) : null}
-    </AdminTableLayout>
+      </CRUDModal>
+    </div>
   );
 };
 

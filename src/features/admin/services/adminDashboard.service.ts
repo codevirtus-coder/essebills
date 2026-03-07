@@ -34,13 +34,16 @@ function normalizeTx(tx: PaymentTransaction): DashboardTransaction {
 
 export async function getRecentPaymentTransactions(): Promise<DashboardTransaction[]> {
   const result = await adminJsonFetch<PaymentTransaction[] | { content?: PaymentTransaction[] }>(
-    '/v1/payment-transactions'
+    ADMIN_ENDPOINTS.paymentTransactions.root,
   )
   const raw = Array.isArray(result) ? result : (result?.content ?? [])
   return raw.map(normalizeTx)
 }
 
 export async function getUsersCount(): Promise<number> {
-  const result = await adminJsonFetch<unknown[]>(ADMIN_ENDPOINTS.users.all)
-  return Array.isArray(result) ? result.length : 0
+  const result = await adminJsonFetch<{ totalElements?: number; content?: unknown[] }>(
+    ADMIN_ENDPOINTS.users.root,
+    { filters: { size: 1 } },
+  )
+  return result?.totalElements ?? (Array.isArray(result) ? (result as unknown[]).length : 0)
 }

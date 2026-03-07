@@ -3,10 +3,11 @@ import { Toaster } from 'react-hot-toast'
 import { GoeyToaster } from 'goey-toast'
 import 'goey-toast/styles.css'
 import { router } from './router'
+import { ErrorBoundary } from './features/shared/components/ErrorBoundary'
 
 function App() {
   return (
-    <>
+    <ErrorBoundary>
       <RouterProvider router={router} />
       <Toaster
         position="top-right"
@@ -15,7 +16,7 @@ function App() {
         }}
       />
       <GoeyToaster position="bottom-center" bounce={0.3} />
-    </>
+    </ErrorBoundary>
   )
 }
 

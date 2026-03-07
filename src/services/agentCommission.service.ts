@@ -38,3 +38,13 @@ export async function updateAgentCommissionRate(
     body: payload,
   })
 }
+
+/** Delete a commission rate for an agent */
+export async function deleteAgentCommissionRate(
+  agentId: string | number,
+  id: string | number,
+): Promise<void> {
+  return apiFetch(API_ENDPOINTS.agentCommission.rateById(agentId, id), {
+    method: 'DELETE',
+  })
+}

@@ -7,13 +7,10 @@ import { API_ENDPOINTS } from '../api/endpoints'
 import type {
   Product,
   ProductCategory,
-  ProductField,
   Currency,
   Country,
   Bank,
-  FeeType,
   PageResponse,
-  ProductVendorBalance,
 } from '../types'
 
 // --------------------------------------------------------------------------
@@ -26,6 +23,7 @@ export interface ProductQueryParams extends Record<string, unknown> {
   sort?: string
   order?: 'ASC' | 'DESC'
   search?: string
+  categoryId?: string | number
 }
 
 // --------------------------------------------------------------------------
@@ -38,39 +36,31 @@ export async function getProducts(params?: ProductQueryParams): Promise<PageResp
   return apiFetch<PageResponse<Product>>(`${API_ENDPOINTS.products.root}${query}`)
 }
 
+/** Get products by category */
+export async function getProductsByCategory(
+  categoryId: string | number,
+  params?: Omit<ProductQueryParams, 'categoryId'>
+): Promise<PageResponse<Product>> {
+  const queryParams: ProductQueryParams = {
+    ...(params ?? {}),
+    categoryId,
+  }
+
+  try {
+    // Prefer query-based filtering to align with the main products endpoint contract.
+    return await getProducts(queryParams)
+  } catch {
+    // Fallback for environments that still expose a dedicated by-category route.
+    const query = params ? toQueryString(params) : ''
+    return apiFetch<PageResponse<Product>>(`${API_ENDPOINTS.products.byCategory(categoryId)}${query}`)
+  }
+}
+
 /** Get product by ID */
 export async function getProductById(productId: string | number): Promise<Product> {
   return apiFetch<Product>(API_ENDPOINTS.products.byId(productId))
 }
 
-/** Get all products (non-paginated) */
-export async function getAllProducts(): Promise<Product[]> {
-  return apiFetch<Product[]>(API_ENDPOINTS.products.all)
-}
-
-/** Get active products */
-export async function getActiveProducts(): Promise<Product[]> {
-  return apiFetch<Product[]>(API_ENDPOINTS.products.allActive)
-}
-
-/** Get product vendor balance */
-export async function getProductVendorBalance(productCode: string): Promise<ProductVendorBalance> {
-  return apiFetch<ProductVendorBalance>(
-    `${API_ENDPOINTS.products.vendorBalance}?productCode=${encodeURIComponent(productCode)}`
-  )
-}
-
-/** Get required fields for a product */
-export async function getProductRequiredFields(productCode: string): Promise<ProductField[]> {
-  return apiFetch<ProductField[]>(
-    `${API_ENDPOINTS.products.requiredFields}?productCode=${encodeURIComponent(productCode)}`
-  )
-}
-
-/** Get required fields for a product by ID */
-export async function getProductRequiredFieldsById(productId: string | number): Promise<ProductField[]> {
-  return apiFetch<ProductField[]>(API_ENDPOINTS.products.requiredFieldsById(productId))
-}
 
 /** Create a new product */
 export async function createProduct(product: Partial<Product>): Promise<Product> {
@@ -101,12 +91,7 @@ export async function deleteProduct(productId: string | number): Promise<void> {
 
 /** Get all product categories */
 export async function getProductCategories(): Promise<ProductCategory[]> {
-  return apiFetch<ProductCategory[]>(API_ENDPOINTS.productCategories.all)
-}
-
-/** Get active product categories */
-export async function getActiveProductCategories(): Promise<ProductCategory[]> {
-  return apiFetch<ProductCategory[]>(API_ENDPOINTS.productCategories.allActive)
+  return apiFetch<ProductCategory[]>(API_ENDPOINTS.productCategories.root)
 }
 
 /** Get product category by ID */
@@ -146,14 +131,9 @@ export async function deleteProductCategory(categoryId: string | number): Promis
 // Currencies
 // --------------------------------------------------------------------------
 
-/** Get all currencies */
-export async function getCurrencies(): Promise<Currency[]> {
-  return apiFetch<Currency[]>(API_ENDPOINTS.currencies.all)
-}
-
-/** Get active currencies */
-export async function getActiveCurrencies(): Promise<Currency[]> {
-  return apiFetch<Currency[]>(API_ENDPOINTS.currencies.allActive)
+/** Get paginated currencies */
+export async function getCurrencies(): Promise<PageResponse<Currency>> {
+  return apiFetch<PageResponse<Currency>>(API_ENDPOINTS.currencies.root)
 }
 
 /** Get currency by ID */
@@ -191,9 +171,9 @@ export async function deleteCurrency(currencyId: string | number): Promise<void>
 // Countries
 // --------------------------------------------------------------------------
 
-/** Get all countries */
-export async function getCountries(): Promise<Country[]> {
-  return apiFetch<Country[]>(API_ENDPOINTS.countries.all)
+/** Get paginated countries */
+export async function getCountries(): Promise<PageResponse<Country>> {
+  return apiFetch<PageResponse<Country>>(API_ENDPOINTS.countries.root)
 }
 
 /** Get country by ID */
@@ -231,9 +211,9 @@ export async function deleteCountry(countryId: string | number): Promise<void> {
 // Banks
 // --------------------------------------------------------------------------
 
-/** Get all banks */
-export async function getBanks(): Promise<Bank[]> {
-  return apiFetch<Bank[]>(API_ENDPOINTS.banks.all)
+/** Get paginated banks */
+export async function getBanks(): Promise<PageResponse<Bank>> {
+  return apiFetch<PageResponse<Bank>>(API_ENDPOINTS.banks.root)
 }
 
 /** Get bank by ID */
@@ -264,42 +244,3 @@ export async function deleteBank(bankId: string | number): Promise<void> {
   })
 }
 
-// --------------------------------------------------------------------------
-// Fee Types
-// --------------------------------------------------------------------------
-
-/** Get all fee types */
-export async function getFeeTypes(): Promise<FeeType[]> {
-  return apiFetch<FeeType[]>(API_ENDPOINTS.feeTypes.all)
-}
-
-/** Get fee type by ID */
-export async function getFeeTypeById(feeTypeId: string | number): Promise<FeeType> {
-  return apiFetch<FeeType>(API_ENDPOINTS.feeTypes.byId(feeTypeId))
-}
-
-/** Create fee type */
-export async function createFeeType(feeType: Partial<FeeType>): Promise<FeeType> {
-  return apiFetch<FeeType>(API_ENDPOINTS.feeTypes.root, {
-    method: 'POST',
-    body: feeType,
-  })
-}
-
-/** Update fee type */
-export async function updateFeeType(
-  feeTypeId: string | number,
-  feeType: Partial<FeeType>
-): Promise<FeeType> {
-  return apiFetch<FeeType>(API_ENDPOINTS.feeTypes.byId(feeTypeId), {
-    method: 'PUT',
-    body: feeType,
-  })
-}
-
-/** Delete fee type */
-export async function deleteFeeType(feeTypeId: string | number): Promise<void> {
-  return apiFetch(API_ENDPOINTS.feeTypes.byId(feeTypeId), {
-    method: 'DELETE',
-  })
-}

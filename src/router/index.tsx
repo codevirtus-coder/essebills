@@ -24,6 +24,7 @@ import { AdminDashboardPage } from "../features/admin/pages/AdminDashboardPage";
 import { AgentDashboardPage } from "../features/agent/pages/AgentDashboardPage";
 import { BillerDashboardPage } from "../features/biller/pages/BillerDashboardPage";
 import { CustomerDashboardPage } from "../features/customer/pages/CustomerDashboardPage";
+import { NotificationsPage } from "../pages/NotificationsPage";
 
 const routes: RouteObject[] = [
   {
@@ -87,6 +88,10 @@ const routes: RouteObject[] = [
                 element: <AdminDashboardPage />,
               },
               {
+                path: "notifications",
+                element: <NotificationsPage />,
+              },
+              {
                 path: ":tab",
                 element: <AdminDashboardPage />,
               },
@@ -105,6 +110,10 @@ const routes: RouteObject[] = [
               {
                 index: true,
                 element: <AgentDashboardPage />,
+              },
+              {
+                path: "notifications",
+                element: <NotificationsPage />,
               },
               {
                 path: ":tab",
@@ -127,6 +136,10 @@ const routes: RouteObject[] = [
                 element: <BillerDashboardPage />,
               },
               {
+                path: "notifications",
+                element: <NotificationsPage />,
+              },
+              {
                 path: ":tab",
                 element: <BillerDashboardPage />,
               },
@@ -145,6 +158,10 @@ const routes: RouteObject[] = [
               {
                 index: true,
                 element: <CustomerDashboardPage />,
+              },
+              {
+                path: "notifications",
+                element: <NotificationsPage />,
               },
               {
                 path: ":tab",

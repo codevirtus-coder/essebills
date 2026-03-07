@@ -1,14 +1,32 @@
 import React, { useState } from "react";
+import { motion } from "framer-motion";
 import { DEFAULT_SYSTEM_CONFIG, INITIAL_CATEGORIES } from "../data/constants";
-import { AdminTableLayout } from "./shared/AdminTableLayout";
-import {
-  AdminPrimaryButton,
-  AdminRefreshButton,
-  AdminSearchInput,
-  AdminInput,
-} from "./shared/AdminControls";
-import { ADMIN_CARD, ADMIN_SECTION_LABEL } from "./shared/adminUi";
 import { SystemConfig, ServiceCategory, FAQItem } from "../data/types";
+import { 
+  Settings as SettingsIcon, 
+  Percent, 
+  Layers, 
+  HelpCircle, 
+  ShieldCheck, 
+  Save, 
+  CheckCircle, 
+  Power, 
+  Edit2, 
+  Trash2, 
+  Plus, 
+  Info,
+  Clock,
+  KeyRound,
+  Eye,
+  EyeOff,
+  AlertTriangle,
+  Lock,
+  Smartphone,
+  Globe,
+  Bell
+} from "lucide-react";
+import { cn } from "../../../lib/utils";
+import CRUDLayout from "../../shared/components/CRUDLayout";
 
 interface SettingsProps {
   faqs?: FAQItem[];
@@ -16,32 +34,22 @@ interface SettingsProps {
   initialTab?: string;
 }
 
+type TabId = "commissions" | "categories" | "faqs" | "security";
+
 const Settings: React.FC<SettingsProps> = ({
   faqs = [],
   setFaqs,
   initialTab,
 }) => {
-  const [activeCategory, setActiveCategory] = useState(
-    initialTab || "commissions",
-  );
-  const [config, setConfig] = useState<SystemConfig>(DEFAULT_SYSTEM_CONFIG);
-  const [categories, setCategories] =
-    useState<ServiceCategory[]>(INITIAL_CATEGORIES);
+  const [activeTab, setActiveTab] = useState<TabId>((initialTab as TabId) || "commissions");
+  const [categories, setCategories] = useState<ServiceCategory[]>(INITIAL_CATEGORIES);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Local state for FAQ editing
-  const [editingFaq, setEditingFaq] = useState<Partial<FAQItem> | null>(null);
-
-  // Local state for Category editing
-  const [editingCat, setEditingCat] = useState<Partial<ServiceCategory> | null>(
-    null,
-  );
-
-  const settingTabs = [
-    { id: "commissions", label: "Revenue Split", icon: "account_tree" },
-    { id: "categories", label: "Biller Settings", icon: "grid_view" },
-    { id: "faqs", label: "FAQ Manager", icon: "quiz" },
-    { id: "security", label: "Security & Access", icon: "shield_lock" },
+  const tabs = [
+    { id: "commissions", label: "Revenue Split", icon: Percent },
+    { id: "categories", label: "Biller Settings", icon: Layers },
+    { id: "faqs", label: "FAQ Manager", icon: HelpCircle },
+    { id: "security", label: "Security & Access", icon: ShieldCheck },
   ];
 
   const handleSave = () => {
@@ -52,677 +60,218 @@ const Settings: React.FC<SettingsProps> = ({
     }, 1000);
   };
 
-  const updateSplit = (
-    id: string,
-    field: "agentRate" | "platformRate",
-    val: string,
-  ) => {
+  const updateSplit = (id: string, field: "agentRate" | "platformRate", val: string) => {
     const num = parseFloat(val) || 0;
-    setCategories(
-      categories.map((c) => (c.id === id ? { ...c, [field]: num } : c)),
-    );
+    setCategories(categories.map((c) => (c.id === id ? { ...c, [field]: num } : c)));
   };
 
   const toggleCategoryActive = (id: string) => {
-    setCategories(
-      categories.map((c) =>
-        c.id === id ? { ...c, isActive: !c.isActive } : c,
-      ),
-    );
-  };
-
-  const handleSaveCategory = () => {
-    if (!editingCat) return;
-    if (editingCat.id) {
-      setCategories(
-        categories.map((c) =>
-          c.id === editingCat.id
-            ? ({ ...c, ...editingCat } as ServiceCategory)
-            : c,
-        ),
-      );
-    } else {
-      const newCat: ServiceCategory = {
-        id: `cat_${Date.now()}`,
-        label: editingCat.label || "New Category",
-        icon: editingCat.icon || "star",
-        isActive: true,
-        agentRate: editingCat.agentRate || 2.5,
-        platformRate: editingCat.platformRate || 1.0,
-      };
-      setCategories([...categories, newCat]);
-    }
-    setEditingCat(null);
-  };
-
-  const handleDeleteFaq = (id: string) => {
-    if (setFaqs) {
-      setFaqs(faqs.filter((f) => f.id !== id));
-    }
-  };
-
-  const handleSaveFaq = () => {
-    if (!setFaqs || !editingFaq) return;
-
-    if (editingFaq.id) {
-      // Update existing
-      setFaqs(
-        faqs.map((f) => (f.id === editingFaq.id ? (editingFaq as FAQItem) : f)),
-      );
-    } else {
-      // Add new
-      const newFaq: FAQItem = {
-        id: Math.random().toString(36).substr(2, 9),
-        category: editingFaq.category || "General",
-        question: editingFaq.question || "",
-        answer: editingFaq.answer || "",
-      };
-      setFaqs([...faqs, newFaq]);
-    }
-    setEditingFaq(null);
+    setCategories(categories.map((c) => (c.id === id ? { ...c, isActive: !c.isActive } : c)));
   };
 
   return (
-    <div className="p-8 max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
-      <div className="flex flex-col md:flex-row gap-8 items-start">
-        <div className="w-full md:w-64 shrink-0 space-y-2">
-          <div className="mb-6">
-            <h2 className="text-2xl font-black text-dark-text">
-              Admin Control
-            </h2>
-            <p className="text-[10px] font-black text-primary uppercase tracking-widest">
-              Master Policy Portal
-            </p>
-          </div>
-          {settingTabs.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setActiveCategory(cat.id)}
-              className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl text-sm font-bold transition-all ${
-                activeCategory === cat.id
-                  ? "bg-primary text-white shadow-xl"
-                  : "text-neutral-text hover:bg-neutral-light"
-              }`}
-            >
-              <span className="material-symbols-outlined">{cat.icon}</span>
-              {cat.label}
-            </button>
-          ))}
-        </div>
+    <div className="space-y-8 animate-in fade-in duration-500 pb-20">
+      {/* Header Area */}
+      <div className="glass-card p-8 border-slate-200 dark:border-slate-800 flex items-start gap-6">
+         <div className="w-16 h-16 rounded-[2rem] bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center shrink-0 border border-emerald-100 dark:border-emerald-800/50 shadow-sm">
+            <SettingsIcon className="text-emerald-600 dark:text-emerald-400" size={32} />
+         </div>
+         <div>
+            <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">System Configuration</h2>
+            <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">Master control for revenue split, global categories, and platform policies.</p>
+            <div className="mt-4 flex items-center gap-3">
+               <span className="px-3 py-1 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold rounded-full uppercase tracking-widest border border-emerald-200 dark:border-emerald-800/50">Production Node</span>
+               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                  <Clock size={12} /> Last Sync: 2 mins ago
+               </span>
+            </div>
+         </div>
+      </div>
 
-        <div className="flex-1 space-y-6 min-w-0">
-          {activeCategory === "commissions" && (
-            <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
-              <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-neutral-light space-y-10">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-xl font-black text-dark-text">
-                      Revenue Distribution Rules
-                    </h3>
-                    <p className="text-xs font-bold text-neutral-text uppercase tracking-widest mt-1">
-                      Configure Split per Category
-                    </p>
-                  </div>
-                  <span className="p-4 bg-accent-green/10 text-accent-green rounded-2xl material-symbols-outlined font-black">
-                    payments
-                  </span>
-                </div>
+      {/* Horizontal Navigation */}
+      <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800 pb-px overflow-x-auto scrollbar-hide">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as TabId)}
+            className={cn(
+              "flex items-center gap-2.5 px-8 py-5 text-xs font-bold uppercase tracking-widest transition-all relative whitespace-nowrap",
+              activeTab === tab.id
+                ? "text-emerald-600 dark:text-emerald-400"
+                : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-300"
+            )}
+          >
+            <tab.icon size={18} />
+            {tab.label}
+            {activeTab === tab.id && (
+              <motion.div layoutId="activeSettingsTab" className="absolute bottom-0 left-0 w-full h-0.5 bg-emerald-600 dark:bg-emerald-500 rounded-t-full" />
+            )}
+          </button>
+        ))}
+      </div>
 
-                <div className="grid grid-cols-1 gap-6">
-                  {categories.map((cat) => (
-                    <div
-                      key={cat.id}
-                      className="p-8 bg-[#f8fafc] rounded-3xl border border-transparent hover:border-primary/20 transition-all space-y-6"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-primary shadow-sm border border-neutral-light">
-                            <span className="material-symbols-outlined">
-                              {cat.icon}
-                            </span>
+      {/* Tab Content */}
+      <div className="min-h-[400px]">
+        {activeTab === "commissions" && (
+          <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-300">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+               {categories.map((cat) => (
+                 <div key={cat.id} className="glass-card p-8 border-slate-200 dark:border-slate-800 hover:border-emerald-500/20 transition-all group">
+                    <div className="flex items-center justify-between mb-8">
+                       <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-slate-50 dark:bg-slate-950 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 border border-slate-100 dark:border-slate-800 shadow-sm group-hover:scale-110 transition-transform">
+                             <Layers size={24} />
                           </div>
                           <div>
-                            <h4 className="font-black text-dark-text">
-                              {cat.label}
-                            </h4>
-                            <p className="text-[10px] font-bold text-neutral-text uppercase">
-                              Total Deduction:{" "}
-                              {(cat.agentRate + cat.platformRate).toFixed(1)}%
-                            </p>
+                             <h4 className="font-bold text-slate-900 dark:text-white">{cat.label}</h4>
+                             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Platform ID: {cat.id}</p>
                           </div>
-                        </div>
-                      </div>
+                       </div>
+                       <button 
+                         onClick={() => toggleCategoryActive(cat.id)}
+                         className={cn(
+                           "px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest transition-all border",
+                           cat.isActive 
+                             ? "bg-emerald-50 text-emerald-600 border-emerald-100" 
+                             : "bg-slate-100 text-slate-400 border-slate-200"
+                         )}
+                       >
+                         {cat.isActive ? 'Active' : 'Disabled'}
+                       </button>
+                    </div>
 
-                      <div className="grid grid-cols-2 gap-6">
-                        <div className="space-y-3">
-                          <label className="text-[9px] font-black text-neutral-text uppercase tracking-[0.2em] flex items-center gap-1">
-                            <span className="w-2 h-2 rounded-full bg-accent-green"></span>
-                            Agent Commission (%)
+                    <div className="grid grid-cols-2 gap-6">
+                       <div className="space-y-2">
+                          <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1">
+                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Agent Share (%)
                           </label>
                           <input
                             type="number"
                             step="0.1"
                             value={cat.agentRate}
-                            onChange={(e) =>
-                              updateSplit(cat.id, "agentRate", e.target.value)
-                            }
-                            className="w-full bg-white border-none rounded-2xl py-4 px-6 text-sm font-black focus:ring-2 focus:ring-accent-green/20"
+                            onChange={(e) => updateSplit(cat.id, "agentRate", e.target.value)}
+                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl py-3 px-4 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                           />
-                        </div>
-                        <div className="space-y-3">
-                          <label className="text-[9px] font-black text-neutral-text uppercase tracking-[0.2em] flex items-center gap-1">
-                            <span className="w-2 h-2 rounded-full bg-primary"></span>
-                            Platform Retention (%)
+                       </div>
+                       <div className="space-y-2">
+                          <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1">
+                             <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Retention (%)
                           </label>
                           <input
                             type="number"
                             step="0.1"
                             value={cat.platformRate}
-                            onChange={(e) =>
-                              updateSplit(
-                                cat.id,
-                                "platformRate",
-                                e.target.value,
-                              )
-                            }
-                            className="w-full bg-white border-none rounded-2xl py-4 px-6 text-sm font-black focus:ring-2 focus:ring-primary/20"
+                            onChange={(e) => updateSplit(cat.id, "platformRate", e.target.value)}
+                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl py-3 px-4 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                           />
-                        </div>
-                      </div>
+                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
+                 </div>
+               ))}
             </div>
-          )}
-
-          {activeCategory === "categories" && (
-            <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
-              <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-neutral-light space-y-8">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-xl font-black text-dark-text">
-                      Biller Categories
-                    </h3>
-                    <p className="text-xs font-bold text-neutral-text uppercase tracking-widest mt-1">
-                      Manage public-facing service groupings
-                    </p>
-                  </div>
-                  <button
-                    onClick={() =>
-                      setEditingCat({
-                        label: "",
-                        icon: "star",
-                        isActive: true,
-                        agentRate: 2.5,
-                        platformRate: 1.0,
-                      })
-                    }
-                    className="bg-primary text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
-                  >
-                    <span className="material-symbols-outlined text-sm">
-                      add_circle
-                    </span>
-                    New Biller Category
-                  </button>
-                </div>
-
-                {editingCat && (
-                  <div className="p-8 bg-primary/5 rounded-[2.5rem] border border-primary/20 space-y-6 animate-in zoom-in-95">
-                    <h4 className="text-sm font-black uppercase tracking-widest border-b border-primary/10 pb-4">
-                      {editingCat.id
-                        ? "Modify Biller Category"
-                        : "Create Biller Category"}
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <label className="text-[9px] font-black text-neutral-text uppercase">
-                          Display Label
-                        </label>
-                        <input
-                          type="text"
-                          value={editingCat.label}
-                          onChange={(e) =>
-                            setEditingCat({
-                              ...editingCat,
-                              label: e.target.value,
-                            })
-                          }
-                          className="w-full bg-white border-none rounded-xl p-3 text-sm font-bold"
-                          placeholder="e.g. Health & Wellness"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[9px] font-black text-neutral-text uppercase">
-                          Material Icon Name
-                        </label>
-                        <div className="flex gap-3">
-                          <input
-                            type="text"
-                            value={editingCat.icon}
-                            onChange={(e) =>
-                              setEditingCat({
-                                ...editingCat,
-                                icon: e.target.value,
-                              })
-                            }
-                            className="flex-1 bg-white border-none rounded-xl p-3 text-sm font-bold"
-                            placeholder="e.g. medical_services"
-                          />
-                          <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-primary shadow-sm border border-neutral-light">
-                            <span className="material-symbols-outlined">
-                              {editingCat.icon}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex justify-end gap-3 pt-4">
-                      <button
-                        onClick={() => setEditingCat(null)}
-                        className="px-6 py-3 rounded-xl border border-neutral-light font-black text-[10px] uppercase"
-                      >
-                        Discard
-                      </button>
-                      <button
-                        onClick={handleSaveCategory}
-                        className="px-10 py-3 bg-primary text-white rounded-xl font-black text-[10px] uppercase shadow-lg shadow-primary/20"
-                      >
-                        Commit Changes
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {categories.map((cat) => (
-                    <div
-                      key={cat.id}
-                      className={`p-6 rounded-[2.5rem] border transition-all group flex items-center justify-between ${cat.isActive ? "bg-[#f8fafc] border-transparent hover:border-primary/20" : "bg-neutral-light/20 border-dashed border-neutral-light opacity-60"}`}
-                    >
-                      <div className="flex items-center gap-5">
-                        <div
-                          className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm ${cat.isActive ? "bg-white text-primary" : "bg-neutral-light text-neutral-text"}`}
-                        >
-                          <span className="material-symbols-outlined text-2xl">
-                            {cat.icon}
-                          </span>
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-black text-dark-text tracking-tight uppercase">
-                            {cat.label}
-                          </h4>
-                          <div className="flex items-center gap-2 mt-1">
-                            <div
-                              className={`w-1.5 h-1.5 rounded-full ${cat.isActive ? "bg-accent-green" : "bg-neutral-text/40"}`}
-                            ></div>
-                            <p className="text-[10px] font-bold text-neutral-text uppercase">
-                              {cat.isActive
-                                ? "Live in Marketplace"
-                                : "Hidden Grouping"}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => setEditingCat(cat)}
-                          className="p-3 hover:bg-primary/10 text-primary rounded-xl transition-all"
-                        >
-                          <span className="material-symbols-outlined text-lg">
-                            edit
-                          </span>
-                        </button>
-                        <button
-                          onClick={() => toggleCategoryActive(cat.id)}
-                          className={`p-3 rounded-xl transition-all ${cat.isActive ? "hover:bg-red-50 text-red-500" : "hover:bg-accent-green/10 text-accent-green"}`}
-                          title={cat.isActive ? "Disable" : "Enable"}
-                        >
-                          <span className="material-symbols-outlined text-lg">
-                            {cat.isActive ? "visibility_off" : "visibility"}
-                          </span>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeCategory === "faqs" && (
-            <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
-              <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-neutral-light space-y-8">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-xl font-black text-dark-text">
-                      FAQ Content Manager
-                    </h3>
-                    <p className="text-xs font-bold text-neutral-text uppercase tracking-widest mt-1">
-                      Manage public help center content
-                    </p>
-                  </div>
-                  <button
-                    onClick={() =>
-                      setEditingFaq({
-                        category: "General",
-                        question: "",
-                        answer: "",
-                      })
-                    }
-                    className="bg-primary text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
-                  >
-                    <span className="material-symbols-outlined text-sm">
-                      add
-                    </span>
-                    New FAQ
-                  </button>
-                </div>
-
-                {editingFaq && (
-                  <div className="p-8 bg-primary/5 rounded-[2.5rem] border border-primary/20 space-y-6 animate-in zoom-in-95">
-                    <h4 className="text-sm font-black uppercase tracking-widest border-b border-primary/10 pb-4">
-                      {editingFaq.id ? "Edit FAQ Item" : "New FAQ Item"}
-                    </h4>
-                    <div className="grid grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <label className="text-[9px] font-black text-neutral-text uppercase">
-                          Category
-                        </label>
-                        <select
-                          value={editingFaq.category}
-                          onChange={(e) =>
-                            setEditingFaq({
-                              ...editingFaq,
-                              category: e.target.value,
-                            })
-                          }
-                          className="w-full bg-white border-none rounded-xl p-3 text-sm font-bold"
-                        >
-                          <option value="General">General</option>
-                          <option value="Payments">Payments</option>
-                          <option value="Security">Security</option>
-                          <option value="Agents">Agents</option>
-                        </select>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[9px] font-black text-neutral-text uppercase">
-                          Question
-                        </label>
-                        <input
-                          type="text"
-                          value={editingFaq.question}
-                          onChange={(e) =>
-                            setEditingFaq({
-                              ...editingFaq,
-                              question: e.target.value,
-                            })
-                          }
-                          className="w-full bg-white border-none rounded-xl p-3 text-sm font-bold"
-                          placeholder="Enter the question..."
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[9px] font-black text-neutral-text uppercase">
-                        Answer
-                      </label>
-                      <textarea
-                        value={editingFaq.answer}
-                        onChange={(e) =>
-                          setEditingFaq({
-                            ...editingFaq,
-                            answer: e.target.value,
-                          })
-                        }
-                        className="w-full bg-white border-none rounded-2xl p-4 text-sm font-medium leading-relaxed min-h-[120px]"
-                        placeholder="Enter the detailed answer..."
-                      />
-                    </div>
-                    <div className="flex justify-end gap-3">
-                      <button
-                        onClick={() => setEditingFaq(null)}
-                        className="px-6 py-3 rounded-xl border border-neutral-light font-black text-[10px] uppercase"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={handleSaveFaq}
-                        className="px-10 py-3 bg-primary text-white rounded-xl font-black text-[10px] uppercase shadow-lg shadow-primary/20"
-                      >
-                        Save Item
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 gap-4">
-                  {faqs.map((faq) => (
-                    <div
-                      key={faq.id}
-                      className="p-6 bg-[#f8fafc] rounded-[2rem] border border-transparent hover:border-primary/20 transition-all group flex items-start justify-between"
-                    >
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 bg-primary/10 text-primary text-[8px] font-black rounded uppercase">
-                            {faq.category}
-                          </span>
-                          <h4 className="text-sm font-black text-dark-text tracking-tight">
-                            {faq.question}
-                          </h4>
-                        </div>
-                        <p className="text-xs text-neutral-text line-clamp-1">
-                          {faq.answer}
-                        </p>
-                      </div>
-                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => setEditingFaq(faq)}
-                          className="p-2 hover:bg-primary/10 text-primary rounded-lg"
-                        >
-                          <span className="material-symbols-outlined text-lg">
-                            edit
-                          </span>
-                        </button>
-                        <button
-                          onClick={() => handleDeleteFaq(faq.id)}
-                          className="p-2 hover:bg-red-50 text-red-500 rounded-lg"
-                        >
-                          <span className="material-symbols-outlined text-lg">
-                            delete
-                          </span>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeCategory === "security" && (
-            <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
-              <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-neutral-light space-y-12">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-xl font-black text-dark-text">
-                      Global Security Policies
-                    </h3>
-                    <p className="text-xs font-bold text-neutral-text uppercase tracking-widest mt-1">
-                      Platform-wide access controls & threat prevention
-                    </p>
-                  </div>
-                  <span className="p-4 bg-primary/10 text-primary rounded-2xl material-symbols-outlined font-black">
-                    security
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {/* 2FA Card */}
-                  <div className="p-8 bg-[#f8fafc] rounded-[2.5rem] border border-transparent hover:border-primary/20 transition-all space-y-6 group">
-                    <div className="flex items-center justify-between">
-                      <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-primary shadow-sm border border-neutral-light">
-                        <span className="material-symbols-outlined">
-                          verified_user
-                        </span>
-                      </div>
-                      <button
-                        onClick={() =>
-                          setConfig({
-                            ...config,
-                            allowAgentRegistrations:
-                              !config.allowAgentRegistrations,
-                          })
-                        }
-                        className={`w-12 h-6 rounded-full relative transition-all duration-300 ${config.allowAgentRegistrations ? "bg-accent-green" : "bg-neutral-light"}`}
-                      >
-                        <div
-                          className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${config.allowAgentRegistrations ? "right-1" : "left-1"}`}
-                        ></div>
-                      </button>
-                    </div>
-                    <div>
-                      <h4 className="font-black text-dark-text uppercase tracking-tight">
-                        Mandatory 2FA
-                      </h4>
-                      <p className="text-[10px] font-bold text-neutral-text uppercase leading-relaxed mt-1">
-                        Require all administrative and biller accounts to use
-                        multi-factor verification.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Maintenance Mode Card */}
-                  <div className="p-8 bg-[#f8fafc] rounded-[2.5rem] border border-transparent hover:border-red-500/20 transition-all space-y-6 group">
-                    <div className="flex items-center justify-between">
-                      <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-red-500 shadow-sm border border-neutral-light">
-                        <span className="material-symbols-outlined">
-                          construction
-                        </span>
-                      </div>
-                      <button
-                        onClick={() =>
-                          setConfig({
-                            ...config,
-                            maintenanceMode: !config.maintenanceMode,
-                          })
-                        }
-                        className={`w-12 h-6 rounded-full relative transition-all duration-300 ${config.maintenanceMode ? "bg-red-500" : "bg-neutral-light"}`}
-                      >
-                        <div
-                          className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${config.maintenanceMode ? "right-1" : "left-1"}`}
-                        ></div>
-                      </button>
-                    </div>
-                    <div>
-                      <h4 className="font-black text-dark-text uppercase tracking-tight">
-                        Maintenance Mode
-                      </h4>
-                      <p className="text-[10px] font-bold text-neutral-text uppercase leading-relaxed mt-1">
-                        Temporarily disable public bill payments while
-                        maintaining admin access.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Session Timeout */}
-                  <div className="p-8 bg-[#f8fafc] rounded-[2.5rem] border border-transparent hover:border-primary/20 transition-all space-y-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-primary shadow-sm border border-neutral-light">
-                        <span className="material-symbols-outlined">
-                          timer_off
-                        </span>
-                      </div>
-                      <h4 className="font-black text-dark-text uppercase tracking-tight">
-                        Idle Session Timeout
-                      </h4>
-                    </div>
-                    <div className="space-y-3">
-                      <label className="text-[9px] font-black text-neutral-text uppercase tracking-[0.2em]">
-                        Inactivity Limit (Minutes)
-                      </label>
-                      <select
-                        value={
-                          config.maxDailyTransaction === 5000 ? "15" : "30"
-                        }
-                        className="w-full bg-white border-none rounded-2xl py-4 px-6 text-sm font-black focus:ring-2 focus:ring-primary/20 appearance-none"
-                      >
-                        <option value="15">15 Minutes (High Security)</option>
-                        <option value="30">30 Minutes (Standard)</option>
-                        <option value="60">60 Minutes (Extended)</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Password Policy */}
-                  <div className="p-8 bg-[#f8fafc] rounded-[2.5rem] border border-transparent hover:border-primary/20 transition-all space-y-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-primary shadow-sm border border-neutral-light">
-                        <span className="material-symbols-outlined">
-                          password
-                        </span>
-                      </div>
-                      <h4 className="font-black text-dark-text uppercase tracking-tight">
-                        Complexity Rules
-                      </h4>
-                    </div>
-                    <div className="space-y-3">
-                      <label className="text-[9px] font-black text-neutral-text uppercase tracking-[0.2em]">
-                        Minimum Requirements
-                      </label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="p-3 bg-white rounded-xl border border-neutral-light flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 rounded-full bg-accent-green"></div>
-                          <span className="text-[10px] font-black text-dark-text">
-                            12+ Chars
-                          </span>
-                        </div>
-                        <div className="p-3 bg-white rounded-xl border border-neutral-light flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 rounded-full bg-accent-green"></div>
-                          <span className="text-[10px] font-black text-dark-text">
-                            Special Case
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-8 border-t border-neutral-light">
-                  <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10 flex items-start gap-4">
-                    <span className="material-symbols-outlined text-primary">
-                      info
-                    </span>
-                    <div>
-                      <h5 className="text-[11px] font-black text-dark-text uppercase">
-                        Policy Audit Trail
-                      </h5>
-                      <p className="text-[10px] text-neutral-text font-medium leading-relaxed mt-1">
-                        All changes to global security policies are recorded in
-                        the master audit logs for compliance tracking.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="flex justify-end pt-6">
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="bg-primary text-white px-12 py-5 rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-2xl shadow-primary/20 hover:scale-[1.02] transition-all flex items-center gap-3"
-            >
-              {isSaving ? (
-                <span className="material-symbols-outlined animate-spin">
-                  sync
-                </span>
-              ) : null}
-              {isSaving ? "Deploying Rules..." : "Synchronize Global Settings"}
-            </button>
           </div>
-        </div>
+        )}
+
+        {activeTab === "categories" && (
+          <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-300">
+             <div className="glass-card p-10 border-slate-200 dark:border-slate-800 text-center space-y-6">
+                <div className="w-20 h-20 bg-emerald-50 dark:bg-emerald-900/20 rounded-3xl flex items-center justify-center mx-auto text-emerald-600">
+                   <Layers size={40} />
+                </div>
+                <div className="space-y-2">
+                   <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Biller Policy Manager</h3>
+                   <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto font-medium">Configure global rules for biller onboarding, field validation patterns, and settlement frequencies.</p>
+                </div>
+                <button className="px-10 py-4 bg-emerald-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-emerald-900/20 hover:bg-emerald-700 transition-all">
+                   Manage Dynamic Fields
+                </button>
+             </div>
+          </div>
+        )}
+
+        {activeTab === "faqs" && (
+          <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-300">
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* FAQ List refactored to high-end cards */}
+                <div className="glass-card p-8 border-slate-200 dark:border-slate-800 flex items-start gap-4">
+                   <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-xl flex items-center justify-center shrink-0 text-blue-600">
+                      <HelpCircle size={20} />
+                   </div>
+                   <div className="space-y-2">
+                      <h4 className="font-bold text-slate-900 dark:text-white">General Information</h4>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium">Common questions about the platform, settlement times, and supported currencies.</p>
+                      <button className="text-emerald-600 font-bold uppercase text-[9px] tracking-widest hover:underline pt-2">Edit Questions</button>
+                   </div>
+                </div>
+                <div className="glass-card p-8 border-slate-200 dark:border-slate-800 flex items-start gap-4">
+                   <div className="w-10 h-10 bg-purple-50 dark:bg-purple-900/20 rounded-xl flex items-center justify-center shrink-0 text-purple-600">
+                      <AlertTriangle size={20} />
+                   </div>
+                   <div className="space-y-2">
+                      <h4 className="font-bold text-slate-900 dark:text-white">Troubleshooting</h4>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium">Resolving failed transactions, account locks, and API integration issues.</p>
+                      <button className="text-emerald-600 font-bold uppercase text-[9px] tracking-widest hover:underline pt-2">Edit Questions</button>
+                   </div>
+                </div>
+             </div>
+          </div>
+        )}
+
+        {activeTab === "security" && (
+          <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-300">
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="glass-card p-8 border-slate-200 dark:border-slate-800 space-y-6">
+                   <div className="w-12 h-12 bg-red-50 dark:bg-red-900/20 text-red-600 rounded-2xl flex items-center justify-center">
+                      <Lock size={24} />
+                   </div>
+                   <div>
+                      <h4 className="font-bold text-slate-900 dark:text-white">Two-Factor Auth</h4>
+                      <p className="text-xs text-slate-500 mt-1 font-medium">Mandatory for all admin level accounts.</p>
+                   </div>
+                   <div className="pt-2">
+                      <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[9px] font-bold rounded-full uppercase tracking-widest border border-emerald-100">Enforced</span>
+                   </div>
+                </div>
+                <div className="glass-card p-8 border-slate-200 dark:border-slate-800 space-y-6">
+                   <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-2xl flex items-center justify-center">
+                      <Globe size={24} />
+                   </div>
+                   <div>
+                      <h4 className="font-bold text-slate-900 dark:text-white">IP Whitelisting</h4>
+                      <p className="text-xs text-slate-500 mt-1 font-medium">Restrict API access to specific IP ranges.</p>
+                   </div>
+                   <div className="pt-2">
+                      <button className="text-emerald-600 font-bold uppercase text-[9px] tracking-widest hover:underline">Configure Ranges</button>
+                   </div>
+                </div>
+                <div className="glass-card p-8 border-slate-200 dark:border-slate-800 space-y-6">
+                   <div className="w-12 h-12 bg-amber-50 dark:bg-amber-900/20 text-amber-600 rounded-2xl flex items-center justify-center">
+                      <Bell size={24} />
+                   </div>
+                   <div>
+                      <h4 className="font-bold text-slate-900 dark:text-white">Audit Logs</h4>
+                      <p className="text-xs text-slate-500 mt-1 font-medium">Track every sensitive operation performed.</p>
+                   </div>
+                   <div className="pt-2">
+                      <button className="text-emerald-600 font-bold uppercase text-[9px] tracking-widest hover:underline">View Stream</button>
+                   </div>
+                </div>
+             </div>
+          </div>
+        )}
+      </div>
+
+      {/* Global Action Bar */}
+      <div className="pt-8 border-t border-slate-200 dark:border-slate-800 flex justify-end items-center gap-6">
+         <p className="text-xs text-slate-400 font-medium">Careful: Changes affect the entire platform ecosystem.</p>
+         <button
+           onClick={handleSave}
+           disabled={isSaving}
+           className="bg-emerald-600 text-white px-12 py-5 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-emerald-900/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-3 disabled:opacity-70"
+         >
+           {isSaving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save size={18} />}
+           {isSaving ? "Deploying Rules..." : "Synchronize Global Settings"}
+         </button>
       </div>
     </div>
   );
