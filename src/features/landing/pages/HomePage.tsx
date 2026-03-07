@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import {
@@ -946,6 +946,22 @@ function FinalCTA() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export function HomePage() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const scrollTo = (location.state as { scrollTo?: string } | null)?.scrollTo;
+    if (!scrollTo) return;
+    const attempt = (retries: number) => {
+      const el = document.getElementById(scrollTo);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      } else if (retries > 0) {
+        setTimeout(() => attempt(retries - 1), 150);
+      }
+    };
+    attempt(5);
+  }, [location.state]);
+
   return (
     <div className="bg-white">
       <Hero />

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, NavLink, useLocation } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import esebillsLogo from '../assets/esebills_logo.png';
 import { ROUTE_PATHS, getDashboardRouteByGroup } from '../router/paths';
@@ -16,7 +16,18 @@ export function Navbar() {
   const [authenticated, setAuthenticated] = useState(() => isAuthenticated());
   const [session, setSession] = useState(() => getAuthSession());
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const isHome = pathname === '/';
+
+  function handleHowItWorks(e: React.MouseEvent) {
+    e.preventDefault();
+    setMobileOpen(false);
+    if (isHome) {
+      document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      navigate('/', { state: { scrollTo: 'how-it-works' } });
+    }
+  }
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -41,8 +52,8 @@ export function Navbar() {
     : null;
 
   const navLinks = [
-    { label: 'Services', to: ROUTE_PATHS.services },
-    { label: 'How it Works', to: isHome ? '#how-it-works' : '/#how-it-works' },
+    { label: 'Services', to: ROUTE_PATHS.services, onClick: undefined as ((e: React.MouseEvent) => void) | undefined },
+    { label: 'How it Works', to: '#how-it-works', onClick: handleHowItWorks },
   ];
 
   return (
@@ -59,15 +70,26 @@ export function Navbar() {
         </NavLink>
 
         <nav className="hidden md:flex items-center gap-6 lg:gap-8">
-          {navLinks.map((link) => (
-            <a
-              key={link.label}
-              href={link.to}
-              className="text-sm text-white/85 hover:text-white transition-colors font-medium"
-            >
-              {link.label}
-            </a>
-          ))}
+          {navLinks.map((link) =>
+            link.onClick ? (
+              <a
+                key={link.label}
+                href={link.to}
+                onClick={link.onClick}
+                className="text-sm text-white/85 hover:text-white transition-colors font-medium"
+              >
+                {link.label}
+              </a>
+            ) : (
+              <Link
+                key={link.label}
+                to={link.to}
+                className="text-sm text-white/85 hover:text-white transition-colors font-medium"
+              >
+                {link.label}
+              </Link>
+            )
+          )}
         </nav>
 
         <div className="hidden md:flex items-center gap-3">
@@ -118,16 +140,27 @@ export function Navbar() {
 
       {mobileOpen && (
         <div className="md:hidden bg-slate-900/98 backdrop-blur-md border-t border-white/10 px-4 py-4 space-y-1">
-          {navLinks.map((link) => (
-            <a
-              key={link.label}
-              href={link.to}
-              onClick={() => setMobileOpen(false)}
-              className="block text-sm text-white/85 hover:text-white py-2.5 font-medium transition-colors"
-            >
-              {link.label}
-            </a>
-          ))}
+          {navLinks.map((link) =>
+            link.onClick ? (
+              <a
+                key={link.label}
+                href={link.to}
+                onClick={link.onClick}
+                className="block text-sm text-white/85 hover:text-white py-2.5 font-medium transition-colors"
+              >
+                {link.label}
+              </a>
+            ) : (
+              <Link
+                key={link.label}
+                to={link.to}
+                onClick={() => setMobileOpen(false)}
+                className="block text-sm text-white/85 hover:text-white py-2.5 font-medium transition-colors"
+              >
+                {link.label}
+              </Link>
+            )
+          )}
           <div className="pt-3 flex flex-col gap-2 border-t border-white/10">
             {authenticated ? (
               <>
