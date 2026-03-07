@@ -2278,6 +2278,81 @@
         }
       }
     },
+    "/v1/admin/bank-top-ups/{id}/reject": {
+      "post": {
+        "tags": [
+          "pending-bank-top-up-admin-controller"
+        ],
+        "operationId": "reject",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PendingBankTopUp"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/bank-top-ups/{id}/confirm": {
+      "post": {
+        "tags": [
+          "pending-bank-top-up-admin-controller"
+        ],
+        "operationId": "confirm",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PendingBankTopUp"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/admin/agents/{agentId}/commission-rates": {
       "get": {
         "tags": [
@@ -2943,6 +3018,36 @@
         }
       }
     },
+    "/v1/wallet/bank-top-ups": {
+      "get": {
+        "tags": [
+          "pending-bank-top-up-user-controller"
+        ],
+        "operationId": "myTopUps",
+        "parameters": [
+          {
+            "name": "pageable",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagePendingBankTopUp"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/users/profile": {
       "get": {
         "tags": [
@@ -3366,6 +3471,16 @@
           "ese-bills-accounts-rest-controller"
         ],
         "operationId": "getAllEseBillsAccounts",
+        "parameters": [
+          {
+            "name": "currencyCode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -3782,23 +3897,60 @@
         }
       }
     },
-    "/v1/agent/wallet/balance": {
+    "/v1/agent/wallet/balances": {
       "get": {
         "tags": [
           "agent-wallet-controller"
         ],
-        "operationId": "getBalance",
+        "operationId": "getBalances",
         "responses": {
           "200": {
             "description": "OK",
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "number",
-                    "format": "double"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AgentWalletBalance"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/bank-top-ups": {
+      "get": {
+        "tags": [
+          "pending-bank-top-up-admin-controller"
+        ],
+        "operationId": "list",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageable",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagePendingBankTopUp"
                 }
               }
             }
@@ -5052,6 +5204,10 @@
             "type": "string",
             "minLength": 1
           },
+          "currencyCode": {
+            "type": "string",
+            "minLength": 1
+          },
           "id": {
             "type": "integer",
             "format": "int64"
@@ -5061,6 +5217,7 @@
           "accountName",
           "accountNumber",
           "bank",
+          "currencyCode",
           "id"
         ]
       },
@@ -5100,6 +5257,9 @@
           },
           "accountName": {
             "type": "string"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
           }
         }
       },
@@ -6269,12 +6429,17 @@
           "accountName": {
             "type": "string",
             "minLength": 1
+          },
+          "currencyCode": {
+            "type": "string",
+            "minLength": 1
           }
         },
         "required": [
           "accountName",
           "accountNumber",
-          "bank"
+          "bank",
+          "currencyCode"
         ]
       },
       "CreateCurrencyCommand": {
@@ -6399,6 +6564,73 @@
             "type": "string"
           },
           "refreshToken": {
+            "type": "string"
+          }
+        }
+      },
+      "PendingBankTopUp": {
+        "type": "object",
+        "properties": {
+          "createdBy": {
+            "type": "string"
+          },
+          "lastModifiedBy": {
+            "type": "string"
+          },
+          "lastModifiedDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "deleted": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          },
+          "eseBillsAccount": {
+            "$ref": "#/components/schemas/EseBillsAccount"
+          },
+          "currencyCode": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "depositReference": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "CONFIRMED",
+              "REJECTED"
+            ]
+          },
+          "processedBy": {
+            "$ref": "#/components/schemas/User"
+          },
+          "processedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "rejectionReason": {
+            "type": "string"
+          },
+          "walletCreditRef": {
             "type": "string"
           }
         }
@@ -6999,6 +7231,9 @@
       "PageableObject": {
         "type": "object",
         "properties": {
+          "unpaged": {
+            "type": "boolean"
+          },
           "paged": {
             "type": "boolean"
           },
@@ -7009,9 +7244,6 @@
           "pageSize": {
             "type": "integer",
             "format": "int32"
-          },
-          "unpaged": {
-            "type": "boolean"
           },
           "sort": {
             "$ref": "#/components/schemas/SortObject"
@@ -7025,10 +7257,10 @@
       "SortObject": {
         "type": "object",
         "properties": {
-          "sorted": {
+          "unsorted": {
             "type": "boolean"
           },
-          "unsorted": {
+          "sorted": {
             "type": "boolean"
           },
           "empty": {
@@ -7076,7 +7308,9 @@
               "ACCOUNT_MANAGEMENT",
               "AGENT_WALLET",
               "AGENT_WALLET_TOPUP",
-              "AGENT_REGISTRATION"
+              "AGENT_REGISTRATION",
+              "CUSTOMER_WALLET",
+              "CUSTOMER_WALLET_TOPUP"
             ]
           },
           "currentStep": {
@@ -7202,6 +7436,52 @@
           "sessionId": {
             "type": "integer",
             "format": "int64"
+          }
+        }
+      },
+      "PagePendingBankTopUp": {
+        "type": "object",
+        "properties": {
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PendingBankTopUp"
+            }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "empty": {
+            "type": "boolean"
           }
         }
       },
@@ -7877,10 +8157,6 @@
           },
           "user": {
             "$ref": "#/components/schemas/User"
-          },
-          "balance": {
-            "type": "number",
-            "format": "double"
           }
         }
       },
@@ -7914,6 +8190,9 @@
           },
           "agentWallet": {
             "$ref": "#/components/schemas/AgentWallet"
+          },
+          "currencyCode": {
+            "type": "string"
           },
           "amount": {
             "type": "number",
@@ -7984,6 +8263,46 @@
           },
           "empty": {
             "type": "boolean"
+          }
+        }
+      },
+      "AgentWalletBalance": {
+        "type": "object",
+        "properties": {
+          "createdBy": {
+            "type": "string"
+          },
+          "lastModifiedBy": {
+            "type": "string"
+          },
+          "lastModifiedDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "deleted": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "agentWallet": {
+            "$ref": "#/components/schemas/AgentWallet"
+          },
+          "currencyCode": {
+            "type": "string"
+          },
+          "balance": {
+            "type": "number",
+            "format": "double"
           }
         }
       },

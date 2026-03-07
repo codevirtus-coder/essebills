@@ -7,7 +7,7 @@ import { NotificationsPage } from '../../../pages/NotificationsPage';
 import { getAuthSession, saveAuthSession } from '../../auth/auth.storage';
 import { getCurrentUserProfile } from '../../auth/auth.service';
 import type { UserProfileDto } from '../../auth/dto/auth.dto';
-import { getAgentWalletBalance, getAgentWalletHistory, type WalletHistoryEntry } from '../services/agent.service';
+import { getAgentWalletBalances, getAgentWalletHistory, getMyBankTopUps, type AgentWalletBalance, type AgentWalletTransaction, type PendingBankTopUp } from '../services/agent.service';
 import Logo from '../../../components/ui/Logo';
 import CRUDLayout, { type CRUDColumn, type PageableState } from '../../shared/components/CRUDLayout';
 import CRUDModal from '../../shared/components/CRUDModal';
@@ -32,11 +32,6 @@ const INITIAL_SALES: Sale[] = [
   { id: 'S-10291', biller: 'ZINWA Water', customer: 'ZW-991-001', amount: 35.00, commission: 0.88, time: '1 hour ago', icon: 'water_drop' },
 ];
 
-const FALLBACK_FLOAT_HISTORY: WalletHistoryEntry[] = [
-  { id: 'FL-9920', date: 'May 23, 2024', amount: 500.00, method: 'EcoCash', status: 'Approved' },
-  { id: 'FL-9918', date: 'May 20, 2024', amount: 200.00, method: 'Visa Card', status: 'Approved' },
-  { id: 'FL-9912', date: 'May 15, 2024', amount: 1000.00, method: 'Bank Transfer', status: 'Approved' },
-];
 
 export function AgentDashboardPage() {
   const { tab: urlTab } = useParams();
@@ -63,13 +58,25 @@ export function AgentDashboardPage() {
     setSellStep('select');
   };
 
-  const [floatBalance, setFloatBalance] = useState(452.10);
+  const [walletBalances, setWalletBalances] = useState<AgentWalletBalance[]>([]);
   const [floatLoading, setFloatLoading] = useState(true);
   const [commissionBalance, setCommissionBalance] = useState(24.40);
   const [recentSales, setRecentSales] = useState<Sale[]>(INITIAL_SALES);
 
-  const [floatHistory, setFloatHistory] = useState<WalletHistoryEntry[]>([]);
-  const [loadingFloatHistory, setLoadingFloatHistory] = useState(false);
+  const [floatHistory, setFloatHistory] = useState<AgentWalletTransaction[]>([]);
+  const [floatHistoryTotal, setFloatHistoryTotal] = useState(0);
+  const [floatHistoryPage, setFloatHistoryPage] = useState(0);
+  const [loadingFloatHistory, setLoadingFloatHistory] = useState(true);
+
+  const [topUps, setTopUps] = useState<PendingBankTopUp[]>([]);
+  const [topUpsTotal, setTopUpsTotal] = useState(0);
+  const [loadingTopUps, setLoadingTopUps] = useState(true);
+  const [floatSubTab, setFloatSubTab] = useState<'history' | 'topups'>('history');
+
+  // Derived: primary float balance (first USD balance or first available)
+  const floatBalance = walletBalances.find(b => b.currencyCode === 'USD')?.balance
+    ?? walletBalances[0]?.balance
+    ?? 452.10;
 
   // Sale Logic
   const [sellStep, setSellStep] = useState<'select' | 'details' | 'confirm' | 'success'>('select');
@@ -99,29 +106,40 @@ export function AgentDashboardPage() {
 
   useEffect(() => {
     let mounted = true;
-    getAgentWalletBalance()
-      .then((data) => {
-        if (mounted) setFloatBalance(data.balance ?? 452.10);
-      })
-      .catch(() => { })
+    getAgentWalletBalances()
+      .then((data) => { if (mounted) setWalletBalances(data); })
+      .catch(() => {})
       .finally(() => { if (mounted) setFloatLoading(false); });
     return () => { mounted = false; };
   }, []);
 
   useEffect(() => {
     if (activeTab !== 'float') return;
-    setLoadingFloatHistory(true);
-    getAgentWalletHistory()
-      .then((data) => {
-        setFloatHistory(data.length > 0 ? data : FALLBACK_FLOAT_HISTORY);
+    let mounted = true;
+    getAgentWalletHistory(floatHistoryPage, 20)
+      .then(({ content, totalElements }) => {
+        if (!mounted) return;
+        setFloatHistory(content);
+        setFloatHistoryTotal(totalElements);
       })
-      .catch(() => { 
-        setFloatHistory(FALLBACK_FLOAT_HISTORY); 
+      .catch(() => {})
+      .finally(() => { if (mounted) setLoadingFloatHistory(false); });
+    return () => { mounted = false; };
+  }, [activeTab, floatHistoryPage]);
+
+  useEffect(() => {
+    if (activeTab !== 'float' || floatSubTab !== 'topups') return;
+    let mounted = true;
+    getMyBankTopUps(0, 20)
+      .then(({ content, totalElements }) => {
+        if (!mounted) return;
+        setTopUps(content);
+        setTopUpsTotal(totalElements);
       })
-      .finally(() => {
-        setLoadingFloatHistory(false);
-      });
-  }, [activeTab]);
+      .catch(() => {})
+      .finally(() => { if (mounted) setLoadingTopUps(false); });
+    return () => { mounted = false; };
+  }, [activeTab, floatSubTab]);
 
   const billers = [
     { id: 'zesa', name: 'ZESA Electricity', icon: <Bolt size={24} />, color: 'bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400', catId: 'util' },
@@ -212,35 +230,92 @@ export function AgentDashboardPage() {
     },
   ];
 
-  const floatColumns: CRUDColumn<WalletHistoryEntry>[] = [
+  const floatColumns: CRUDColumn<AgentWalletTransaction>[] = [
     {
       key: 'date',
       header: 'Date',
-      render: (f) => <span className="font-semibold text-slate-900 dark:text-slate-100">{String(f.date ?? '—')}</span>,
+      render: (f) => (
+        <span className="text-xs font-semibold text-slate-500">
+          {f.createdDate ? new Date(f.createdDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+        </span>
+      ),
     },
     {
-      key: 'reference',
-      header: 'Reference',
-      render: (f) => <span className="text-xs font-mono font-bold text-emerald-600">{String(f.id ?? '—')}</span>,
+      key: 'type',
+      header: 'Type',
+      render: (f) => (
+        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+          f.transactionType === 'TOP_UP'
+            ? 'bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-900/20 dark:text-blue-400'
+            : 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400'
+        }`}>
+          {f.transactionType === 'TOP_UP' ? 'Top Up' : 'Commission'}
+        </span>
+      ),
     },
     {
-      key: 'method',
-      header: 'Method',
-      render: (f) => <span className="text-sm text-slate-600 dark:text-slate-400">{String(f.method ?? '—')}</span>,
+      key: 'description',
+      header: 'Description',
+      render: (f) => <span className="text-sm text-slate-600 dark:text-slate-400">{f.description ?? f.productCode ?? '—'}</span>,
     },
     {
       key: 'amount',
       header: 'Amount',
       className: 'text-right',
-      render: (f) => <span className="font-bold text-slate-900 dark:text-slate-100">${(Number(f.amount) || 0).toFixed(2)}</span>,
+      render: (f) => <span className="font-bold text-slate-900 dark:text-slate-100">{f.currencyCode} {(Number(f.amount) || 0).toFixed(2)}</span>,
+    },
+    {
+      key: 'runningBalance',
+      header: 'Balance',
+      className: 'text-right',
+      render: (f) => <span className="font-mono text-sm text-slate-500">{f.currencyCode} {(Number(f.runningBalance) || 0).toFixed(2)}</span>,
+    },
+  ];
+
+  const topUpStatusStyle = (status: string) => {
+    if (status === 'CONFIRMED') return 'bg-emerald-50 text-emerald-600 border-emerald-100';
+    if (status === 'REJECTED') return 'bg-red-50 text-red-600 border-red-100';
+    return 'bg-amber-50 text-amber-600 border-amber-100';
+  };
+
+  const topUpColumns: CRUDColumn<PendingBankTopUp>[] = [
+    {
+      key: 'date',
+      header: 'Date',
+      render: (t) => (
+        <span className="text-xs font-semibold text-slate-500">
+          {t.createdDate ? new Date(t.createdDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+        </span>
+      ),
+    },
+    {
+      key: 'bank',
+      header: 'Bank Account',
+      render: (t) => (
+        <div>
+          <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm">{t.eseBillsAccount?.bank ?? '—'}</p>
+          <p className="text-[10px] font-mono text-slate-400">{t.eseBillsAccount?.accountNumber ?? ''}</p>
+        </div>
+      ),
+    },
+    {
+      key: 'reference',
+      header: 'Deposit Ref',
+      render: (t) => <span className="font-mono text-xs text-emerald-600">{t.depositReference ?? '—'}</span>,
+    },
+    {
+      key: 'amount',
+      header: 'Amount',
+      className: 'text-right',
+      render: (t) => <span className="font-bold text-slate-900 dark:text-slate-100">{t.currencyCode} {(Number(t.amount) || 0).toFixed(2)}</span>,
     },
     {
       key: 'status',
       header: 'Status',
       className: 'text-center',
-      render: (f) => (
-        <span className="px-2.5 py-1 bg-emerald-50 text-emerald-600 border border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50 rounded-full text-[10px] font-bold uppercase tracking-wider">
-          {String(f.status ?? '—')}
+      render: (t) => (
+        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${topUpStatusStyle(t.status)}`}>
+          {t.status}
         </span>
       ),
     },
@@ -490,26 +565,82 @@ export function AgentDashboardPage() {
 
       {activeTab === 'float' && (
         <div className="space-y-8">
-           <div className="bg-slate-900 p-10 rounded-2xl text-white relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-8 shadow-2xl">
-              <div className="relative z-10">
+           {/* Balance cards */}
+           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+             {floatLoading ? (
+               <div className="bg-slate-900 p-8 rounded-2xl col-span-full animate-pulse h-28" />
+             ) : walletBalances.length > 0 ? (
+               walletBalances.map((wb) => (
+                 <div key={wb.id} className="bg-slate-900 p-8 rounded-2xl text-white shadow-xl">
+                   <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">{wb.currencyCode} Float</p>
+                   <h3 className="text-4xl font-bold tracking-tighter">{wb.currencyCode} {(wb.balance || 0).toFixed(2)}</h3>
+                 </div>
+               ))
+             ) : (
+               <div className="bg-slate-900 p-8 rounded-2xl text-white shadow-xl">
                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Available Float</p>
-                 <h3 className="text-6xl font-bold tracking-tighter">${(floatBalance || 0).toFixed(2)}</h3>
-              </div>
-              <button className="bg-emerald-600 px-10 py-5 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-emerald-900/20 hover:bg-emerald-700 transition-all flex items-center gap-2">
-                 <PlusCircle size={18} />
-                 Replenish Float
-              </button>
+                 <h3 className="text-4xl font-bold tracking-tighter">USD {(floatBalance || 0).toFixed(2)}</h3>
+               </div>
+             )}
            </div>
-           <CRUDLayout
-             title="Wallet History"
-             columns={floatColumns}
-             data={floatHistory}
-             loading={loadingFloatHistory}
-             pageable={{ page: 1, size: 10, totalElements: floatHistory.length, totalPages: 1 }}
-             onPageChange={() => {}}
-             onSizeChange={() => {}}
-             onRefresh={() => {}}
-           />
+
+           {/* Sub-tabs */}
+           <div className="flex gap-1 p-1 bg-slate-100 rounded-xl w-fit">
+             {([['history', 'Wallet History'], ['topups', 'My Top-Up Requests']] as const).map(([id, label]) => (
+               <button
+                 key={id}
+                 onClick={() => setFloatSubTab(id)}
+                 className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                   floatSubTab === id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                 }`}
+               >
+                 {label}
+               </button>
+             ))}
+           </div>
+
+           {floatSubTab === 'history' && (
+             <CRUDLayout
+               title="Wallet Transactions"
+               columns={floatColumns}
+               data={floatHistory}
+               loading={loadingFloatHistory}
+               pageable={{
+                 page: floatHistoryPage + 1,
+                 size: 20,
+                 totalElements: floatHistoryTotal,
+                 totalPages: Math.max(1, Math.ceil(floatHistoryTotal / 20)),
+               }}
+               onPageChange={(p) => setFloatHistoryPage(p - 1)}
+               onSizeChange={() => {}}
+               onRefresh={() => {
+                 setLoadingFloatHistory(true);
+                 getAgentWalletHistory(floatHistoryPage, 20)
+                   .then(({ content, totalElements }) => { setFloatHistory(content); setFloatHistoryTotal(totalElements); })
+                   .catch(() => {})
+                   .finally(() => setLoadingFloatHistory(false));
+               }}
+             />
+           )}
+
+           {floatSubTab === 'topups' && (
+             <CRUDLayout
+               title="Bank Top-Up Submissions"
+               columns={topUpColumns}
+               data={topUps}
+               loading={loadingTopUps}
+               pageable={{ page: 1, size: 20, totalElements: topUpsTotal, totalPages: Math.max(1, Math.ceil(topUpsTotal / 20)) }}
+               onPageChange={() => {}}
+               onSizeChange={() => {}}
+               onRefresh={() => {
+                 setLoadingTopUps(true);
+                 getMyBankTopUps(0, 20)
+                   .then(({ content, totalElements }) => { setTopUps(content); setTopUpsTotal(totalElements); })
+                   .catch(() => {})
+                   .finally(() => setLoadingTopUps(false));
+               }}
+             />
+           )}
         </div>
       )}
 

@@ -11,6 +11,7 @@ import AdminParametersPage from '../components/AdminParametersPage'
 import AdminStyledApiModulePage from '../components/AdminStyledApiModulePage'
 import Settings from '../components/Settings'
 import Commissions from '../components/Commissions'
+import BankTopUps from '../components/BankTopUps'
 import Support from '../components/Support'
 import WhatsAppCenter from '../components/WhatsAppCenter'
 import AdminFeaturePlaceholder from '../components/AdminFeaturePlaceholder'
@@ -144,6 +145,8 @@ export function AdminDashboardPage() {
         return <AdminFeaturePlaceholder title="Providers" description="Enable or disable payment providers (ESOLUTIONS, ECONET_DIRECT, NETONE_DIRECT, ZESA_DIRECT)." />
       case 'commissions':
         return <Commissions />
+      case 'bankTopUps':
+        return <BankTopUps />
       case 'settings':
         return <Settings initialTab="commissions" />
       case 'support':

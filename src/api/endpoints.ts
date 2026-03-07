@@ -115,9 +115,21 @@ export const API_ENDPOINTS = {
   // Agent
   agent: {
     wallet: {
-      balance: '/v1/agent/wallet/balance',
+      balances: '/v1/agent/wallet/balances',
       history: '/v1/agent/wallet/history',
     },
+  },
+
+  // Wallet (user-facing top-up submissions)
+  wallet: {
+    bankTopUps: '/v1/wallet/bank-top-ups',
+  },
+
+  // Admin bank top-up management
+  adminBankTopUps: {
+    root: '/v1/admin/bank-top-ups',
+    confirm: (id: string | number) => `/v1/admin/bank-top-ups/${id}/confirm`,
+    reject: (id: string | number) => `/v1/admin/bank-top-ups/${id}/reject`,
   },
 
   // WhatsApp

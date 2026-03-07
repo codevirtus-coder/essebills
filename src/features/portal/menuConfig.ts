@@ -74,6 +74,7 @@ export const ADMIN_MENU: MenuSection[] = [
       { id: 'billers', label: 'Billers', icon: 'corporate_fare' },
       { id: 'agents', label: 'Agents', icon: 'storefront' },
       { id: 'commissions', label: 'Commissions', icon: 'payments' },
+      { id: 'bankTopUps', label: 'Bank Top-Ups', icon: 'account_balance_wallet' },
       { id: 'whatsapp', label: 'WhatsApp Center', icon: 'mark_chat_read' },
     ],
   },
