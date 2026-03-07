@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import esebillsLogo from '../assets/esebills_logo.png';
 import { ROUTE_PATHS, getDashboardRouteByGroup } from '../router/paths';
@@ -15,6 +15,8 @@ export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [authenticated, setAuthenticated] = useState(() => isAuthenticated());
   const [session, setSession] = useState(() => getAuthSession());
+  const { pathname } = useLocation();
+  const isHome = pathname === '/';
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -40,13 +42,15 @@ export function Navbar() {
 
   const navLinks = [
     { label: 'Services', to: ROUTE_PATHS.services },
-    { label: 'How it Works', to: '#how-it-works' },
+    { label: 'How it Works', to: isHome ? '#how-it-works' : '/#how-it-works' },
   ];
 
   return (
     <header
-      className={`sticky top-0 inset-x-0 z-50 transition-all duration-300 ${
-        scrolled ? 'bg-slate-900/90 backdrop-blur-md shadow-lg border-b border-white/10' : 'bg-slate-900'
+      className={`sticky top-0 inset-x-0 z-50 transition-all duration-500 ${
+        scrolled || !isHome
+          ? 'bg-slate-900/95 backdrop-blur-md shadow-xl shadow-slate-950/30 border-b border-white/10'
+          : 'bg-slate-900'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
@@ -59,7 +63,7 @@ export function Navbar() {
             <a
               key={link.label}
               href={link.to}
-              className="text-sm text-white/85 visited:text-white/85 hover:text-white transition-colors font-medium"
+              className="text-sm text-white/85 hover:text-white transition-colors font-medium"
             >
               {link.label}
             </a>
@@ -74,7 +78,7 @@ export function Navbar() {
               )}
               <NavLink
                 to={dashboardRoute}
-                className="text-sm font-medium text-white/85 visited:text-white/85 hover:text-white px-4 py-2 rounded-lg transition-colors"
+                className="text-sm font-medium text-white/85 hover:text-white px-4 py-2 rounded-lg transition-colors"
               >
                 Dashboard
               </NavLink>
@@ -89,7 +93,7 @@ export function Navbar() {
             <>
               <Link
                 to={ROUTE_PATHS.login}
-                className="text-sm font-medium text-white/85 visited:text-white/85 hover:text-white px-4 py-2 rounded-lg transition-colors"
+                className="text-sm font-medium text-white/85 hover:text-white px-4 py-2 rounded-lg transition-colors"
               >
                 Login
               </Link>
@@ -113,13 +117,13 @@ export function Navbar() {
       </div>
 
       {mobileOpen && (
-        <div className="md:hidden bg-slate-900 border-t border-white/10 px-4 py-4 space-y-1">
+        <div className="md:hidden bg-slate-900/98 backdrop-blur-md border-t border-white/10 px-4 py-4 space-y-1">
           {navLinks.map((link) => (
             <a
               key={link.label}
               href={link.to}
               onClick={() => setMobileOpen(false)}
-              className="block text-sm text-white/85 visited:text-white/85 hover:text-white py-2.5 font-medium transition-colors"
+              className="block text-sm text-white/85 hover:text-white py-2.5 font-medium transition-colors"
             >
               {link.label}
             </a>
@@ -129,7 +133,7 @@ export function Navbar() {
               <>
                 <NavLink
                   to={dashboardRoute}
-                  className="text-sm font-medium text-center py-2.5 rounded-lg border border-white/20 text-white/85 visited:text-white/85 hover:text-white transition-colors"
+                  className="text-sm font-medium text-center py-2.5 rounded-lg border border-white/20 text-white/85 hover:text-white transition-colors"
                 >
                   Dashboard
                 </NavLink>
@@ -144,7 +148,7 @@ export function Navbar() {
               <>
                 <Link
                   to={ROUTE_PATHS.login}
-                  className="text-sm font-medium text-center py-2.5 rounded-lg border border-white/20 text-white/85 visited:text-white/85 hover:text-white transition-colors"
+                  className="text-sm font-medium text-center py-2.5 rounded-lg border border-white/20 text-white/85 hover:text-white transition-colors"
                 >
                   Login
                 </Link>

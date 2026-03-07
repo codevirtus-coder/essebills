@@ -46,7 +46,7 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
   return (
     <div className="min-h-screen bg-[#f8fafc] font-sans text-slate-900 overflow-y-auto pb-20">
       {/* ── Navbar ────────────────────────────────────────────────────────── */}
-      <header className="h-20 flex items-center justify-between px-4 sm:px-8 border-b border-slate-200 bg-slate-900 sticky top-0 z-50">
+      <header className="h-20 flex items-center justify-between px-4 sm:px-8 border-b border-slate-200 bg-slate-900 text-white sticky top-0 z-50">
         <Link to={ROUTE_PATHS.home} className="flex items-center">
           <img src={esebillsLogo} alt="EseBills" className="h-10 w-auto brightness-0 invert" />
         </Link>

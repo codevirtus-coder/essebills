@@ -39,3 +39,19 @@ export async function changeUserActivationStatus(status: boolean, userId: string
     filters: { status },
   })
 }
+
+// Spec: PATCH /v1/users/{userId}?enabled=boolean
+export async function changeUserEnabledStatus(enabled: boolean, userId: string | number) {
+  return adminJsonFetch<AdminUserDto>(ADMIN_ENDPOINTS.users.byId(userId), {
+    method: 'PATCH',
+    filters: { enabled },
+  })
+}
+
+// Spec: PATCH /v1/users/{userId} - update multiple fields at once
+export async function patchUser(userId: string | number, updates: Partial<AdminUserDto>) {
+  return adminJsonFetch<AdminUserDto>(ADMIN_ENDPOINTS.users.byId(userId), {
+    method: 'PATCH',
+    body: updates,
+  })
+}

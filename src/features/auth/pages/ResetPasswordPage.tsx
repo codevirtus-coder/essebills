@@ -107,7 +107,7 @@ export function ResetPasswordPage() {
     'block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 sm:text-sm transition-colors';
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-white">
       {/* Left panel */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
         <img
@@ -119,7 +119,7 @@ export function ResetPasswordPage() {
 
         <Link
           to={ROUTE_PATHS.home}
-          className="absolute top-8 left-8 z-20 flex items-center gap-2 text-white/70 hover:text-white transition-colors font-medium text-sm group"
+          className="absolute top-8 left-8 z-20 flex items-center gap-2 text-white/80 hover:text-white transition-colors font-medium text-sm group"
         >
           <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
           Back to Home
@@ -131,7 +131,7 @@ export function ResetPasswordPage() {
             {config.asideTitle}<br />
             <span className="text-emerald-400">{config.asideAccent}</span>
           </h1>
-          <p className="mt-4 text-base text-white/70 max-w-xs leading-relaxed">
+          <p className="mt-4 text-base text-white/80 max-w-xs leading-relaxed">
             {config.asideDescription}
           </p>
         </div>

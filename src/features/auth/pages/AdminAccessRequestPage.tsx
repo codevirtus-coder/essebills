@@ -31,7 +31,7 @@ export const AdminAccessRequestPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex bg-white dark:bg-slate-950">
+    <div className="min-h-screen flex bg-white">
       {/* Left panel */}
       <div className="hidden lg:flex lg:w-5/12 relative overflow-hidden bg-slate-900">
         <motion.img
@@ -44,7 +44,7 @@ export const AdminAccessRequestPage: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent" />
         
         <div className="relative z-10 flex flex-col justify-end p-12 pb-16 w-full">
-          <Link to={ROUTE_PATHS.home} className="absolute top-8 left-8 flex items-center gap-2 text-white/70 hover:text-white transition-colors font-medium text-sm group">
+          <Link to={ROUTE_PATHS.home} className="absolute top-8 left-8 flex items-center gap-2 text-white/80 hover:text-white transition-colors font-medium text-sm group">
             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
             Back to Home
           </Link>
@@ -64,7 +64,7 @@ export const AdminAccessRequestPage: React.FC = () => {
               Platform<br />
               <span className="text-emerald-500">Administration</span>
             </h1>
-            <p className="text-lg text-slate-300 max-w-md leading-relaxed">
+            <p className="text-lg text-white/80 max-w-md leading-relaxed">
               Request administrative access to manage the EseBills ecosystem, partners, and financial parameters.
             </p>
           </motion.div>
@@ -72,7 +72,7 @@ export const AdminAccessRequestPage: React.FC = () => {
       </div>
 
       {/* Right panel */}
-      <div className="flex-1 flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-20 bg-white dark:bg-slate-950 overflow-y-auto">
+      <div className="flex-1 flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-20 bg-white overflow-y-auto">
         <div className="mx-auto w-full max-w-lg">
           <motion.div
             initial={{ opacity: 0, x: 20 }}
@@ -80,13 +80,13 @@ export const AdminAccessRequestPage: React.FC = () => {
             transition={{ duration: 0.6 }}
           >
             <div className="mb-10">
-              <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Request Admin Access</h2>
-              <p className="mt-2 text-slate-500 dark:text-slate-400 font-medium">Submit your details for internal review and verification.</p>
+              <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Request Admin Access</h2>
+              <p className="mt-2 text-slate-500 font-medium">Submit your details for internal review and verification.</p>
             </div>
 
             <form className="space-y-5" onSubmit={handleSubmit}>
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Full Name</label>
+                <label className="text-xs font-bold text-slate-700 ml-1">Full Name</label>
                 <div className="relative group">
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors">
                      <User size={16} />
@@ -96,14 +96,14 @@ export const AdminAccessRequestPage: React.FC = () => {
                     placeholder="e.g. John Doe"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium"
+                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium"
                     required
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Corporate Email</label>
+                <label className="text-xs font-bold text-slate-700 ml-1">Corporate Email</label>
                 <div className="relative group">
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors">
                      <Mail size={16} />
@@ -113,21 +113,21 @@ export const AdminAccessRequestPage: React.FC = () => {
                     placeholder="john@esebills.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium"
+                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium"
                     required
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Reason for Access</label>
+                <label className="text-xs font-bold text-slate-700 ml-1">Reason for Access</label>
                 <div className="relative group">
                   <textarea
                     rows={4}
                     placeholder="Briefly describe your role and why you need administrative access..."
                     value={reason}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium text-sm"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium text-sm"
                     required
                   />
                 </div>
@@ -151,8 +151,8 @@ export const AdminAccessRequestPage: React.FC = () => {
               </div>
             </form>
 
-            <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 text-center">
-               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+            <div className="mt-8 pt-6 border-t border-slate-100 text-center">
+               <p className="text-sm font-medium text-slate-500">
                   Already have access?{" "}
                   <Link to={ROUTE_PATHS.loginAdmin} className="text-emerald-600 font-bold hover:text-emerald-500 transition-colors">
                     Admin Login

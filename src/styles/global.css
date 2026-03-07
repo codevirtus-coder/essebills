@@ -22,11 +22,12 @@ body {
   font-family: var(--app-font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: transparent;
   color: var(--text-color, #111827);
 }
 
-a { color: inherit; text-decoration: none }
+a {
+  text-decoration: none;
+}
 
 /* App level helpers (small set to start) */
 .container { max-width: 1200px; margin: 0 auto; padding-left: 1rem; padding-right: 1rem }

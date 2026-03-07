@@ -92,7 +92,7 @@ export function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-white">
       {/* Left panel */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
         <img
@@ -104,7 +104,7 @@ export function ForgotPasswordPage() {
 
         <Link
           to={ROUTE_PATHS.home}
-          className="absolute top-8 left-8 z-20 flex items-center gap-2 text-white/70 hover:text-white transition-colors font-medium text-sm group"
+          className="absolute top-8 left-8 z-20 flex items-center gap-2 text-white/80 hover:text-white transition-colors font-medium text-sm group"
         >
           <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
           Back to Home
@@ -116,7 +116,7 @@ export function ForgotPasswordPage() {
             {config.asideTitle}<br />
             <span className="text-emerald-400">{config.asideAccent}</span>
           </h1>
-          <p className="mt-4 text-base text-white/70 max-w-xs leading-relaxed">
+          <p className="mt-4 text-base text-white/80 max-w-xs leading-relaxed">
             {config.asideDescription}
           </p>
         </div>

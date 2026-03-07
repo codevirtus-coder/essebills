@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import {
   Zap,
   ShieldCheck,
@@ -20,8 +20,8 @@ import {
   Heart,
   Sparkles,
   ArrowRight,
-  Loader2,
 } from 'lucide-react';
+import { ChatbotWidget } from '../components/ChatbotWidget';
 import bg1 from '../../../assets/bg1.jpg';
 import bg2 from '../../../assets/bg2.jpg';
 import { ROUTE_PATHS } from '../../../router/paths';
@@ -130,73 +130,116 @@ async function fetchProductsAndCategories(categoryId?: string) {
 // ─── Hero ──────────────────────────────────────────────────────────────────────
 
 function Hero() {
+  const ref = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] });
+  const bgY = useTransform(scrollYProgress, [0, 1], ['0%', '30%']);
+  const contentY = useTransform(scrollYProgress, [0, 1], ['0%', '12%']);
+
   return (
-    <section className="relative min-h-[calc(100vh-80px)] flex items-center justify-center overflow-hidden">
-      <div
-        className="absolute inset-0"
-        style={{ backgroundImage: `url(${bg2})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+    <section ref={ref} className="relative h-[calc(100vh-5rem)] flex items-center justify-center overflow-hidden">
+      {/* Parallax background */}
+      <motion.div
+        className="absolute inset-0 scale-110"
+        style={{ backgroundImage: `url(${bg2})`, backgroundSize: 'cover', backgroundPosition: 'center top', y: bgY }}
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-900/90 via-slate-950/80 to-slate-950" />
-      <div className="absolute top-1/4 right-1/4 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-1/4 left-1/4 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none" />
+      {/* Layered overlays — lighter to show photo, darker at bottom */}
+      <div className="absolute inset-0 bg-slate-950/40" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-950/30 to-slate-950/95" />
+      {/* Ambient glows */}
+      <div className="absolute top-1/3 right-1/4 w-[600px] h-[600px] bg-emerald-500/8 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-1/4 left-1/3 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-32 w-full text-center lg:text-left">
+      <motion.div style={{ y: contentY }} className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-6 w-full text-center lg:text-left">
         <div className="max-w-4xl mx-auto lg:mx-0">
-          <div className="inline-flex items-center gap-2 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs sm:text-sm font-bold px-5 py-2 rounded-full mb-8 uppercase tracking-widest backdrop-blur-md animate-pulse">
-            <Zap size={16} />
+          {/* Badge */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+            className="inline-flex items-center gap-2 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs sm:text-sm font-bold px-5 py-2 rounded-full mb-5 uppercase tracking-widest backdrop-blur-sm"
+          >
+            <Zap size={14} />
             Fast &amp; Secure Digital Payments
-          </div>
+          </motion.div>
 
-          <h1 className="text-5xl sm:text-6xl lg:text-8xl font-black text-white leading-[0.95] tracking-tighter mb-8">
+          {/* Headline */}
+          <motion.h1
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: 'easeOut', delay: 0.1 }}
+            className="text-4xl sm:text-5xl lg:text-7xl font-black text-white leading-[0.93] tracking-tighter mb-5"
+          >
             Pay any bill.<br />
             <span className="text-emerald-400">Instantly.</span>
-          </h1>
+          </motion.h1>
 
-          <p className="text-lg sm:text-xl lg:text-2xl text-slate-200 leading-relaxed mb-10 max-w-2xl mx-auto lg:mx-0">
+          {/* Subheading */}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: 'easeOut', delay: 0.2 }}
+            className="text-base sm:text-lg lg:text-xl text-slate-300 leading-relaxed mb-7 max-w-2xl mx-auto lg:mx-0"
+          >
             Say goodbye to long queues and late fees. Pay utility, mobile, education,
             and insurance bills instantly from anywhere, anytime.
-          </p>
+          </motion.p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+          {/* CTAs */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: 'easeOut', delay: 0.3 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
+          >
             <a
               href="#pay-now"
-              className="group inline-flex items-center justify-center gap-2 bg-emerald-600 text-white font-extrabold text-base sm:text-lg px-8 sm:px-10 py-4 sm:py-5 rounded-2xl hover:bg-emerald-500 transition-all shadow-2xl shadow-emerald-900/40 hover:-translate-y-1"
+              className="group inline-flex items-center justify-center gap-2 bg-emerald-500 text-white font-extrabold text-base sm:text-lg px-8 sm:px-10 py-4 sm:py-5 rounded-2xl hover:bg-emerald-400 transition-all shadow-2xl shadow-emerald-900/40 hover:-translate-y-1 active:translate-y-0"
             >
               Pay a Bill Now
               <ChevronRight size={22} className="group-hover:translate-x-1 transition-transform" />
             </a>
             <Link
               to={ROUTE_PATHS.login}
-              className="inline-flex items-center justify-center gap-2 bg-white/5 text-white font-bold text-base sm:text-lg px-8 sm:px-10 py-4 sm:py-5 rounded-2xl border border-white/20 hover:bg-white/10 transition-all backdrop-blur-md"
+              className="inline-flex items-center justify-center gap-2 bg-white/10 text-white font-bold text-base sm:text-lg px-8 sm:px-10 py-4 sm:py-5 rounded-2xl border border-white/25 hover:bg-white/20 hover:border-white/40 transition-all backdrop-blur-sm"
             >
               Sign In
             </Link>
-          </div>
+          </motion.div>
 
-          <div className="mt-14 sm:mt-20 grid grid-cols-2 sm:flex sm:flex-wrap justify-center lg:justify-start gap-x-10 gap-y-5">
+          {/* Trust badges */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.5 }}
+            className="mt-8 sm:mt-10 flex flex-wrap justify-center lg:justify-start gap-x-8 gap-y-3"
+          >
             {[
               { icon: CheckCircle2, label: 'Instant processing' },
               { icon: ShieldCheck, label: 'Bank-level security' },
               { icon: Headphones, label: '24/7 support' },
-              { icon: Sparkles, label: 'Zero hidden fees' }
+              { icon: Sparkles, label: 'Zero hidden fees' },
             ].map(({ icon: Icon, label }) => (
-              <div key={label} className="flex items-center gap-3 text-slate-300 text-sm sm:text-base font-medium">
-                <Icon size={18} className="text-emerald-500 shrink-0" />
+              <div key={label} className="flex items-center gap-2.5 text-slate-300 text-sm font-medium">
+                <Icon size={16} className="text-emerald-400 shrink-0" />
                 {label}
               </div>
             ))}
-          </div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
 
-      <button
+      {/* Scroll indicator */}
+      <motion.button
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.2, duration: 0.8 }}
         onClick={() => document.getElementById('pay-now')?.scrollIntoView({ behavior: 'smooth' })}
-        className="absolute bottom-10 left-1/2 -translate-x-1/2 hidden sm:flex flex-col items-center gap-3 text-slate-300/90 hover:text-white text-xs font-bold transition-all z-20 group"
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 hidden sm:flex flex-col items-center gap-2 text-white/50 hover:text-white/90 text-xs font-medium tracking-[0.25em] uppercase transition-colors z-20 group"
         aria-label="Scroll to services"
       >
-        <div className="w-px h-12 bg-gradient-to-b from-transparent via-emerald-500/50 to-emerald-500 group-hover:h-16 transition-all duration-500" />
-        <span className="uppercase tracking-[0.3em]">Scroll</span>
-      </button>
+        <span>Scroll</span>
+        <div className="w-px h-10 bg-gradient-to-b from-white/40 to-transparent group-hover:h-14 transition-all duration-500" />
+      </motion.button>
     </section>
   );
 }
@@ -204,13 +247,13 @@ function Hero() {
 // ─── Services ─────────────────────────────────────────────────────────────────
 
 function Services() {
-  const [activeCategory, setActiveCategory] = useState('');
+  const [activeCategory, setActiveCategory] = useState('all');
   const [selectedId, setSelectedId] = useState('');
   const [formValues, setFormValues] = useState<Record<string, string>>({});
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['public-products-categories', activeCategory],
-    queryFn: () => fetchProductsAndCategories(activeCategory),
+    queryFn: () => fetchProductsAndCategories(activeCategory === 'all' ? undefined : activeCategory),
     staleTime: 5 * 60 * 1000,
   });
 
@@ -225,7 +268,7 @@ function Services() {
       .filter((c) => c.key.length > 0);
 
     if (fromApi.length > 0) {
-      return fromApi;
+      return [{ key: 'all', label: 'All Services' }, ...fromApi];
     }
 
     const seen = new Set<string>();
@@ -247,7 +290,8 @@ function Services() {
         return true;
       });
 
-    return fromProducts.length > 0 ? fromProducts : [{ key: 'utilities', label: 'Utilities' }];
+    const base = fromProducts.length > 0 ? fromProducts : [{ key: 'utilities', label: 'Utilities' }];
+    return [{ key: 'all', label: 'All Services' }, ...base];
   }, [data?.categories, data?.products]);
 
   // Build biller items from active products
@@ -278,17 +322,8 @@ function Services() {
       }),
   [data?.products]);
 
-  // Sync active category when tabs load
-  useEffect(() => {
-    if (!categoryTabs.length) return;
-    if (!activeCategory || !categoryTabs.some((t) => t.key === activeCategory)) {
-      const nonUtilities = categoryTabs.find((t) => t.label.toLowerCase() !== 'utilities');
-      setActiveCategory(nonUtilities?.key ?? categoryTabs[0].key);
-    }
-  }, [categoryTabs, activeCategory]);
-
   const filtered = useMemo(
-    () => billers.filter((b) => b.categoryKey === activeCategory),
+    () => activeCategory === 'all' ? billers : billers.filter((b) => b.categoryKey === activeCategory),
     [billers, activeCategory],
   );
 
@@ -333,9 +368,6 @@ function Services() {
     window.location.assign(`${ROUTE_PATHS.checkout}?${query.toString()}`);
   };
 
-  const inputClass =
-    'block w-full px-4 py-3.5 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-sm transition-all bg-slate-50/50';
-
   return (
     <section id="pay-now" className="bg-slate-50/50 py-24 sm:py-32 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
@@ -361,11 +393,11 @@ function Services() {
 
         <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-2xl shadow-slate-200/50 overflow-hidden">
           {/* Category tabs */}
-          <div className="flex gap-3 overflow-x-auto px-8 py-8 bg-slate-50/30 border-b border-slate-100 scrollbar-hide">
+          <div className="flex gap-3 overflow-x-auto px-8 py-6 bg-slate-50/30 border-b border-slate-100 scrollbar-hide min-h-[84px] items-center">
             {isLoading ? (
               <div className="flex gap-3">
                 {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="h-12 w-32 bg-slate-200 rounded-2xl animate-pulse" />
+                  <div key={i} className="h-12 w-32 bg-slate-200 rounded-2xl animate-pulse shrink-0" />
                 ))}
               </div>
             ) : (
@@ -379,9 +411,11 @@ function Services() {
                       : 'bg-white border-slate-100 text-slate-500 hover:border-slate-300 hover:text-slate-800'
                   }`}
                 >
-                  <div className={`transition-colors ${activeCategory === tab.key ? 'text-emerald-400' : 'text-slate-400 group-hover:text-slate-600'}`}>
-                    {categoryIcon(tab.label, 'w-5 h-5')}
-                  </div>
+                  {tab.key !== 'all' && (
+                    <div className={`transition-colors ${activeCategory === tab.key ? 'text-emerald-400' : 'text-slate-400 group-hover:text-slate-600'}`}>
+                      {categoryIcon(tab.label, 'w-5 h-5')}
+                    </div>
+                  )}
                   {tab.label}
                 </button>
               ))
@@ -391,7 +425,7 @@ function Services() {
           {/* Content: biller grid + form */}
           <div className="grid lg:grid-cols-[1fr_380px]">
             {/* Biller cards */}
-            <div className="p-8 lg:border-r border-slate-100 bg-white">
+            <div className="p-8 lg:border-r border-slate-100 bg-white min-h-[360px]">
               {isLoading && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                   {[...Array(12)].map((_, i) => (
@@ -531,47 +565,67 @@ function Overview() {
       icon: Zap,
       title: 'Instant Settlement',
       desc: 'Payments processed in real-time. Instant validation and confirmation on every transaction.',
+      stat: '< 3s',
+      statLabel: 'avg. settlement',
     },
     {
       icon: ShieldCheck,
       title: 'Bank-level Security',
       desc: 'Your transactions are encrypted end-to-end with OTP verification on every login.',
+      stat: '256-bit',
+      statLabel: 'encryption',
     },
     {
       icon: Users,
       title: 'Built for Everyone',
       desc: 'Customers, agents, and billers — one unified platform for the full payment ecosystem.',
+      stat: '3',
+      statLabel: 'user types',
     },
   ];
 
   return (
-    <section id="overview" className="bg-white py-16 sm:py-24 px-4 sm:px-6 lg:px-8">
+    <section id="overview" className="bg-white py-20 sm:py-28 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        <div className="max-w-2xl mb-10 sm:mb-16">
-          <p className="text-emerald-600 text-xs sm:text-sm font-bold uppercase tracking-widest mb-3">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          className="max-w-2xl mb-12 sm:mb-20"
+        >
+          <p className="text-emerald-600 text-xs sm:text-sm font-black uppercase tracking-[0.2em] mb-3">
             The Platform
           </p>
-          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 leading-tight mb-4">
+          <h2 className="text-3xl sm:text-5xl font-black text-slate-900 leading-tight mb-4">
             One platform.<br />Pay anything.
           </h2>
-          <p className="text-slate-600 text-base sm:text-lg leading-relaxed">
+          <p className="text-slate-500 text-base sm:text-lg leading-relaxed">
             EseBills connects customers, agents, and businesses on a single payment platform —
             eliminating queues, delays, and cash handling.
           </p>
-        </div>
+        </motion.div>
 
         <div className="grid sm:grid-cols-3 gap-4 sm:gap-6">
-          {cards.map(({ icon: Icon, title, desc }) => (
-            <div
+          {cards.map(({ icon: Icon, title, desc, stat, statLabel }, i) => (
+            <motion.div
               key={title}
-              className="group p-6 sm:p-8 rounded-2xl border border-slate-100 hover:border-emerald-400/40 hover:shadow-md transition-all"
+              initial={{ opacity: 0, y: 32 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.5, ease: 'easeOut', delay: i * 0.1 }}
+              className="group relative p-7 sm:p-8 rounded-3xl border border-slate-100 hover:border-emerald-400/50 hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300 overflow-hidden"
             >
-              <div className="w-11 h-11 rounded-xl bg-emerald-50 flex items-center justify-center mb-4 sm:mb-5 group-hover:bg-emerald-100 transition-colors">
-                <Icon size={20} className="text-emerald-600" />
+              <div className="absolute top-0 right-0 pr-6 pt-5 text-right">
+                <p className="text-2xl font-black text-slate-100 group-hover:text-emerald-100 transition-colors">{stat}</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300 group-hover:text-emerald-200 transition-colors">{statLabel}</p>
               </div>
-              <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-2">{title}</h3>
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center mb-5 group-hover:bg-emerald-100 group-hover:scale-110 transition-all duration-300">
+                <Icon size={22} className="text-emerald-600" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-2">{title}</h3>
               <p className="text-slate-500 text-sm leading-relaxed">{desc}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
@@ -587,13 +641,12 @@ function ForWho() {
       icon: Users,
       title: 'Customers',
       tag: 'Personal',
-      tagColor: 'bg-emerald-50 text-emerald-700',
+      featured: true,
       description:
         'Pay your utility, mobile, education, and insurance bills instantly from one secure dashboard.',
-      perks: ['ZESA, water & council bills', 'Airtime & data bundles', 'School & university fees', 'Full payment history'],
-      cta: 'Create Account',
+      perks: ['Electricity & water bills', 'Airtime & data bundles', 'School & university fees', 'Full payment history'],
+      cta: 'Create Free Account',
       href: ROUTE_PATHS.registerBuyer,
-      ctaStyle: 'bg-slate-900 text-white hover:bg-slate-800',
       loginHref: ROUTE_PATHS.login,
       loginLabel: 'Already a customer? Sign in',
     },
@@ -601,13 +654,12 @@ function ForWho() {
       icon: Store,
       title: 'EseAgents',
       tag: 'Agent Network',
-      tagColor: 'bg-slate-100 text-slate-600',
+      featured: false,
       description:
         'Join our agency network. Sell airtime, electricity tokens, and bill payments to earn commissions.',
       perks: ['Competitive commissions', 'Float management', 'Real-time transaction reports', 'Dedicated agent support'],
       cta: 'Become an Agent',
       href: ROUTE_PATHS.registerAgent,
-      ctaStyle: 'bg-slate-100 text-slate-900 hover:bg-slate-200',
       loginHref: ROUTE_PATHS.loginAgent,
       loginLabel: 'Agent login',
     },
@@ -615,61 +667,86 @@ function ForWho() {
       icon: Building2,
       title: 'Billers',
       tag: 'Corporate',
-      tagColor: 'bg-slate-100 text-slate-600',
+      featured: false,
       description:
         'Digitize your collections. Reach more customers and receive real-time settlements.',
       perks: ['Digital collection portal', 'Real-time settlements', 'Reconciliation reports', 'API integration'],
       cta: 'Register as Biller',
       href: ROUTE_PATHS.registerBiller,
-      ctaStyle: 'bg-slate-100 text-slate-900 hover:bg-slate-200',
       loginHref: ROUTE_PATHS.loginBiller,
       loginLabel: 'Biller login',
     },
   ];
 
   return (
-    <section id="audience" className="bg-white py-16 sm:py-24 px-4 sm:px-6 lg:px-8">
+    <section id="audience" className="bg-slate-50/60 py-20 sm:py-28 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        <div className="max-w-2xl mb-10 sm:mb-16">
-          <p className="text-emerald-600 text-xs sm:text-sm font-bold uppercase tracking-widest mb-3">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          className="max-w-2xl mb-12 sm:mb-16"
+        >
+          <p className="text-emerald-600 text-xs sm:text-sm font-black uppercase tracking-[0.2em] mb-3">
             Who It's For
           </p>
-          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 leading-tight">
+          <h2 className="text-3xl sm:text-5xl font-black text-slate-900 leading-tight">
             Built for the full<br />payment ecosystem.
           </h2>
-        </div>
+        </motion.div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {audiences.map(({ icon: Icon, title, tag, tagColor, description, perks, cta, href, ctaStyle, loginHref, loginLabel }) => (
-            <div key={title} className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-100 flex flex-col">
-              <div className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full mb-5 self-start ${tagColor}`}>
+          {audiences.map(({ icon: Icon, title, tag, featured, description, perks, cta, href, loginHref, loginLabel }, i) => (
+            <motion.div
+              key={title}
+              initial={{ opacity: 0, y: 32 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{ duration: 0.5, ease: 'easeOut', delay: i * 0.1 }}
+              className={`relative rounded-3xl p-7 sm:p-8 flex flex-col overflow-hidden ${
+                featured
+                  ? 'bg-slate-900 border border-slate-800 shadow-2xl shadow-slate-900/20'
+                  : 'bg-white border border-slate-100 hover:border-slate-200 hover:shadow-lg transition-all'
+              }`}
+            >
+              {featured && (
+                <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
+              )}
+              <div className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full mb-5 self-start ${
+                featured ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' : 'bg-slate-100 text-slate-600'
+              }`}>
                 <Icon size={12} />
                 {tag}
               </div>
-              <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-3">{title}</h3>
-              <p className="text-slate-500 text-sm leading-relaxed mb-5">{description}</p>
-              <ul className="space-y-2 mb-6 sm:mb-8 flex-1">
+              <h3 className={`text-lg sm:text-xl font-bold mb-3 ${featured ? 'text-white' : 'text-slate-900'}`}>{title}</h3>
+              <p className={`text-sm leading-relaxed mb-5 ${featured ? 'text-slate-400' : 'text-slate-500'}`}>{description}</p>
+              <ul className="space-y-2.5 mb-7 flex-1">
                 {perks.map((perk) => (
-                  <li key={perk} className="flex items-center gap-2 text-sm text-slate-600">
-                    <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
+                  <li key={perk} className={`flex items-center gap-2.5 text-sm ${featured ? 'text-slate-300' : 'text-slate-600'}`}>
+                    <CheckCircle2 size={14} className={featured ? 'text-emerald-400 shrink-0' : 'text-emerald-500 shrink-0'} />
                     {perk}
                   </li>
                 ))}
               </ul>
               <Link
                 to={href}
-                className={`inline-flex items-center justify-center gap-2 font-semibold text-sm px-5 py-3 rounded-xl transition-colors ${ctaStyle}`}
+                className={`inline-flex items-center justify-center gap-2 font-bold text-sm px-5 py-3.5 rounded-2xl transition-all ${
+                  featured
+                    ? 'bg-emerald-500 text-white hover:bg-emerald-400 shadow-lg shadow-emerald-900/30'
+                    : 'bg-slate-900 text-white hover:bg-slate-800'
+                }`}
               >
                 {cta}
                 <ChevronRight size={16} />
               </Link>
               <Link
                 to={loginHref}
-                className="mt-3 text-center text-xs text-slate-400 hover:text-slate-600 transition-colors font-medium"
+                className={`mt-3 text-center text-xs transition-colors font-medium ${featured ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600'}`}
               >
                 {loginLabel}
               </Link>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
@@ -728,11 +805,16 @@ function Features() {
 // ─── Banner Break ─────────────────────────────────────────────────────────────
 
 function BannerBreak() {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
+  const bgY = useTransform(scrollYProgress, [0, 1], ['-15%', '15%']);
+
   return (
-    <div
-      className="relative h-52 sm:h-64 overflow-hidden"
-      style={{ backgroundImage: `url(${bg1})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
-    >
+    <div ref={ref} className="relative h-52 sm:h-64 overflow-hidden">
+      <motion.div
+        className="absolute inset-0 scale-125"
+        style={{ backgroundImage: `url(${bg1})`, backgroundSize: 'cover', backgroundPosition: 'center', y: bgY }}
+      />
       <div className="absolute inset-0 bg-slate-950/70" />
       <div className="relative z-10 h-full flex items-center justify-center px-4 sm:px-6">
         <p className="text-white text-xl sm:text-2xl lg:text-4xl font-bold text-center max-w-3xl leading-tight">
@@ -860,8 +942,6 @@ function FinalCTA() {
     </section>
   );
 }
-
-import { ChatbotWidget } from '../components/ChatbotWidget';
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 

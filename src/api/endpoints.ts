@@ -123,6 +123,10 @@ export const API_ENDPOINTS = {
   // WhatsApp
   whatsapp: {
     webhook: '/v1/whatsapp/webhook',
+    simulator: {
+      inbound: '/v1/whatsapp/simulator/inbound',
+      responses: '/v1/whatsapp/simulator/responses',
+    },
     sessions: {
       root: '/v1/whatsapp/sessions',
     },
