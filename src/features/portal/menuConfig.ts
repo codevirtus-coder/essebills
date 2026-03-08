@@ -25,6 +25,13 @@ export const ADMIN_MENU: MenuSection[] = [
     ],
   },
   {
+    id: 'donations',
+    title: 'Donations',
+    items: [
+      { id: 'donations', label: 'Donations', icon: 'favorite' },
+    ],
+  },
+  {
     id: 'catalog',
     title: 'Product Catalog',
     items: [
@@ -112,6 +119,7 @@ export const BILLER_MENU: MenuSection[] = [
       { id: 'overview', label: 'Dashboard', icon: 'home' },
       { id: 'collections', label: 'Collections', icon: 'payments' },
       { id: 'settlements', label: 'Settlements', icon: 'account_balance' },
+      { id: 'donations', label: 'Donations', icon: 'favorite' },
       { id: 'notifications', label: 'Notifications', icon: 'notifications' },
       { id: 'settings', label: 'Settings', icon: 'settings' },
       { id: 'profile', label: 'Profile', icon: 'person' },

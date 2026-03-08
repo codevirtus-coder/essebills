@@ -11,6 +11,7 @@ import type { PaymentTransaction } from "../../../types";
 import CRUDLayout, { type CRUDColumn, type PageableState } from "../../shared/components/CRUDLayout";
 import { CreditCard, History, Settings, UserCircle, TrendingUp, TrendingDown, ArrowUpRight, Users, CheckCircle } from "lucide-react";
 import { cn } from "../../../lib/utils";
+import BillerDonationsPage from "./BillerDonationsPage";
 import "../styles/biller-portal.css";
 
 const MOCK_SETTLEMENTS = [
@@ -415,6 +416,7 @@ export function BillerDashboardPage() {
       {activeTab === "overview" && renderOverview()}
       {activeTab === "collections" && renderCollections()}
       {activeTab === "settlements" && renderSettlements()}
+      {activeTab === "donations" && <BillerDonationsPage />}
       {activeTab === "notifications" && <NotificationsPage />}
       {activeTab === "settings" && renderSettings()}
       {activeTab === "profile" && (

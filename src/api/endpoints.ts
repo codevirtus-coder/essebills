@@ -354,6 +354,29 @@ export const API_ENDPOINTS = {
     markRead: (id: string | number) => `/v1/notifications/${id}/read`,
     markAllRead: '/v1/notifications/read-all',
   },
+
+  // Donations
+  donations: {
+    root: '/v1/donations',
+    byId: (id: string | number) => `/v1/donations/${id}`,
+    byCampaign: (campaignId: string | number) => `/v1/donations/by-campaign/${campaignId}`,
+    byDonor: (donorId: string | number) => `/v1/donations/by-donor/${donorId}`,
+    process: '/v1/donations/process',
+    refund: (id: string | number) => `/v1/donations/${id}/refund`,
+  },
+
+  // Donation Campaigns
+  donationCampaigns: {
+    root: '/v1/donation-campaigns',
+    byId: (id: string | number) => `/v1/donation-campaigns/${id}`,
+    updateStatus: (id: string | number) => `/v1/donation-campaigns/${id}/status`,
+  },
+
+  // Donation Categories/Charities
+  donationCategories: {
+    root: '/v1/donation-categories',
+    byId: (id: string | number) => `/v1/donation-categories/${id}`,
+  },
 } as const
 
 export type ApiEndpoints = typeof API_ENDPOINTS

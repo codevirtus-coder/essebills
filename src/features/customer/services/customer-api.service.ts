@@ -20,7 +20,8 @@ export interface CustomerProfile {
 }
 
 export interface CustomerTransaction {
-  id: string | number
+  id: number
+  uid?: string
   transactionDate: string
   amount: number
   productName: string

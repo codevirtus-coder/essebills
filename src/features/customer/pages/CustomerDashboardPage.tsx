@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import UserProfile from '../../admin/components/UserProfile';
-import { getPayments } from '../../../services/payments.service';
-import type { PaymentTransaction } from '../../../types';
+import { getCustomerTransactions, type CustomerTransaction } from '../services/customer-api.service';
 import { NotificationsPage } from '../../../pages/NotificationsPage';
 import CRUDLayout, { type CRUDColumn, type PageableState } from '../../shared/components/CRUDLayout';
 
@@ -12,7 +11,7 @@ export function CustomerDashboardPage() {
 
   const activeTab = urlTab || searchParams.get('tab') || 'overview';
 
-  const [transactions, setTransactions] = useState<PaymentTransaction[]>([]);
+  const [transactions, setTransactions] = useState<CustomerTransaction[]>([]);
   const [loading, setLoading] = useState(false);
   const [pageable, setPageable] = useState<PageableState>({
     page: 1,
@@ -21,13 +20,13 @@ export function CustomerDashboardPage() {
     totalPages: 0,
   });
 
-  const columns: CRUDColumn<PaymentTransaction>[] = [
+  const columns: CRUDColumn<CustomerTransaction>[] = [
     {
       key: 'date',
       header: 'Date',
       render: (tx) => {
-        const date = tx.dateTimeOfTransaction
-          ? new Date(tx.dateTimeOfTransaction).toLocaleDateString()
+        const date = tx.transactionDate
+          ? new Date(tx.transactionDate).toLocaleDateString()
           : '—';
         return <span className="font-semibold text-slate-900 dark:text-slate-100">{date}</span>;
       },
@@ -36,7 +35,7 @@ export function CustomerDashboardPage() {
       key: 'reference',
       header: 'Reference',
       render: (tx) => {
-        const ref = tx.productReferenceNumber ?? tx.pesepayReferenceNumber ?? String(tx.id);
+        const ref = tx.productReference ?? String(tx.id);
         return <span className="text-xs font-mono text-slate-500 dark:text-slate-400">{ref}</span>;
       },
     },
@@ -78,7 +77,7 @@ export function CustomerDashboardPage() {
 
   const fetchTransactions = (page = 1, size = 10) => {
     setLoading(true);
-    getPayments({ page: page - 1, size })
+    getCustomerTransactions({ page: page - 1, size })
       .then((data) => {
         setTransactions(data.content ?? []);
         setPageable({

@@ -14,7 +14,9 @@ import Commissions from '../components/Commissions'
 import BankTopUps from '../components/BankTopUps'
 import Support from '../components/Support'
 import WhatsAppCenter from '../components/WhatsAppCenter'
+import Donations from '../components/Donations'
 import AdminFeaturePlaceholder from '../components/AdminFeaturePlaceholder'
+import { NotificationsPage } from '../../../pages/NotificationsPage'
 import {
   createPesepayCredentials,
   getPaginatedPesepayCredentials,
@@ -46,6 +48,8 @@ export function AdminDashboardPage() {
     switch (activeTab) {
       case 'dashboard':
         return <Dashboard />
+      case 'donations':
+        return <Donations />
       case 'profile':
         return <UserProfile />
       case 'notifications':

@@ -8,6 +8,7 @@ import { getAuthSession, saveAuthSession } from '../../auth/auth.storage';
 import { getCurrentUserProfile } from '../../auth/auth.service';
 import type { UserProfileDto } from '../../auth/dto/auth.dto';
 import { getAgentWalletBalances, getAgentWalletHistory, getMyBankTopUps, type AgentWalletBalance, type AgentWalletTransaction, type PendingBankTopUp } from '../services/agent.service';
+import { getAgentRecentPayments, getAgentCommissionBalance, type AgentPaymentProduct } from '../services/agent-api.service';
 import Logo from '../../../components/ui/Logo';
 import CRUDLayout, { type CRUDColumn, type PageableState } from '../../shared/components/CRUDLayout';
 import CRUDModal from '../../shared/components/CRUDModal';
@@ -60,8 +61,9 @@ export function AgentDashboardPage() {
 
   const [walletBalances, setWalletBalances] = useState<AgentWalletBalance[]>([]);
   const [floatLoading, setFloatLoading] = useState(true);
-  const [commissionBalance, setCommissionBalance] = useState(24.40);
-  const [recentSales, setRecentSales] = useState<Sale[]>(INITIAL_SALES);
+  const [commissionBalance, setCommissionBalance] = useState<number>(0);
+  const [recentSales, setRecentSales] = useState<Sale[]>([]);
+  const [loadingSales, setLoadingSales] = useState(true);
 
   const [floatHistory, setFloatHistory] = useState<AgentWalletTransaction[]>([]);
   const [floatHistoryTotal, setFloatHistoryTotal] = useState(0);
@@ -110,6 +112,23 @@ export function AgentDashboardPage() {
       .then((data) => { if (mounted) setWalletBalances(data); })
       .catch(() => {})
       .finally(() => { if (mounted) setFloatLoading(false); });
+    return () => { mounted = false; };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    getAgentRecentPayments(10)
+      .then((data) => { if (mounted) setRecentSales(data); })
+      .catch(() => {})
+      .finally(() => { if (mounted) setLoadingSales(false); });
+    return () => { mounted = false; };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    getAgentCommissionBalance()
+      .then((data) => { if (mounted) setCommissionBalance(data.availableBalance || 0); })
+      .catch(() => {});
     return () => { mounted = false; };
   }, []);
 

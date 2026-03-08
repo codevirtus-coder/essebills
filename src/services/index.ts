@@ -28,3 +28,6 @@ export * from './audits.service'
 
 // Agent Commission Service
 export * from './agentCommission.service'
+
+// Donations Service
+export * from './donations.service'

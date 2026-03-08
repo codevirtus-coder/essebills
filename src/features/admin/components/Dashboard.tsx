@@ -11,91 +11,110 @@ import {
 import StatCard from "../../../components/ui/StatCard";
 import CRUDLayout, { type CRUDColumn } from "../../shared/components/CRUDLayout";
 import {
-  MOCK_STATS,
-  BILLER_PERFORMANCE,
-  REVENUE_DATA,
-  MOCK_AGENTS,
-} from "../data/constants";
-import {
-  getRecentPaymentTransactions,
-  getUsersCount,
-  type DashboardTransaction,
-} from "../services/adminDashboard.service";
+  getDashboardStats,
+  getDashboardRevenue,
+  getTopBillers,
+  getActivityFeed,
+  type DashboardStats,
+  type RevenueDataPoint,
+  type TopBiller,
+} from "../services/admin-api.service";
 import { 
-  TrendingUp, 
-  Users, 
-  Activity, 
-  Wallet, 
   Download, 
-  ArrowUpRight, 
-  Clock, 
-  CheckCircle, 
-  XCircle,
   MoreVertical,
   Layers
 } from "lucide-react";
 import { cn } from "../../../lib/utils";
+import type { PaymentTransaction } from "../../../types";
+
+// Default fallback data
+const DEFAULT_STATS: DashboardStats = {
+  totalRevenue: 0,
+  totalTransactions: 0,
+  activeUsers: 0,
+  agentEarnings: 0,
+  revenueChange: '',
+  transactionsChange: '',
+  usersChange: '',
+};
+
+const DEFAULT_REVENUE_DATA: RevenueDataPoint[] = [
+  { month: 'Jan', revenue: 0 },
+  { month: 'Feb', revenue: 0 },
+  { month: 'Mar', revenue: 0 },
+  { month: 'Apr', revenue: 0 },
+  { month: 'May', revenue: 0 },
+  { month: 'Jun', revenue: 0 },
+];
+
+const DEFAULT_TOP_BILLERS: TopBiller[] = [];
 
 const Dashboard: React.FC = () => {
-  const [transactions, setTransactions] = useState<DashboardTransaction[]>([]);
-  const [usersCount, setUsersCount] = useState<number>(MOCK_STATS.activeUsers);
-  const [totalTransactions, setTotalTransactions] = useState<number>(
-    MOCK_STATS.totalTransactions,
-  );
+  const [transactions, setTransactions] = useState<PaymentTransaction[]>([]);
+  const [stats, setStats] = useState<DashboardStats>(DEFAULT_STATS);
+  const [revenueData, setRevenueData] = useState<RevenueDataPoint[]>(DEFAULT_REVENUE_DATA);
+  const [topBillers, setTopBillers] = useState<TopBiller[]>(DEFAULT_TOP_BILLERS);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
-    Promise.all([getRecentPaymentTransactions(), getUsersCount()])
-      .then(([txs, count]) => {
+    
+    Promise.all([
+      getDashboardStats().catch(() => DEFAULT_STATS),
+      getDashboardRevenue({ period: 'monthly' }).catch(() => DEFAULT_REVENUE_DATA),
+      getTopBillers(5).catch(() => DEFAULT_TOP_BILLERS),
+      getActivityFeed(10).catch(() => []),
+    ])
+      .then(([dashboardStats, revenue, billers, activity]) => {
         if (!mounted) return;
-        setTransactions(txs);
-        setTotalTransactions(txs.length || MOCK_STATS.totalTransactions);
-        setUsersCount(count || MOCK_STATS.activeUsers);
+        setStats(dashboardStats);
+        setRevenueData(revenue);
+        setTopBillers(billers);
+        setTransactions(activity);
       })
       .catch(() => {
-        /* keep mock fallbacks */
+        /* keep fallback data */
       })
       .finally(() => {
         if (mounted) setIsLoading(false);
       });
+      
     return () => {
       mounted = false;
     };
   }, []);
 
-  const txColumns: CRUDColumn<DashboardTransaction>[] = [
+  const txColumns: CRUDColumn<PaymentTransaction>[] = [
     {
       key: "date",
       header: "Transaction Time",
-      render: (tx) => (
-        <div>
-          <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
-            {tx.date ?? "—"}
-          </p>
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-            {tx.time ?? ""}
-          </p>
-        </div>
-      ),
+      render: (tx) => {
+        const dt = tx.dateTimeOfTransaction ? new Date(tx.dateTimeOfTransaction) : null;
+        return (
+          <div>
+            <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
+              {dt ? dt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : "—"}
+            </p>
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+              {dt ? dt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : ""}
+            </p>
+          </div>
+        );
+      },
     },
     {
       key: "customer",
       header: "Customer Account",
       render: (tx) => {
-        const customerInitials =
-          tx.customerInitials ??
-          (String(tx.customerName ?? "")
-            .slice(0, 2)
-            .toUpperCase() ||
-            "--");
+        const customerIdentifier = tx.customerPhoneNumber || tx.customerEmail || '—';
+        const initials = customerIdentifier.slice(0, 2).toUpperCase();
         return (
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-lg flex items-center justify-center text-[10px] font-black border border-emerald-100 dark:border-emerald-800/50">
-              {customerInitials}
+              {initials}
             </div>
             <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
-              {tx.customerName ?? "—"}
+              {customerIdentifier}
             </p>
           </div>
         );
@@ -106,7 +125,7 @@ const Dashboard: React.FC = () => {
       header: "Service Biller",
       render: (tx) => (
         <span className="text-xs font-bold text-slate-600 dark:text-slate-400">
-          {tx.biller ?? "—"}
+          {tx.productName ?? "—"}
         </span>
       ),
     },
@@ -125,9 +144,9 @@ const Dashboard: React.FC = () => {
       header: "Fulfillment",
       className: "text-center",
       render: (tx) => {
-        const status = String(tx.status ?? "").toUpperCase();
+        const status = String(tx.paymentStatus ?? "").toUpperCase();
         const isSuccess = status === "SUCCESS" || status === "COMPLETED" || status === "APPROVED";
-        const isPending = status === "PENDING" || status === "PROCESSING";
+        const isPending = status === "PENDING" || status === "PROCESSING" || status === "INITIATED";
         
         return (
           <span className={cn(
@@ -138,7 +157,7 @@ const Dashboard: React.FC = () => {
               ? "bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/50"
               : "bg-red-50 text-red-600 border-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800/50"
           )}>
-            {tx.status || "—"}
+            {tx.paymentStatus || "—"}
           </span>
         );
       },
@@ -151,8 +170,8 @@ const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           label="Total Revenue"
-          value={`$${MOCK_STATS.totalRevenue.toLocaleString()}.00`}
-          change={MOCK_STATS.revenueChange}
+          value={`$${stats.totalRevenue.toLocaleString()}.00`}
+          change={stats.revenueChange}
           icon="payments"
           iconBg="bg-emerald-50 dark:bg-emerald-900/20"
           iconColor="text-emerald-600 dark:text-emerald-400"
@@ -161,8 +180,8 @@ const Dashboard: React.FC = () => {
         />
         <StatCard
           label="Total Transactions"
-          value={totalTransactions.toLocaleString()}
-          change={MOCK_STATS.transactionsChange}
+          value={stats.totalTransactions.toLocaleString()}
+          change={stats.transactionsChange}
           icon="sync_alt"
           iconBg="bg-blue-50 dark:bg-blue-900/20"
           iconColor="text-blue-600 dark:text-blue-400"
@@ -171,8 +190,8 @@ const Dashboard: React.FC = () => {
         />
         <StatCard
           label="Active Users"
-          value={usersCount.toLocaleString()}
-          change={MOCK_STATS.usersChange}
+          value={stats.activeUsers.toLocaleString()}
+          change={stats.usersChange}
           icon="person_check"
           iconBg="bg-purple-50 dark:bg-purple-900/20"
           iconColor="text-purple-600 dark:text-purple-400"
@@ -181,7 +200,7 @@ const Dashboard: React.FC = () => {
         />
         <StatCard
           label="Agent Earnings"
-          value={`$${MOCK_AGENTS.reduce((acc, curr) => acc + curr.totalEarnings, 0).toLocaleString()}`}
+          value={`$${stats.agentEarnings.toLocaleString()}`}
           change="+8.4% vs ytd"
           icon="storefront"
           iconBg="bg-amber-50 dark:bg-amber-900/20"
@@ -216,7 +235,7 @@ const Dashboard: React.FC = () => {
           <div className="h-[320px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
-                data={REVENUE_DATA}
+                data={revenueData}
                 margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
               >
                 <defs>
@@ -268,24 +287,28 @@ const Dashboard: React.FC = () => {
              <Layers size={18} className="text-slate-400" />
           </div>
           <div className="space-y-6 flex-1">
-            {BILLER_PERFORMANCE.map((biller) => (
-              <div key={biller.name} className="space-y-2 group">
-                <div className="flex justify-between items-center px-1">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight group-hover:text-emerald-600 transition-colors">
-                    {biller.name}
-                  </span>
-                  <span className="text-xs font-bold text-slate-900 dark:text-white">
-                    ${biller.amount.toLocaleString()}
-                  </span>
+            {topBillers.length > 0 ? (
+              topBillers.map((biller) => (
+                <div key={String(biller.id)} className="space-y-2 group">
+                  <div className="flex justify-between items-center px-1">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight group-hover:text-emerald-600 transition-colors">
+                      {biller.name}
+                    </span>
+                    <span className="text-xs font-bold text-slate-900 dark:text-white">
+                      ${biller.amount.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-emerald-500 rounded-full transition-all duration-1000 group-hover:bg-emerald-400"
+                      style={{ width: `${biller.percentage}%` }}
+                    ></div>
+                  </div>
                 </div>
-                <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-emerald-500 rounded-full transition-all duration-1000 group-hover:bg-emerald-400"
-                    style={{ width: `${biller.percentage}%` }}
-                  ></div>
-                </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-sm text-slate-500 text-center">No data available</p>
+            )}
           </div>
           <button className="mt-8 w-full bg-slate-900 dark:bg-emerald-600 text-white text-[10px] font-bold uppercase tracking-widest py-4 rounded-xl shadow-lg shadow-emerald-900/20 hover:scale-[1.02] transition-all">
             Full Audit Report
@@ -304,13 +327,6 @@ const Dashboard: React.FC = () => {
         onSizeChange={() => {}}
         onRefresh={() => {}}
         searchable={false}
-        actions={{
-          renderCustom: () => (
-            <button className="p-1.5 text-slate-400 hover:text-emerald-600 transition-colors">
-              <MoreVertical size={16} />
-            </button>
-          )
-        }}
       />
     </div>
   );
