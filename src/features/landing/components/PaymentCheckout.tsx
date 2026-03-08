@@ -20,8 +20,11 @@ interface PaymentCheckoutProps {
   billerName: string;
   accountNumber: string;
   amount: string;
+  categoryLabel?: string;
+  currencyCode?: string;
+  minimumAmount?: number;
   onBack: () => void;
-  onConfirm: (method: PaymentOption, email: string, phone: string, accountNumber: string) => void;
+  onConfirm: (method: PaymentOption, email: string, phone: string, accountNumber: string, amount: number) => void;
   isLoading?: boolean;
 }
 
@@ -30,7 +33,10 @@ export type PaymentOption = "wallet" | "card" | "mobile_money" | "pesepay";
 const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
   billerName = "ZESA Prepaid",
   accountNumber: initialAccountNumber = "",
-  amount = "50.00",
+  amount = "0",
+  categoryLabel,
+  currencyCode = "USD",
+  minimumAmount,
   onBack,
   onConfirm,
   isLoading = false,
@@ -39,9 +45,18 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [accountNumber, setAccountNumber] = useState(initialAccountNumber);
-  const baseAmount = parseFloat(amount) || 0;
+  const [amountInput, setAmountInput] = useState(
+    parseFloat(amount) > 0 ? String(parseFloat(amount)) : ""
+  );
+
+  const baseAmount = parseFloat(amountInput) || 0;
   const serviceFee = baseAmount * 0.01;
   const totalAmount = baseAmount + serviceFee;
+
+  const amountError = minimumAmount && baseAmount > 0 && baseAmount < minimumAmount
+    ? `Minimum amount is ${currencyCode} ${minimumAmount.toFixed(2)}`
+    : null;
+  const canPay = !!phone && !!accountNumber && baseAmount > 0 && !amountError;
 
   return (
     <div className="min-h-screen bg-[#f8fafc] font-sans text-slate-900 overflow-y-auto pb-20">
@@ -97,7 +112,7 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
                     Account / Meter Number <span className="text-emerald-600">*</span>
                   </label>
-                  <input 
+                  <input
                     type="text"
                     value={accountNumber}
                     onChange={(e) => setAccountNumber(e.target.value)}
@@ -105,9 +120,38 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                     className="w-full px-0 py-1 bg-transparent border-0 border-b border-slate-200 focus:outline-none focus:border-emerald-500 text-xl font-black tracking-tight text-slate-900 transition-all placeholder:text-slate-300"
                   />
                 </div>
+
+                {/* Editable amount */}
                 <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Transaction Type</p>
-                  <p className="text-xl font-black tracking-tight text-slate-900">Utility Bill</p>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                    Amount <span className="text-emerald-600">*</span>
+                    {minimumAmount ? (
+                      <span className="ml-2 normal-case font-bold text-slate-300">
+                        (min {currencyCode} {minimumAmount.toFixed(2)})
+                      </span>
+                    ) : null}
+                  </label>
+                  <div className="flex items-baseline gap-1 border-b border-slate-200 focus-within:border-emerald-500 transition-all pb-1">
+                    <span className="text-xl font-black text-slate-400">{currencyCode}</span>
+                    <input
+                      type="number"
+                      min={minimumAmount ?? 0.01}
+                      step="0.01"
+                      value={amountInput}
+                      onChange={(e) => setAmountInput(e.target.value)}
+                      placeholder="0.00"
+                      className="flex-1 px-0 py-0 bg-transparent border-0 focus:outline-none text-xl font-black tracking-tight text-slate-900 placeholder:text-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                  </div>
+                  {amountError && (
+                    <p className="text-[10px] text-rose-500 font-bold mt-1">{amountError}</p>
+                  )}
+                </div>
+
+                {/* Transaction type */}
+                <div className="sm:col-span-2">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Transaction Type</p>
+                  <p className="text-sm font-bold text-slate-600">{categoryLabel ?? "Bill Payment"}</p>
                 </div>
                 
                 {/* Notification Fields */}
@@ -234,11 +278,11 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
               <div className="space-y-6">
                 <div className="flex justify-between items-center group">
                   <span className="text-slate-400 font-bold group-hover:text-slate-300 transition-colors text-sm">Base Amount</span>
-                  <span className="font-black text-lg">${baseAmount.toFixed(2)}</span>
+                  <span className="font-black text-lg">{currencyCode} {baseAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center group">
                   <span className="text-slate-400 font-bold group-hover:text-slate-300 transition-colors text-sm">Service Fee (1%)</span>
-                  <span className="font-black text-lg text-emerald-400">+${serviceFee.toFixed(2)}</span>
+                  <span className="font-black text-lg text-emerald-400">+{currencyCode} {serviceFee.toFixed(2)}</span>
                 </div>
                 
                 <div className="pt-8 mt-4 border-t border-white/10">
@@ -248,13 +292,13 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                       <p className="text-sm text-emerald-500 font-bold">Incl. all taxes</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-4xl font-black tracking-tighter text-white">${totalAmount.toFixed(2)}</p>
+                      <p className="text-4xl font-black tracking-tighter text-white">{currencyCode} {totalAmount.toFixed(2)}</p>
                     </div>
                   </div>
 
                   <button
-                    onClick={() => onConfirm(paymentMethod, email, phone, accountNumber)}
-                    disabled={isLoading || !phone || !accountNumber}
+                    onClick={() => onConfirm(paymentMethod, email, phone, accountNumber, baseAmount)}
+                    disabled={isLoading || !canPay}
                     className="w-full bg-emerald-600 py-5 rounded-2xl font-black text-base uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-emerald-500 active:scale-[0.98] transition-all shadow-xl shadow-emerald-900/20 disabled:opacity-50 disabled:cursor-not-allowed group"
                   >
                     {isLoading ? (

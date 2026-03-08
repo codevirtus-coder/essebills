@@ -96,7 +96,7 @@ export function PaymentCheckoutPage() {
     }
   });
 
-  const handleConfirm = (method: PaymentOption, email: string, phone: string, enteredAccountNumber: string) => {
+  const handleConfirm = (method: PaymentOption, email: string, phone: string, enteredAccountNumber: string, enteredAmount: number) => {
     if (!product) {
       toast.error("Product information not found.");
       return;
@@ -105,11 +105,15 @@ export function PaymentCheckoutPage() {
       toast.error("Currency information not found. Please refresh and try again.");
       return;
     }
+    if (!enteredAmount || enteredAmount <= 0) {
+      toast.error("Please enter a valid amount.");
+      return;
+    }
 
     const context: ProductPaymentContext = {
       email: email || undefined,
       phoneNumber: phone,
-      amount: amountValue,
+      amount: enteredAmount,
       paymentMethodCode: method === 'pesepay' ? 'PXP' : 'WALLET',
       currencyCode: currency,
       productCode: product,
@@ -127,11 +131,17 @@ export function PaymentCheckoutPage() {
     mutation.mutate(context);
   };
 
+  const categoryLabel = product?.category?.displayName ?? product?.category?.name ?? undefined;
+  const minimumAmount = product?.minimumPurchaseAmount ?? undefined;
+
   return (
     <PaymentCheckout
       billerName={billerName}
       accountNumber={accountNumber}
       amount={amount}
+      categoryLabel={categoryLabel}
+      currencyCode={currency?.code ?? "USD"}
+      minimumAmount={minimumAmount}
       onBack={() => navigate(`${ROUTE_PATHS.home}#pay-now`)}
       onConfirm={handleConfirm}
       isLoading={mutation.isPending || isLoadingProduct || isLoadingCurrencies}

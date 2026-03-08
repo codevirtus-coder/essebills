@@ -399,6 +399,7 @@ export const API_ENDPOINTS = {
     root: '/v1/notifications',
     markRead: (id: string | number) => `/v1/notifications/${id}/read`,
     markAllRead: '/v1/notifications/read-all',
+    delete: (id: string | number) => `/v1/notifications/${id}`,
   },
 
   // Donations
