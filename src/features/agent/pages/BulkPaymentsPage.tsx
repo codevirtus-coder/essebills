@@ -479,7 +479,7 @@ export default function BulkPaymentsPage() {
         />
       )}
 
-      {activeTab === 'history' || activeSubTab === 'history' && (
+      {activeSubTab === 'history' && (
         <CRUDLayout
           title="Bulk Request History"
           columns={requestColumns}

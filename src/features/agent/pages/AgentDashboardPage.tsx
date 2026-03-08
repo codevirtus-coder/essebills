@@ -365,21 +365,53 @@ export function AgentDashboardPage() {
           />
        </div>
 
-       <div className="space-y-4">
-          <div className="flex items-center justify-between">
-             <h4 className="text-lg font-bold text-slate-800 dark:text-slate-100">Recent Activity</h4>
-             <button onClick={() => setTab('sell')} className="text-xs font-bold text-emerald-600 uppercase tracking-widest hover:underline">New Sale</button>
+       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-4">
+             <div className="flex items-center justify-between">
+                <h4 className="text-lg font-bold text-slate-800 dark:text-slate-100">Recent Activity</h4>
+                <button onClick={() => setTab('sell')} className="text-xs font-bold text-emerald-600 uppercase tracking-widest hover:underline">New Sale</button>
+             </div>
+             <CRUDLayout
+               title=""
+               columns={salesColumns}
+               data={recentSales.slice(0, 5)}
+               loading={false}
+               pageable={{ page: 1, size: 5, totalElements: recentSales.length, totalPages: 1 }}
+               onPageChange={() => {}}
+               onSizeChange={() => {}}
+               searchable={false}
+             />
           </div>
-          <CRUDLayout
-            title=""
-            columns={salesColumns}
-            data={recentSales.slice(0, 5)}
-            loading={false}
-            pageable={{ page: 1, size: 5, totalElements: recentSales.length, totalPages: 1 }}
-            onPageChange={() => {}}
-            onSizeChange={() => {}}
-            searchable={false}
-          />
+
+          <div className="space-y-6">
+             <div className="glass-card p-8 border-slate-200 dark:border-slate-800 h-full">
+                <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest mb-6">Quick Sell</h4>
+                <div className="grid grid-cols-2 gap-4">
+                   {[
+                     { id: 'air', label: 'Airtime', icon: <Smartphone size={20} />, color: 'text-blue-600 bg-blue-50' },
+                     { id: 'util', label: 'Electricity', icon: <Zap size={20} />, color: 'text-orange-600 bg-orange-50' },
+                     { id: 'net', label: 'Internet', icon: <Wifi size={20} />, color: 'text-indigo-600 bg-indigo-50' },
+                     { id: 'edu', label: 'Education', icon: <BookOpen size={20} />, color: 'text-emerald-600 bg-emerald-50' },
+                   ].map(cat => (
+                     <button 
+                       key={cat.id}
+                       onClick={() => setTab('sell')}
+                       className="p-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 hover:border-emerald-500/50 transition-all group flex flex-col items-center gap-3"
+                     >
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform ${cat.color} dark:bg-opacity-10`}>
+                           {cat.icon}
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">{cat.label}</span>
+                     </button>
+                   ))}
+                </div>
+                <div className="mt-8 p-4 bg-emerald-600 rounded-2xl text-white text-center space-y-2">
+                   <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">Agent Commission</p>
+                   <p className="text-xl font-black">Up to 5.0%</p>
+                   <button onClick={() => setTab('commissions')} className="text-[9px] font-black uppercase tracking-tighter hover:underline">View Earnings Ledger</button>
+                </div>
+             </div>
+          </div>
        </div>
     </div>
   );

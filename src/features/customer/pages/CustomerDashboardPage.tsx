@@ -56,6 +56,7 @@ export function CustomerDashboardPage() {
 
   const setTab = (tab: string) => {
     navigate(`/portal-customer/${tab}`);
+    setSelectedCheckoutProduct(null);
   };
 
   const columns: CRUDColumn<CustomerTransaction>[] = [
@@ -229,6 +230,7 @@ export function CustomerDashboardPage() {
           icon="account_balance_wallet"
           iconBg="bg-emerald-50 dark:bg-emerald-900/20"
           iconColor="text-emerald-600 dark:text-emerald-400"
+          onClick={() => setIsTopUpModalOpen(true)}
         />
         <StatCard
           label="Pending Top-ups"
@@ -418,41 +420,34 @@ export function CustomerDashboardPage() {
     </div>
   );
 
-  // --------------------------------------------------------------------------
-  // Tab Routing
-  // --------------------------------------------------------------------------
-
-  if (activeTab === 'profile') return <div className="animate-in fade-in duration-300"><UserProfile /></div>;
-  if (activeTab === 'notifications') return <NotificationsPage />;
-  if (activeTab === 'bulk-payments') return <BulkPaymentsPage />;
-  
-  if (activeTab === 'pay') return renderPay();
-  if (activeTab === 'wallet') return renderWallet();
-
-  if (activeTab === 'transactions') {
-    return (
-      <div className="space-y-6">
-        <CRUDLayout
-          title="My Transactions"
-          columns={columns}
-          data={transactions}
-          loading={loading}
-          pageable={pageable}
-          onPageChange={(page) => fetchTransactions(page, pageable.size)}
-          onSizeChange={(size) => fetchTransactions(1, size)}
-          onRefresh={() => fetchTransactions(pageable.page, pageable.size)}
-          actions={{
-            onView: handleRepeatPayment,
-          }}
-        />
-      </div>
-    );
-  }
-
-  // Default: Overview
   return (
-    <>
-      {renderOverview()}
+    <div className="space-y-8 font-sans">
+      {activeTab === 'overview' && renderOverview()}
+      {activeTab === 'pay' && renderPay()}
+      {activeTab === 'wallet' && renderWallet()}
+      
+      {activeTab === 'transactions' && (
+        <div className="space-y-6">
+          <CRUDLayout
+            title="My Transactions"
+            columns={columns}
+            data={transactions}
+            loading={loading}
+            pageable={pageable}
+            onPageChange={(page) => fetchTransactions(page, pageable.size)}
+            onSizeChange={(size) => fetchTransactions(1, size)}
+            onRefresh={() => fetchTransactions(pageable.page, pageable.size)}
+            actions={{
+              onView: handleRepeatPayment,
+            }}
+          />
+        </div>
+      )}
+
+      {activeTab === 'bulk-payments' && <BulkPaymentsPage />}
+      {activeTab === 'notifications' && <NotificationsPage />}
+      {activeTab === 'profile' && <div className="animate-in fade-in duration-300"><UserProfile /></div>}
+
       <WalletTopUpModal 
         isOpen={isTopUpModalOpen} 
         onClose={() => setIsTopUpModalOpen(false)}
@@ -460,6 +455,6 @@ export function CustomerDashboardPage() {
           fetchWalletData();
         }}
       />
-    </>
+    </div>
   );
 }
