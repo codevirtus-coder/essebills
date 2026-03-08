@@ -348,6 +348,52 @@ export const API_ENDPOINTS = {
     myAudits: '/v1/my-audits/period',
   },
 
+  // Analytics
+  analytics: {
+    // Admin Analytics
+    admin: {
+      dashboard: {
+        stats: '/v1/analytics/admin/dashboard/stats',
+        transactions: '/v1/analytics/admin/dashboard/transactions',
+        revenue: (params?: { period?: string; startDate?: string; endDate?: string }) => {
+          const query = new URLSearchParams()
+          if (params?.period) query.set('period', params.period)
+          if (params?.startDate) query.set('startDate', params.startDate)
+          if (params?.endDate) query.set('endDate', params.endDate)
+          return `/v1/analytics/admin/dashboard/revenue${query.toString() ? '?' + query.toString() : ''}`
+        },
+      },
+    },
+    // Biller Analytics
+    biller: {
+      dashboard: {
+        summary: (billerId: string | number) => `/v1/analytics/biller/dashboard/${billerId}/summary`,
+        transactions: (billerId: string | number) => `/v1/analytics/biller/dashboard/${billerId}/transactions`,
+      },
+    },
+    // Agent Analytics
+    agent: {
+      dashboard: {
+        stats: (agentId: string | number) => `/v1/analytics/agent/dashboard/${agentId}/stats`,
+        transactions: (agentId: string | number) => `/v1/analytics/agent/dashboard/${agentId}/transactions`,
+      },
+    },
+    // Customer Analytics
+    customer: {
+      dashboard: {
+        transactions: (customerPhoneNumber: string) => `/v1/analytics/customer/dashboard/${customerPhoneNumber}/transactions`,
+      },
+    },
+    // Donations Analytics
+    donations: {
+      summary: '/v1/analytics/donations/summary',
+    },
+    // WhatsApp Sessions Analytics
+    whatsappSessions: {
+      summary: '/v1/analytics/whatsapp-sessions/summary',
+    },
+  },
+
   // Notifications
   notifications: {
     root: '/v1/notifications',

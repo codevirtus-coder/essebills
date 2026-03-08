@@ -343,3 +343,60 @@ export async function getAgentPayoutHistory(params?: AgentQueryParams): Promise<
       : API_ENDPOINTS.agent.commissions.payoutHistory
   )
 }
+
+// --------------------------------------------------------------------------
+// Analytics API (New endpoints from API spec)
+// --------------------------------------------------------------------------
+
+export interface AgentDashboardStatsDto {
+  totalTransactions?: number
+  totalEarnings?: number
+  pendingPayouts?: number
+  successfulTransactions?: number
+  failedTransactions?: number
+  averageTransactionAmount?: number
+  todayTransactions?: number
+  todayEarnings?: number
+}
+
+export interface AgentTransaction {
+  id: number
+  dateTimeOfTransaction?: string
+  customerPhoneNumber?: string
+  customerEmail?: string
+  productName?: string
+  amount?: number
+  totalAmount?: number
+  paymentStatus?: string
+  agentCommission?: number
+}
+
+/**
+ * Get agent dashboard stats from analytics endpoint
+ * Uses: GET /v1/analytics/agent/dashboard/{agentId}/stats
+ */
+export async function getAgentAnalyticsStats(agentId: string | number): Promise<AgentDashboardStatsDto> {
+  return apiFetch<AgentDashboardStatsDto>(API_ENDPOINTS.analytics.agent.dashboard.stats(agentId))
+}
+
+/**
+ * Get agent transaction feed from analytics endpoint
+ * Uses: GET /v1/analytics/agent/dashboard/{agentId}/transactions
+ */
+export async function getAgentAnalyticsTransactions(agentId: string | number, params?: {
+  page?: number
+  size?: number
+  sort?: string
+}): Promise<{ content: AgentTransaction[]; totalElements: number; totalPages: number }> {
+  const query = new URLSearchParams()
+  if (params?.page !== undefined) query.set('page', params.page.toString())
+  if (params?.size !== undefined) query.set('size', params.size.toString())
+  if (params?.sort) query.set('sort', params.sort)
+  
+  const queryString = query.toString()
+  return apiFetch(
+    queryString 
+      ? `${API_ENDPOINTS.analytics.agent.dashboard.transactions(agentId)}?${queryString}` 
+      : API_ENDPOINTS.analytics.agent.dashboard.transactions(agentId)
+  )
+}

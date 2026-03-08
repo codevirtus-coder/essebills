@@ -13,11 +13,17 @@ import CRUDLayout, { type CRUDColumn } from "../../shared/components/CRUDLayout"
 import {
   getDashboardStats,
   getDashboardRevenue,
-  getTopBillers,
   getActivityFeed,
+  getAnalyticsDashboardStats,
+  getAnalyticsRevenueChart,
+  getAnalyticsTransactionFeed,
+  getDonationsSummary,
+  getWhatsAppSessionsSummary,
   type DashboardStats,
+  type AnalyticsDashboardStats,
   type RevenueDataPoint,
   type TopBiller,
+  type TransactionFeedItem,
 } from "../services/admin-api.service";
 import { 
   Download, 
@@ -52,25 +58,44 @@ const DEFAULT_TOP_BILLERS: TopBiller[] = [];
 const Dashboard: React.FC = () => {
   const [transactions, setTransactions] = useState<PaymentTransaction[]>([]);
   const [stats, setStats] = useState<DashboardStats>(DEFAULT_STATS);
+  const [analyticsStats, setAnalyticsStats] = useState<AnalyticsDashboardStats | null>(null);
   const [revenueData, setRevenueData] = useState<RevenueDataPoint[]>(DEFAULT_REVENUE_DATA);
   const [topBillers, setTopBillers] = useState<TopBiller[]>(DEFAULT_TOP_BILLERS);
   const [isLoading, setIsLoading] = useState(true);
+  const [donationsSummary, setDonationsSummary] = useState<Record<string, unknown>>({});
+  const [whatsAppSummary, setWhatsAppSummary] = useState<Record<string, unknown>>({});
 
   useEffect(() => {
     let mounted = true;
     
+    // Use new analytics endpoints as primary, fall back to legacy if needed
     Promise.all([
-      getDashboardStats().catch(() => DEFAULT_STATS),
-      getDashboardRevenue({ period: 'monthly' }).catch(() => DEFAULT_REVENUE_DATA),
-      getTopBillers(5).catch(() => DEFAULT_TOP_BILLERS),
-      getActivityFeed(10).catch(() => []),
+      getAnalyticsDashboardStats().catch(() => getDashboardStats().catch(() => DEFAULT_STATS)),
+      getAnalyticsRevenueChart({ period: 'monthly' }).catch(() => getDashboardRevenue({ period: 'monthly' }).catch(() => DEFAULT_REVENUE_DATA)),
+      getAnalyticsTransactionFeed({ size: 10 }).catch(() => getActivityFeed(10).catch(() => [])),
+      getDonationsSummary().catch(() => ({} as Record<string, unknown>)),
+      getWhatsAppSessionsSummary().catch(() => ({} as Record<string, unknown>)),
     ])
-      .then(([dashboardStats, revenue, billers, activity]) => {
+      .then(([dashboardStats, revenue, activity, donations, whatsapp]) => {
         if (!mounted) return;
-        setStats(dashboardStats);
+        
+        // Handle analytics stats - can be either new format or legacy
+        if ('totalRevenue' in dashboardStats || 'billersCount' in dashboardStats) {
+          setAnalyticsStats(dashboardStats as AnalyticsDashboardStats);
+        } else {
+          setStats(dashboardStats as DashboardStats);
+        }
+        
         setRevenueData(revenue);
-        setTopBillers(billers);
-        setTransactions(activity);
+        // Handle transaction feed
+        if (activity && typeof activity === 'object' && 'content' in activity) {
+          setTransactions(((activity as { content: unknown }).content as PaymentTransaction[]) || []);
+        } else if (Array.isArray(activity)) {
+          setTransactions(activity as PaymentTransaction[]);
+        }
+        setDonationsSummary(donations);
+        setWhatsAppSummary(whatsapp);
+        setTopBillers([]); // Can be fetched separately if needed
       })
       .catch(() => {
         /* keep fallback data */
@@ -170,8 +195,8 @@ const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           label="Total Revenue"
-          value={`$${stats.totalRevenue.toLocaleString()}.00`}
-          change={stats.revenueChange}
+          value={`${((analyticsStats?.totalRevenue ?? stats.totalRevenue) ?? 0).toLocaleString()}.00`}
+          change={analyticsStats?.revenueChange ?? stats.revenueChange}
           icon="payments"
           iconBg="bg-emerald-50 dark:bg-emerald-900/20"
           iconColor="text-emerald-600 dark:text-emerald-400"
@@ -180,8 +205,8 @@ const Dashboard: React.FC = () => {
         />
         <StatCard
           label="Total Transactions"
-          value={stats.totalTransactions.toLocaleString()}
-          change={stats.transactionsChange}
+          value={((analyticsStats?.totalTransactions ?? stats.totalTransactions) ?? 0).toLocaleString()}
+          change={analyticsStats?.transactionsChange ?? stats.transactionsChange}
           icon="sync_alt"
           iconBg="bg-blue-50 dark:bg-blue-900/20"
           iconColor="text-blue-600 dark:text-blue-400"
@@ -190,8 +215,8 @@ const Dashboard: React.FC = () => {
         />
         <StatCard
           label="Active Users"
-          value={stats.activeUsers.toLocaleString()}
-          change={stats.usersChange}
+          value={((analyticsStats?.activeUsers ?? stats.activeUsers) ?? 0).toLocaleString()}
+          change={analyticsStats?.usersChange ?? stats.usersChange}
           icon="person_check"
           iconBg="bg-purple-50 dark:bg-purple-900/20"
           iconColor="text-purple-600 dark:text-purple-400"
@@ -200,13 +225,71 @@ const Dashboard: React.FC = () => {
         />
         <StatCard
           label="Agent Earnings"
-          value={`$${stats.agentEarnings.toLocaleString()}`}
+          value={`${((analyticsStats?.totalEarnings ?? stats.agentEarnings) ?? 0).toLocaleString()}`}
           change="+8.4% vs ytd"
           icon="storefront"
           iconBg="bg-amber-50 dark:bg-amber-900/20"
           iconColor="text-amber-600 dark:text-amber-400"
           chartPath="M0 15 Q 50 5, 100 25"
           strokeColor="#f59e0b"
+        />
+      </div>
+
+      {/* Analytics Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard
+          label="Total Billers"
+          value={(analyticsStats?.billersCount ?? 0).toLocaleString()}
+          change="Active billers"
+          icon="business"
+          iconBg="bg-cyan-50 dark:bg-cyan-900/20"
+          iconColor="text-cyan-600 dark:text-cyan-400"
+          chartPath="M0 20 L 25 15 L 50 25 L 75 10 L 100 20"
+          strokeColor="#06b6d4"
+        />
+        <StatCard
+          label="Total Agents"
+          value={(analyticsStats?.agentsCount ?? 0).toLocaleString()}
+          change="Active agents"
+          icon="groups"
+          iconBg="bg-orange-50 dark:bg-orange-900/20"
+          iconColor="text-orange-600 dark:text-orange-400"
+          chartPath="M0 25 L 20 20 L 40 15 L 60 25 L 80 10 L 100 25"
+          strokeColor="#f97316"
+        />
+        <StatCard
+          label="Total Customers"
+          value={(analyticsStats?.customersCount ?? 0).toLocaleString()}
+          change="Registered customers"
+          icon="people"
+          iconBg="bg-pink-50 dark:bg-pink-900/20"
+          iconColor="text-pink-600 dark:text-pink-400"
+          chartPath="M0 15 Q 50 25, 100 15"
+          strokeColor="#ec4899"
+        />
+        <StatCard
+          label="WhatsApp Sessions"
+          value={String(whatsAppSummary?.totalSessions ?? whatsAppSummary?.sessions ?? 0)}
+          change="Active sessions"
+          icon="chat"
+          iconBg="bg-green-50 dark:bg-green-900/20"
+          iconColor="text-green-600 dark:text-green-400"
+          chartPath="M0 20 Q 25 10, 50 20 T 100 20"
+          strokeColor="#22c55e"
+        />
+      </div>
+
+      {/* Donations & Additional Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard
+          label="Total Donations"
+          value={`${donationsSummary?.totalAmount ?? donationsSummary?.amount ?? 0}`}
+          change="Donations received"
+          icon="volunteer_activism"
+          iconBg="bg-rose-50 dark:bg-rose-900/20"
+          iconColor="text-rose-600 dark:text-rose-400"
+          chartPath="M0 20 Q 50 5, 100 20"
+          strokeColor="#f43f5e"
         />
       </div>
 
@@ -295,7 +378,7 @@ const Dashboard: React.FC = () => {
                       {biller.name}
                     </span>
                     <span className="text-xs font-bold text-slate-900 dark:text-white">
-                      ${biller.amount.toLocaleString()}
+                      ${(biller.amount ?? 0).toLocaleString()}
                     </span>
                   </div>
                   <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">

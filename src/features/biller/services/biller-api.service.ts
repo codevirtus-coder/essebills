@@ -46,6 +46,18 @@ export interface CollectionsSummary {
   grossChange: number
 }
 
+// Analytics DTOs based on new API spec
+export interface BillerCollectionSummaryDto {
+  totalCollections?: number
+  totalTransactions?: number
+  successfulTransactions?: number
+  failedTransactions?: number
+  pendingTransactions?: number
+  averageTransactionAmount?: number
+  totalAgentCommission?: number
+  totalPlatformFee?: number
+}
+
 export interface CollectionStatistics {
   totalCount: number
   totalAmount: number
@@ -188,6 +200,40 @@ export async function getCollectionStatistics(params?: {
     queryString 
       ? `${API_ENDPOINTS.biller.collections.statistics}?${queryString}` 
       : API_ENDPOINTS.biller.collections.statistics
+  )
+}
+
+// --------------------------------------------------------------------------
+// Analytics API (New endpoints from API spec)
+// --------------------------------------------------------------------------
+
+/**
+ * Get biller collection summary from analytics endpoint
+ * Uses: GET /v1/analytics/biller/dashboard/{billerId}/summary
+ */
+export async function getBillerAnalyticsSummary(billerId: string | number): Promise<BillerCollectionSummaryDto> {
+  return apiFetch<BillerCollectionSummaryDto>(API_ENDPOINTS.analytics.biller.dashboard.summary(billerId))
+}
+
+/**
+ * Get biller transaction feed from analytics endpoint
+ * Uses: GET /v1/analytics/biller/dashboard/{billerId}/transactions
+ */
+export async function getBillerAnalyticsTransactions(billerId: string | number, params?: {
+  page?: number
+  size?: number
+  sort?: string
+}): Promise<PageResponse<Collection>> {
+  const query = new URLSearchParams()
+  if (params?.page !== undefined) query.set('page', params.page.toString())
+  if (params?.size !== undefined) query.set('size', params.size.toString())
+  if (params?.sort) query.set('sort', params.sort)
+  
+  const queryString = query.toString()
+  return apiFetch<PageResponse<Collection>>(
+    queryString 
+      ? `${API_ENDPOINTS.analytics.biller.dashboard.transactions(billerId)}?${queryString}` 
+      : API_ENDPOINTS.analytics.biller.dashboard.transactions(billerId)
   )
 }
 

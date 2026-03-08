@@ -248,3 +248,32 @@ export async function deleteSavedAccount(id: string | number): Promise<{ success
     method: 'DELETE',
   })
 }
+
+// --------------------------------------------------------------------------
+// Analytics API (New endpoints from API spec)
+// --------------------------------------------------------------------------
+
+/**
+ * Get customer transaction feed from analytics endpoint
+ * Uses: GET /v1/analytics/customer/dashboard/{customerPhoneNumber}/transactions
+ */
+export async function getCustomerAnalyticsTransactions(
+  customerPhoneNumber: string,
+  params?: {
+    page?: number
+    size?: number
+    sort?: string
+  }
+): Promise<{ content: CustomerTransaction[]; totalElements: number; totalPages: number }> {
+  const query = new URLSearchParams()
+  if (params?.page !== undefined) query.set('page', params.page.toString())
+  if (params?.size !== undefined) query.set('size', params.size.toString())
+  if (params?.sort) query.set('sort', params.sort)
+
+  const queryString = query.toString()
+  return apiFetch(
+    queryString
+      ? `${API_ENDPOINTS.analytics.customer.dashboard.transactions(customerPhoneNumber)}?${queryString}`
+      : API_ENDPOINTS.analytics.customer.dashboard.transactions(customerPhoneNumber)
+  )
+}

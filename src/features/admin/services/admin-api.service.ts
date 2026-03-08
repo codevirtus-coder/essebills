@@ -22,6 +22,42 @@ export interface DashboardStats {
   billersChange?: string
 }
 
+// Analytics DTOs based on new API spec
+export interface AnalyticsDashboardStats {
+  totalRevenue?: number
+  totalTransactions?: number
+  activeUsers?: number
+  agentEarnings?: number
+  totalEarnings?: number
+  revenueChange?: string
+  transactionsChange?: string
+  usersChange?: string
+  billersCount?: number
+  agentsCount?: number
+  customersCount?: number
+}
+
+export interface TransactionFeedItem {
+  id: string | number
+  dateTimeOfTransaction?: string
+  customerPhoneNumber?: string
+  customerEmail?: string
+  productName?: string
+  amount?: number
+  totalAmount?: number
+  paymentStatus?: string
+  agentCommission?: number
+  platformFee?: number
+}
+
+export interface PageTransactionFeedDto {
+  content?: TransactionFeedItem[]
+  totalElements?: number
+  totalPages?: number
+  number?: number
+  size?: number
+}
+
 export interface RevenueDataPoint {
   month: string
   revenue: number
@@ -174,6 +210,79 @@ export async function getTopAgents(limit = 5): Promise<TopAgent[]> {
 
 export async function getActivityFeed(limit = 20): Promise<PaymentTransaction[]> {
   return adminJsonFetch<PaymentTransaction[]>(`${API_ENDPOINTS.adminDashboard.activityFeed}?limit=${limit}`)
+}
+
+// --------------------------------------------------------------------------
+// Analytics API (New endpoints from API spec)
+// --------------------------------------------------------------------------
+
+/**
+ * Get admin dashboard stats from analytics endpoint
+ * Uses: GET /v1/analytics/admin/dashboard/stats
+ */
+export async function getAnalyticsDashboardStats(): Promise<AnalyticsDashboardStats> {
+  return adminJsonFetch<AnalyticsDashboardStats>(API_ENDPOINTS.analytics.admin.dashboard.stats)
+}
+
+/**
+ * Get paginated transaction feed from analytics endpoint
+ * Uses: GET /v1/analytics/admin/dashboard/transactions
+ */
+export async function getAnalyticsTransactionFeed(params?: {
+  page?: number
+  size?: number
+  sort?: string
+}): Promise<PageTransactionFeedDto> {
+  const query = new URLSearchParams()
+  if (params?.page !== undefined) query.set('page', params.page.toString())
+  if (params?.size !== undefined) query.set('size', params.size.toString())
+  if (params?.sort) query.set('sort', params.sort)
+  
+  const queryString = query.toString()
+  return adminJsonFetch<PageTransactionFeedDto>(
+    queryString 
+      ? `${API_ENDPOINTS.analytics.admin.dashboard.transactions}?${queryString}` 
+      : API_ENDPOINTS.analytics.admin.dashboard.transactions
+  )
+}
+
+/**
+ * Get revenue chart data from analytics endpoint
+ * Uses: GET /v1/analytics/admin/dashboard/revenue
+ */
+export async function getAnalyticsRevenueChart(params?: {
+  period?: string
+  startDate?: string
+  endDate?: string
+}): Promise<RevenueDataPoint[]> {
+  const query = new URLSearchParams()
+  if (params?.period) query.set('period', params.period)
+  if (params?.startDate) query.set('startDate', params.startDate)
+  if (params?.endDate) query.set('endDate', params.endDate)
+  
+  const queryString = query.toString()
+  const baseUrl = API_ENDPOINTS.analytics.admin.dashboard.revenue({})
+  return adminJsonFetch<RevenueDataPoint[]>(
+    queryString 
+      ? `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}${queryString}` 
+      : baseUrl
+  )
+}
+
+/**
+ * Get donations summary from analytics endpoint
+ * Uses: GET /v1/analytics/donations/summary
+ */
+export async function getDonationsSummary(): Promise<Record<string, unknown>> {
+  return adminJsonFetch<Record<string, unknown>>(API_ENDPOINTS.analytics.donations.summary)
+}
+
+/**
+ * Get WhatsApp sessions summary from analytics endpoint
+ * Uses: GET /v1/analytics/whatsapp-sessions/summary
+ */
+export async function getWhatsAppSessionsSummary(): Promise<Record<string, unknown>> {
+  return adminJsonFetch<Record<string, unknown>>(API_ENDPOINTS.analytics.whatsappSessions.summary)
 }
 
 // --------------------------------------------------------------------------
