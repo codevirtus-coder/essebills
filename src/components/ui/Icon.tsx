@@ -30,6 +30,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   // Users & identity
   person: User,
   people: Users,
+  groups: Users,
   group: Users2,
   account_circle: CircleUser,
   manage_accounts: UserCog,

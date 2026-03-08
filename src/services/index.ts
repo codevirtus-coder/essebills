@@ -7,6 +7,8 @@ export * from './auth.service'
 
 // Users Service
 export * from './users.service'
+export * from './bulkPayment.service'
+export * from './wallet.service'
 
 // Products Service
 export * from './products.service'

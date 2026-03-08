@@ -154,9 +154,15 @@ export async function getCustomerTransactionStatistics(): Promise<TransactionSta
 // --------------------------------------------------------------------------
 
 export async function makePayment(payment: PaymentRequest): Promise<PaymentResponse> {
-  return apiFetch<PaymentResponse>(API_ENDPOINTS.customer.payments.root, {
+  return apiFetch<PaymentResponse>(API_ENDPOINTS.payments.portal.root, {
     method: 'POST',
     body: payment,
+  })
+}
+
+export async function repeatPayment(transactionId: string | number): Promise<PaymentResponse> {
+  return apiFetch<PaymentResponse>(API_ENDPOINTS.payments.portal.repeat(transactionId), {
+    method: 'POST',
   })
 }
 
@@ -252,6 +258,32 @@ export async function deleteSavedAccount(id: string | number): Promise<{ success
 // --------------------------------------------------------------------------
 // Analytics API (New endpoints from API spec)
 // --------------------------------------------------------------------------
+
+/**
+ * Get customer wallet balances
+ */
+export async function getCustomerWalletBalances(): Promise<any[]> {
+  return apiFetch(API_ENDPOINTS.customer.wallet.balances)
+}
+
+/**
+ * Get customer wallet history
+ */
+export async function getCustomerWalletHistory(params?: {
+  page?: number
+  size?: number
+}): Promise<PageResponse<any>> {
+  const query = new URLSearchParams()
+  if (params?.page !== undefined) query.set('page', params.page.toString())
+  if (params?.size !== undefined) query.set('size', params.size.toString())
+
+  const queryString = query.toString()
+  return apiFetch(
+    queryString
+      ? `${API_ENDPOINTS.customer.wallet.history}?${queryString}`
+      : API_ENDPOINTS.customer.wallet.history
+  )
+}
 
 /**
  * Get customer transaction feed from analytics endpoint

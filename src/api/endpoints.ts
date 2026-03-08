@@ -75,6 +75,29 @@ export const API_ENDPOINTS = {
     all: '/v1/payment-transactions', // Alias for all payments
     byId: (id: string | number) => `/v1/payment-transactions/${id}`,
     productPayment: '/v1/product-payment',
+    portal: {
+      root: '/v1/portal/product-payment',
+      repeat: (id: string | number) => `/v1/portal/product-payment/repeat/${id}`,
+    },
+  },
+
+  // Bulk Payments
+  bulkPayments: {
+    root: '/v1/bulk-payments',
+    groups: {
+      root: '/v1/bulk-payments/groups',
+      byId: (id: string | number) => `/v1/bulk-payments/groups/${id}`,
+    },
+    schedules: {
+      root: '/v1/bulk-payments/schedules',
+      byId: (id: string | number) => `/v1/bulk-payments/schedules/${id}`,
+    },
+    requests: {
+      root: '/v1/bulk-payments/requests',
+      byId: (id: string | number) => `/v1/bulk-payments/requests/${id}`,
+    },
+    initiate: '/v1/bulk-payments/initiate',
+    initiateFromGroup: (groupId: string | number) => `/v1/bulk-payments/initiate/from-group/${groupId}`,
   },
 
   // Integration Credentials
@@ -301,6 +324,10 @@ export const API_ENDPOINTS = {
       root: '/v1/customer/products',
       validate: (productId: string | number) => `/v1/customer/products/${productId}/validate`,
       categories: '/v1/customer/products/categories',
+    },
+    wallet: {
+      balances: '/v1/customer/wallet/balances',
+      history: '/v1/customer/wallet/history',
     },
     savedAccounts: {
       root: '/v1/customer/saved-accounts',

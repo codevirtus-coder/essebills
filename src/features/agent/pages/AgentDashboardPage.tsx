@@ -1,42 +1,30 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import StatCard from '../../../components/ui/StatCard';
 import { INITIAL_CATEGORIES } from '../constants';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import UserProfile from '../../admin/components/UserProfile';
 import { NotificationsPage } from '../../../pages/NotificationsPage';
 import { getAuthSession, saveAuthSession } from '../../auth/auth.storage';
 import { getCurrentUserProfile } from '../../auth/auth.service';
 import type { UserProfileDto } from '../../auth/dto/auth.dto';
 import { getAgentWalletBalances, getAgentWalletHistory, getMyBankTopUps, type AgentWalletBalance, type AgentWalletTransaction, type PendingBankTopUp } from '../services/agent.service';
-import { getAgentRecentPayments, getAgentCommissionBalance, type AgentPaymentProduct } from '../services/agent-api.service';
+import { getAgentRecentPayments, getAgentCommissionBalance, getAgentAnalyticsStats, type AgentPaymentProduct, type AgentDashboardStatsDto } from '../services/agent-api.service';
 import Logo from '../../../components/ui/Logo';
 import CRUDLayout, { type CRUDColumn, type PageableState } from '../../shared/components/CRUDLayout';
 import CRUDModal from '../../shared/components/CRUDModal';
-import { Bolt, Antenna, Droplets, Landmark, History, PlusCircle, CheckCircle, Smartphone, Share2, Printer, ShoppingCart, Wallet, ArrowRight } from 'lucide-react';
+import { Bolt, Antenna, Droplets, Landmark, History, PlusCircle, CheckCircle, Smartphone, Share2, Printer, ShoppingCart, Wallet, ArrowRight, Loader2, Repeat, Zap, Wifi, BookOpen, ShieldCheck, Heart, Sparkles } from 'lucide-react';
 import '../styles/agent-dashboard.css';
-
-interface Sale {
-  id: string;
-  biller: string;
-  customer: string;
-  amount: number;
-  commission: number;
-  time: string;
-  icon: string;
-  token?: string;
-  units?: string;
-}
-
-const INITIAL_SALES: Sale[] = [
-  { id: 'S-10293', biller: 'ZESA Electricity', customer: '0771 223 994', amount: 20.00, commission: 0.50, time: '2 mins ago', icon: 'bolt', token: '1922-3884-1002-3394-1102', units: '45.2 kWh' },
-  { id: 'S-10292', biller: 'Econet Airtime', customer: '0772 445 112', amount: 5.00, commission: 0.25, time: '15 mins ago', icon: 'cell_tower' },
-  { id: 'S-10291', biller: 'ZINWA Water', customer: 'ZW-991-001', amount: 35.00, commission: 0.88, time: '1 hour ago', icon: 'water_drop' },
-];
-
+import BulkPaymentsPage from './BulkPaymentsPage';
+import toast from 'react-hot-toast';
+import { ServicesMarketplace, type BillerCard } from '../../shared/components/ServicesMarketplace';
+import { ProductPaymentCheckout } from '../../landing/components/ProductPaymentCheckout';
+import WalletTopUpModal from '../../customer/components/WalletTopUpModal';
+import { repeatPayment } from '../../customer/services/customer-api.service';
 
 export function AgentDashboardPage() {
   const { tab: urlTab } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const activeTab = urlTab || searchParams.get('tab') || 'overview';
 
   const session = getAuthSession();
@@ -50,20 +38,19 @@ export function AgentDashboardPage() {
   const setTab = (tab: string) => {
     const basePath = '/portal-agent';
     if (tab === 'overview') {
-      window.history.replaceState(null, '', basePath);
-      setSearchParams({});
+      navigate(basePath);
     } else {
-      window.history.replaceState(null, '', `${basePath}/${tab}`);
-      setSearchParams({});
+      navigate(`${basePath}/${tab}`);
     }
-    setSellStep('select');
+    setSelectedCheckoutProduct(null);
   };
 
   const [walletBalances, setWalletBalances] = useState<AgentWalletBalance[]>([]);
   const [floatLoading, setFloatLoading] = useState(true);
   const [commissionBalance, setCommissionBalance] = useState<number>(0);
-  const [recentSales, setRecentSales] = useState<Sale[]>([]);
+  const [recentSales, setRecentSales] = useState<any[]>([]);
   const [loadingSales, setLoadingSales] = useState(true);
+  const [stats, setStats] = useState<AgentDashboardStatsDto | null>(null);
 
   const [floatHistory, setFloatHistory] = useState<AgentWalletTransaction[]>([]);
   const [floatHistoryTotal, setFloatHistoryTotal] = useState(0);
@@ -75,23 +62,17 @@ export function AgentDashboardPage() {
   const [loadingTopUps, setLoadingTopUps] = useState(true);
   const [floatSubTab, setFloatSubTab] = useState<'history' | 'topups'>('history');
 
+  const [selectedCheckoutProduct, setSelectedCheckoutProduct] = useState<BillerCard | null>(null);
+  const [isTopUpModalOpen, setIsTopUpModalOpen] = useState(false);
+
   // Derived: primary float balance (first USD balance or first available)
   const floatBalance = walletBalances.find(b => b.currencyCode === 'USD')?.balance
     ?? walletBalances[0]?.balance
-    ?? 452.10;
-
-  // Sale Logic
-  const [sellStep, setSellStep] = useState<'select' | 'details' | 'confirm' | 'success'>('select');
-  const [sellForm, setSellForm] = useState({ billerId: '', billerName: '', customerRef: '', amount: '', catId: 'util' });
-  const [lastSale, setLastSale] = useState<Sale | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+    ?? 0;
 
   // Payout Logic
   const [isRequestingPayout, setIsRequestingPayout] = useState(false);
   const [payoutRequested, setPayoutRequested] = useState(false);
-
-  // Fulfillment Interaction Logic
-  const [fulfillmentStatus, setFulfillmentStatus] = useState<string | null>(null);
 
   useEffect(() => {
     if (profile) return;
@@ -106,22 +87,26 @@ export function AgentDashboardPage() {
     return () => { mounted = false; };
   }, [profile, session]);
 
-  useEffect(() => {
-    let mounted = true;
+  const refreshBalances = () => {
     getAgentWalletBalances()
-      .then((data) => { if (mounted) setWalletBalances(data); })
+      .then((data) => { setWalletBalances(data); })
       .catch(() => {})
-      .finally(() => { if (mounted) setFloatLoading(false); });
-    return () => { mounted = false; };
-  }, []);
+      .finally(() => { setFloatLoading(false); });
+  };
 
   useEffect(() => {
-    let mounted = true;
+    refreshBalances();
+  }, []);
+
+  const refreshSales = () => {
     getAgentRecentPayments(10)
-      .then((data) => { if (mounted) setRecentSales(data); })
+      .then((data) => { setRecentSales(data); })
       .catch(() => {})
-      .finally(() => { if (mounted) setLoadingSales(false); });
-    return () => { mounted = false; };
+      .finally(() => { setLoadingSales(false); });
+  };
+
+  useEffect(() => {
+    refreshSales();
   }, []);
 
   useEffect(() => {
@@ -131,6 +116,16 @@ export function AgentDashboardPage() {
       .catch(() => {});
     return () => { mounted = false; };
   }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    if (session?.profile?.id) {
+      getAgentAnalyticsStats(session.profile.id)
+        .then(data => { if (mounted) setStats(data); })
+        .catch(() => {});
+    }
+    return () => { mounted = false; };
+  }, [session?.profile?.id]);
 
   useEffect(() => {
     if (activeTab !== 'float') return;
@@ -160,42 +155,6 @@ export function AgentDashboardPage() {
     return () => { mounted = false; };
   }, [activeTab, floatSubTab]);
 
-  const billers = [
-    { id: 'zesa', name: 'ZESA Electricity', icon: <Bolt size={24} />, color: 'bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400', catId: 'util' },
-    { id: 'econet', name: 'Econet Airtime', icon: <Antenna size={24} />, color: 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400', catId: 'air' },
-    { id: 'netone', name: 'NetOne Airtime', icon: <Smartphone size={24} />, color: 'bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400', catId: 'air' },
-    { id: 'telone', name: 'TelOne Internet', icon: <Share2 size={24} />, color: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400', catId: 'net' },
-  ];
-
-  const getCommissionRate = (catId: string) => INITIAL_CATEGORIES.find(c => c.id === catId)?.agentRate || 2.0;
-
-  const handleProcess = () => {
-    const amt = parseFloat(sellForm.amount) || 0;
-    if (amt > floatBalance) return toast.error("Insufficient Float Balance!");
-    setIsProcessing(true);
-    setTimeout(() => {
-      const comm = amt * (getCommissionRate(sellForm.catId) / 100);
-      const isUtility = sellForm.catId === 'util';
-      const newSale: Sale = {
-        id: `S-${Math.floor(Math.random() * 90000)}`,
-        biller: sellForm.billerName,
-        customer: sellForm.customerRef,
-        amount: amt,
-        commission: comm,
-        time: 'Just now',
-        icon: 'payments',
-        token: isUtility ? `${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}` : undefined,
-        units: isUtility ? `${(amt * 2.2).toFixed(1)} kWh` : undefined
-      };
-      setFloatBalance(prev => prev - amt);
-      setCommissionBalance(prev => prev + comm);
-      setRecentSales([newSale, ...recentSales]);
-      setLastSale(newSale);
-      setIsProcessing(false);
-      setSellStep('success');
-    }, 1500);
-  };
-
   const handleRequestPayout = () => {
     if (commissionBalance <= 0) return;
     setIsRequestingPayout(true);
@@ -207,31 +166,44 @@ export function AgentDashboardPage() {
     }, 2000);
   };
 
-  const handleFulfillAction = (type: string) => {
-    setFulfillmentStatus(`Processing ${type}...`);
-    setTimeout(() => {
-      setFulfillmentStatus(`${type} Sent Successfully!`);
-      setTimeout(() => setFulfillmentStatus(null), 3000);
-    }, 1500);
+  const handleRepeatPayment = async (txId: string | number) => {
+    const loadingToast = toast.loading("Initiating repeat sale...");
+    try {
+      const response = await repeatPayment(txId);
+      toast.dismiss(loadingToast);
+      
+      const redirectUrl = (response as any).paymentTransaction?.redirectUrl || (response as any).redirectUrl;
+      
+      if (redirectUrl) {
+        window.location.assign(redirectUrl);
+      } else {
+        toast.success("Sale successful!");
+        refreshSales();
+        refreshBalances();
+      }
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      toast.error("Failed to repeat sale.");
+    }
   };
 
   // --------------------------------------------------------------------------
   // Tables
   // --------------------------------------------------------------------------
 
-  const salesColumns: CRUDColumn<Sale>[] = [
+  const salesColumns: CRUDColumn<any>[] = [
     {
       key: 'time',
       header: 'Time',
-      render: (sale) => <span className="text-xs font-semibold text-slate-500">{sale.time}</span>,
+      render: (sale) => <span className="text-xs font-semibold text-slate-500">{sale.time || new Date(sale.transactionDate).toLocaleTimeString()}</span>,
     },
     {
       key: 'service',
       header: 'Service',
       render: (sale) => (
         <div>
-          <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{sale.biller}</p>
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{sale.customer}</p>
+          <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{sale.biller || sale.productName}</p>
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{sale.customer || sale.productReference}</p>
         </div>
       ),
     },
@@ -239,14 +211,21 @@ export function AgentDashboardPage() {
       key: 'amount',
       header: 'Amount',
       className: 'text-right',
-      render: (sale) => <span className="font-bold text-slate-700 dark:text-slate-300">${sale.amount.toFixed(2)}</span>,
+      render: (sale) => <span className="font-bold text-slate-700 dark:text-slate-300">${(Number(sale.amount) || 0).toFixed(2)}</span>,
     },
     {
-      key: 'commission',
-      header: 'Comm.',
+      key: 'actions',
+      header: '',
       className: 'text-right',
-      render: (sale) => <span className="font-bold text-emerald-600">+${sale.commission.toFixed(2)}</span>,
-    },
+      render: (sale) => (
+        <button 
+          onClick={() => handleRepeatPayment(sale.id)}
+          className="text-[9px] font-black text-emerald-600 uppercase tracking-tighter hover:underline flex items-center gap-1 ml-auto"
+        >
+          <Repeat size={10} /> Repeat
+        </button>
+      ),
+    }
   ];
 
   const floatColumns: CRUDColumn<AgentWalletTransaction>[] = [
@@ -346,11 +325,11 @@ export function AgentDashboardPage() {
 
   const renderOverview = () => (
     <div className="space-y-8 animate-in fade-in duration-500">
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
             label="Total Sales Today"
-            value={`$${(recentSales.reduce((a, b) => a + (Number(b.amount) || 0), 0) || 0).toFixed(2)}`}
-            change="+12.4% vs yesterday"
+            value={stats?.todayTransactions !== undefined ? String(stats.todayTransactions) : `$${(recentSales.reduce((a, b) => a + (Number(b.amount) || 0), 0) || 0).toFixed(2)}`}
+            change={stats?.todayEarnings !== undefined ? `+$${stats.todayEarnings.toFixed(2)} earned` : "+12.4% vs yesterday"}
             icon="shopping_cart"
             iconBg="bg-emerald-50 dark:bg-emerald-900/20"
             iconColor="text-emerald-600 dark:text-emerald-400"
@@ -366,6 +345,23 @@ export function AgentDashboardPage() {
             iconColor="text-slate-600 dark:text-slate-300"
             chartPath="M0 20 Q 50 5, 100 15"
             strokeColor="#64748b"
+            onClick={() => setIsTopUpModalOpen(true)}
+          />
+          <StatCard
+            label="Commissions"
+            value={`$${commissionBalance.toFixed(2)}`}
+            change="Available for payout"
+            icon="payments"
+            iconBg="bg-blue-50 dark:bg-blue-900/20"
+            iconColor="text-blue-600 dark:text-blue-400"
+          />
+          <StatCard
+            label="Success Rate"
+            value={stats?.successfulTransactions !== undefined && stats?.totalTransactions ? `${Math.round((stats.successfulTransactions / stats.totalTransactions) * 100)}%` : "98.2%"}
+            change="System health optimal"
+            icon="check_circle"
+            iconBg="bg-amber-50 dark:bg-amber-900/20"
+            iconColor="text-amber-600 dark:text-amber-400"
           />
        </div>
 
@@ -389,144 +385,34 @@ export function AgentDashboardPage() {
   );
 
   const renderSell = () => (
-    <div className="space-y-8">
-      {sellStep === 'select' && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 animate-in slide-in-from-bottom-4">
-           {billers.map(b => (
-              <button 
-                key={b.id} 
-                onClick={() => { setSellForm({...sellForm, billerId: b.id, billerName: b.name, catId: b.catId}); setSellStep('details'); }} 
-                className="glass-card p-8 hover:border-emerald-500/50 hover:shadow-xl transition-all group flex flex-col items-center gap-4 border-slate-200 dark:border-slate-800"
-              >
-                 <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110", b.color)}>
-                    {b.icon}
-                 </div>
-                 <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">{b.name}</h4>
-                 <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Earn {getCommissionRate(b.catId)}%</p>
-              </button>
-           ))}
-        </div>
-      )}
+    <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+      <div className="max-w-2xl">
+        <h2 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Authorize Sale</h2>
+        <p className="text-slate-500 mt-2">Browse the marketplace and select a service to sell.</p>
+      </div>
 
-      {sellStep === 'details' && (
-        <div className="max-w-2xl mx-auto glass-card p-10 border-slate-200 dark:border-slate-800 space-y-8 animate-in zoom-in-95">
-           <div className="text-center space-y-2">
-              <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Authorize Sale</h3>
-              <p className="text-slate-500 dark:text-slate-400">Verify customer details before proceeding with payment.</p>
-           </div>
-           
-           <div className="space-y-6">
-              <div className="space-y-2">
-                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Customer Reference / Mobile</label>
-                 <input 
-                   type="text" 
-                   placeholder="e.g. 0771 000 000" 
-                   onChange={e => setSellForm({...sellForm, customerRef: e.target.value})} 
-                   className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3.5 font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20" 
-                 />
-              </div>
-              <div className="space-y-2">
-                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Payment Amount ($)</label>
-                 <input 
-                   type="number" 
-                   placeholder="0.00" 
-                   onChange={e => setSellForm({...sellForm, amount: e.target.value})} 
-                   className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 text-3xl font-bold text-emerald-600 text-center focus:outline-none focus:ring-2 focus:ring-emerald-500/20" 
-                 />
-              </div>
-           </div>
-           
-           <div className="p-5 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800/50 flex items-center justify-between">
-              <div>
-                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Your Commission</p>
-                 <p className="text-2xl font-bold text-emerald-600">+${((parseFloat(sellForm.amount) || 0) * (getCommissionRate(sellForm.catId)/100)).toFixed(2)}</p>
-              </div>
-              <div className="w-12 h-12 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center shadow-sm">
-                 <CheckCircle className="text-emerald-500" size={24} />
-              </div>
-           </div>
-
-           <div className="grid grid-cols-2 gap-4 pt-2">
-              <button onClick={() => setSellStep('select')} className="py-4 rounded-xl border border-slate-200 dark:border-slate-800 font-bold text-[11px] text-slate-600 dark:text-slate-400 uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Cancel</button>
-              <button 
-                onClick={handleProcess} 
-                disabled={isProcessing} 
-                className="py-4 bg-emerald-600 text-white rounded-xl font-bold text-[11px] uppercase tracking-widest shadow-lg shadow-emerald-900/20 hover:bg-emerald-700 transition-all disabled:opacity-50"
-              >
-                {isProcessing ? 'Processing...' : 'Confirm Payment'}
-              </button>
-           </div>
-        </div>
-      )}
-
-      {sellStep === 'success' && (
-        <div className="max-w-2xl mx-auto animate-in zoom-in duration-500 pb-20">
-           <div className="glass-card overflow-hidden border-slate-200 dark:border-slate-800">
-              <div className="bg-emerald-50/50 dark:bg-emerald-900/10 p-12 text-center border-b border-dashed border-slate-200 dark:border-slate-800">
-                 <div className="w-20 h-20 bg-emerald-600 text-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-emerald-900/20">
-                    <CheckCircle size={40} />
-                 </div>
-                 <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Payment Successful</h3>
-                 <p className="text-slate-500 dark:text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em] mt-2">Auth ID: {lastSale?.id}</p>
-              </div>
-
-              {lastSale?.token && (
-                 <div className="p-10 bg-slate-50/50 dark:bg-slate-900/50 text-center space-y-4">
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Voucher Code</p>
-                    <div className="bg-white dark:bg-slate-950 border-2 border-emerald-500/20 rounded-2xl p-8 shadow-inner">
-                       <p className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white tracking-tighter font-mono">{lastSale.token}</p>
-                    </div>
-                    <div className="flex justify-center gap-4">
-                       <div className="px-4 py-2 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">Units: {lastSale.units}</div>
-                       <div className="px-4 py-2 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">Service: ZESA</div>
-                    </div>
-                 </div>
-              )}
-
-              <div className="p-12 space-y-8">
-                 <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                       <span className="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest text-[9px]">Authorized By</span>
-                       <span className="text-slate-900 dark:text-white font-bold text-sm">{agentName}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                       <span className="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest text-[9px]">Customer Reference</span>
-                       <span className="text-slate-900 dark:text-white font-bold text-sm">{lastSale?.customer}</span>
-                    </div>
-                    <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                       <span className="text-slate-900 dark:text-white font-bold uppercase tracking-widest text-[10px]">Total Paid</span>
-                       <span className="text-3xl font-bold text-emerald-600 tracking-tighter">${(Number(lastSale?.amount) || 0).toFixed(2)}</span>
-                    </div>
-                 </div>
-
-                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-                    <button onClick={() => handleFulfillAction('Print')} className="flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-slate-900 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all gap-2 group">
-                       <Printer size={20} className="text-slate-600 dark:text-slate-400 group-hover:text-emerald-500 transition-colors" />
-                       <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Thermal Print</span>
-                    </button>
-                    <button onClick={() => handleFulfillAction('WhatsApp')} className="flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-slate-900 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all gap-2 group">
-                       <Share2 size={20} className="text-slate-600 dark:text-slate-400 group-hover:text-emerald-500 transition-colors" />
-                       <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">WhatsApp</span>
-                    </button>
-                    <button onClick={() => handleFulfillAction('SMS')} className="flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-slate-900 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all gap-2 group">
-                       <PlusCircle size={20} className="text-slate-600 dark:text-slate-400 group-hover:text-emerald-500 transition-colors" />
-                       <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Send SMS</span>
-                    </button>
-                 </div>
-
-                 <div className="pt-6 flex flex-col gap-4">
-                    <button onClick={() => setSellStep('select')} className="w-full bg-slate-900 dark:bg-emerald-600 text-white py-5 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl transition-all flex items-center justify-center gap-3">
-                       <PlusCircle size={18} />
-                       New Transaction
-                    </button>
-                    <button onClick={() => setTab('overview')} className="w-full py-4 text-slate-500 dark:text-slate-400 font-bold text-[10px] uppercase tracking-widest hover:text-slate-900 dark:hover:text-white transition-colors">
-                       Return to Dashboard
-                    </button>
-                 </div>
-              </div>
-           </div>
-        </div>
-      )}
+      <div className="glass-card p-8 md:p-10 border-slate-200 dark:border-slate-800 overflow-hidden min-h-[600px]">
+        {selectedCheckoutProduct ? (
+          <ProductPaymentCheckout 
+            productId={selectedCheckoutProduct.productId}
+            billerName={selectedCheckoutProduct.name}
+            productCategoryId={selectedCheckoutProduct.productCategoryId}
+            embedded={true}
+            onBack={() => setSelectedCheckoutProduct(null)}
+            onSuccess={() => {
+              setSelectedCheckoutProduct(null);
+              setTab('overview');
+              refreshBalances();
+              refreshSales();
+            }}
+          />
+        ) : (
+          <ServicesMarketplace 
+            embedded={true} 
+            onSelectProduct={(p) => setSelectedCheckoutProduct(p)}
+          />
+        )}
+      </div>
     </div>
   );
 
@@ -534,6 +420,7 @@ export function AgentDashboardPage() {
     <div className="space-y-8 font-sans">
       {activeTab === 'overview' && renderOverview()}
       {activeTab === 'sell' && renderSell()}
+      {activeTab === 'bulk-payments' && <BulkPaymentsPage />}
       {activeTab === 'notifications' && <NotificationsPage />}
       
       {activeTab === 'commissions' && (
@@ -668,26 +555,17 @@ export function AgentDashboardPage() {
           <UserProfile />
         </div>
       )}
+
+      <WalletTopUpModal 
+        isOpen={isTopUpModalOpen} 
+        onClose={() => setIsTopUpModalOpen(false)}
+        onSuccess={() => {
+          refreshBalances();
+        }}
+      />
     </div>
   );
 }
-
-const Loader2 = ({ className, size }: { className?: string, size?: number }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width={size || 24} 
-    height={size || 24} 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={cn("animate-spin", className)}
-  >
-    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-  </svg>
-)
 
 function cn(...inputs: any[]) {
   return inputs.filter(Boolean).join(' ');

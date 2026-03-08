@@ -5,6 +5,7 @@ import './index.css'
 import './App.css'
 import './styles/global.css'
 import App from './App'
+import { ErrorBoundary } from './components/ui/ErrorBoundary'
 
 const queryClient = new QueryClient()
 const rootElement = document.getElementById('root')
@@ -16,7 +17,9 @@ if (!rootElement) {
 createRoot(rootElement).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <App />
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
     </QueryClientProvider>
   </StrictMode>,
 )

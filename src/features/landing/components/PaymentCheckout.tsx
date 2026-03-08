@@ -26,6 +26,7 @@ interface PaymentCheckoutProps {
   onBack: () => void;
   onConfirm: (method: PaymentOption, email: string, phone: string, accountNumber: string, amount: number) => void;
   isLoading?: boolean;
+  embedded?: boolean;
 }
 
 export type PaymentOption = "wallet" | "card" | "mobile_money" | "pesepay";
@@ -40,6 +41,7 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
   onBack,
   onConfirm,
   isLoading = false,
+  embedded = false,
 }) => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentOption>("pesepay");
   const [email, setEmail] = useState("");
@@ -59,31 +61,33 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
   const canPay = !!phone && !!accountNumber && baseAmount > 0 && !amountError;
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] font-sans text-slate-900 overflow-y-auto pb-20">
+    <div className={`${embedded ? '' : 'min-h-screen bg-[#f8fafc] pb-20'} font-sans text-slate-900 overflow-y-auto`}>
       {/* ── Navbar ────────────────────────────────────────────────────────── */}
-      <header className="h-20 flex items-center justify-between px-4 sm:px-8 border-b border-slate-200 bg-slate-900 text-white sticky top-0 z-50">
-        <Link to={ROUTE_PATHS.home} className="flex items-center">
-          <img src={esebillsLogo} alt="EseBills" className="h-10 w-auto brightness-0 invert" />
-        </Link>
-        <div className="flex items-center gap-4">
-          <div className="hidden sm:flex flex-col items-end mr-2">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Secured Payment</p>
-            <p className="text-[10px] text-emerald-400 font-bold">SSL 256-BIT ENCRYPTED</p>
+      {!embedded && (
+        <header className="h-20 flex items-center justify-between px-4 sm:px-8 border-b border-slate-200 bg-slate-900 text-white sticky top-0 z-50">
+          <Link to={ROUTE_PATHS.home} className="flex items-center">
+            <img src={esebillsLogo} alt="EseBills" className="h-10 w-auto brightness-0 invert" />
+          </Link>
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:flex flex-col items-end mr-2">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Secured Payment</p>
+              <p className="text-[10px] text-emerald-400 font-bold">SSL 256-BIT ENCRYPTED</p>
+            </div>
+            <ShieldCheck className="text-emerald-500 w-8 h-8" />
           </div>
-          <ShieldCheck className="text-emerald-500 w-8 h-8" />
-        </div>
-      </header>
+        </header>
+      )}
 
-      <main className="max-w-5xl mx-auto pt-8 px-4 sm:px-6">
+      <main className={`${embedded ? 'p-0' : 'max-w-5xl mx-auto pt-8 px-4 sm:px-6'}`}>
         <button
           onClick={onBack}
           className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-900 transition-all mb-8 group"
         >
           <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-          Back to Bill Selection
+          {embedded ? 'Back to Marketplace' : 'Back to Bill Selection'}
         </button>
 
-        <div className="grid lg:grid-cols-[1fr_400px] gap-8 items-start">
+        <div className={`grid ${embedded ? 'grid-cols-1 lg:grid-cols-[1fr_350px]' : 'lg:grid-cols-[1fr_400px]'} gap-8 items-start`}>
           {/* ── Left Column: Details & Payment Methods ─────────────────────── */}
           <div className="space-y-6">
             <div className="bg-white rounded-[2rem] border border-slate-200 overflow-hidden shadow-xl shadow-slate-200/50">

@@ -652,16 +652,16 @@ function ForWho() {
     },
     {
       icon: Store,
-      title: 'EseAgents',
-      tag: 'Agent Network',
+      title: 'EseAgents & Corporates',
+      tag: 'Business & Scale',
       featured: false,
       description:
-        'Join our agency network. Sell airtime, electricity tokens, and bill payments to earn commissions.',
-      perks: ['Competitive commissions', 'Float management', 'Real-time transaction reports', 'Dedicated agent support'],
-      cta: 'Become an Agent',
+        'Join our agency network or manage company payouts. Execute bulk payments for employees and recurring bills.',
+      perks: ['Bulk & Recurring Payments', 'Competitive commissions', 'Float management', 'Real-time reports'],
+      cta: 'Join the Network',
       href: ROUTE_PATHS.registerAgent,
       loginHref: ROUTE_PATHS.loginAgent,
-      loginLabel: 'Agent login',
+      loginLabel: 'Business login',
     },
     {
       icon: Building2,

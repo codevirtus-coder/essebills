@@ -1622,7 +1622,7 @@
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProductPaymentResponse"
+                  "type": "object"
                 }
               }
             }
@@ -1746,6 +1746,87 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/ProductCategory"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portal/product-payment": {
+      "post": {
+        "tags": [
+          "portal-product-payment-rest-controller"
+        ],
+        "operationId": "processProductPayment_1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductPaymentContext"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portal/product-payment/repeat/{transactionId}": {
+      "post": {
+        "tags": [
+          "portal-product-payment-rest-controller"
+        ],
+        "operationId": "repeatPayment",
+        "parameters": [
+          {
+            "name": "transactionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
                 }
               }
             }
@@ -2341,6 +2422,177 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/Country"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/bulk-payments/schedules": {
+      "get": {
+        "tags": [
+          "bulk-payment-rest-controller"
+        ],
+        "operationId": "getSchedules",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BulkPaymentSchedule"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "bulk-payment-rest-controller"
+        ],
+        "operationId": "createSchedule",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkPaymentSchedule"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/bulk-payments/initiate": {
+      "post": {
+        "tags": [
+          "bulk-payment-rest-controller"
+        ],
+        "operationId": "initiateBulk",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkInitiateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkPaymentRequest"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/bulk-payments/initiate/from-group/{groupId}": {
+      "post": {
+        "tags": [
+          "bulk-payment-rest-controller"
+        ],
+        "operationId": "initiateFromGroup",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkPaymentRequest"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/bulk-payments/groups": {
+      "get": {
+        "tags": [
+          "bulk-payment-rest-controller"
+        ],
+        "operationId": "getGroups",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BulkPaymentGroup"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "bulk-payment-rest-controller"
+        ],
+        "operationId": "createGroup",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkPaymentGroup"
                 }
               }
             }
@@ -2985,6 +3237,43 @@
         }
       }
     },
+    "/v1/notifications/{id}/read": {
+      "patch": {
+        "tags": [
+          "user-notification-rest-controller"
+        ],
+        "operationId": "markRead",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/v1/notifications/read-all": {
+      "patch": {
+        "tags": [
+          "user-notification-rest-controller"
+        ],
+        "operationId": "markAllRead",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/v1/whatsapp/simulator/responses": {
       "get": {
         "tags": [
@@ -3588,6 +3877,29 @@
         }
       }
     },
+    "/v1/notifications": {
+      "get": {
+        "tags": [
+          "user-notification-rest-controller"
+        ],
+        "operationId": "list",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserNotificationDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/my-audits/period": {
       "get": {
         "tags": [
@@ -3724,6 +4036,59 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/PageDonation"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/customer/wallet/history": {
+      "get": {
+        "tags": [
+          "customer-wallet-rest-controller"
+        ],
+        "operationId": "getHistory",
+        "parameters": [
+          {
+            "name": "pageable",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageCustomerWalletTransaction"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/customer/wallet/balances": {
+      "get": {
+        "tags": [
+          "customer-wallet-rest-controller"
+        ],
+        "operationId": "getBalances",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomerWalletBalance"
+                  }
                 }
               }
             }
@@ -3933,6 +4298,60 @@
                   "items": {
                     "$ref": "#/components/schemas/Country"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/bulk-payments/requests": {
+      "get": {
+        "tags": [
+          "bulk-payment-rest-controller"
+        ],
+        "operationId": "getRequests",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BulkPaymentRequest"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/bulk-payments/requests/{id}": {
+      "get": {
+        "tags": [
+          "bulk-payment-rest-controller"
+        ],
+        "operationId": "getRequest",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkPaymentRequest"
                 }
               }
             }
@@ -4415,7 +4834,7 @@
         "tags": [
           "agent-wallet-controller"
         ],
-        "operationId": "getHistory",
+        "operationId": "getHistory_1",
         "parameters": [
           {
             "name": "page",
@@ -4457,7 +4876,7 @@
         "tags": [
           "agent-wallet-controller"
         ],
-        "operationId": "getBalances",
+        "operationId": "getBalances_1",
         "responses": {
           "200": {
             "description": "OK",
@@ -4480,7 +4899,7 @@
         "tags": [
           "pending-bank-top-up-admin-controller"
         ],
-        "operationId": "list",
+        "operationId": "list_1",
         "parameters": [
           {
             "name": "status",
@@ -5047,6 +5466,30 @@
         }
       }
     },
+    "/v1/notifications/{id}": {
+      "delete": {
+        "tags": [
+          "user-notification-rest-controller"
+        ],
+        "operationId": "delete_9",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/v1/holidays/{id}": {
       "delete": {
         "tags": [
@@ -5335,13 +5778,13 @@
           "shopLocation": {
             "type": "string"
           },
+          "accountNonLocked": {
+            "type": "boolean"
+          },
           "accountNonExpired": {
             "type": "boolean"
           },
           "credentialsNonExpired": {
-            "type": "boolean"
-          },
-          "accountNonLocked": {
             "type": "boolean"
           }
         }
@@ -5516,12 +5959,12 @@
             "type": "number",
             "format": "double"
           },
+          "defaultCurrency": {
+            "$ref": "#/components/schemas/Currency"
+          },
           "minimumPurchaseAmount": {
             "type": "number",
             "format": "double"
-          },
-          "defaultCurrency": {
-            "$ref": "#/components/schemas/Currency"
           }
         }
       },
@@ -6709,6 +7152,10 @@
           "productMetadata": {
             "type": "string"
           },
+          "userId": {
+            "type": "integer",
+            "format": "int64"
+          },
           "currencyCode": {
             "$ref": "#/components/schemas/Currency"
           },
@@ -6721,6 +7168,113 @@
           "paymentMethodCode",
           "phoneNumber",
           "productCode"
+        ]
+      },
+      "PesepayTransaction": {
+        "type": "object",
+        "properties": {
+          "transactionStatus": {
+            "type": "string"
+          },
+          "transactionStatusDescription": {
+            "type": "string"
+          },
+          "pesepayReferenceNumber": {
+            "type": "string"
+          },
+          "merchantReference": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "currencyCode": {
+            "type": "string"
+          },
+          "pollUrl": {
+            "type": "string"
+          },
+          "redirectUrl": {
+            "type": "string"
+          },
+          "referenceNumber": {
+            "type": "string"
+          }
+        }
+      },
+      "CreatePesepayIntegrationDetailsCommand": {
+        "type": "object",
+        "properties": {
+          "encryptionKey": {
+            "type": "string",
+            "minLength": 1
+          },
+          "integrationKey": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "encryptionKey",
+          "integrationKey"
+        ]
+      },
+      "PaymentTransactionCreationContext": {
+        "type": "object",
+        "properties": {
+          "productReferenceNumber": {
+            "type": "string",
+            "minLength": 1
+          },
+          "product": {
+            "$ref": "#/components/schemas/Product"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "defaultCurrencyCode": {
+            "type": "string"
+          },
+          "amountInDefaultCurrency": {
+            "type": "number",
+            "format": "double"
+          },
+          "productTransactionId": {
+            "type": "string"
+          },
+          "customerEmail": {
+            "type": "string"
+          },
+          "customerPhoneNumber": {
+            "type": "string"
+          },
+          "serviceFees": {
+            "type": "number",
+            "format": "double"
+          },
+          "paymentNotificationSms": {
+            "type": "boolean"
+          },
+          "productPaymentNotificationSms": {
+            "type": "boolean"
+          },
+          "productMetadata": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "currency",
+          "product",
+          "productReferenceNumber"
         ]
       },
       "PaymentTransaction": {
@@ -6753,6 +7307,10 @@
           },
           "pesepayReferenceNumber": {
             "type": "string"
+          },
+          "userId": {
+            "type": "integer",
+            "format": "int64"
           },
           "productReferenceNumber": {
             "type": "string"
@@ -6848,137 +7406,6 @@
             "format": "double"
           }
         }
-      },
-      "ProductPaymentResponse": {
-        "type": "object",
-        "properties": {
-          "paymentTransaction": {
-            "$ref": "#/components/schemas/PaymentTransaction"
-          },
-          "purchaseResults": {
-            "type": "object",
-            "additionalProperties": {
-
-            }
-          },
-          "productPaymentCompletionStatus": {
-            "type": "string",
-            "enum": [
-              "SUCCESS",
-              "FAILED",
-              "NOT_COMPLETE"
-            ]
-          },
-          "productCode": {
-            "type": "string"
-          },
-          "productPurchaseReferenceNumber": {
-            "type": "string"
-          }
-        }
-      },
-      "PesepayTransaction": {
-        "type": "object",
-        "properties": {
-          "transactionStatus": {
-            "type": "string"
-          },
-          "transactionStatusDescription": {
-            "type": "string"
-          },
-          "pesepayReferenceNumber": {
-            "type": "string"
-          },
-          "merchantReference": {
-            "type": "string"
-          },
-          "amount": {
-            "type": "number",
-            "format": "double"
-          },
-          "currencyCode": {
-            "type": "string"
-          },
-          "referenceNumber": {
-            "type": "string"
-          },
-          "pollUrl": {
-            "type": "string"
-          },
-          "redirectUrl": {
-            "type": "string"
-          }
-        }
-      },
-      "CreatePesepayIntegrationDetailsCommand": {
-        "type": "object",
-        "properties": {
-          "encryptionKey": {
-            "type": "string",
-            "minLength": 1
-          },
-          "integrationKey": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "encryptionKey",
-          "integrationKey"
-        ]
-      },
-      "PaymentTransactionCreationContext": {
-        "type": "object",
-        "properties": {
-          "productReferenceNumber": {
-            "type": "string",
-            "minLength": 1
-          },
-          "product": {
-            "$ref": "#/components/schemas/Product"
-          },
-          "currency": {
-            "$ref": "#/components/schemas/Currency"
-          },
-          "amount": {
-            "type": "number",
-            "format": "double"
-          },
-          "defaultCurrencyCode": {
-            "type": "string"
-          },
-          "amountInDefaultCurrency": {
-            "type": "number",
-            "format": "double"
-          },
-          "productTransactionId": {
-            "type": "string"
-          },
-          "customerEmail": {
-            "type": "string"
-          },
-          "customerPhoneNumber": {
-            "type": "string"
-          },
-          "serviceFees": {
-            "type": "number",
-            "format": "double"
-          },
-          "paymentNotificationSms": {
-            "type": "boolean"
-          },
-          "productPaymentNotificationSms": {
-            "type": "boolean"
-          },
-          "productMetadata": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "currency",
-          "product",
-          "productReferenceNumber"
-        ]
       },
       "OtpVerificationCommand": {
         "type": "object",
@@ -7239,6 +7666,350 @@
           "code",
           "name"
         ]
+      },
+      "ScheduleRequest": {
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "frequency": {
+            "type": "string"
+          },
+          "startDate": {
+            "type": "string"
+          }
+        }
+      },
+      "BulkPaymentGroup": {
+        "type": "object",
+        "properties": {
+          "createdBy": {
+            "type": "string"
+          },
+          "lastModifiedBy": {
+            "type": "string"
+          },
+          "lastModifiedDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "deleted": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BulkPaymentGroupItem"
+            }
+          }
+        }
+      },
+      "BulkPaymentGroupItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "group": {
+
+          },
+          "productCode": {
+            "type": "string"
+          },
+          "recipientIdentifier": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "currencyCode": {
+            "type": "string"
+          },
+          "recipientName": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "string"
+          },
+          "createdDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedDate": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "BulkPaymentSchedule": {
+        "type": "object",
+        "properties": {
+          "createdBy": {
+            "type": "string"
+          },
+          "lastModifiedBy": {
+            "type": "string"
+          },
+          "lastModifiedDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "deleted": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          },
+          "group": {
+            "$ref": "#/components/schemas/BulkPaymentGroup"
+          },
+          "name": {
+            "type": "string"
+          },
+          "frequency": {
+            "type": "string",
+            "enum": [
+              "DAILY",
+              "WEEKLY",
+              "BI_WEEKLY",
+              "MONTHLY"
+            ]
+          },
+          "nextRunDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastRunDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "BulkInitiateRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BulkItemDto"
+            }
+          }
+        }
+      },
+      "BulkItemDto": {
+        "type": "object",
+        "properties": {
+          "productCode": {
+            "type": "string"
+          },
+          "recipientIdentifier": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "currencyCode": {
+            "type": "string"
+          },
+          "recipientName": {
+            "type": "string"
+          },
+          "requiredFields": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "BulkPaymentItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "request": {
+            "$ref": "#/components/schemas/BulkPaymentRequest"
+          },
+          "productCode": {
+            "type": "string"
+          },
+          "recipientIdentifier": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "currencyCode": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "SUCCESS",
+              "FAILED"
+            ]
+          },
+          "errorMessage": {
+            "type": "string"
+          },
+          "paymentTransactionRef": {
+            "type": "string"
+          },
+          "createdDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "processedDate": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "BulkPaymentRequest": {
+        "type": "object",
+        "properties": {
+          "createdBy": {
+            "type": "string"
+          },
+          "lastModifiedBy": {
+            "type": "string"
+          },
+          "lastModifiedDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "deleted": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          },
+          "group": {
+            "$ref": "#/components/schemas/BulkPaymentGroup"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "PROCESSING",
+              "COMPLETED",
+              "PARTIAL_FAILURE",
+              "FAILED"
+            ]
+          },
+          "totalAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "currencyCode": {
+            "type": "string"
+          },
+          "itemCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "successCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "failureCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "processedDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BulkPaymentItem"
+            }
+          }
+        }
+      },
+      "GroupCreateRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BulkItemDto"
+            }
+          }
+        }
       },
       "RefreshTokenRequest": {
         "type": "object",
@@ -7897,12 +8668,8 @@
             "type": "integer",
             "format": "int64"
           },
-          "numberOfElements": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sort": {
-            "$ref": "#/components/schemas/SortObject"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -7910,8 +8677,12 @@
           "last": {
             "type": "boolean"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
           },
           "size": {
             "type": "integer",
@@ -7935,9 +8706,6 @@
       "PageableObject": {
         "type": "object",
         "properties": {
-          "sort": {
-            "$ref": "#/components/schemas/SortObject"
-          },
           "paged": {
             "type": "boolean"
           },
@@ -7951,6 +8719,9 @@
           },
           "unpaged": {
             "type": "boolean"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
           },
           "offset": {
             "type": "integer",
@@ -8053,12 +8824,8 @@
             "type": "integer",
             "format": "int64"
           },
-          "numberOfElements": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sort": {
-            "$ref": "#/components/schemas/SortObject"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -8066,8 +8833,12 @@
           "last": {
             "type": "boolean"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
           },
           "size": {
             "type": "integer",
@@ -8155,12 +8926,8 @@
             "type": "integer",
             "format": "int64"
           },
-          "numberOfElements": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sort": {
-            "$ref": "#/components/schemas/SortObject"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -8168,8 +8935,12 @@
           "last": {
             "type": "boolean"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
           },
           "size": {
             "type": "integer",
@@ -8201,12 +8972,8 @@
             "type": "integer",
             "format": "int64"
           },
-          "numberOfElements": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sort": {
-            "$ref": "#/components/schemas/SortObject"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -8214,8 +8981,12 @@
           "last": {
             "type": "boolean"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
           },
           "size": {
             "type": "integer",
@@ -8247,12 +9018,8 @@
             "type": "integer",
             "format": "int64"
           },
-          "numberOfElements": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sort": {
-            "$ref": "#/components/schemas/SortObject"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -8260,8 +9027,12 @@
           "last": {
             "type": "boolean"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
           },
           "size": {
             "type": "integer",
@@ -8349,12 +9120,8 @@
             "type": "integer",
             "format": "int64"
           },
-          "numberOfElements": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sort": {
-            "$ref": "#/components/schemas/SortObject"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -8362,8 +9129,12 @@
           "last": {
             "type": "boolean"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
           },
           "size": {
             "type": "integer",
@@ -8411,12 +9182,8 @@
             "type": "integer",
             "format": "int64"
           },
-          "numberOfElements": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sort": {
-            "$ref": "#/components/schemas/SortObject"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -8424,8 +9191,12 @@
           "last": {
             "type": "boolean"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
           },
           "size": {
             "type": "integer",
@@ -8457,12 +9228,8 @@
             "type": "integer",
             "format": "int64"
           },
-          "numberOfElements": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sort": {
-            "$ref": "#/components/schemas/SortObject"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -8470,8 +9237,12 @@
           "last": {
             "type": "boolean"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
           },
           "size": {
             "type": "integer",
@@ -8488,6 +9259,35 @@
             "format": "int32"
           },
           "empty": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UserNotificationDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "actionUrl": {
+            "type": "string"
+          },
+          "read": {
             "type": "boolean"
           }
         }
@@ -8556,12 +9356,8 @@
             "type": "integer",
             "format": "int64"
           },
-          "numberOfElements": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sort": {
-            "$ref": "#/components/schemas/SortObject"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -8569,8 +9365,12 @@
           "last": {
             "type": "boolean"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
           },
           "size": {
             "type": "integer",
@@ -8613,12 +9413,8 @@
             "type": "integer",
             "format": "int64"
           },
-          "numberOfElements": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sort": {
-            "$ref": "#/components/schemas/SortObject"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -8626,8 +9422,12 @@
           "last": {
             "type": "boolean"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
           },
           "size": {
             "type": "integer",
@@ -8659,12 +9459,8 @@
             "type": "integer",
             "format": "int64"
           },
-          "numberOfElements": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sort": {
-            "$ref": "#/components/schemas/SortObject"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -8672,8 +9468,12 @@
           "last": {
             "type": "boolean"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
           },
           "size": {
             "type": "integer",
@@ -8759,12 +9559,8 @@
             "type": "integer",
             "format": "int64"
           },
-          "numberOfElements": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sort": {
-            "$ref": "#/components/schemas/SortObject"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -8772,8 +9568,12 @@
           "last": {
             "type": "boolean"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
           },
           "size": {
             "type": "integer",
@@ -8794,6 +9594,187 @@
           }
         }
       },
+      "CustomerWallet": {
+        "type": "object",
+        "properties": {
+          "createdBy": {
+            "type": "string"
+          },
+          "lastModifiedBy": {
+            "type": "string"
+          },
+          "lastModifiedDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "deleted": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          }
+        }
+      },
+      "CustomerWalletTransaction": {
+        "type": "object",
+        "properties": {
+          "createdBy": {
+            "type": "string"
+          },
+          "lastModifiedBy": {
+            "type": "string"
+          },
+          "lastModifiedDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "deleted": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "customerWallet": {
+            "$ref": "#/components/schemas/CustomerWallet"
+          },
+          "currencyCode": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "transactionType": {
+            "type": "string",
+            "enum": [
+              "TOP_UP",
+              "PAYMENT",
+              "DEBIT",
+              "REFUND"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "paymentTransactionRef": {
+            "type": "string"
+          },
+          "productCode": {
+            "type": "string"
+          },
+          "runningBalance": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "PageCustomerWalletTransaction": {
+        "type": "object",
+        "properties": {
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerWalletTransaction"
+            }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CustomerWalletBalance": {
+        "type": "object",
+        "properties": {
+          "createdBy": {
+            "type": "string"
+          },
+          "lastModifiedBy": {
+            "type": "string"
+          },
+          "lastModifiedDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "deleted": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "customerWallet": {
+            "$ref": "#/components/schemas/CustomerWallet"
+          },
+          "currencyCode": {
+            "type": "string"
+          },
+          "balance": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
       "PageCurrency": {
         "type": "object",
         "properties": {
@@ -8805,12 +9786,8 @@
             "type": "integer",
             "format": "int64"
           },
-          "numberOfElements": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sort": {
-            "$ref": "#/components/schemas/SortObject"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -8818,8 +9795,12 @@
           "last": {
             "type": "boolean"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
           },
           "size": {
             "type": "integer",
@@ -8851,12 +9832,8 @@
             "type": "integer",
             "format": "int64"
           },
-          "numberOfElements": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sort": {
-            "$ref": "#/components/schemas/SortObject"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -8864,8 +9841,12 @@
           "last": {
             "type": "boolean"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
           },
           "size": {
             "type": "integer",
@@ -8897,12 +9878,8 @@
             "type": "integer",
             "format": "int64"
           },
-          "numberOfElements": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sort": {
-            "$ref": "#/components/schemas/SortObject"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -8910,8 +9887,12 @@
           "last": {
             "type": "boolean"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
           },
           "size": {
             "type": "integer",
@@ -8943,12 +9924,8 @@
             "type": "integer",
             "format": "int64"
           },
-          "numberOfElements": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sort": {
-            "$ref": "#/components/schemas/SortObject"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -8956,8 +9933,12 @@
           "last": {
             "type": "boolean"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
           },
           "size": {
             "type": "integer",
@@ -9239,7 +10220,8 @@
             "type": "string",
             "enum": [
               "COMMISSION_EARNED",
-              "TOP_UP"
+              "TOP_UP",
+              "WITHDRAWAL"
             ]
           },
           "description": {
@@ -9268,12 +10250,8 @@
             "type": "integer",
             "format": "int64"
           },
-          "numberOfElements": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sort": {
-            "$ref": "#/components/schemas/SortObject"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -9281,8 +10259,12 @@
           "last": {
             "type": "boolean"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
           },
           "size": {
             "type": "integer",
@@ -9354,12 +10336,8 @@
             "type": "integer",
             "format": "int64"
           },
-          "numberOfElements": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sort": {
-            "$ref": "#/components/schemas/SortObject"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -9367,8 +10345,12 @@
           "last": {
             "type": "boolean"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
           },
           "size": {
             "type": "integer",
@@ -9400,12 +10382,8 @@
             "type": "integer",
             "format": "int64"
           },
-          "numberOfElements": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sort": {
-            "$ref": "#/components/schemas/SortObject"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -9413,8 +10391,12 @@
           "last": {
             "type": "boolean"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
           },
           "size": {
             "type": "integer",
@@ -9446,12 +10428,8 @@
             "type": "integer",
             "format": "int64"
           },
-          "numberOfElements": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sort": {
-            "$ref": "#/components/schemas/SortObject"
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
           },
           "first": {
             "type": "boolean"
@@ -9459,8 +10437,12 @@
           "last": {
             "type": "boolean"
           },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
           },
           "size": {
             "type": "integer",

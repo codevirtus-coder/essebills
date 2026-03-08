@@ -4,6 +4,7 @@
 
 import axios, { AxiosInstance, AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios'
 import type { ErrorMessage } from '../types'
+import { getAccessToken } from '../features/auth/auth.storage'
 
 // --------------------------------------------------------------------------
 // Configuration
@@ -11,20 +12,6 @@ import type { ErrorMessage } from '../types'
 
 // Use explicit API base URL when configured; otherwise use same-origin relative requests.
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() || undefined
-
-// --------------------------------------------------------------------------
-// Storage (lazy import to avoid circular dependencies)
-// --------------------------------------------------------------------------
-
-function getAccessToken(): string | null {
-  try {
-    // Dynamic import to avoid issues when storage is not initialized
-    const storage = localStorage.getItem('accessToken')
-    return storage
-  } catch {
-    return null
-  }
-}
 
 // --------------------------------------------------------------------------
 // Error Handling
@@ -131,6 +118,35 @@ export interface RequestOptions<T = unknown> {
   requiresAuth?: boolean
   headers?: Record<string, string>
   timeout?: number
+}
+
+/**
+ * Fetch with multipart/form-data for file uploads
+ */
+export async function multipartFetch<T = unknown>(
+  path: string,
+  formData: FormData,
+  options: Omit<RequestOptions, 'body'> = {}
+): Promise<T> {
+  const { method = 'POST', timeout } = options
+
+  try {
+    const config: AxiosRequestConfig = {
+      method: method.toLowerCase(),
+      url: path,
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        ...options.headers,
+      },
+      timeout,
+    }
+
+    const response = await api.request<T>(config)
+    return response.data
+  } catch (err) {
+    throw normalizeAxiosError(err)
+  }
 }
 
 /**
