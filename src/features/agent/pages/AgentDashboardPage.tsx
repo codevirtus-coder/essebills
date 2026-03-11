@@ -15,11 +15,13 @@ import CRUDModal from '../../shared/components/CRUDModal';
 import { Bolt, Antenna, Droplets, Landmark, History, PlusCircle, CheckCircle, Smartphone, Share2, Printer, ShoppingCart, Wallet, ArrowRight, Loader2, Repeat, Zap, Wifi, BookOpen, ShieldCheck, Heart, Sparkles } from 'lucide-react';
 import '../styles/agent-dashboard.css';
 import BulkPaymentsPage from './BulkPaymentsPage';
+import AgentDonationsPage from './AgentDonationsPage';
 import toast from 'react-hot-toast';
 import { ServicesMarketplace, type BillerCard } from '../../shared/components/ServicesMarketplace';
 import { ProductPaymentCheckout } from '../../landing/components/ProductPaymentCheckout';
 import WalletTopUpModal from '../../customer/components/WalletTopUpModal';
 import { repeatPayment } from '../../customer/services/customer-api.service';
+import { uploadProofOfPayment } from '../../../services/wallet.service';
 
 export function AgentDashboardPage() {
   const { tab: urlTab } = useParams();
@@ -64,6 +66,10 @@ export function AgentDashboardPage() {
 
   const [selectedCheckoutProduct, setSelectedCheckoutProduct] = useState<BillerCard | null>(null);
   const [isTopUpModalOpen, setIsTopUpModalOpen] = useState(false);
+  const [isProofModalOpen, setIsProofModalOpen] = useState(false);
+  const [proofTopUp, setProofTopUp] = useState<PendingBankTopUp | null>(null);
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [proofUploading, setProofUploading] = useState(false);
 
   // Derived: primary float balance (first USD balance or first available)
   const floatBalance = walletBalances.find(b => b.currencyCode === 'USD')?.balance
@@ -184,6 +190,39 @@ export function AgentDashboardPage() {
     } catch (error) {
       toast.dismiss(loadingToast);
       toast.error("Failed to repeat sale.");
+    }
+  };
+
+  const handleOpenProofUpload = (topUp: PendingBankTopUp) => {
+    setProofTopUp(topUp);
+    setProofFile(null);
+    setIsProofModalOpen(true);
+  };
+
+  const handleUploadProof = async () => {
+    if (!proofTopUp?.id) return;
+    if (!proofFile) {
+      toast.error('Please select a file');
+      return;
+    }
+
+    setProofUploading(true);
+    try {
+      await uploadProofOfPayment(proofTopUp.id, proofFile);
+      toast.success('Proof of payment uploaded');
+      setIsProofModalOpen(false);
+      setProofTopUp(null);
+      setProofFile(null);
+
+      setLoadingTopUps(true);
+      const { content, totalElements } = await getMyBankTopUps(0, 20);
+      setTopUps(content);
+      setTopUpsTotal(totalElements);
+    } catch (error) {
+      toast.error('Failed to upload proof of payment');
+    } finally {
+      setProofUploading(false);
+      setLoadingTopUps(false);
     }
   };
 
@@ -315,6 +354,23 @@ export function AgentDashboardPage() {
         <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${topUpStatusStyle(t.status)}`}>
           {t.status}
         </span>
+      ),
+    },
+    {
+      key: 'proof',
+      header: 'Proof',
+      className: 'text-right',
+      render: (t) => (
+        <button
+          onClick={() => handleOpenProofUpload(t)}
+          disabled={t.status !== 'PENDING'}
+          className={cn(
+            "text-[9px] font-black uppercase tracking-tighter hover:underline inline-flex items-center gap-1",
+            t.status === 'PENDING' ? 'text-emerald-600' : 'text-slate-400 cursor-not-allowed hover:no-underline'
+          )}
+        >
+          Upload
+        </button>
       ),
     },
   ];
@@ -452,6 +508,7 @@ export function AgentDashboardPage() {
     <div className="space-y-8 font-sans">
       {activeTab === 'overview' && renderOverview()}
       {activeTab === 'sell' && renderSell()}
+      {activeTab === 'donations' && <AgentDonationsPage />}
       {activeTab === 'bulk-payments' && <BulkPaymentsPage />}
       {activeTab === 'notifications' && <NotificationsPage />}
       
@@ -570,6 +627,8 @@ export function AgentDashboardPage() {
                pageable={{ page: 1, size: 20, totalElements: topUpsTotal, totalPages: Math.max(1, Math.ceil(topUpsTotal / 20)) }}
                onPageChange={() => {}}
                onSizeChange={() => {}}
+               onAdd={() => setIsTopUpModalOpen(true)}
+               addButtonText="Top Up Wallet"
                onRefresh={() => {
                  setLoadingTopUps(true);
                  getMyBankTopUps(0, 20)
@@ -595,6 +654,48 @@ export function AgentDashboardPage() {
           refreshBalances();
         }}
       />
+
+      <CRUDModal
+        isOpen={isProofModalOpen}
+        onClose={() => setIsProofModalOpen(false)}
+        title={`Upload Proof${proofTopUp?.depositReference ? `: ${proofTopUp.depositReference}` : ''}`}
+        onSubmit={handleUploadProof}
+        isSubmitting={proofUploading}
+        submitLabel="Upload Proof"
+        size="md"
+      >
+        <div className="space-y-4">
+          <p className="text-xs text-slate-500">
+            Upload a clear photo or PDF of your deposit slip to speed up verification.
+          </p>
+          <div className="relative group">
+            <input
+              type="file"
+              accept="image/*,application/pdf"
+              onChange={(e) => setProofFile(e.target.files?.[0] || null)}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+            />
+            <div
+              className={cn(
+                "p-8 border-2 border-dashed rounded-2xl transition-all flex flex-col items-center justify-center gap-2",
+                proofFile
+                  ? "border-emerald-500 bg-emerald-50/30 dark:bg-emerald-900/10"
+                  : "border-slate-200 dark:border-slate-800 group-hover:border-emerald-500/50 group-hover:bg-slate-50 dark:group-hover:bg-slate-800/50"
+              )}
+            >
+              <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                {proofFile ? proofFile.name : 'Click to choose a file'}
+              </p>
+              <p className="text-[10px] text-slate-500">JPG, PNG, or PDF</p>
+            </div>
+          </div>
+          {proofTopUp?.status && proofTopUp.status !== 'PENDING' && (
+            <div className="text-xs font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/40 rounded-xl px-4 py-3">
+              Proof upload is only available for pending top-ups.
+            </div>
+          )}
+        </div>
+      </CRUDModal>
     </div>
   );
 }

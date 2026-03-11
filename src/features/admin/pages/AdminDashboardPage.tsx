@@ -25,6 +25,7 @@ import {
   updateEsebillsAccount,
   deleteEsebillsAccount,
 } from '../services'
+import { getCurrencies } from '../../../services'
 import { ROUTE_PATHS } from '../../../router/paths'
 import '../styles/admin-dashboard.css'
 
@@ -134,11 +135,24 @@ export function AdminDashboardPage() {
               { key: 'bank', label: 'Bank' },
               { key: 'accountNumber', label: 'Account Number' },
               { key: 'accountName', label: 'Account Name' },
+              { key: 'currency.code', label: 'Currency' },
             ]}
             createFields={[
               { key: 'bank', label: 'Bank', type: 'text' },
               { key: 'accountNumber', label: 'Account Number', type: 'text' },
               { key: 'accountName', label: 'Account Name', type: 'text' },
+              {
+                key: 'currencyCode',
+                label: 'Currency',
+                type: 'select',
+                optionsLoader: async () => {
+                  const page = await getCurrencies()
+                  const list = Array.isArray(page?.content) ? page.content : []
+                  return list
+                    .filter((c) => c.active !== false && c.code)
+                    .map((c) => ({ label: String(c.code), value: String(c.code) }))
+                },
+              },
             ]}
             emptyLabel="EseBillsAccounts"
             onUpdate={updateEsebillsAccount}

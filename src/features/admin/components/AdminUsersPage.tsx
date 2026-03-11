@@ -2,10 +2,11 @@ import React, { useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import CRUDLayout, { type CRUDColumn } from '../../shared/components/CRUDLayout'
 import CRUDModal from '../../shared/components/CRUDModal'
-import type { AdminUserDto } from '../dto/admin-api.dto'
-import { changeUserActivationStatus, createUser, getPaginatedUsers, updateUser } from '../services'
+import type { AdminGroupDto, AdminUserDto } from '../dto/admin-api.dto'
+import { changeUserActivationStatus, createUser, getPaginatedGroups, getPaginatedUsers, updateUser } from '../services'
 import {
   AdminInput,
+  AdminSelect,
 } from './shared/AdminControls'
 import { CheckCircle, XCircle, User, Mail, Phone, Calendar, Edit2, ShieldCheck, Ban, Check } from 'lucide-react'
 import { cn } from '../../../lib/utils'
@@ -19,6 +20,7 @@ const AdminUsersPage: React.FC = () => {
   const [isUpdating, setIsUpdating] = useState(false)
   const [statusLoadingId, setStatusLoadingId] = useState<string | number | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [groups, setGroups] = useState<AdminGroupDto[]>([])
 
   const [selectedUser, setSelectedUser] = useState<AdminUserDto | null>(null)
   const [form, setForm] = useState({
@@ -27,6 +29,7 @@ const AdminUsersPage: React.FC = () => {
     lastName: '',
     email: '',
     phoneNumber: '',
+    groupId: '',
   })
   const [editForm, setEditForm] = useState({
     username: '',
@@ -51,6 +54,18 @@ const AdminUsersPage: React.FC = () => {
   React.useEffect(() => {
     void loadUsers()
   }, [loadUsers])
+
+  React.useEffect(() => {
+    const loadGroups = async () => {
+      try {
+        const response = await getPaginatedGroups({ page: 0, size: 200 })
+        setGroups(Array.isArray(response?.content) ? response.content : [])
+      } catch {
+        setGroups([])
+      }
+    }
+    void loadGroups()
+  }, [])
 
   const filteredUsers = useMemo(() => {
     const term = searchTerm.toLowerCase()
@@ -80,15 +95,27 @@ const AdminUsersPage: React.FC = () => {
       return
     }
 
+    if (!form.groupId) {
+      toast.error('Group is required')
+      return
+    }
+
     try {
       setIsCreating(true)
-      await createUser({
+      const payload: AdminUserDto = {
         username: form.username.trim(),
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
         email: form.email.trim(),
-        phoneNumber: form.phoneNumber.trim(),
-      })
+        groupId: Number(form.groupId),
+      }
+
+      const phoneNumber = form.phoneNumber.trim()
+      if (phoneNumber) {
+        payload.phoneNumber = phoneNumber
+      }
+
+      await createUser(payload)
       toast.success('User created')
       setForm({
         username: '',
@@ -248,7 +275,7 @@ const AdminUsersPage: React.FC = () => {
         onSearch={setSearchTerm}
         onRefresh={loadUsers}
         onAdd={() => {
-          setForm({ username: '', firstName: '', lastName: '', email: '', phoneNumber: '' })
+          setForm({ username: '', firstName: '', lastName: '', email: '', phoneNumber: '', groupId: '' })
           setIsCreateOpen(true)
         }}
         addButtonText="Add User"
@@ -332,6 +359,21 @@ const AdminUsersPage: React.FC = () => {
               className="w-full"
               placeholder="+263..."
             />
+          </div>
+          <div className="md:col-span-2 space-y-1.5">
+            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Group</label>
+            <AdminSelect
+              value={form.groupId}
+              onChange={(e) => setForm({ ...form, groupId: e.target.value })}
+              className="w-full"
+            >
+              <option value="">Select group</option>
+              {groups.map((group) => (
+                <option key={String(group.id)} value={String(group.id)}>
+                  {String(group.name ?? group.id)}
+                </option>
+              ))}
+            </AdminSelect>
           </div>
         </div>
       </CRUDModal>

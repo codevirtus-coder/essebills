@@ -102,6 +102,7 @@ export const AGENT_MENU: MenuSection[] = [
     items: [
       { id: 'overview', label: 'Dashboard', icon: 'home' },
       { id: 'sell', label: 'Make a Sale', icon: 'point_of_sale' },
+      { id: 'donations', label: 'Donations', icon: 'favorite' },
       { id: 'bulk-payments', label: 'Bulk Payments', icon: 'groups' },
       { id: 'commissions', label: 'Earnings Analysis', icon: 'payments' },
       { id: 'schedule', label: 'Commission Schedule', icon: 'table_chart' },
@@ -135,6 +136,7 @@ export const CUSTOMER_MENU: MenuSection[] = [
     items: [
       { id: 'overview', label: 'Dashboard', icon: 'home' },
       { id: 'pay', label: 'Pay a Bill', icon: 'payments' },
+      { id: 'donations', label: 'Donations', icon: 'favorite' },
       { id: 'bulk-payments', label: 'Bulk Payments', icon: 'groups' },
       { id: 'wallet', label: 'Wallet', icon: 'account_balance_wallet' },
       { id: 'transactions', label: 'My Transactions', icon: 'receipt_long' },

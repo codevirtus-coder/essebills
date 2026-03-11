@@ -61,6 +61,7 @@ export interface EseBillsAccount {
   accountNumber: string
   accountName: string
   currencyCode: string
+  // Some environments return `active`, others only `deleted` on the account itself.
   active: boolean
 }
 
@@ -95,7 +96,41 @@ export async function getMyWalletHistory(
 /** Get EseBills bank accounts for manual deposit */
 export async function getEseBillsAccounts(currencyCode?: string): Promise<EseBillsAccount[]> {
   const query = currencyCode ? toQueryString({ currencyCode }) : ''
-  return apiFetch<EseBillsAccount[]>(`${API_ENDPOINTS.esebillsAccounts.root}${query}`)
+  // OpenAPI: GET /v1/esebills-accounts is paginated (PageEseBillsAccount).
+  // Some environments may still return a plain array, so support both.
+  const res = await apiFetch<unknown>(`${API_ENDPOINTS.esebillsAccounts.root}${query}`)
+  const rawList: unknown[] = Array.isArray(res)
+    ? res
+    : res && typeof res === 'object' && Array.isArray((res as any).content)
+      ? ((res as any).content as unknown[])
+      : []
+
+  return rawList
+    .filter((r) => r && typeof r === 'object')
+    .map((r) => {
+      const row = r as any
+      const currency = row.currency
+      const currencyCodeValue =
+        typeof row.currencyCode === 'string'
+          ? row.currencyCode
+          : currency && typeof currency === 'object' && typeof currency.code === 'string'
+            ? currency.code
+            : ''
+
+      // Treat missing `active` as active unless explicitly deleted.
+      const activeValue =
+        typeof row.active === 'boolean' ? row.active : row.deleted === true ? false : true
+
+      return {
+        id: Number(row.id),
+        bank: String(row.bank ?? ''),
+        accountNumber: String(row.accountNumber ?? ''),
+        accountName: String(row.accountName ?? ''),
+        currencyCode: String(currencyCodeValue),
+        active: Boolean(activeValue),
+      } satisfies EseBillsAccount
+    })
+    .filter((a) => a.id && a.bank && a.accountNumber && a.accountName && a.currencyCode)
 }
 
 /** Notify system of a bank deposit */

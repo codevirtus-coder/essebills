@@ -23,7 +23,13 @@ interface AdminStyledApiModulePageProps {
   createJsonTemplate?: UnknownRecord
   columns?: Array<{ key: string; label: string }>
   emptyLabel?: string
-  createFields?: Array<{ key: string; label: string; type?: 'text' | 'number' | 'checkbox' }>
+  createFields?: Array<{
+    key: string
+    label: string
+    type?: 'text' | 'number' | 'checkbox' | 'select'
+    optionsLoader?: () => Promise<Array<{ label: string; value: string | number }>>
+    options?: Array<{ label: string; value: string | number }>
+  }>
   onUpdate?: (id: string | number, payload: UnknownRecord) => Promise<unknown>
   onDelete?: (id: string | number) => Promise<unknown>
 }
@@ -72,6 +78,9 @@ const AdminStyledApiModulePage: React.FC<AdminStyledApiModulePageProps> = ({
     JSON.stringify(createJsonTemplate, null, 2) || '{\n\n}',
   )
   const [fieldValues, setFieldValues] = useState<Record<string, string | number | boolean>>({})
+  const [fieldOptions, setFieldOptions] = useState<Record<string, Array<{ label: string; value: string | number }>>>(
+    {}
+  )
 
   const loadRows = React.useCallback(async () => {
     try {
@@ -88,6 +97,35 @@ const AdminStyledApiModulePage: React.FC<AdminStyledApiModulePageProps> = ({
   React.useEffect(() => {
     void loadRows()
   }, [loadRows])
+
+  React.useEffect(() => {
+    if (!isCreateOpen || createMode !== 'fields') return
+
+    let mounted = true
+    const load = async () => {
+      const entries = createFields.filter((f) => f.type === 'select' && (f.optionsLoader || f.options))
+      if (!entries.length) return
+
+      const next: Record<string, Array<{ label: string; value: string | number }>> = {}
+      for (const field of entries) {
+        try {
+          if (field.options?.length) next[field.key] = field.options
+          else if (field.optionsLoader) next[field.key] = await field.optionsLoader()
+        } catch (e) {
+          // Keep empty; field will render but without options.
+          next[field.key] = []
+        }
+      }
+
+      if (!mounted) return
+      setFieldOptions((prev) => ({ ...prev, ...next }))
+    }
+
+    void load()
+    return () => {
+      mounted = false
+    }
+  }, [createFields, createMode, isCreateOpen])
 
   const columnKeys = useMemo(() => {
     if (columns?.length) {
@@ -353,6 +391,21 @@ const AdminStyledApiModulePage: React.FC<AdminStyledApiModulePageProps> = ({
                       className="w-5 h-5 rounded border-slate-300 text-emerald-600"
                     />
                   </div>
+                ) : field.type === 'select' ? (
+                  <select
+                    value={String(fieldValues[field.key] ?? '')}
+                    onChange={(event) =>
+                      setFieldValues((prev) => ({ ...prev, [field.key]: event.target.value }))
+                    }
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none"
+                  >
+                    <option value="">Select...</option>
+                    {(fieldOptions[field.key] ?? []).map((opt) => (
+                      <option key={`${field.key}-${String(opt.value)}`} value={String(opt.value)}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
                 ) : (
                   <input
                     type={field.type === 'number' ? 'number' : 'text'}

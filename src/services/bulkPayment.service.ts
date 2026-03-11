@@ -17,14 +17,36 @@ import type {
 // Recipient Groups
 // --------------------------------------------------------------------------
 
+function sanitizeBulkPaymentGroups(value: unknown): BulkPaymentGroup[] {
+  if (!Array.isArray(value)) return []
+  return value.map((raw) => {
+    const g = raw as Record<string, unknown>
+    const rawItems = Array.isArray(g.items) ? (g.items as unknown[]) : []
+    const items = rawItems.map((it) => {
+      const item = it as Record<string, unknown>
+      // Backend sometimes includes a nested `group` reference per item, which can explode payload size.
+      // Strip it; the UI only needs item fields.
+      const { group: _group, ...rest } = item
+      return rest
+    })
+    return {
+      ...(g as unknown as BulkPaymentGroup),
+      items: items as unknown as BulkPaymentGroup['items'],
+    }
+  })
+}
+
 /** Get all recipient groups for the current user */
 export async function getBulkPaymentGroups(): Promise<BulkPaymentGroup[]> {
-  return apiFetch<BulkPaymentGroup[]>(API_ENDPOINTS.bulkPayments.groups.root)
+  const data = await apiFetch<unknown>(API_ENDPOINTS.bulkPayments.groups.root)
+  return sanitizeBulkPaymentGroups(data)
 }
 
 /** Get a recipient group by ID */
 export async function getBulkPaymentGroupById(groupId: string | number): Promise<BulkPaymentGroup> {
-  return apiFetch<BulkPaymentGroup>(API_ENDPOINTS.bulkPayments.groups.byId(groupId))
+  const data = await apiFetch<unknown>(API_ENDPOINTS.bulkPayments.groups.byId(groupId))
+  const groups = sanitizeBulkPaymentGroups([data])
+  return groups[0] as BulkPaymentGroup
 }
 
 /** Create a new recipient group */

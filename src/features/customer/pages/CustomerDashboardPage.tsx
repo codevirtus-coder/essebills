@@ -22,6 +22,7 @@ import toast from 'react-hot-toast';
 import { ServicesMarketplace, type BillerCard } from '../../shared/components/ServicesMarketplace';
 import { ProductPaymentCheckout } from '../../landing/components/ProductPaymentCheckout';
 import WalletTopUpModal from '../components/WalletTopUpModal';
+import CustomerDonationsPage from './CustomerDonationsPage';
 
 export function CustomerDashboardPage() {
   const { tab: urlTab } = useParams();
@@ -424,6 +425,7 @@ export function CustomerDashboardPage() {
     <div className="space-y-8 font-sans">
       {activeTab === 'overview' && renderOverview()}
       {activeTab === 'pay' && renderPay()}
+      {activeTab === 'donations' && <CustomerDonationsPage />}
       {activeTab === 'wallet' && renderWallet()}
       
       {activeTab === 'transactions' && (

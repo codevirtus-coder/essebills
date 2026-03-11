@@ -1,5 +1,5 @@
-import { apiFetch } from '../../../api/apiClient'
 import { API_ENDPOINTS } from '../../../api/endpoints'
+import { apiFetch } from '../../../api/client'
 
 export interface AgentWalletBalance {
   id: number

@@ -9,6 +9,8 @@ import {
   updateAgentCommissionRate 
 } from '../../../services/agentCommission.service';
 import { getPaginatedUsers } from '../services/adminUsers.service';
+import { getPaginatedCurrencies } from '../services/adminLookups.service';
+import { getAllProductCategories } from '../services/adminProducts.service';
 import { INITIAL_CATEGORIES } from '../data/constants';
 import { 
   Percent, 
@@ -38,6 +40,8 @@ export default function Commissions() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editingRate, setEditingRate] = useState<any>(null);
+  const [productCategories, setProductCategories] = useState<Array<Record<string, unknown>>>([]);
+  const [currencies, setCurrencies] = useState<Array<Record<string, unknown>>>([]);
 
   // Revenue Split State (Categories)
   const [categories, setCategories] = useState(INITIAL_CATEGORIES);
@@ -54,6 +58,18 @@ export default function Commissions() {
       setAgents(filtered);
       if (filtered.length > 0) setSelectedAgentId(String(filtered[0].id));
     });
+  }, []);
+
+  useEffect(() => {
+    Promise.all([getAllProductCategories(), getPaginatedCurrencies({ size: 200 })])
+      .then(([categoryData, currencyData]) => {
+        setProductCategories(Array.isArray(categoryData) ? categoryData : []);
+        setCurrencies(Array.isArray(currencyData?.content) ? currencyData.content : []);
+      })
+      .catch(() => {
+        setProductCategories([]);
+        setCurrencies([]);
+      });
   }, []);
 
   // Load rates when agent changes
@@ -91,7 +107,7 @@ export default function Commissions() {
       key: 'rate',
       header: 'Commission Rate',
       className: 'text-right',
-      render: (r) => <span className="font-bold text-emerald-600 dark:text-emerald-400">{r.rate || r.commissionRate}%</span>
+      render: (r) => <span className="font-bold text-emerald-600 dark:text-emerald-400">{r.ratePercent ?? r.rate ?? r.commissionRate}%</span>
     },
     {
       key: 'type',
@@ -138,13 +154,32 @@ export default function Commissions() {
   ];
 
   const handleSaveRate = async () => {
-    if (!selectedAgentId || !editingRate?.rate) return;
+    if (!selectedAgentId) return;
+    const ratePercent = Number(editingRate?.ratePercent);
+    if (!Number.isFinite(ratePercent)) {
+      toast.error("Rate percent is required");
+      return;
+    }
+    if (!String(editingRate?.productCode ?? "").trim()) {
+      toast.error("Product code is required");
+      return;
+    }
+    if (!String(editingRate?.currencyCode ?? "").trim()) {
+      toast.error("Currency code is required");
+      return;
+    }
     try {
       setIsSaving(true);
+      const payload = {
+        productCategory: String(editingRate?.productCategory ?? "").trim(),
+        productCode: String(editingRate?.productCode ?? "").trim(),
+        currencyCode: String(editingRate?.currencyCode ?? "").trim().toUpperCase(),
+        ratePercent,
+      };
       if (editingRate.id) {
-        await updateAgentCommissionRate(selectedAgentId, editingRate.id, editingRate);
+        await updateAgentCommissionRate(selectedAgentId, editingRate.id, payload);
       } else {
-        await createAgentCommissionRate(selectedAgentId, editingRate);
+        await createAgentCommissionRate(selectedAgentId, payload);
       }
       toast.success("Commission rate saved");
       setIsModalOpen(false);
@@ -231,7 +266,15 @@ export default function Commissions() {
               onPageChange={() => {}}
               onSizeChange={() => {}}
               onRefresh={loadRates}
-              onAdd={() => { setEditingRate({ rate: '' }); setIsModalOpen(true); }}
+              onAdd={() => {
+                setEditingRate({
+                  productCategory: '',
+                  productCode: '',
+                  currencyCode: '',
+                  ratePercent: '',
+                });
+                setIsModalOpen(true);
+              }}
               addButtonText="Add Exception"
               actions={{
                 onEdit: (r) => { setEditingRate(r); setIsModalOpen(true); },
@@ -277,12 +320,54 @@ export default function Commissions() {
             </div>
             
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Rate Percentage (%)</label>
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Product Category</label>
+              <select
+                value={editingRate.productCategory ?? ''}
+                onChange={(e) => setEditingRate({ ...editingRate, productCategory: e.target.value })}
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              >
+                <option value="">Select category</option>
+                {productCategories.map((category) => {
+                  const code = String(category.code ?? category.name ?? category.id ?? '');
+                  const label = String(category.displayName ?? category.name ?? code);
+                  return <option key={code} value={code}>{label}</option>;
+                })}
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Product Code</label>
+              <input
+                type="text"
+                value={editingRate.productCode ?? ''}
+                onChange={(e) => setEditingRate({ ...editingRate, productCode: e.target.value })}
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                placeholder="e.g. ZESA_PREPAID"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Currency Code</label>
+              <select
+                value={editingRate.currencyCode ?? ''}
+                onChange={(e) => setEditingRate({ ...editingRate, currencyCode: e.target.value })}
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              >
+                <option value="">Select currency</option>
+                {currencies.map((currency) => {
+                  const code = String(currency.code ?? currency.id ?? '');
+                  return <option key={code} value={code}>{code}</option>;
+                })}
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Rate Percent</label>
               <input
                 type="number"
                 step="0.1"
-                value={editingRate.rate}
-                onChange={(e) => setEditingRate({ ...editingRate, rate: e.target.value })}
+                value={editingRate.ratePercent ?? ''}
+                onChange={(e) => setEditingRate({ ...editingRate, ratePercent: e.target.value })}
                 className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                 placeholder="e.g. 2.5"
               />
@@ -293,6 +378,7 @@ export default function Commissions() {
               <select
                 className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 dark:text-white focus:outline-none"
                 defaultValue="PERCENTAGE"
+                disabled
               >
                 <option value="PERCENTAGE">Percentage</option>
                 <option value="FIXED">Fixed Amount</option>

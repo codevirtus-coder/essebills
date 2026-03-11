@@ -100,6 +100,12 @@ export const API_ENDPOINTS = {
     initiateFromGroup: (groupId: string | number) => `/v1/bulk-payments/initiate/from-group/${groupId}`,
   },
 
+  // Donations (Gateway spec: /v1/donations/*)
+  donationsV1: {
+    campaigns: '/v1/donations/campaigns',
+    donationsByCampaign: (campaignId: string | number) => `/v1/donations/campaign/${campaignId}`,
+  },
+
   // Integration Credentials
   integrations: {
     pesepay: {

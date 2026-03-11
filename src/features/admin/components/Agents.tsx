@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo } from "react";
 import toast from "react-hot-toast";
-import { getPaginatedUsers, getUserById, changeUserActivationStatus, updateUser } from "../services/adminUsers.service";
+import { getPaginatedUsers, getUserById, changeUserActivationStatus, updateUser, createUser } from "../services/adminUsers.service";
+import { getPaginatedGroups } from "../services/adminGroups.service";
 import type { AdminUserDto } from "../dto/admin-api.dto";
 import CRUDLayout, { type CRUDColumn } from "../../shared/components/CRUDLayout";
+import CRUDModal from "../../shared/components/CRUDModal";
 import { UserCircle, Store, MapPin, Wallet, TrendingUp, ShieldCheck, Search, PlusCircle, Download, X, Check, Ban, Eye, Edit2 } from "lucide-react";
 import { cn } from "../../../lib/utils";
 
@@ -63,6 +65,20 @@ const Agents: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editForm, setEditForm] = useState<Partial<AdminUserDto>>({});
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Create agent (onboarding) modal state
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [agentGroupId, setAgentGroupId] = useState<number | null>(null);
+  const [createForm, setCreateForm] = useState({
+    username: "",
+    firstName: "",
+    lastName: "",
+    email: "",
+    phoneNumber: "",
+    shopName: "",
+    shopLocation: "",
+  });
   
   // Pagination state
   const [page, setPage] = useState(0);
@@ -102,6 +118,85 @@ const Agents: React.FC = () => {
   const handleSearch = (term: string) => {
     setSearchTerm(term);
     setPage(0); // Reset to first page when searching
+  };
+
+  const ensureAgentGroupId = async (): Promise<number | null> => {
+    if (agentGroupId) return agentGroupId;
+    try {
+      const page = await getPaginatedGroups({ page: 0, size: 200 });
+      const groups = Array.isArray(page?.content) ? page.content : [];
+      const agentGroup = groups.find((g) => String(g?.name ?? "").toUpperCase() === "AGENT");
+      const id = agentGroup?.id;
+      const numericId = typeof id === "number" ? id : Number(id);
+      if (!numericId || Number.isNaN(numericId)) {
+        toast.error('Could not find "AGENT" group. Please create it first.');
+        return null;
+      }
+      setAgentGroupId(numericId);
+      return numericId;
+    } catch (error) {
+      console.error("Failed to load groups:", error);
+      toast.error("Failed to load user groups");
+      return null;
+    }
+  };
+
+  const openCreateModal = async () => {
+    setIsCreateModalOpen(true);
+    await ensureAgentGroupId();
+  };
+
+  const handleCreateAgent = async () => {
+    const username = createForm.username.trim();
+    const firstName = createForm.firstName.trim();
+    const lastName = createForm.lastName.trim();
+    const email = createForm.email.trim();
+
+    if (!username || !firstName || !lastName || !email) {
+      toast.error("Username, First Name, Last Name and Email are required");
+      return;
+    }
+
+    const groupId = await ensureAgentGroupId();
+    if (!groupId) return;
+
+    const payload: AdminUserDto = {
+      username,
+      firstName,
+      lastName,
+      email,
+      groupId,
+    };
+
+    const phoneNumber = createForm.phoneNumber.trim();
+    if (phoneNumber) payload.phoneNumber = phoneNumber;
+
+    const shopName = createForm.shopName.trim();
+    if (shopName) payload.shopName = shopName;
+
+    const shopLocation = createForm.shopLocation.trim();
+    if (shopLocation) payload.shopLocation = shopLocation;
+
+    setIsCreating(true);
+    try {
+      await createUser(payload);
+      toast.success("Agent created");
+      setIsCreateModalOpen(false);
+      setCreateForm({
+        username: "",
+        firstName: "",
+        lastName: "",
+        email: "",
+        phoneNumber: "",
+        shopName: "",
+        shopLocation: "",
+      });
+      fetchAgents();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to create agent");
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   useEffect(() => {
@@ -271,7 +366,7 @@ const Agents: React.FC = () => {
         onSizeChange={handleSizeChange}
         onSearch={handleSearch}
         onRefresh={fetchAgents}
-        onAdd={() => {}}
+        onAdd={openCreateModal}
         addButtonText="Onboard Agent"
         actions={{
           onEdit: async (agent) => {
@@ -304,6 +399,91 @@ const Agents: React.FC = () => {
           },
         }}
       />
+
+      <CRUDModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        title="Onboard Agent"
+        onSubmit={handleCreateAgent}
+        isSubmitting={isCreating}
+        submitLabel="Create Agent"
+        size="lg"
+      >
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Username</label>
+              <input
+                value={createForm.username}
+                onChange={(e) => setCreateForm({ ...createForm, username: e.target.value })}
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                placeholder="e.g. agent.jdoe"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Email</label>
+              <input
+                type="email"
+                value={createForm.email}
+                onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                placeholder="e.g. agent@example.com"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">First Name</label>
+              <input
+                value={createForm.firstName}
+                onChange={(e) => setCreateForm({ ...createForm, firstName: e.target.value })}
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                placeholder="e.g. John"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Last Name</label>
+              <input
+                value={createForm.lastName}
+                onChange={(e) => setCreateForm({ ...createForm, lastName: e.target.value })}
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                placeholder="e.g. Doe"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Phone Number (optional)</label>
+              <input
+                value={createForm.phoneNumber}
+                onChange={(e) => setCreateForm({ ...createForm, phoneNumber: e.target.value })}
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                placeholder="e.g. +2637xxxxxxx"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Shop Name (optional)</label>
+              <input
+                value={createForm.shopName}
+                onChange={(e) => setCreateForm({ ...createForm, shopName: e.target.value })}
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                placeholder="e.g. Mbare Tuckshop"
+              />
+            </div>
+            <div className="space-y-1.5 md:col-span-2">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Shop Location (optional)</label>
+              <input
+                value={createForm.shopLocation}
+                onChange={(e) => setCreateForm({ ...createForm, shopLocation: e.target.value })}
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                placeholder="e.g. Harare, ZW"
+              />
+            </div>
+          </div>
+
+          {!agentGroupId && (
+            <div className="text-xs font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/40 rounded-xl px-4 py-3">
+              Loading agent group… If this doesn’t resolve, ensure an "AGENT" group exists in Admin User Groups.
+            </div>
+          )}
+        </div>
+      </CRUDModal>
 
       {/* View Agent Details Modal */}
       {isViewModalOpen && selectedAgent && (

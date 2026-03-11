@@ -81,22 +81,36 @@ export default function BulkPaymentsPage() {
   // Products for selections
   const [products, setProducts] = useState<Product[]>([]);
 
+  const coerceGroups = (value: unknown): BulkPaymentGroup[] => {
+    if (Array.isArray(value)) return value as BulkPaymentGroup[];
+    if (value && typeof value === 'object') {
+      const obj = value as Record<string, unknown>;
+      const content = obj.content;
+      if (Array.isArray(content)) return content as BulkPaymentGroup[];
+      const groupsProp = obj.groups;
+      if (Array.isArray(groupsProp)) return groupsProp as BulkPaymentGroup[];
+      const dataProp = obj.data;
+      if (Array.isArray(dataProp)) return dataProp as BulkPaymentGroup[];
+    }
+    return [];
+  };
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       if (activeSubTab === 'groups') {
         const data = await getBulkPaymentGroups();
-        setGroups(data);
+        setGroups(coerceGroups(data));
       } else if (activeSubTab === 'initiate') {
         const data = await getBulkPaymentGroups();
-        setGroups(data);
+        setGroups(coerceGroups(data));
         const prodData = await getProducts({ size: 100 });
         setProducts(prodData.content);
       } else if (activeSubTab === 'schedules') {
         const data = await getBulkPaymentSchedules();
         setSchedules(data);
         const groupData = await getBulkPaymentGroups();
-        setGroups(groupData);
+        setGroups(coerceGroups(groupData));
       } else if (activeSubTab === 'history') {
         const data = await getBulkPaymentRequests();
         setRequests(data);
@@ -218,7 +232,12 @@ export default function BulkPaymentsPage() {
     { key: 'description', header: 'Description' },
     { key: 'items', header: 'Recipients', render: (g) => <span className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded text-xs font-mono font-bold text-slate-600 dark:text-slate-400">{g.items?.length || 0}</span> },
     { key: 'total', header: 'Est. Volume', render: (g) => <span className="text-xs font-bold text-emerald-600">${g.items?.reduce((a, b) => a + (b.amount || 0), 0).toFixed(2)}</span> },
-    { key: 'createdDate', header: 'Created', render: (g) => <span className="text-xs text-slate-500">{new Date(g.createdDate).toLocaleDateString()}</span> },
+    { key: 'createdDate', header: 'Created', render: (g) => {
+      const raw = String(g.createdDate ?? '');
+      const t = Date.parse(raw);
+      const label = Number.isFinite(t) ? new Date(t).toLocaleDateString() : raw;
+      return <span className="text-xs text-slate-500">{label}</span>;
+    } },
   ];
 
   const scheduleColumns: CRUDColumn<BulkPaymentSchedule>[] = [

@@ -104,6 +104,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   notifications_off: BellOff,
   inbox: Inbox,
   logout: LogOut,
+  favorite: Heart,
 
   // Material-style aliases used across landing/admin screens
   bolt: Zap,

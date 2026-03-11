@@ -33,3 +33,4 @@ export * from './agentCommission.service'
 
 // Donations Service
 export * from './donations.service'
+export * from './donationsV1.service'

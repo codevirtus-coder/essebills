@@ -1,17 +1,11 @@
 import React, { useEffect, useState, useCallback } from "react";
 import {
-  getAllDonations,
-  getAllCampaigns,
-  getAllDonationCategories,
-  getDonationStats,
-  refundDonation,
-  updateCampaignStatus,
-  deleteCampaign,
-  type Donation,
-  type DonationCampaign,
-  type DonationCategory,
-  type DonationStats,
-} from "../../../services/donations.service";
+  getDonationCampaignsV1,
+  getDonationsByCampaignV1,
+  getDonationSummaryV1,
+  type DonationCampaignV1,
+  type DonationV1,
+} from "../../../services/donationsV1.service";
 import StatCard from "../../../components/ui/StatCard";
 import CRUDLayout from "../../shared/components/CRUDLayout";
 import { cn } from "../../../lib/utils";
@@ -21,88 +15,72 @@ const Donations: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"donations" | "campaigns" | "categories">("donations");
 
   // Donations state
-  const [donations, setDonations] = useState<Donation[]>([]);
+  const [donations, setDonations] = useState<DonationV1[]>([]);
   const [loadingDonations, setLoadingDonations] = useState(false);
-  const donationsPageable = { page: 1, size: 10, totalElements: 0, totalPages: 0 };
+  const [donationsPageable, setDonationsPageable] = useState({ page: 1, size: 10, totalElements: 0, totalPages: 0 });
+  const [campaignsV1, setCampaignsV1] = useState<Array<{ id: number; name: string }>>([]);
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
 
   // Campaigns state
-  const [campaigns, setCampaigns] = useState<DonationCampaign[]>([]);
+  const [campaigns, setCampaigns] = useState<DonationCampaignV1[]>([]);
   const [loadingCampaigns, setLoadingCampaigns] = useState(false);
   const campaignsPageable = { page: 1, size: 10, totalElements: 0, totalPages: 0 };
 
-  // Categories state
-  const [categories, setCategories] = useState<DonationCategory[]>([]);
-  const [loadingCategories, setLoadingCategories] = useState(false);
-
   // Stats state
-  const [stats, setStats] = useState<DonationStats | null>(null);
+  const [stats, setStats] = useState<Record<string, unknown> | null>(null);
 
   const loadStats = useCallback(() => {
-    getDonationStats()
+    getDonationSummaryV1()
       .then(setStats)
       .catch(() => {});
   }, []);
 
   const fetchDonations = useCallback((page = 1, size = 10) => {
     setLoadingDonations(true);
-    getAllDonations({ page: page - 1, size })
-      .then((data) => {
-        setDonations(data.content ?? []);
-      })
+    const load = async () => {
+      // Swagger: donations are fetched by campaign
+      if (!selectedCampaignId) {
+        const camps = await getDonationCampaignsV1();
+        const options = Array.isArray(camps) ? camps.map((c) => ({ id: Number(c.id), name: String(c.name ?? "") })) : [];
+        setCampaignsV1(options);
+        if (options[0]?.id) {
+          setSelectedCampaignId(String(options[0].id));
+          const data = await getDonationsByCampaignV1(options[0].id, page - 1, size);
+          setDonations(data.content ?? []);
+          setDonationsPageable({
+            page: (data.number ?? 0) + 1,
+            size: data.size ?? size,
+            totalElements: data.totalElements ?? 0,
+            totalPages: data.totalPages ?? 0,
+          });
+          return;
+        }
+        setDonations([]);
+        setDonationsPageable({ page: 1, size, totalElements: 0, totalPages: 0 });
+        return;
+      }
+      const data = await getDonationsByCampaignV1(Number(selectedCampaignId), page - 1, size);
+      setDonations(data.content ?? []);
+      setDonationsPageable({
+        page: (data.number ?? 0) + 1,
+        size: data.size ?? size,
+        totalElements: data.totalElements ?? 0,
+        totalPages: data.totalPages ?? 0,
+      });
+    };
+
+    Promise.resolve(load())
       .catch(() => setDonations([]))
       .finally(() => setLoadingDonations(false));
-  }, []);
+  }, [selectedCampaignId]);
 
   const fetchCampaigns = useCallback((page = 1, size = 10) => {
     setLoadingCampaigns(true);
-    getAllCampaigns({ page: page - 1, size })
-      .then((data) => {
-        setCampaigns(data.content ?? []);
-      })
+    getDonationCampaignsV1()
+      .then((data) => setCampaigns(Array.isArray(data) ? data : []))
       .catch(() => setCampaigns([]))
       .finally(() => setLoadingCampaigns(false));
   }, []);
-
-  const fetchCategories = useCallback(() => {
-    setLoadingCategories(true);
-    getAllDonationCategories()
-      .then(setCategories)
-      .catch(() => setCategories([]))
-      .finally(() => setLoadingCategories(false));
-  }, []);
-
-  const handleRefund = async (id: string | number) => {
-    if (window.confirm("Are you sure you want to refund this donation?")) {
-      try {
-        await refundDonation(id, "Refunded by admin");
-        fetchDonations();
-        loadStats();
-      } catch (error) {
-        console.error("Failed to refund donation", error);
-      }
-    }
-  };
-
-  const handleToggleCampaign = async (campaign: DonationCampaign) => {
-    try {
-      await updateCampaignStatus(campaign.id, !campaign.isActive);
-      fetchCampaigns();
-    } catch (error) {
-      console.error("Failed to update campaign", error);
-    }
-  };
-
-  const handleDeleteCampaign = async (id: string | number) => {
-    if (window.confirm("Are you sure you want to delete this campaign?")) {
-      try {
-        await deleteCampaign(id);
-        fetchCampaigns();
-        loadStats();
-      } catch (error) {
-        console.error("Failed to delete campaign", error);
-      }
-    }
-  };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { loadStats(); }, []);
@@ -114,7 +92,7 @@ const Donations: React.FC = () => {
     } else if (activeTab === "campaigns") {
       fetchCampaigns();
     } else if (activeTab === "categories") {
-      fetchCategories();
+      // No categories endpoint in provided Swagger.
     }
   }, [activeTab]);
 
@@ -137,7 +115,7 @@ const Donations: React.FC = () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       render: (d: any) => (
         <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-          {d.campaignName}
+          {d.campaign?.name ?? "â€”"}
         </span>
       ),
     },
@@ -148,11 +126,9 @@ const Donations: React.FC = () => {
       render: (d: any) => (
         <div>
           <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-            {d.isAnonymous ? "Anonymous" : d.donorName}
+            {d.donorName || "Anonymous"}
           </p>
-          {d.donorEmail && (
-            <p className="text-xs text-slate-500">{d.donorEmail}</p>
-          )}
+          {d.donorEmail && <p className="text-xs text-slate-500">{d.donorEmail}</p>}
         </div>
       ),
     },
@@ -200,15 +176,13 @@ const Donations: React.FC = () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       render: (d: any) => (
         <div className="flex gap-2">
-          {d.paymentStatus === "SUCCESS" && (
-            <button
-              onClick={() => handleRefund(d.id)}
-              className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-              title="Refund"
-            >
-              <Trash2 size={16} />
-            </button>
-          )}
+          <button
+            disabled
+            className="p-1.5 text-slate-300 cursor-not-allowed"
+            title="Refund (not in Swagger)"
+          >
+            <Trash2 size={16} />
+          </button>
         </div>
       ),
     },
@@ -229,46 +203,21 @@ const Donations: React.FC = () => {
       ),
     },
     {
-      key: "category",
-      header: "Category",
+      key: "product",
+      header: "Product",
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       render: (c: any) => (
         <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-          {c.categoryName}
+          {c.product?.name ?? "â€”"}
         </span>
       ),
     },
     {
-      key: "progress",
-      header: "Progress",
+      key: "targetAmount",
+      header: "Target",
+      className: "text-right",
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      render: (c: any) => {
-        const percentage = c.targetAmount > 0 ? (c.raisedAmount / c.targetAmount) * 100 : 0;
-        return (
-          <div className="w-full max-w-[150px]">
-            <div className="flex justify-between text-xs mb-1">
-              <span className="text-slate-500">{percentage.toFixed(0)}%</span>
-              <span className="text-slate-400">${c.raisedAmount.toLocaleString()} / ${c.targetAmount.toLocaleString()}</span>
-            </div>
-            <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-emerald-500 rounded-full"
-                style={{ width: `${Math.min(percentage, 100)}%` }}
-              />
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      key: "donors",
-      header: "Donors",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      render: (c: any) => (
-        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-          {c.donorCount}
-        </span>
-      ),
+      render: (c: any) => <span className="text-sm font-bold text-slate-900 dark:text-slate-100">${(Number(c.targetAmount) || 0).toFixed(2)}</span>,
     },
     {
       key: "status",
@@ -276,17 +225,16 @@ const Donations: React.FC = () => {
       className: "text-center",
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       render: (c: any) => (
-        <button
-          onClick={() => handleToggleCampaign(c)}
+        <span
           className={cn(
             "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border",
-            c.isActive 
-              ? "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400" 
-              : "bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400"
+            c.active === false
+              ? "bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400"
+              : "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400"
           )}
         >
-          {c.isActive ? "Active" : "Inactive"}
-        </button>
+          {c.active === false ? "Inactive" : "Active"}
+        </span>
       ),
     },
     {
@@ -295,11 +243,7 @@ const Donations: React.FC = () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       render: (c: any) => (
         <div className="flex gap-2">
-          <button
-            onClick={() => handleDeleteCampaign(c.id)}
-            className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-            title="Delete"
-          >
+          <button disabled className="p-1.5 text-slate-300 cursor-not-allowed" title="Delete (not in Swagger)">
             <Trash2 size={16} />
           </button>
         </div>
@@ -317,7 +261,7 @@ const Donations: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <StatCard
           label="Total Raised"
-          value={`$${(stats?.totalRaised || 0).toLocaleString()}`}
+          value={`$${Number((stats as any)?.totalAmount ?? (stats as any)?.amount ?? 0).toLocaleString()}`}
           change="All time"
           icon="payments"
           iconBg="bg-emerald-50 dark:bg-emerald-900/20"
@@ -327,7 +271,7 @@ const Donations: React.FC = () => {
         />
         <StatCard
           label="Total Donations"
-          value={String(stats?.totalDonations || 0)}
+          value={String((stats as any)?.totalDonations ?? (stats as any)?.count ?? 0)}
           change="Transactions"
           icon="sync_alt"
           iconBg="bg-blue-50 dark:bg-blue-900/20"
@@ -337,7 +281,7 @@ const Donations: React.FC = () => {
         />
         <StatCard
           label="Active Campaigns"
-          value={String(stats?.activeCampaigns || 0)}
+          value={String((stats as any)?.activeCampaigns ?? 0)}
           change="Running"
           icon="campaign"
           iconBg="bg-purple-50 dark:bg-purple-900/20"
@@ -347,7 +291,7 @@ const Donations: React.FC = () => {
         />
         <StatCard
           label="Total Donors"
-          value={String(stats?.donorCount || 0)}
+          value={String((stats as any)?.donorCount ?? 0)}
           change="Unique"
           icon="people"
           iconBg="bg-amber-50 dark:bg-amber-900/20"
@@ -403,9 +347,38 @@ const Donations: React.FC = () => {
           data={donationsData}
           loading={loadingDonations}
           pageable={donationsPageable}
-          onPageChange={() => {}}
-          onSizeChange={() => {}}
+          onPageChange={(p) => fetchDonations(p, donationsPageable.size)}
+          onSizeChange={(s) => fetchDonations(1, s)}
           searchable={true}
+          filterComponent={
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex-1 space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Campaign</label>
+                <select
+                  value={selectedCampaignId}
+                  onChange={(e) => {
+                    setSelectedCampaignId(e.target.value);
+                  }}
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none"
+                >
+                  <option value="">Select campaign...</option>
+                  {campaignsV1.map((c) => (
+                    <option key={String(c.id)} value={String(c.id)}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-end">
+                <button
+                  onClick={() => fetchDonations(donationsPageable.page, donationsPageable.size)}
+                  className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-emerald-900/20 hover:bg-emerald-700 transition-colors"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          }
         />
       )}
 
@@ -425,30 +398,10 @@ const Donations: React.FC = () => {
 
       {activeTab === "categories" && (
         <div className="glass-card p-6 border-slate-200 dark:border-slate-800">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Donation Categories</h3>
-          {loadingCategories ? (
-            <p className="text-slate-500">Loading...</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {categories.map((cat) => (
-                <div
-                  key={String(cat.id)}
-                  className="p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800"
-                >
-                  <h4 className="font-bold text-slate-900 dark:text-white">{cat.name}</h4>
-                  <p className="text-sm text-slate-500 mt-1">{cat.description}</p>
-                  <span className={cn(
-                    "mt-2 inline-block px-2 py-0.5 rounded text-xs font-bold uppercase",
-                    cat.isActive 
-                      ? "bg-emerald-50 text-emerald-600" 
-                      : "bg-slate-100 text-slate-500"
-                  )}>
-                    {cat.isActive ? "Active" : "Inactive"}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Donation Categories</h3>
+          <p className="text-sm text-slate-500">
+            Not available: the provided Swagger does not expose donation category endpoints.
+          </p>
         </div>
       )}
     </div>
