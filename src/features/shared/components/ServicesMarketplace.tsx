@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -17,6 +18,8 @@ import {
   X,
 } from 'lucide-react';
 import { ROUTE_PATHS } from '../../../router/paths';
+import { getActiveCampaigns, type DonationCampaign } from '../../../services/donations.service';
+import { getDonationCampaignsV1, type DonationCampaignV1 } from '../../../services/donationsV1.service';
 import { getProducts, getProductCategories, getProductsByCategory, getCurrencies } from '../../../services/products.service';
 import type { Product, ProductCategory, Currency } from '../../../types/products';
 
@@ -63,8 +66,9 @@ function getColor(key: string) {
 }
 
 async function fetchData(params: { search?: string; categoryId?: string }): Promise<{ products: Product[]; categories: ProductCategory[] }> {
+  const isDonationsOnly = params.categoryId === 'donations';
   const [productsPage, categories] = await Promise.all([
-    params.categoryId && params.categoryId !== 'all'
+    params.categoryId && params.categoryId !== 'all' && !isDonationsOnly
       ? getProductsByCategory(params.categoryId, { size: 100, search: params.search })
       : getProducts({ size: 100, search: params.search }),
     getProductCategories(),
@@ -86,16 +90,21 @@ export type BillerCard = {
   currencyCode?: string;
   currencyName?: string;
   minimumPurchaseAmount?: number;
+  isDonationCampaign?: boolean;
 };
 
 type CategoryTab = { key: string; label: string };
 
 interface ServicesMarketplaceProps {
   embedded?: boolean;
+  showTitle?: boolean;
+  liftSearch?: boolean;
+  headerPortalId?: string;
+  tabsPortalId?: string;
   onSelectProduct?: (product: BillerCard) => void;
 }
 
-export function ServicesMarketplace({ embedded = false, onSelectProduct }: ServicesMarketplaceProps) {
+export function ServicesMarketplace({ embedded = false, showTitle = true, liftSearch = false, headerPortalId, tabsPortalId, onSelectProduct }: ServicesMarketplaceProps) {
   const navigate = useNavigate();
 
   // Raw search input (not debounced)
@@ -119,6 +128,19 @@ export function ServicesMarketplace({ embedded = false, onSelectProduct }: Servi
     staleTime: 5 * 60 * 1000,
     placeholderData: (prev) => prev,
   });
+
+  const { data: donationCampaignsData } = useQuery({
+    queryKey: ['donations-campaigns-unified'],
+    queryFn: async () => {
+      const [v1, pub] = await Promise.allSettled([getDonationCampaignsV1(), getActiveCampaigns()]);
+      return {
+        v1: v1.status === 'fulfilled' && Array.isArray(v1.value) ? v1.value : [],
+        pub: pub.status === 'fulfilled' && Array.isArray(pub.value) ? pub.value : [],
+      };
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: !embedded,
+  });
   
   const isInitialLoading = isLoading && !data;
 
@@ -138,11 +160,13 @@ export function ServicesMarketplace({ embedded = false, onSelectProduct }: Servi
         label: String(c.displayName ?? c.name ?? 'Category'),
       }))
       .filter((c) => c.key.length > 0);
-    return [{ key: 'all', label: 'All Services' }, ...fromApi];
+    const hasDonations = fromApi.some((c) => /donat/i.test(c.label) || /donat/i.test(c.key));
+    const base = [{ key: 'all', label: 'All Services' }, ...fromApi];
+    return hasDonations ? base : [...base, { key: 'donations', label: 'Donations' }];
   }, [data?.categories]);
 
-  const billers: BillerCard[] = useMemo(() =>
-    (data?.products ?? [])
+  const billers: BillerCard[] = useMemo(() => {
+    const products: BillerCard[] = (data?.products ?? [])
       .filter((p): p is Product & { id: number } => p.status === 'ACTIVE' && !p.deleted && typeof p.id === 'number')
       .map((p) => {
         const name    = String(p.name ?? 'Unnamed');
@@ -161,8 +185,46 @@ export function ServicesMarketplace({ embedded = false, onSelectProduct }: Servi
           currencyName:          p.defaultCurrency?.name ?? p.defaultCurrency?.code ?? undefined,
           minimumPurchaseAmount: Number(p.minimumPurchaseAmount ?? 0) || undefined,
         };
-      }),
-  [data?.products]);
+      });
+
+    const v1Campaigns: DonationCampaignV1[] = donationCampaignsData?.v1 ?? [];
+    const publicCampaigns: DonationCampaign[] = donationCampaignsData?.pub ?? [];
+    const usePublic = v1Campaigns.length === 0;
+
+    const donationCards: BillerCard[] = (usePublic ? publicCampaigns : v1Campaigns)
+      .filter((c) => {
+        if ('active' in c) return c.active !== false;
+        if ('isActive' in c) return c.isActive !== false;
+        return true;
+      })
+      .map((c) => {
+        if ('product' in c) {
+          return {
+            id:                 `d-${String(c.id)}`,
+            productId:          typeof c.product?.id === 'number' ? c.product.id : 0,
+            productCategoryId:  typeof c.product?.category?.id === 'number' ? c.product.category.id : undefined,
+            name:               String(c.name ?? c.product?.name ?? 'Donation'),
+            description:        c.description ?? undefined,
+            categoryKey:        'donations',
+            categoryLabel:      'Donations',
+            isDonationCampaign: true,
+          };
+        }
+        return {
+          id:                 `d-${String(c.id)}`,
+          productId:          0,
+          name:               String(c.name ?? 'Donation'),
+          description:        c.description ?? undefined,
+          categoryKey:        'donations',
+          categoryLabel:      'Donations',
+          currencyCode:       c.currencyCode ?? undefined,
+          minimumPurchaseAmount: Number((c as DonationCampaign).targetAmount ?? 0) || undefined,
+          isDonationCampaign: true,
+        };
+      });
+
+    return [...products, ...donationCards];
+  }, [data?.products, donationCampaignsData]);
 
   const availableCurrencies = useMemo<Array<{ code: string; name: string }>>(() => {
     const raw = currenciesData as { content?: Currency[] } | Currency[] | undefined;
@@ -189,6 +251,10 @@ export function ServicesMarketplace({ embedded = false, onSelectProduct }: Servi
       onSelectProduct(biller);
       return;
     }
+    if (biller.isDonationCampaign && (!biller.productId || biller.productId <= 0)) {
+      navigate(`${ROUTE_PATHS.portalCustomer}/donations`);
+      return;
+    }
     const query = new URLSearchParams({
       biller:    biller.name,
       account:   '',
@@ -207,108 +273,150 @@ export function ServicesMarketplace({ embedded = false, onSelectProduct }: Servi
     setSelectedCurrency('');
   };
 
-  return (
-    <div className={`space-y-8 ${embedded ? '' : 'min-h-screen bg-white'}`}>
-      {/* Search & Currency Section */}
-      <div className={`${embedded ? 'p-0' : 'bg-slate-900 pt-16 pb-28 px-4 sm:px-6 lg:px-8 relative overflow-hidden'}`}>
-        {!embedded && (
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
-        )}
+  const headerContent = (
+    <>
+      {!embedded && showTitle && (
+        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-6 tracking-tight">
+          Services <span className="text-emerald-400">Marketplace</span>
+        </h1>
+      )}
 
-        <div className={`mx-auto relative z-10 ${embedded ? '' : 'max-w-5xl text-center'}`}>
-          {!embedded && (
-             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-6 tracking-tight">
-               Services <span className="text-emerald-400">Marketplace</span>
-             </h1>
-          )}
-          
-          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between mb-6">
-            <div className={`relative flex-1 group ${embedded ? 'w-full' : 'max-w-3xl mx-auto'}`}>
-              <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl blur opacity-10 group-hover:opacity-25 transition-opacity" />
-              <div className={`relative flex items-center border rounded-2xl shadow-sm backdrop-blur-xl transition-all ${embedded ? 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800' : 'bg-slate-800/80 border-white/10'}`}>
-                <Search size={18} className={`ml-4 ${embedded ? 'text-slate-400' : 'text-slate-400'}`} />
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search for a biller, school, or service..."
-                  className={`w-full pl-3 pr-4 py-4 bg-transparent focus:outline-none text-sm font-medium ${embedded ? 'text-slate-900 dark:text-white placeholder-slate-400' : 'text-white placeholder-slate-500'}`}
-                />
-                {search && (
-                  <button type="button" onClick={() => setSearch('')} className="mr-4 text-slate-400 hover:text-slate-600 transition-colors">
-                    <X size={16} />
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {availableCurrencies.length > 0 && (
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
-                  <DollarSign size={10} /> Currency:
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setSelectedCurrency('')}
-                  className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
-                    !selectedCurrency
-                      ? 'bg-slate-900 text-white border-slate-900 shadow-lg'
-                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300'
-                  }`}
-                >
-                  ALL
-                </button>
-                {availableCurrencies.map((c) => (
-                  <button
-                    key={c.code}
-                    type="button"
-                    onClick={() => setSelectedCurrency(selectedCurrency === c.code ? '' : c.code)}
-                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
-                      selectedCurrency === c.code
-                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-lg'
-                        : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300'
-                    }`}
-                  >
-                    {c.code}
-                  </button>
-                ))}
-              </div>
+      <div className={`flex flex-col md:flex-row gap-4 items-start md:items-center justify-between ${liftSearch ? 'mb-2' : 'mb-6'}`}>
+        <div className={`relative flex-1 group ${embedded ? 'w-full' : 'max-w-3xl mx-auto'}`}>
+          <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl blur opacity-10 group-hover:opacity-25 transition-opacity" />
+          <div className={`relative flex items-center border rounded-2xl shadow-sm backdrop-blur-xl transition-all ${embedded ? 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800' : 'bg-slate-800/80 border-white/10'}`}>
+            <Search size={18} className={`ml-4 ${embedded ? 'text-slate-400' : 'text-slate-400'}`} />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search for a biller, school, or service..."
+              className={`w-full pl-3 pr-4 py-4 bg-transparent focus:outline-none text-sm font-medium ${embedded ? 'text-slate-900 dark:text-white placeholder-slate-400' : 'text-white placeholder-slate-500'}`}
+            />
+            {search && (
+              <button type="button" onClick={() => setSearch('')} className="mr-4 text-slate-400 hover:text-slate-600 transition-colors">
+                <X size={16} />
+              </button>
             )}
           </div>
         </div>
-      </div>
 
-      {/* Category Tabs */}
-      <div className={`sticky ${embedded ? 'top-[-2rem]' : 'top-0'} z-30 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 -mx-4 px-4`}>
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide py-4 items-center">
-          {isInitialLoading ? (
-            <div className="flex gap-3 py-1">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="h-10 w-28 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse shrink-0" />
-              ))}
-            </div>
-          ) : (
-            categoryTabs.map((tab) => (
+        {availableCurrencies.length > 0 && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
+              <DollarSign size={10} /> Currency:
+            </span>
+            <button
+              type="button"
+              onClick={() => setSelectedCurrency('')}
+              className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
+                !selectedCurrency
+                  ? 'bg-slate-900 text-white border-slate-900 shadow-lg'
+                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300'
+              }`}
+            >
+              ALL
+            </button>
+            {availableCurrencies.map((c) => (
               <button
-                key={tab.key}
-                onClick={() => setActiveCategory(tab.key)}
-                className={`inline-flex items-center gap-2 whitespace-nowrap px-5 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 border-2 active:scale-95 ${
-                  activeCategory === tab.key
-                    ? 'bg-slate-900 dark:bg-slate-700 border-slate-900 dark:border-slate-700 text-white shadow-lg'
-                    : 'border-slate-100 dark:border-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-slate-900'
+                key={c.code}
+                type="button"
+                onClick={() => setSelectedCurrency(selectedCurrency === c.code ? '' : c.code)}
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
+                  selectedCurrency === c.code
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-lg'
+                    : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300'
                 }`}
               >
-                {tab.key !== 'all' && (
-                  <span className={activeCategory === tab.key ? 'text-emerald-400' : 'text-slate-400'}>
-                    <CategoryIcon label={tab.label} className="w-3.5 h-3.5" />
-                  </span>
-                )}
-                {tab.label}
+                {c.code}
               </button>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
+    </>
+  );
+
+  const headerSection = (
+    <div className={`${embedded ? 'p-0' : `bg-slate-900 ${liftSearch ? 'pt-8 pb-14' : 'pt-16 pb-28'} px-4 sm:px-6 lg:px-8 relative overflow-hidden`}`}>
+      {!embedded && (
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
+      )}
+
+      <div className={`mx-auto relative z-10 ${embedded ? '' : 'max-w-5xl text-center'}`}>
+        {headerContent}
+      </div>
+    </div>
+  );
+
+  const portalHeaderSection = (
+    <div className={`relative z-10 ${embedded ? '' : 'max-w-5xl mx-auto text-center'}`}>
+      {headerContent}
+    </div>
+  );
+
+  const headerHost = headerPortalId && typeof document !== 'undefined'
+    ? document.getElementById(headerPortalId)
+    : null;
+
+  const headerNode = headerPortalId
+    ? (headerHost ? createPortal(portalHeaderSection, headerHost) : headerSection)
+    : headerSection;
+
+  const tabsContent = (
+    <div
+      className={`sticky ${embedded ? 'top-[-2rem]' : 'top-0'} z-30 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 ${
+        liftSearch && !embedded
+          ? '-mx-8 -mt-8 px-8 pt-6 pb-4 rounded-t-[2.5rem]'
+          : '-mx-4 px-4'
+      }`}
+    >
+      <div className="flex gap-2 overflow-x-auto scrollbar-hide py-4 items-center">
+        {isInitialLoading ? (
+          <div className="flex gap-3 py-1">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="h-10 w-28 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse shrink-0" />
+            ))}
+          </div>
+        ) : (
+          categoryTabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveCategory(tab.key)}
+              className={`inline-flex items-center gap-2 whitespace-nowrap px-5 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 border-2 active:scale-95 ${
+                activeCategory === tab.key
+                  ? 'bg-slate-900 dark:bg-slate-700 border-slate-900 dark:border-slate-700 text-white shadow-lg'
+                  : 'border-slate-100 dark:border-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-slate-900'
+              }`}
+            >
+              {tab.key !== 'all' && (
+                <span className={activeCategory === tab.key ? 'text-emerald-400' : 'text-slate-400'}>
+                  <CategoryIcon label={tab.label} className="w-3.5 h-3.5" />
+                </span>
+              )}
+              {tab.label}
+            </button>
+          ))
+        )}
+      </div>
+    </div>
+  );
+
+  const tabsHost = tabsPortalId && typeof document !== 'undefined'
+    ? document.getElementById(tabsPortalId)
+    : null;
+
+  const tabsNode = tabsPortalId
+    ? (tabsHost ? createPortal(tabsContent, tabsHost) : tabsContent)
+    : tabsContent;
+
+  return (
+    <div className={`space-y-8 ${embedded ? '' : 'min-h-screen bg-white'}`}>
+      {/* Search & Currency Section */}
+      {headerNode}
+
+      {/* Category Tabs */}
+      {tabsNode}
 
       {/* Products Grid */}
       <div className="space-y-6">

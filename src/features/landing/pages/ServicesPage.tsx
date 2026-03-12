@@ -28,13 +28,24 @@ export function ServicesPage() {
             Quickly find and pay for utilities, airtime, fees, insurance, and more.
             All your bills in one secure place.
           </p>
+
+          <div id="services-marketplace-header" className="mt-10" />
         </div>
       </div>
 
       {/* ── Marketplace Content ─────────────────────────────────────────────── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 pb-20 relative z-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 relative z-20">
+        <div id="services-marketplace-tabs" />
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 pb-20 relative z-20">
         <div className="bg-white dark:bg-slate-950 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-2xl p-8 md:p-12">
-          <ServicesMarketplace />
+          <ServicesMarketplace
+            showTitle={false}
+            liftSearch
+            headerPortalId="services-marketplace-header"
+            tabsPortalId="services-marketplace-tabs"
+          />
         </div>
       </div>
     </div>
