@@ -20,7 +20,6 @@ export interface DonationCampaignDto {
 }
 
 export interface CreateDonationCampaignCommand {
-  productId: number
   name: string
   description?: string
   targetAmount?: number

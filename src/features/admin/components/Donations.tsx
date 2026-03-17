@@ -14,8 +14,6 @@ import {
   setDonationCampaignStatus,
   type DonationCampaignDto,
 } from "../../../services/donationCampaigns.service";
-import { getProducts } from "../../../services/products.service";
-import type { Product } from "../../../types";
 import StatCard from "../../../components/ui/StatCard";
 import CRUDLayout from "../../shared/components/CRUDLayout";
 import CRUDModal from "../../shared/components/CRUDModal";
@@ -36,13 +34,10 @@ const Donations: React.FC = () => {
   const [campaigns, setCampaigns] = useState<DonationCampaignDto[]>([]);
   const [loadingCampaigns, setLoadingCampaigns] = useState(false);
 
-  // Products for the create dropdown
-  const [products, setProducts] = useState<Product[]>([]);
-
   // Create modal
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [createForm, setCreateForm] = useState({ productId: "", name: "", description: "", targetAmount: "" });
+  const [createForm, setCreateForm] = useState({ name: "", description: "", targetAmount: "" });
 
   // Edit modal
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -61,26 +56,18 @@ const Donations: React.FC = () => {
       .finally(() => setLoadingCampaigns(false));
   }, []);
 
-  const loadProducts = useCallback(() => {
-    getProducts({ size: 200 })
-      .then((r) => setProducts(r?.content ?? []))
-      .catch(() => {});
-  }, []);
-
   const handleCreate = async () => {
-    if (!createForm.productId) { toast.error("Product is required"); return; }
     if (!createForm.name.trim()) { toast.error("Name is required"); return; }
     try {
       setIsCreating(true);
       await createDonationCampaign({
-        productId: Number(createForm.productId),
         name: createForm.name.trim(),
         description: createForm.description.trim() || undefined,
         targetAmount: createForm.targetAmount ? Number(createForm.targetAmount) : undefined,
       });
       toast.success("Campaign created");
       setIsCreateOpen(false);
-      setCreateForm({ productId: "", name: "", description: "", targetAmount: "" });
+      setCreateForm({ name: "", description: "", targetAmount: "" });
       fetchCampaigns();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to create");
@@ -169,7 +156,7 @@ const Donations: React.FC = () => {
       .finally(() => setLoadingDonations(false));
   }, [selectedCampaignId]);
 
-  useEffect(() => { loadStats(); loadProducts(); }, [loadStats, loadProducts]);
+  useEffect(() => { loadStats(); }, [loadStats]);
   useEffect(() => { if (activeTab === "campaigns") fetchCampaigns(); }, [activeTab, fetchCampaigns]);
   useEffect(() => { if (activeTab === "donations" && selectedCampaignId) fetchDonations(); }, [activeTab, selectedCampaignId, fetchDonations]);
 
@@ -481,19 +468,6 @@ const Donations: React.FC = () => {
         submitLabel="Create Campaign"
       >
         <div className="space-y-5">
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Product *</label>
-            <select
-              value={createForm.productId}
-              onChange={(e) => setCreateForm((p) => ({ ...p, productId: e.target.value }))}
-              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-            >
-              <option value="">Select product…</option>
-              {products.map((p) => (
-                <option key={p.id} value={String(p.id)}>{p.name}</option>
-              ))}
-            </select>
-          </div>
           {[
             { key: "name", label: "Campaign Name *", type: "text" },
             { key: "description", label: "Description", type: "text" },
