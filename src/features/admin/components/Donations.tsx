@@ -1,102 +1,290 @@
 import React, { useEffect, useState, useCallback } from "react";
+import toast from "react-hot-toast";
+import { confirmToast } from "../../../lib/confirmToast";
 import {
-  getDonationCampaignsV1,
   getDonationsByCampaignV1,
   getDonationSummaryV1,
-  type DonationCampaignV1,
   type DonationV1,
 } from "../../../services/donationsV1.service";
+import {
+  getDonationCampaigns,
+  createDonationCampaign,
+  updateDonationCampaign,
+  deleteDonationCampaign,
+  setDonationCampaignStatus,
+  type DonationCampaignDto,
+} from "../../../services/donationCampaigns.service";
+import { getProducts } from "../../../services/products.service";
+import type { Product } from "../../../types";
 import StatCard from "../../../components/ui/StatCard";
 import CRUDLayout from "../../shared/components/CRUDLayout";
+import CRUDModal from "../../shared/components/CRUDModal";
 import { cn } from "../../../lib/utils";
-import { Trash2 } from "lucide-react";
+import { Edit2, Trash2, ToggleLeft, ToggleRight, Plus } from "lucide-react";
 
 const Donations: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<"donations" | "campaigns" | "categories">("donations");
+  const [activeTab, setActiveTab] = useState<"donations" | "campaigns">("campaigns");
 
-  // Donations state
-  const [donations, setDonations] = useState<DonationV1[]>([]);
-  const [loadingDonations, setLoadingDonations] = useState(false);
-  const [donationsPageable, setDonationsPageable] = useState({ page: 1, size: 10, totalElements: 0, totalPages: 0 });
-  const [campaignsV1, setCampaignsV1] = useState<Array<{ id: number; name: string }>>([]);
-  const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
-
-  // Campaigns state
-  const [campaigns, setCampaigns] = useState<DonationCampaignV1[]>([]);
-  const [loadingCampaigns, setLoadingCampaigns] = useState(false);
-  const campaignsPageable = { page: 1, size: 10, totalElements: 0, totalPages: 0 };
-
-  // Stats state
+  // ── Stats ──────────────────────────────────────────────────────────────────
   const [stats, setStats] = useState<Record<string, unknown> | null>(null);
 
   const loadStats = useCallback(() => {
-    getDonationSummaryV1()
-      .then(setStats)
+    getDonationSummaryV1().then(setStats).catch(() => {});
+  }, []);
+
+  // ── Campaigns ──────────────────────────────────────────────────────────────
+  const [campaigns, setCampaigns] = useState<DonationCampaignDto[]>([]);
+  const [loadingCampaigns, setLoadingCampaigns] = useState(false);
+
+  // Products for the create dropdown
+  const [products, setProducts] = useState<Product[]>([]);
+
+  // Create modal
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [createForm, setCreateForm] = useState({ productId: "", name: "", description: "", targetAmount: "" });
+
+  // Edit modal
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [editingCampaign, setEditingCampaign] = useState<DonationCampaignDto | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: "", description: "", targetAmount: "", currencyCode: "",
+    imageUrl: "", startDate: "", endDate: "", active: true, featured: false,
+  });
+
+  const fetchCampaigns = useCallback(() => {
+    setLoadingCampaigns(true);
+    getDonationCampaigns()
+      .then((data) => setCampaigns(Array.isArray(data) ? data : []))
+      .catch(() => { toast.error("Failed to load campaigns"); setCampaigns([]); })
+      .finally(() => setLoadingCampaigns(false));
+  }, []);
+
+  const loadProducts = useCallback(() => {
+    getProducts({ size: 200 })
+      .then((r) => setProducts(r?.content ?? []))
       .catch(() => {});
   }, []);
 
-  const fetchDonations = useCallback((page = 1, size = 10) => {
-    setLoadingDonations(true);
-    const load = async () => {
-      // Swagger: donations are fetched by campaign
-      if (!selectedCampaignId) {
-        const camps = await getDonationCampaignsV1();
-        const options = Array.isArray(camps) ? camps.map((c) => ({ id: Number(c.id), name: String(c.name ?? "") })) : [];
-        setCampaignsV1(options);
-        if (options[0]?.id) {
-          setSelectedCampaignId(String(options[0].id));
-          const data = await getDonationsByCampaignV1(options[0].id, page - 1, size);
-          setDonations(data.content ?? []);
-          setDonationsPageable({
-            page: (data.number ?? 0) + 1,
-            size: data.size ?? size,
-            totalElements: data.totalElements ?? 0,
-            totalPages: data.totalPages ?? 0,
-          });
-          return;
-        }
-        setDonations([]);
-        setDonationsPageable({ page: 1, size, totalElements: 0, totalPages: 0 });
-        return;
-      }
-      const data = await getDonationsByCampaignV1(Number(selectedCampaignId), page - 1, size);
-      setDonations(data.content ?? []);
-      setDonationsPageable({
-        page: (data.number ?? 0) + 1,
-        size: data.size ?? size,
-        totalElements: data.totalElements ?? 0,
-        totalPages: data.totalPages ?? 0,
+  const handleCreate = async () => {
+    if (!createForm.productId) { toast.error("Product is required"); return; }
+    if (!createForm.name.trim()) { toast.error("Name is required"); return; }
+    try {
+      setIsCreating(true);
+      await createDonationCampaign({
+        productId: Number(createForm.productId),
+        name: createForm.name.trim(),
+        description: createForm.description.trim() || undefined,
+        targetAmount: createForm.targetAmount ? Number(createForm.targetAmount) : undefined,
       });
-    };
+      toast.success("Campaign created");
+      setIsCreateOpen(false);
+      setCreateForm({ productId: "", name: "", description: "", targetAmount: "" });
+      fetchCampaigns();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to create");
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
-    Promise.resolve(load())
+  const openEdit = (c: DonationCampaignDto) => {
+    setEditingCampaign(c);
+    setEditForm({
+      name: c.name,
+      description: c.description ?? "",
+      targetAmount: c.targetAmount != null ? String(c.targetAmount) : "",
+      currencyCode: c.currencyCode ?? "",
+      imageUrl: c.imageUrl ?? "",
+      startDate: c.startDate ? c.startDate.slice(0, 16) : "",
+      endDate: c.endDate ? c.endDate.slice(0, 16) : "",
+      active: c.isActive ?? true,
+      featured: c.isFeatured ?? false,
+    });
+    setIsEditOpen(true);
+  };
+
+  const handleUpdate = async () => {
+    if (!editingCampaign) return;
+    if (!editForm.name.trim()) { toast.error("Name is required"); return; }
+    try {
+      setIsUpdating(true);
+      await updateDonationCampaign(editingCampaign.id, {
+        name: editForm.name.trim(),
+        description: editForm.description.trim() || undefined,
+        targetAmount: editForm.targetAmount ? Number(editForm.targetAmount) : undefined,
+        currencyCode: editForm.currencyCode.trim() || undefined,
+        imageUrl: editForm.imageUrl.trim() || undefined,
+        startDate: editForm.startDate || undefined,
+        endDate: editForm.endDate || undefined,
+        active: editForm.active,
+        featured: editForm.featured,
+      });
+      toast.success("Campaign updated");
+      setIsEditOpen(false);
+      fetchCampaigns();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleToggleStatus = (c: DonationCampaignDto) => {
+    const next = !c.isActive;
+    setDonationCampaignStatus(c.id, next)
+      .then(() => { toast.success(next ? "Campaign activated" : "Campaign deactivated"); fetchCampaigns(); })
+      .catch((err) => toast.error(err instanceof Error ? err.message : "Failed to update status"));
+  };
+
+  const handleDelete = (c: DonationCampaignDto) => {
+    confirmToast(`Delete campaign "${c.name}"?`, () => {
+      deleteDonationCampaign(c.id)
+        .then(() => { toast.success("Campaign deleted"); fetchCampaigns(); })
+        .catch((err) => toast.error(err instanceof Error ? err.message : "Failed to delete"));
+    });
+  };
+
+  // ── Donations (individual) ─────────────────────────────────────────────────
+  const [donations, setDonations] = useState<DonationV1[]>([]);
+  const [loadingDonations, setLoadingDonations] = useState(false);
+  const [donationsPageable, setDonationsPageable] = useState({ page: 1, size: 10, totalElements: 0, totalPages: 0 });
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
+
+  const fetchDonations = useCallback((page = 1, size = 10) => {
+    if (!selectedCampaignId) return;
+    setLoadingDonations(true);
+    getDonationsByCampaignV1(Number(selectedCampaignId), page - 1, size)
+      .then((data) => {
+        setDonations(data.content ?? []);
+        setDonationsPageable({
+          page: (data.number ?? 0) + 1,
+          size: data.size ?? size,
+          totalElements: data.totalElements ?? 0,
+          totalPages: data.totalPages ?? 0,
+        });
+      })
       .catch(() => setDonations([]))
       .finally(() => setLoadingDonations(false));
   }, [selectedCampaignId]);
 
-  const fetchCampaigns = useCallback((page = 1, size = 10) => {
-    setLoadingCampaigns(true);
-    getDonationCampaignsV1()
-      .then((data) => setCampaigns(Array.isArray(data) ? data : []))
-      .catch(() => setCampaigns([]))
-      .finally(() => setLoadingCampaigns(false));
-  }, []);
+  useEffect(() => { loadStats(); loadProducts(); }, [loadStats, loadProducts]);
+  useEffect(() => { if (activeTab === "campaigns") fetchCampaigns(); }, [activeTab, fetchCampaigns]);
+  useEffect(() => { if (activeTab === "donations" && selectedCampaignId) fetchDonations(); }, [activeTab, selectedCampaignId, fetchDonations]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { loadStats(); }, []);
+  // ── Columns ────────────────────────────────────────────────────────────────
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const campaignColumns: any[] = [
+    {
+      key: "name",
+      header: "Campaign",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      render: (c: any) => (
+        <div>
+          <p className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            {c.name}
+            {c.isFeatured && (
+              <span className="text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded-full dark:bg-amber-900/30 dark:text-amber-400">
+                Featured
+              </span>
+            )}
+          </p>
+          {c.description && <p className="text-xs text-slate-400 truncate max-w-[220px] mt-0.5">{c.description}</p>}
+          {c.categoryName && <p className="text-[10px] text-slate-400 font-mono mt-0.5">{c.categoryName}</p>}
+        </div>
+      ),
+    },
+    {
+      key: "progress",
+      header: "Progress",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      render: (c: any) => {
+        const raised = Number(c.raisedAmount ?? 0);
+        const target = Number(c.targetAmount ?? 0);
+        const pct = target > 0 ? Math.min(100, Math.round((raised / target) * 100)) : null;
+        const currency = c.currencyCode ?? "";
+        return (
+          <div className="min-w-[140px]">
+            <p className="text-sm font-bold text-emerald-600">
+              {currency} {raised.toLocaleString()}
+            </p>
+            {target > 0 && (
+              <>
+                <p className="text-[10px] text-slate-400">of {currency} {target.toLocaleString()} goal</p>
+                <div className="mt-1 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden w-28">
+                  <div
+                    className="h-full bg-emerald-500 rounded-full transition-all"
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+                <p className="text-[10px] text-slate-400 mt-0.5">{pct}%</p>
+              </>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      key: "donors",
+      header: "Donors",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      render: (c: any) => (
+        <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+          {Number(c.donorCount ?? 0).toLocaleString()}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      className: "text-center",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      render: (c: any) => (
+        <button
+          onClick={() => handleToggleStatus(c)}
+          title={c.isActive ? "Click to deactivate" : "Click to activate"}
+          className="flex items-center gap-1.5 mx-auto transition-opacity hover:opacity-70"
+        >
+          {c.isActive ? (
+            <>
+              <ToggleRight className="w-5 h-5 text-emerald-500" />
+              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Active</span>
+            </>
+          ) : (
+            <>
+              <ToggleLeft className="w-5 h-5 text-slate-400" />
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Inactive</span>
+            </>
+          )}
+        </button>
+      ),
+    },
+    {
+      key: "actions",
+      header: "",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      render: (c: any) => (
+        <div className="flex gap-1.5 justify-end">
+          <button
+            onClick={() => openEdit(c)}
+            className="p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-500 transition-colors"
+            title="Edit"
+          >
+            <Edit2 size={15} />
+          </button>
+          <button
+            onClick={() => handleDelete(c)}
+            className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 transition-colors"
+            title="Delete"
+          >
+            <Trash2 size={15} />
+          </button>
+        </div>
+      ),
+    },
+  ];
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (activeTab === "donations") {
-      fetchDonations();
-    } else if (activeTab === "campaigns") {
-      fetchCampaigns();
-    } else if (activeTab === "categories") {
-      // No categories endpoint in provided Swagger.
-    }
-  }, [activeTab]);
-
-  // Donations columns - use any type for simplicity
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const donationColumns: any[] = [
     {
@@ -110,24 +298,12 @@ const Donations: React.FC = () => {
       ),
     },
     {
-      key: "campaign",
-      header: "Campaign",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      render: (d: any) => (
-        <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-          {d.campaign?.name ?? "â€”"}
-        </span>
-      ),
-    },
-    {
       key: "donor",
       header: "Donor",
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       render: (d: any) => (
         <div>
-          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-            {d.donorName || "Anonymous"}
-          </p>
+          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{d.donorName || "Anonymous"}</p>
           {d.donorEmail && <p className="text-xs text-slate-500">{d.donorEmail}</p>}
         </div>
       ),
@@ -150,117 +326,35 @@ const Donations: React.FC = () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       render: (d: any) => {
         const status = d.paymentStatus;
-        const isSuccess = status === "SUCCESS";
-        const isPending = status === "PENDING" || status === "PROCESSING";
-        const isFailed = status === "FAILED";
-        
         return (
           <span className={cn(
             "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border",
-            isSuccess 
-              ? "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400" 
-              : isPending
+            status === "SUCCESS"
+              ? "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400"
+              : status === "PENDING" || status === "PROCESSING"
               ? "bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400"
-              : isFailed
+              : status === "FAILED"
               ? "bg-red-50 text-red-600 border-red-100 dark:bg-red-900/20 dark:text-red-400"
               : "bg-slate-50 text-slate-600 border-slate-100"
           )}>
-            {status}
+            {status ?? "—"}
           </span>
         );
       },
     },
-    {
-      key: "actions",
-      header: "",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      render: (d: any) => (
-        <div className="flex gap-2">
-          <button
-            disabled
-            className="p-1.5 text-slate-300 cursor-not-allowed"
-            title="Refund (not in Swagger)"
-          >
-            <Trash2 size={16} />
-          </button>
-        </div>
-      ),
-    },
   ];
 
-  // Campaigns columns
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const campaignColumns: any[] = [
-    {
-      key: "name",
-      header: "Campaign",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      render: (c: any) => (
-        <div>
-          <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{c.name}</p>
-          <p className="text-xs text-slate-500 truncate max-w-[200px]">{c.description}</p>
-        </div>
-      ),
-    },
-    {
-      key: "product",
-      header: "Product",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      render: (c: any) => (
-        <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-          {c.product?.name ?? "â€”"}
-        </span>
-      ),
-    },
-    {
-      key: "targetAmount",
-      header: "Target",
-      className: "text-right",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      render: (c: any) => <span className="text-sm font-bold text-slate-900 dark:text-slate-100">${(Number(c.targetAmount) || 0).toFixed(2)}</span>,
-    },
-    {
-      key: "status",
-      header: "Status",
-      className: "text-center",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      render: (c: any) => (
-        <span
-          className={cn(
-            "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border",
-            c.active === false
-              ? "bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400"
-              : "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400"
-          )}
-        >
-          {c.active === false ? "Inactive" : "Active"}
-        </span>
-      ),
-    },
-    {
-      key: "actions",
-      header: "",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      render: (c: any) => (
-        <div className="flex gap-2">
-          <button disabled className="p-1.5 text-slate-300 cursor-not-allowed" title="Delete (not in Swagger)">
-            <Trash2 size={16} />
-          </button>
-        </div>
-      ),
-    },
-  ];
+  const campaignsData = campaigns.map((c) => ({ ...c, uid: String(c.id) }));
+  const donationsData = donations.map((d) => ({ ...d, uid: String(d.id) }));
 
-  // Transform data - add uid field
-  const donationsData = donations.map(d => ({ ...d, uid: String(d.id) }));
-  const campaignsData = campaigns.map(c => ({ ...c, uid: String(c.id) }));
-
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      {/* Stats Cards */}
+      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <StatCard
           label="Total Raised"
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           value={`$${Number((stats as any)?.totalAmount ?? (stats as any)?.amount ?? 0).toLocaleString()}`}
           change="All time"
           icon="payments"
@@ -271,6 +365,7 @@ const Donations: React.FC = () => {
         />
         <StatCard
           label="Total Donations"
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           value={String((stats as any)?.totalDonations ?? (stats as any)?.count ?? 0)}
           change="Transactions"
           icon="sync_alt"
@@ -281,7 +376,8 @@ const Donations: React.FC = () => {
         />
         <StatCard
           label="Active Campaigns"
-          value={String((stats as any)?.activeCampaigns ?? 0)}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          value={String((stats as any)?.activeCampaigns ?? campaigns.filter((c) => c.isActive).length)}
           change="Running"
           icon="campaign"
           iconBg="bg-purple-50 dark:bg-purple-900/20"
@@ -291,6 +387,7 @@ const Donations: React.FC = () => {
         />
         <StatCard
           label="Total Donors"
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           value={String((stats as any)?.donorCount ?? 0)}
           change="Unique"
           icon="people"
@@ -303,85 +400,23 @@ const Donations: React.FC = () => {
 
       {/* Tabs */}
       <div className="flex gap-4 border-b border-slate-200 dark:border-slate-800">
-        <button
-          onClick={() => setActiveTab("donations")}
-          className={cn(
-            "pb-3 px-1 text-sm font-bold uppercase tracking-widest border-b-2 transition-colors",
-            activeTab === "donations"
-              ? "border-emerald-500 text-emerald-600 dark:text-emerald-400"
-              : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400"
-          )}
-        >
-          Donations
-        </button>
-        <button
-          onClick={() => setActiveTab("campaigns")}
-          className={cn(
-            "pb-3 px-1 text-sm font-bold uppercase tracking-widest border-b-2 transition-colors",
-            activeTab === "campaigns"
-              ? "border-emerald-500 text-emerald-600 dark:text-emerald-400"
-              : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400"
-          )}
-        >
-          Campaigns
-        </button>
-        <button
-          onClick={() => setActiveTab("categories")}
-          className={cn(
-            "pb-3 px-1 text-sm font-bold uppercase tracking-widest border-b-2 transition-colors",
-            activeTab === "categories"
-              ? "border-emerald-500 text-emerald-600 dark:text-emerald-400"
-              : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400"
-          )}
-        >
-          Categories
-        </button>
+        {(["campaigns", "donations"] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={cn(
+              "pb-3 px-1 text-sm font-bold uppercase tracking-widest border-b-2 transition-colors",
+              activeTab === tab
+                ? "border-emerald-500 text-emerald-600 dark:text-emerald-400"
+                : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400"
+            )}
+          >
+            {tab === "campaigns" ? "Campaigns" : "Donations"}
+          </button>
+        ))}
       </div>
 
-      {/* Content */}
-      {activeTab === "donations" && (
-        <CRUDLayout
-          title="All Donations"
-          columns={donationColumns}
-          // @ts-expect-error - type mismatch with CRUDLayout
-          data={donationsData}
-          loading={loadingDonations}
-          pageable={donationsPageable}
-          onPageChange={(p) => fetchDonations(p, donationsPageable.size)}
-          onSizeChange={(s) => fetchDonations(1, s)}
-          searchable={true}
-          filterComponent={
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="flex-1 space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Campaign</label>
-                <select
-                  value={selectedCampaignId}
-                  onChange={(e) => {
-                    setSelectedCampaignId(e.target.value);
-                  }}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none"
-                >
-                  <option value="">Select campaign...</option>
-                  {campaignsV1.map((c) => (
-                    <option key={String(c.id)} value={String(c.id)}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex items-end">
-                <button
-                  onClick={() => fetchDonations(donationsPageable.page, donationsPageable.size)}
-                  className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-emerald-900/20 hover:bg-emerald-700 transition-colors"
-                >
-                  Apply
-                </button>
-              </div>
-            </div>
-          }
-        />
-      )}
-
+      {/* Campaigns tab */}
       {activeTab === "campaigns" && (
         <CRUDLayout
           title="Campaigns"
@@ -389,21 +424,145 @@ const Donations: React.FC = () => {
           // @ts-expect-error - type mismatch with CRUDLayout
           data={campaignsData}
           loading={loadingCampaigns}
-          pageable={campaignsPageable}
+          pageable={{ page: 1, size: 50, totalElements: campaigns.length, totalPages: 1 }}
           onPageChange={() => {}}
           onSizeChange={() => {}}
-          searchable={true}
+          onRefresh={fetchCampaigns}
+          onAdd={() => { setCreateForm({ productId: "", name: "", description: "", targetAmount: "" }); setIsCreateOpen(true); }}
+          addButtonText="New Campaign"
+          searchable={false}
         />
       )}
 
-      {activeTab === "categories" && (
-        <div className="glass-card p-6 border-slate-200 dark:border-slate-800">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Donation Categories</h3>
-          <p className="text-sm text-slate-500">
-            Not available: the provided Swagger does not expose donation category endpoints.
-          </p>
+      {/* Donations tab */}
+      {activeTab === "donations" && (
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row gap-3 items-end">
+            <div className="flex-1 space-y-1.5">
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Campaign</label>
+              <select
+                value={selectedCampaignId}
+                onChange={(e) => setSelectedCampaignId(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none"
+              >
+                <option value="">Select campaign…</option>
+                {campaigns.map((c) => (
+                  <option key={c.id} value={String(c.id)}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+            <button
+              onClick={() => fetchDonations(1, donationsPageable.size)}
+              className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-emerald-900/20 hover:bg-emerald-700 transition-colors"
+            >
+              Load
+            </button>
+          </div>
+          <CRUDLayout
+            title=""
+            columns={donationColumns}
+            // @ts-expect-error - type mismatch with CRUDLayout
+            data={donationsData}
+            loading={loadingDonations}
+            pageable={donationsPageable}
+            onPageChange={(p) => fetchDonations(p, donationsPageable.size)}
+            onSizeChange={(s) => fetchDonations(1, s)}
+          />
         </div>
       )}
+
+      {/* Create Campaign Modal */}
+      <CRUDModal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        title="New Donation Campaign"
+        onSubmit={handleCreate}
+        isSubmitting={isCreating}
+        submitLabel="Create Campaign"
+      >
+        <div className="space-y-5">
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Product *</label>
+            <select
+              value={createForm.productId}
+              onChange={(e) => setCreateForm((p) => ({ ...p, productId: e.target.value }))}
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+            >
+              <option value="">Select product…</option>
+              {products.map((p) => (
+                <option key={p.id} value={String(p.id)}>{p.name}</option>
+              ))}
+            </select>
+          </div>
+          {[
+            { key: "name", label: "Campaign Name *", type: "text" },
+            { key: "description", label: "Description", type: "text" },
+            { key: "targetAmount", label: "Target Amount", type: "number" },
+          ].map(({ key, label, type }) => (
+            <div key={key} className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">{label}</label>
+              <input
+                type={type}
+                value={String(createForm[key as keyof typeof createForm])}
+                onChange={(e) => setCreateForm((p) => ({ ...p, [key]: e.target.value }))}
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              />
+            </div>
+          ))}
+        </div>
+      </CRUDModal>
+
+      {/* Edit Campaign Modal */}
+      <CRUDModal
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        title={`Edit: ${editingCampaign?.name ?? ""}`}
+        onSubmit={handleUpdate}
+        isSubmitting={isUpdating}
+        submitLabel="Save Changes"
+      >
+        <div className="space-y-5">
+          {[
+            { key: "name", label: "Campaign Name *", type: "text" },
+            { key: "description", label: "Description", type: "text" },
+            { key: "targetAmount", label: "Target Amount", type: "number" },
+            { key: "currencyCode", label: "Currency Code", type: "text" },
+            { key: "imageUrl", label: "Image URL", type: "text" },
+            { key: "startDate", label: "Start Date", type: "datetime-local" },
+            { key: "endDate", label: "End Date", type: "datetime-local" },
+          ].map(({ key, label, type }) => (
+            <div key={key} className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">{label}</label>
+              <input
+                type={type}
+                value={String(editForm[key as keyof typeof editForm])}
+                onChange={(e) => setEditForm((p) => ({ ...p, [key]: e.target.value }))}
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              />
+            </div>
+          ))}
+          <div className="flex gap-6">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={editForm.active}
+                onChange={(e) => setEditForm((p) => ({ ...p, active: e.target.checked }))}
+                className="w-4 h-4 rounded border-slate-300 text-emerald-600"
+              />
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Active</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={editForm.featured}
+                onChange={(e) => setEditForm((p) => ({ ...p, featured: e.target.checked }))}
+                className="w-4 h-4 rounded border-slate-300 text-amber-500"
+              />
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Featured</span>
+            </label>
+          </div>
+        </div>
+      </CRUDModal>
     </div>
   );
 };
