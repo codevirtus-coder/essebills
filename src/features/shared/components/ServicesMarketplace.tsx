@@ -133,6 +133,8 @@ export function ServicesMarketplace({ embedded = false, onSelectProduct }: Servi
   const categoryTabs: CategoryTab[] = useMemo(() => {
     const fromApi = (data?.categories ?? [])
       .filter((c) => c.active !== false)
+      .slice()
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
       .map((c) => ({
         key:   String(c.id ?? c.name ?? '').trim(),
         label: String(c.displayName ?? c.name ?? 'Category'),

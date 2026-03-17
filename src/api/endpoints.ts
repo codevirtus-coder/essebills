@@ -37,6 +37,8 @@ export const API_ENDPOINTS = {
   // Product Categories
   productCategories: {
     root: '/v1/product-categories',
+    all: '/v1/product-categories/all',
+    reorder: '/v1/product-categories/reorder',
     byId: (id: string | number) => `/v1/product-categories/${id}`,
   },
 

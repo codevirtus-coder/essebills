@@ -89,9 +89,24 @@ export async function deleteProduct(productId: string | number): Promise<void> {
 // Product Categories
 // --------------------------------------------------------------------------
 
-/** Get all product categories */
+/** Get active product categories sorted by sortOrder (for public pages) */
 export async function getProductCategories(): Promise<ProductCategory[]> {
+  return apiFetch<ProductCategory[]>(API_ENDPOINTS.productCategories.all)
+}
+
+/** Get all product categories sorted by sortOrder (for admin) */
+export async function getAllProductCategoriesSorted(): Promise<ProductCategory[]> {
   return apiFetch<ProductCategory[]>(API_ENDPOINTS.productCategories.root)
+}
+
+/** Bulk-reorder categories. Sends [{id, sortOrder}] pairs. */
+export async function reorderProductCategories(
+  entries: Array<{ id: number; sortOrder: number }>
+): Promise<void> {
+  return apiFetch(API_ENDPOINTS.productCategories.reorder, {
+    method: 'PUT',
+    body: entries,
+  })
 }
 
 /** Get product category by ID */

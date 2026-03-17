@@ -26,6 +26,7 @@ export const ADMIN_ENDPOINTS = {
   },
   productCategories: {
     root: '/v1/product-categories',
+    reorder: '/v1/product-categories/reorder',
     byId: (id: string | number) => `/v1/product-categories/${id}`,
   },
   paymentTransactions: {
