@@ -14,6 +14,8 @@ import {
   setDonationCampaignStatus,
   type DonationCampaignDto,
 } from "../../../services/donationCampaigns.service";
+import { getCurrencies } from "../../../services/products.service";
+import type { Currency } from "../../../types";
 import StatCard from "../../../components/ui/StatCard";
 import CRUDLayout from "../../shared/components/CRUDLayout";
 import CRUDModal from "../../shared/components/CRUDModal";
@@ -34,10 +36,13 @@ const Donations: React.FC = () => {
   const [campaigns, setCampaigns] = useState<DonationCampaignDto[]>([]);
   const [loadingCampaigns, setLoadingCampaigns] = useState(false);
 
+  // Currencies
+  const [currencies, setCurrencies] = useState<Currency[]>([]);
+
   // Create modal
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [createForm, setCreateForm] = useState({ name: "", description: "", targetAmount: "" });
+  const [createForm, setCreateForm] = useState({ name: "", description: "", targetAmount: "", currencyCode: "" });
 
   // Edit modal
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -64,10 +69,11 @@ const Donations: React.FC = () => {
         name: createForm.name.trim(),
         description: createForm.description.trim() || undefined,
         targetAmount: createForm.targetAmount ? Number(createForm.targetAmount) : undefined,
+        currencyCode: createForm.currencyCode || undefined,
       });
       toast.success("Campaign created");
       setIsCreateOpen(false);
-      setCreateForm({ name: "", description: "", targetAmount: "" });
+      setCreateForm({ name: "", description: "", targetAmount: "", currencyCode: "" });
       fetchCampaigns();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to create");
@@ -156,7 +162,10 @@ const Donations: React.FC = () => {
       .finally(() => setLoadingDonations(false));
   }, [selectedCampaignId]);
 
-  useEffect(() => { loadStats(); }, [loadStats]);
+  useEffect(() => {
+    loadStats();
+    getCurrencies().then((r) => setCurrencies(r?.content ?? [])).catch(() => {});
+  }, [loadStats]);
   useEffect(() => { if (activeTab === "campaigns") fetchCampaigns(); }, [activeTab, fetchCampaigns]);
   useEffect(() => { if (activeTab === "donations" && selectedCampaignId) fetchDonations(); }, [activeTab, selectedCampaignId, fetchDonations]);
 
@@ -483,6 +492,19 @@ const Donations: React.FC = () => {
               />
             </div>
           ))}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Currency</label>
+            <select
+              value={createForm.currencyCode}
+              onChange={(e) => setCreateForm((p) => ({ ...p, currencyCode: e.target.value }))}
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+            >
+              <option value="">Select currency…</option>
+              {currencies.map((c) => (
+                <option key={c.id} value={c.code}>{c.code} — {c.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </CRUDModal>
 

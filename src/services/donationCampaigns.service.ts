@@ -23,6 +23,7 @@ export interface CreateDonationCampaignCommand {
   name: string
   description?: string
   targetAmount?: number
+  currencyCode?: string
 }
 
 export interface UpdateDonationCampaignCommand {
