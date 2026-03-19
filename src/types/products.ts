@@ -94,7 +94,7 @@ export interface ProductField extends BaseEntity {
   displayName?: string
   hint?: string
   optional?: boolean
-  fieldType?: 'EMAIL' | 'NUMBER' | 'TEXT' | 'DATE' | 'SELECT' | 'FILE'
+  fieldType?: ProductFieldType
   productId?: number
   productCode?: string
 }
@@ -105,7 +105,7 @@ export interface ProductFieldCreationContext {
   displayName: string
   hint?: string
   optional?: boolean
-  fieldType: 'EMAIL' | 'NUMBER' | 'TEXT' | 'DATE' | 'SELECT' | 'FILE'
+  fieldType: ProductFieldType
 }
 
 /** Product */
@@ -114,7 +114,7 @@ export interface Product extends BaseEntity {
   code?: string
   description?: string
   productLogoFileName?: string
-  status?: 'ACTIVE' | 'DISABLED' | 'COMING_SOON'
+  status?: ProductStatus
   category?: ProductCategory
   returnUrl?: string
   minimumDisablingBalance?: number
@@ -128,30 +128,26 @@ export interface Product extends BaseEntity {
 export interface ProductCreationContext {
   name: string
   code: string
-  description: string
-  productLogoFileName: string
-  status?: 'ACTIVE' | 'DISABLED' | 'COMING_SOON'
-  category?: ProductCategory
-  returnUrl?: string
+  description?: string
+  productLogoFileName?: string
+  returnUrl: string
   minimumDisablingBalance?: number
-  minimumPurchaseAmount?: number
-  countryCode?: Country
-  defaultCurrencyCode?: Currency
+  categoryId: number
+  countryId: number
+  currencyId: number
 }
 
 /** Product update context */
 export interface ProductUpdateContext {
   name: string
   code: string
-  description: string
-  productLogoFileName: string
-  status?: 'ACTIVE' | 'DISABLED' | 'COMING_SOON'
-  category?: ProductCategory
-  returnUrl?: string
+  description?: string
+  productLogoFileName?: string
+  returnUrl: string
   minimumDisablingBalance?: number
-  minimumPurchaseAmount?: number
-  countryCode?: Country
-  defaultCurrencyCode?: Currency
+  categoryId: number
+  countryId: number
+  currencyId: number
 }
 
 /** Product vendor balance */

@@ -63,13 +63,14 @@ const Donations: React.FC = () => {
 
   const handleCreate = async () => {
     if (!createForm.name.trim()) { toast.error("Name is required"); return; }
+    if (!createForm.currencyCode) { toast.error("Currency is required"); return; }
     try {
       setIsCreating(true);
       await createDonationCampaign({
         name: createForm.name.trim(),
         description: createForm.description.trim() || undefined,
         targetAmount: createForm.targetAmount ? Number(createForm.targetAmount) : undefined,
-        currencyCode: createForm.currencyCode || undefined,
+        currencyCode: createForm.currencyCode,
       });
       toast.success("Campaign created");
       setIsCreateOpen(false);
@@ -101,13 +102,14 @@ const Donations: React.FC = () => {
   const handleUpdate = async () => {
     if (!editingCampaign) return;
     if (!editForm.name.trim()) { toast.error("Name is required"); return; }
+    if (!editForm.currencyCode.trim()) { toast.error("Currency is required"); return; }
     try {
       setIsUpdating(true);
       await updateDonationCampaign(editingCampaign.id, {
         name: editForm.name.trim(),
         description: editForm.description.trim() || undefined,
         targetAmount: editForm.targetAmount ? Number(editForm.targetAmount) : undefined,
-        currencyCode: editForm.currencyCode.trim() || undefined,
+        currencyCode: editForm.currencyCode.trim(),
         imageUrl: editForm.imageUrl.trim() || undefined,
         startDate: editForm.startDate || undefined,
         endDate: editForm.endDate || undefined,
@@ -493,7 +495,7 @@ const Donations: React.FC = () => {
             </div>
           ))}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Currency</label>
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Currency *</label>
             <select
               value={createForm.currencyCode}
               onChange={(e) => setCreateForm((p) => ({ ...p, currencyCode: e.target.value }))}
@@ -522,7 +524,7 @@ const Donations: React.FC = () => {
             { key: "name", label: "Campaign Name *", type: "text" },
             { key: "description", label: "Description", type: "text" },
             { key: "targetAmount", label: "Target Amount", type: "number" },
-            { key: "currencyCode", label: "Currency Code", type: "text" },
+            { key: "currencyCode", label: "Currency Code *", type: "text" },
             { key: "imageUrl", label: "Image URL", type: "text" },
             { key: "startDate", label: "Start Date", type: "datetime-local" },
             { key: "endDate", label: "End Date", type: "datetime-local" },
