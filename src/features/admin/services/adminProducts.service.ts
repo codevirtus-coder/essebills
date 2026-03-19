@@ -74,3 +74,10 @@ export async function updateProductCategory(id: string | number, payload: Record
 export async function deleteProductCategory(id: string | number) {
   return adminVoidFetch(ADMIN_ENDPOINTS.productCategories.byId(id), { method: 'DELETE' })
 }
+
+export async function reorderProductCategories(entries: Array<{ id: number; sortOrder: number }>) {
+  return adminVoidFetch(ADMIN_ENDPOINTS.productCategories.reorder, {
+    method: 'PUT',
+    body: entries,
+  })
+}

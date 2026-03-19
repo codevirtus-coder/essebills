@@ -106,7 +106,7 @@ export interface ErrorMessage {
 
 export type Gender = 'MALE' | 'FEMALE' | 'OTHER'
 
-export type ProductStatus = 'ACTIVE' | 'DISABLED' | 'COMING_SOON'
+export type ProductStatus = 'ACTIVE' | 'DISABLED' | 'PENDING' | 'ARCHIVED'
 
 export type InstitutionType = 
   | 'PRE_SCHOOL' 
@@ -132,6 +132,9 @@ export type PaymentStatus =
   | 'DECLINED' 
   | 'AUTHORIZATION_FAILED' 
   | 'SERVICE_UNAVAILABLE'
+  | 'CLOSED_PERIOD_ELAPSED'
+  | 'PARTIALLY_PAID'
+  | 'REVERSED'
 
 export type ValueAvailabilityStatus = 'VALUE_AVAILABLE' | 'VALUE_USED' | 'VALUE_NOT_USED'
 
@@ -148,24 +151,25 @@ export type TuitionSettlementStatus =
 
 export type WhatsAppFlow = 
   | 'MAIN_MENU' 
-  | 'ZESA_PURCHASE' 
-  | 'AIRTIME_PURCHASE' 
-  | 'BUNDLE_PURCHASE' 
   | 'PAY_BILLS' 
   | 'SUPPORT' 
   | 'ACCOUNT_MANAGEMENT' 
   | 'AGENT_WALLET' 
   | 'AGENT_WALLET_TOPUP'
+  | 'AGENT_REGISTRATION'
+  | 'CUSTOMER_WALLET'
+  | 'CUSTOMER_WALLET_TOPUP'
+  | 'DONATION'
 
 export type WhatsAppSessionStatus = 'ACTIVE' | 'COMPLETED' | 'EXPIRED'
 
 export type WhatsAppMessageDirection = 'INBOUND' | 'OUTBOUND'
 
-export type FieldType = 'TEXT' | 'EMAIL' | 'DATE' | 'NUMBER' | 'SELECT' | 'RADIO' | 'CHECKBOX' | 'FILE'
+export type FieldType = 'TEXT' | 'NUMBER' | 'DATE' | 'PASSWORD' | 'EMAIL' | 'PHONE_NUMBER' | 'BOOLEAN' | 'DROPDOWN'
 
-export type ProductFieldType = 'EMAIL' | 'NUMBER' | 'TEXT' | 'DATE' | 'SELECT' | 'FILE'
+export type ProductFieldType = 'TEXT' | 'NUMBER' | 'DATE' | 'PASSWORD' | 'EMAIL' | 'PHONE_NUMBER' | 'BOOLEAN' | 'DROPDOWN'
 
-export type AgentWalletTransactionType = 'COMMISSION_EARNED' | 'TOP_UP'
+export type AgentWalletTransactionType = 'COMMISSION_EARNED' | 'TOP_UP' | 'WITHDRAWAL'
 
 export type EconetTransactionCategory = 'AIRTIME' | 'BUNDLE'
 

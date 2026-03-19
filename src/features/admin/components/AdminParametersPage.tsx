@@ -22,24 +22,117 @@ import {
   updateCountry,
   updateCurrency,
   updateProductCategory,
+  reorderProductCategories,
 } from '../services'
-import { 
-  Globe, 
-  DollarSign, 
-  Calendar, 
-  Landmark, 
-  Layers, 
-  Plus, 
-  Edit2, 
-  Trash2, 
+import {
+  Globe,
+  DollarSign,
+  Calendar,
+  Landmark,
+  Layers,
+  Plus,
+  Edit2,
+  Trash2,
   Info,
   CheckCircle2,
-  Activity
+  Activity,
+  ArrowUp,
+  ArrowDown,
+  GripVertical,
+  Save,
 } from 'lucide-react'
 import { cn } from '../../../lib/utils'
 
 type ParameterModule = 'currencies' | 'countries' | 'holidays' | 'banks' | 'productCategories'
 type UnknownRecord = Record<string, unknown>
+
+// ─── Sortable category row ────────────────────────────────────────────────────
+
+interface SortableCategoryRowProps {
+  row: UnknownRecord
+  index: number
+  total: number
+  isDragOver: boolean
+  onMoveUp: () => void
+  onMoveDown: () => void
+  onEdit: () => void
+  onDelete: () => void
+  onDragStart: (e: React.DragEvent, index: number) => void
+  onDragOver: (e: React.DragEvent, index: number) => void
+  onDrop: (e: React.DragEvent, index: number) => void
+  onDragEnd: () => void
+}
+
+function SortableCategoryRow({
+  row, index, total, isDragOver,
+  onMoveUp, onMoveDown, onEdit, onDelete,
+  onDragStart, onDragOver, onDrop, onDragEnd,
+}: SortableCategoryRowProps) {
+  return (
+    <div
+      draggable
+      onDragStart={(e) => onDragStart(e, index)}
+      onDragOver={(e) => onDragOver(e, index)}
+      onDrop={(e) => onDrop(e, index)}
+      onDragEnd={onDragEnd}
+      className={cn(
+        'flex items-center gap-3 p-3 bg-white dark:bg-slate-900 border rounded-xl transition-all duration-150 select-none',
+        isDragOver
+          ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 scale-[1.01] shadow-md'
+          : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700',
+      )}
+    >
+      <GripVertical className="w-4 h-4 text-slate-300 shrink-0 cursor-grab active:cursor-grabbing pointer-events-none" />
+      <span className="text-lg w-7 text-center shrink-0">{String(row.emoji ?? '📦')}</span>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{String(row.displayName ?? row.name ?? '—')}</p>
+        <p className="text-xs text-slate-400 font-mono">{String(row.name ?? '—')}</p>
+      </div>
+      <span className={cn(
+        'text-xs font-bold px-2 py-0.5 rounded-full shrink-0',
+        row.active ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400' : 'bg-slate-100 text-slate-400'
+      )}>
+        {row.active ? 'Active' : 'Hidden'}
+      </span>
+      <div className="flex items-center gap-1 shrink-0" draggable={false}>
+        <button
+          draggable={false}
+          onClick={onMoveUp}
+          disabled={index === 0}
+          className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          title="Move up"
+        >
+          <ArrowUp className="w-4 h-4 text-slate-500" />
+        </button>
+        <button
+          draggable={false}
+          onClick={onMoveDown}
+          disabled={index === total - 1}
+          className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          title="Move down"
+        >
+          <ArrowDown className="w-4 h-4 text-slate-500" />
+        </button>
+        <button
+          draggable={false}
+          onClick={onEdit}
+          className="p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-500 transition-colors"
+          title="Edit"
+        >
+          <Edit2 className="w-4 h-4" />
+        </button>
+        <button
+          draggable={false}
+          onClick={onDelete}
+          className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 transition-colors"
+          title="Delete"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  )
+}
 
 type FieldConfig = {
   key: string
@@ -217,6 +310,85 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
   const canEdit = module !== 'holidays'
   const canDelete = module !== 'holidays'
 
+  // ── Category sort order + drag state ───────────────────────────────────────
+  const [sortedRows, setSortedRows] = useState<UnknownRecord[]>([])
+  const [orderDirty, setOrderDirty] = useState(false)
+  const [isSavingOrder, setIsSavingOrder] = useState(false)
+  const [dragFromIndex, setDragFromIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (module === 'productCategories') {
+      setSortedRows([...rows].sort((a, b) => Number(a.sortOrder ?? 0) - Number(b.sortOrder ?? 0)))
+      setOrderDirty(false)
+    }
+  }, [rows, module])
+
+  const moveCategoryUp = (index: number) => {
+    if (index === 0) return
+    setSortedRows(prev => {
+      const next = [...prev]
+      ;[next[index - 1], next[index]] = [next[index], next[index - 1]]
+      return next
+    })
+    setOrderDirty(true)
+  }
+
+  const moveCategoryDown = (index: number) => {
+    setSortedRows(prev => {
+      if (index >= prev.length - 1) return prev
+      const next = [...prev]
+      ;[next[index], next[index + 1]] = [next[index + 1], next[index]]
+      return next
+    })
+    setOrderDirty(true)
+  }
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDragFromIndex(index)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    if (index !== dragOverIndex) setDragOverIndex(index)
+  }
+
+  const handleDrop = (e: React.DragEvent, toIndex: number) => {
+    e.preventDefault()
+    if (dragFromIndex === null || dragFromIndex === toIndex) return
+    setSortedRows(prev => {
+      const next = [...prev]
+      const [moved] = next.splice(dragFromIndex, 1)
+      next.splice(toIndex, 0, moved)
+      return next
+    })
+    setOrderDirty(true)
+    setDragFromIndex(null)
+    setDragOverIndex(null)
+  }
+
+  const handleDragEnd = () => {
+    setDragFromIndex(null)
+    setDragOverIndex(null)
+  }
+
+  const saveOrder = async () => {
+    try {
+      setIsSavingOrder(true)
+      const entries = sortedRows.map((row, i) => ({ id: Number(row.id), sortOrder: i + 1 }))
+      await reorderProductCategories(entries)
+      toast.success('Category order saved')
+      setOrderDirty(false)
+      await load()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to save order')
+    } finally {
+      setIsSavingOrder(false)
+    }
+  }
+
   const load = useCallback(async () => {
     try {
       setIsLoading(true)
@@ -270,7 +442,7 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
     if (!selectedRow || !canEdit) return
 
     const id = Number(selectedRow.id)
-    if (!Number.isFinite(id) && module !== 'holidays') {
+    if (!Number.isFinite(id)) {
       toast.error('Record ID is missing')
       return
     }
@@ -351,28 +523,86 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
          </div>
       </div>
 
-      <CRUDLayout
-        title=""
-        columns={crudColumns}
-        data={rows}
-        loading={isLoading}
-        pageable={{ page: 1, size: 50, totalElements: rows.length, totalPages: 1 }}
-        onPageChange={() => {}}
-        onSizeChange={() => {}}
-        onRefresh={load}
-        onAdd={() => { setForm({}); setIsCreateOpen(true); }}
-        addButtonText={`Add ${config.title.slice(0, -1)}`}
-        actions={{
-          onEdit: canEdit ? (row) => {
-            setSelectedRow(row)
-            const nextForm: any = {}
-            config.fields.forEach(f => nextForm[f.key] = f.type === 'checkbox' ? Boolean(row[f.key]) : String(row[f.key] ?? ''))
-            setEditForm(nextForm)
-            setIsEditOpen(true)
-          } : undefined,
-          onDelete: canDelete ? handleDelete : undefined
-        }}
-      />
+      {module === 'productCategories' ? (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-slate-400 font-medium">Drag order determines display order on landing and services pages.</p>
+            <div className="flex items-center gap-2">
+              {orderDirty && (
+                <button
+                  onClick={saveOrder}
+                  disabled={isSavingOrder}
+                  className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-colors disabled:opacity-50"
+                >
+                  <Save className="w-4 h-4" />
+                  {isSavingOrder ? 'Saving…' : 'Save Order'}
+                </button>
+              )}
+              <button
+                onClick={() => { setForm({}); setIsCreateOpen(true); }}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-bold rounded-xl transition-colors hover:opacity-90"
+              >
+                <Plus className="w-4 h-4" />
+                Add Category
+              </button>
+            </div>
+          </div>
+          {isLoading ? (
+            <div className="text-center py-10 text-slate-400 text-sm">Loading…</div>
+          ) : sortedRows.length === 0 ? (
+            <div className="text-center py-10 text-slate-400 text-sm">No categories yet.</div>
+          ) : (
+            <div className="space-y-2">
+              {sortedRows.map((row, i) => (
+                <SortableCategoryRow
+                  key={String(row.id ?? i)}
+                  row={row}
+                  index={i}
+                  total={sortedRows.length}
+                  isDragOver={dragOverIndex === i}
+                  onMoveUp={() => moveCategoryUp(i)}
+                  onMoveDown={() => moveCategoryDown(i)}
+                  onEdit={() => {
+                    setSelectedRow(row)
+                    const nextForm: any = {}
+                    config.fields.forEach(f => nextForm[f.key] = f.type === 'checkbox' ? Boolean(row[f.key]) : String(row[f.key] ?? ''))
+                    setEditForm(nextForm)
+                    setIsEditOpen(true)
+                  }}
+                  onDelete={() => handleDelete(row)}
+                  onDragStart={handleDragStart}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                  onDragEnd={handleDragEnd}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        <CRUDLayout
+          title=""
+          columns={crudColumns}
+          data={rows}
+          loading={isLoading}
+          pageable={{ page: 1, size: 50, totalElements: rows.length, totalPages: 1 }}
+          onPageChange={() => {}}
+          onSizeChange={() => {}}
+          onRefresh={load}
+          onAdd={() => { setForm({}); setIsCreateOpen(true); }}
+          addButtonText={`Add ${config.title.slice(0, -1)}`}
+          actions={{
+            onEdit: canEdit ? (row) => {
+              setSelectedRow(row)
+              const nextForm: any = {}
+              config.fields.forEach(f => nextForm[f.key] = f.type === 'checkbox' ? Boolean(row[f.key]) : String(row[f.key] ?? ''))
+              setEditForm(nextForm)
+              setIsEditOpen(true)
+            } : undefined,
+            onDelete: canDelete ? handleDelete : undefined
+          }}
+        />
+      )}
 
       <CRUDModal
         isOpen={isCreateOpen}

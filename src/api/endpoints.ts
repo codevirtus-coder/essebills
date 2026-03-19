@@ -37,6 +37,8 @@ export const API_ENDPOINTS = {
   // Product Categories
   productCategories: {
     root: '/v1/product-categories',
+    all: '/v1/product-categories/all',
+    reorder: '/v1/product-categories/reorder',
     byId: (id: string | number) => `/v1/product-categories/${id}`,
   },
 
@@ -77,6 +79,7 @@ export const API_ENDPOINTS = {
     productPayment: '/v1/product-payment',
     portal: {
       root: '/v1/portal/product-payment',
+      transactions: '/v1/portal/product-payment/transactions',
       repeat: (id: string | number) => `/v1/portal/product-payment/repeat/${id}`,
     },
   },
@@ -97,19 +100,19 @@ export const API_ENDPOINTS = {
       byId: (id: string | number) => `/v1/bulk-payments/requests/${id}`,
     },
     initiate: '/v1/bulk-payments/initiate',
-    initiateFromGroup: (groupId: string | number) => `/v1/bulk-payments/initiate/from-group/${groupId}`,
   },
 
   // Donations (Gateway spec: /v1/donations/*)
   donationsV1: {
-    campaigns: '/v1/donations/campaigns',
-    donationsByCampaign: (campaignId: string | number) => `/v1/donations/campaign/${campaignId}`,
+    campaigns: '/v1/donation-campaigns',
+    donationsByCampaign: (campaignId: string | number) => `/v1/donations/by-campaign/${campaignId}`,
   },
 
   // Integration Credentials
   integrations: {
     pesepay: {
       root: '/v1/pesepay-integration-credentials',
+      byId: (id: string | number) => `/v1/pesepay-integration-credentials/${id}`,
     },
   },
 
@@ -121,17 +124,11 @@ export const API_ENDPOINTS = {
     },
     userAuthorities: {
       root: '/v1/access-control/user-authorities',
-      bundled: '/v1/access-control/user-authorities/bundled',
       byUser: (userId: string | number) => `/v1/access-control/user-authorities/by-user/${userId}`,
-      byUserAll: (userId: string | number) => `/v1/access-control/user-authorities/by-user/${userId}/all`,
-      unassigned: (userId: string | number) => `/v1/access-control/user-authorities/unassigned/${userId}`,
     },
     groupAuthorities: {
       root: '/v1/access-control/group-authorities',
-      bundled: '/v1/access-control/group-authorities/bundled',
       byGroup: (groupId: string | number) => `/v1/access-control/group-authorities/by-group/${groupId}`,
-      byGroupAll: (groupId: string | number) => `/v1/access-control/group-authorities/by-group/${groupId}/all`,
-      unassigned: (groupId: string | number) => `/v1/access-control/group-authorities/unassigned/${groupId}`,
     },
   },
 
@@ -143,100 +140,96 @@ export const API_ENDPOINTS = {
 
   // Admin Dashboard
   adminDashboard: {
-    stats: '/v1/admin/dashboard/stats',
-    revenue: '/v1/admin/dashboard/revenue',
-    topBillers: '/v1/admin/dashboard/top-billers',
-    topAgents: '/v1/admin/dashboard/top-agents',
-    activityFeed: '/v1/admin/dashboard/activity-feed',
+    stats: '/v1/analytics/admin/dashboard/stats',
+    revenue: '/v1/analytics/admin/dashboard/revenue',
+    topBillers: '/v1/analytics/admin/dashboard/stats', // Reusing stats as specific ones aren't in spec
+    topAgents: '/v1/analytics/admin/dashboard/stats',
+    activityFeed: '/v1/audits',
   },
 
-  // Admin Transactions
+  // Admin Transactions (Redirecting to standard payment-transactions)
   adminTransactions: {
-    root: '/v1/admin/transactions',
-    byId: (id: string | number) => `/v1/admin/transactions/${id}`,
-    updateStatus: (id: string | number) => `/v1/admin/transactions/${id}/status`,
-    export: '/v1/admin/transactions/export',
-    statistics: '/v1/admin/transactions/statistics',
+    root: '/v1/payment-transactions',
+    byId: (id: string | number) => `/v1/payment-transactions/${id}`,
+    updateStatus: (id: string | number) => `/v1/payment-transactions/${id}`, // PATCH on same resource
+    export: '/v1/payment-transactions',
+    statistics: '/v1/analytics/admin/dashboard/stats',
   },
 
-  // Admin Users
+  // Admin Users (Redirecting to standard users)
   adminUsers: {
-    root: '/v1/admin/users',
-    byId: (userId: string | number) => `/v1/admin/users/${userId}`,
-    updateStatus: (userId: string | number) => `/v1/admin/users/${userId}/status`,
-    activity: (userId: string | number) => `/v1/admin/users/${userId}/activity`,
+    root: '/v1/users',
+    byId: (userId: string | number) => `/v1/users/${userId}`,
+    updateStatus: (userId: string | number) => `/v1/users/${userId}`,
+    activity: (userId: string | number) => `/v1/audits`,
   },
 
-  // Admin Agents
+  // Admin Agents (Redirecting to standard users with filtering)
   adminAgents: {
-    root: '/v1/admin/agents',
-    byId: (agentId: string | number) => `/v1/admin/agents/${agentId}`,
-    updateStatus: (agentId: string | number) => `/v1/admin/agents/${agentId}/status`,
-    wallet: (agentId: string | number) => `/v1/admin/agents/${agentId}/wallet`,
-    transactions: (agentId: string | number) => `/v1/admin/agents/${agentId}/transactions`,
-    commissions: (agentId: string | number) => `/v1/admin/agents/${agentId}/commissions`,
-    floatTopup: (agentId: string | number) => `/v1/admin/agents/${agentId}/float-topup`,
-    bankTopups: (agentId: string | number) => `/v1/admin/agents/${agentId}/bank-topups`,
-    bankTopupConfirm: (agentId: string | number, topupId: string | number) => `/v1/admin/agents/${agentId}/bank-topups/${topupId}/confirm`,
-    bankTopupReject: (agentId: string | number, topupId: string | number) => `/v1/admin/agents/${agentId}/bank-topups/${topupId}/reject`,
+    root: '/v1/users',
+    byId: (agentId: string | number) => `/v1/users/${agentId}`,
+    updateStatus: (agentId: string | number) => `/v1/users/${agentId}`,
+    wallet: (agentId: string | number) => `/v1/agent-wallet/${agentId}/balance`,
+    transactions: (agentId: string | number) => `/v1/agent-wallet/${agentId}/transactions`,
+    commissions: (agentId: string | number) => `/v1/analytics/agent/dashboard/${agentId}/stats`,
+    floatTopup: (agentId: string | number) => `/v1/wallet/bank-top-ups`,
+    bankTopups: (agentId: string | number) => `/v1/admin/bank-top-ups`,
+    bankTopupConfirm: (agentId: string | number, topupId: string | number) => `/v1/admin/bank-top-ups/${topupId}/confirm`,
+    bankTopupReject: (agentId: string | number, topupId: string | number) => `/v1/admin/bank-top-ups/${topupId}/reject`,
     commissionRates: (agentId: string | number) => `/v1/admin/agents/${agentId}/commission-rates`,
     commissionRateById: (agentId: string | number, rateId: string | number) => `/v1/admin/agents/${agentId}/commission-rates/${rateId}`,
   },
 
   // Admin Billers
   adminBillers: {
-    root: '/v1/admin/billers',
-    byId: (billerId: string | number) => `/v1/admin/billers/${billerId}`,
-    updateStatus: (billerId: string | number) => `/v1/admin/billers/${billerId}/status`,
-    products: (billerId: string | number) => `/v1/admin/billers/${billerId}/products`,
-    transactions: (billerId: string | number) => `/v1/admin/billers/${billerId}/transactions`,
-    settlements: (billerId: string | number) => `/v1/admin/billers/${billerId}/settlements`,
-    analytics: (billerId: string | number) => `/v1/admin/billers/${billerId}/analytics`,
-    settlement: (billerId: string | number) => `/v1/admin/billers/${billerId}/settlement`,
+    root: '/v1/users',
+    byId: (billerId: string | number) => `/v1/users/${billerId}`,
+    updateStatus: (billerId: string | number) => `/v1/users/${billerId}`,
+    products: (billerId: string | number) => `/v1/products`,
+    transactions: (billerId: string | number) => `/v1/payment-transactions`,
+    settlements: (billerId: string | number) => `/v1/payment-transactions`, // Redirect to transactions
+    analytics: (billerId: string | number) => `/v1/analytics/biller/dashboard/${billerId}/summary`,
   },
 
   // Admin Products
   adminProducts: {
-    root: '/v1/admin/products',
-    byId: (productId: string | number) => `/v1/admin/products/${productId}`,
-    updateStatus: (productId: string | number) => `/v1/admin/products/${productId}/status`,
-    categories: '/v1/admin/products/categories',
-    categoryById: (categoryId: string | number) => `/v1/admin/products/categories/${categoryId}`,
+    root: '/v1/products',
+    byId: (productId: string | number) => `/v1/products/${productId}`,
+    updateStatus: (productId: string | number) => `/v1/products/${productId}`,
+    categories: '/v1/product-categories',
+    categoryById: (categoryId: string | number) => `/v1/product-categories/${categoryId}`,
   },
 
   // Admin Commissions
   adminCommissions: {
-    rates: '/v1/admin/commissions/rates',
-    payouts: '/v1/admin/commissions/payouts',
-    payoutApprove: (payoutId: string | number) => `/v1/admin/commissions/payouts/${payoutId}/approve`,
-    payoutReject: (payoutId: string | number) => `/v1/admin/commissions/payouts/${payoutId}/reject`,
-    earnings: '/v1/admin/commissions/earnings',
+    rates: '/v1/admin/agents/commission-rates',
+    payouts: '/v1/agent-wallet/transactions',
+    earnings: '/v1/analytics/admin/dashboard/stats',
   },
 
   // Admin Reports
   adminReports: {
-    revenue: '/v1/admin/reports/revenue',
-    transactions: '/v1/admin/reports/transactions',
-    agents: '/v1/admin/reports/agents',
-    billers: '/v1/admin/reports/billers',
-    commissions: '/v1/admin/reports/commissions',
-    settlements: '/v1/admin/reports/settlements',
+    revenue: '/v1/analytics/admin/dashboard/revenue',
+    transactions: '/v1/payment-transactions',
+    agents: '/v1/users',
+    billers: '/v1/users',
+    commissions: '/v1/analytics/admin/dashboard/stats',
   },
 
   // Admin Settings
   adminSettings: {
-    platform: '/v1/admin/settings/platform',
-    currencies: '/v1/admin/settings/currencies',
-    banks: '/v1/admin/settings/banks',
-    holidays: '/v1/admin/settings/holidays',
+    platform: '/v1/access-control/authorities',
+    currencies: '/v1/currencies',
+    banks: '/v1/banks',
+    holidays: '/v1/holidays',
   },
 
   // Admin Bank Top-ups
   adminBankTopUps: {
     root: '/v1/admin/bank-top-ups',
-    pending: '/v1/admin/bank-top-ups/pending',
     confirm: (id: string | number) => `/v1/admin/bank-top-ups/${id}/confirm`,
     reject: (id: string | number) => `/v1/admin/bank-top-ups/${id}/reject`,
+    proofOfPayment: (id: string | number) => `/v1/admin/bank-top-ups/${id}/proof-of-payment-url`,
   },
 
   // Agent
@@ -441,7 +434,7 @@ export const API_ENDPOINTS = {
     byId: (id: string | number) => `/v1/donations/${id}`,
     byCampaign: (campaignId: string | number) => `/v1/donations/by-campaign/${campaignId}`,
     byDonor: (donorId: string | number) => `/v1/donations/by-donor/${donorId}`,
-    process: '/v1/donations/process',
+    stats: '/v1/donations/stats',
     refund: (id: string | number) => `/v1/donations/${id}/refund`,
   },
 
@@ -450,6 +443,7 @@ export const API_ENDPOINTS = {
     root: '/v1/donation-campaigns',
     byId: (id: string | number) => `/v1/donation-campaigns/${id}`,
     updateStatus: (id: string | number) => `/v1/donation-campaigns/${id}/status`,
+    liquidate: (id: string | number) => `/v1/donation-campaigns/${id}/liquidate`,
   },
 
   // Donation Categories/Charities
