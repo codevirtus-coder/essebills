@@ -40,6 +40,7 @@ export const ADMIN_MENU: MenuSection[] = [
       },
     ],
   },
+
   {
     id: "platform",
     title: "Platform",
