@@ -1,14 +1,14 @@
-import { useEffect, useState } from 'react';
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
-import esebillsLogo from '../assets/esebills_logo.png';
-import { ROUTE_PATHS, getDashboardRouteByGroup } from '../router/paths';
+import { useEffect, useState } from "react";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { Menu, X } from "lucide-react";
+import esebillsLogo from "../assets/esebills_logo.png";
+import { ROUTE_PATHS, getDashboardRouteByGroup } from "../router/paths";
 import {
   clearAuthSession,
   getAuthSession,
   isAuthenticated,
   subscribeToAuthChanges,
-} from '../features/auth/auth.storage';
+} from "../features/auth/auth.storage";
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -17,22 +17,24 @@ export function Navbar() {
   const [session, setSession] = useState(() => getAuthSession());
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const isHome = pathname === '/';
+  const isHome = pathname === "/";
 
   function handleHowItWorks(e: React.MouseEvent) {
     e.preventDefault();
     setMobileOpen(false);
     if (isHome) {
-      document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
+      document
+        .getElementById("how-it-works")
+        ?.scrollIntoView({ behavior: "smooth" });
     } else {
-      navigate('/', { state: { scrollTo: 'how-it-works' } });
+      navigate("/", { state: { scrollTo: "how-it-works" } });
     }
   }
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   useEffect(() => {
@@ -47,26 +49,32 @@ export function Navbar() {
     : ROUTE_PATHS.portal;
 
   const displayName = session?.profile
-    ? `${session.profile.firstName ?? ''} ${session.profile.lastName ?? ''}`.trim() ||
+    ? `${session.profile.firstName ?? ""} ${session.profile.lastName ?? ""}`.trim() ||
       session.profile.username
     : null;
 
   const navLinks = [
-    { label: 'Services', to: ROUTE_PATHS.services, onClick: undefined as ((e: React.MouseEvent) => void) | undefined },
-    { label: 'How it Works', to: '#how-it-works', onClick: handleHowItWorks },
+    {
+      label: "Services",
+      to: ROUTE_PATHS.services,
+      onClick: undefined as ((e: React.MouseEvent) => void) | undefined,
+    },
+    { label: "How it Works", to: "#how-it-works", onClick: handleHowItWorks },
   ];
 
   return (
     <header
-      className={`sticky top-0 inset-x-0 z-50 transition-all duration-500 ${
-        scrolled || !isHome
-          ? 'bg-slate-900/95 backdrop-blur-md shadow-xl shadow-slate-950/30 border-b border-white/10'
-          : 'bg-slate-900'
+      className={`sticky top-0 inset-x-0 z-50 transition-all duration-500 bg-white/10 backdrop-blur-md border border-white/20 shadow-[0_8px_30px_rgba(0,0,0,0.08)] ${
+        scrolled || !isHome ? "bg-white/20" : "bg-white/10"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-        <NavLink to={ROUTE_PATHS.home} aria-label="Go to homepage" className="flex items-center">
-          <img src={esebillsLogo} alt="EseBills" className="h-14 w-auto brightness-0 invert" />
+        <NavLink
+          to={ROUTE_PATHS.home}
+          aria-label="Go to homepage"
+          className="flex items-center"
+        >
+          <img src={esebillsLogo} alt="EseBills" className="h-24 w-auto" />
         </NavLink>
 
         <nav className="hidden md:flex items-center gap-6 lg:gap-8">
@@ -76,7 +84,7 @@ export function Navbar() {
                 key={link.label}
                 href={link.to}
                 onClick={link.onClick}
-                className="text-sm text-white/85 hover:text-white transition-colors font-medium"
+                className="text-sm text-slate-900/80 hover:text-slate-900 transition-colors font-medium"
               >
                 {link.label}
               </a>
@@ -84,11 +92,11 @@ export function Navbar() {
               <Link
                 key={link.label}
                 to={link.to}
-                className="text-sm text-white/85 hover:text-white transition-colors font-medium"
+                className="text-sm text-slate-900/80 hover:text-slate-900 transition-colors font-medium"
               >
                 {link.label}
               </Link>
-            )
+            ),
           )}
         </nav>
 
@@ -96,17 +104,19 @@ export function Navbar() {
           {authenticated ? (
             <>
               {displayName && (
-                <span className="text-sm text-slate-400 hidden lg:block">{displayName}</span>
+                <span className="text-sm text-slate-600 hidden lg:block">
+                  {displayName}
+                </span>
               )}
               <NavLink
                 to={dashboardRoute}
-                className="text-sm font-medium text-white/85 hover:text-white px-4 py-2 rounded-lg transition-colors"
+                className="text-sm font-medium text-slate-900/80 hover:text-slate-900 px-4 py-2 rounded-lg transition-colors"
               >
                 Dashboard
               </NavLink>
               <button
                 onClick={clearAuthSession}
-                className="text-sm font-semibold bg-white/10 border border-white/20 text-white px-4 py-2 rounded-lg hover:bg-white/15 transition-colors"
+                className="text-sm font-semibold bg-white/40 border border-white/50 text-slate-900 px-4 py-2 rounded-lg hover:bg-white/60 transition-colors"
               >
                 Logout
               </button>
@@ -115,13 +125,13 @@ export function Navbar() {
             <>
               <Link
                 to={ROUTE_PATHS.login}
-                className="text-sm font-medium text-white/85 hover:text-white px-4 py-2 rounded-lg transition-colors"
+                className="text-sm font-medium text-slate-900/80 hover:text-slate-900 px-4 py-2 rounded-lg transition-colors"
               >
                 Login
               </Link>
               <Link
                 to={ROUTE_PATHS.register}
-                className="text-sm font-semibold bg-emerald-600 text-white px-4 lg:px-5 py-2 rounded-lg hover:bg-emerald-700 transition-colors"
+                className="text-sm font-semibold bg-[#10B981] text-white px-4 lg:px-5 py-2 rounded-lg hover:bg-[#10B981] transition-colors"
               >
                 Get Started
               </Link>
@@ -130,7 +140,7 @@ export function Navbar() {
         </div>
 
         <button
-          className="md:hidden text-white p-2 -mr-1"
+          className="md:hidden text-slate-900 p-2 -mr-1"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Toggle menu"
         >
@@ -139,14 +149,14 @@ export function Navbar() {
       </div>
 
       {mobileOpen && (
-        <div className="md:hidden bg-slate-900/98 backdrop-blur-md border-t border-white/10 px-4 py-4 space-y-1">
+        <div className="md:hidden bg-white/20 backdrop-blur-md border-t border-white/20 px-4 py-4 space-y-1">
           {navLinks.map((link) =>
             link.onClick ? (
               <a
                 key={link.label}
                 href={link.to}
                 onClick={link.onClick}
-                className="block text-sm text-white/85 hover:text-white py-2.5 font-medium transition-colors"
+                className="block text-sm text-slate-900/80 hover:text-slate-900 py-2.5 font-medium transition-colors"
               >
                 {link.label}
               </a>
@@ -155,24 +165,24 @@ export function Navbar() {
                 key={link.label}
                 to={link.to}
                 onClick={() => setMobileOpen(false)}
-                className="block text-sm text-white/85 hover:text-white py-2.5 font-medium transition-colors"
+                className="block text-sm text-slate-900/80 hover:text-slate-900 py-2.5 font-medium transition-colors"
               >
                 {link.label}
               </Link>
-            )
+            ),
           )}
           <div className="pt-3 flex flex-col gap-2 border-t border-white/10">
             {authenticated ? (
               <>
                 <NavLink
                   to={dashboardRoute}
-                  className="text-sm font-medium text-center py-2.5 rounded-lg border border-white/20 text-white/85 hover:text-white transition-colors"
+                  className="text-sm font-medium text-center py-2.5 rounded-lg border border-white/40 text-slate-900/80 hover:text-slate-900 transition-colors"
                 >
                   Dashboard
                 </NavLink>
                 <button
                   onClick={clearAuthSession}
-                  className="text-sm font-semibold bg-white/10 text-white text-center py-2.5 rounded-lg border border-white/20"
+                  className="text-sm font-semibold bg-white/40 text-slate-900 text-center py-2.5 rounded-lg border border-white/40"
                 >
                   Logout
                 </button>
@@ -181,13 +191,13 @@ export function Navbar() {
               <>
                 <Link
                   to={ROUTE_PATHS.login}
-                  className="text-sm font-medium text-center py-2.5 rounded-lg border border-white/20 text-white/85 hover:text-white transition-colors"
+                  className="text-sm font-medium text-center py-2.5 rounded-lg border border-white/40 text-slate-900/80 hover:text-slate-900 transition-colors"
                 >
                   Login
                 </Link>
                 <Link
                   to={ROUTE_PATHS.register}
-                  className="text-sm font-semibold bg-emerald-600 text-white text-center py-2.5 rounded-lg hover:bg-emerald-700 transition-colors"
+                  className="text-sm font-semibold bg-[#10B981] text-white text-center py-2.5 rounded-lg hover:bg-[#10B981] transition-colors"
                 >
                   Get Started
                 </Link>

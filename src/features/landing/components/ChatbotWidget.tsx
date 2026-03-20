@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+﻿import { useCallback, useEffect, useRef, useState } from 'react';
 import { X, MessageCircle, Send, Loader2, FileText, MapPin, User, Image as ImageIcon } from 'lucide-react';
 import {
   getSimulatorOutboundMessages,
@@ -70,7 +70,7 @@ function ListOptions({
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="text-xs w-full text-center py-1.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200"
+        className="text-xs w-full text-center py-1.5 rounded bg-[#7E56C2]/10 text-[#7E56C2] border border-[#7E56C2]/20"
       >
         {interactive.action?.button || 'View options'}
       </button>
@@ -195,7 +195,7 @@ function PayloadView({
                 key={button.reply.id}
                 disabled={!canReply}
                 onClick={() => onButtonReply(button.reply.id, button.reply.title)}
-                className="text-xs py-1.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="text-xs py-1.5 rounded bg-[#7E56C2]/10 text-[#7E56C2] border border-[#7E56C2]/20 hover:bg-[#7E56C2]/15 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {button.reply.title}
               </button>
@@ -395,6 +395,12 @@ export function ChatbotWidget() {
 
   return (
     <>
+      <style>{`
+        @keyframes chat-float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-8px); }
+        }
+      `}</style>
       <button
         onClick={() => {
           setOpen((value) => !value);
@@ -404,15 +410,16 @@ export function ChatbotWidget() {
         className={`fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-200 ${
           open
             ? 'bg-slate-800 hover:bg-slate-700'
-            : 'bg-emerald-600 hover:bg-emerald-700 hover:scale-105'
+            : 'bg-[#047857] hover:bg-[#065F46] hover:scale-105'
         }`}
+        style={{ animation: 'chat-float 4s ease-in-out infinite' }}
       >
         {open ? (
           <X size={22} className="text-white" />
         ) : (
           <>
             <MessageCircle size={24} className="text-white" />
-            <span className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-400 rounded-full border-2 border-white text-[9px] font-bold text-slate-900 flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#047857] rounded-full border-2 border-white text-[9px] font-bold text-white flex items-center justify-center">
               AI
             </span>
           </>
@@ -424,17 +431,17 @@ export function ChatbotWidget() {
           className="fixed bottom-24 right-6 z-50 w-[340px] sm:w-[380px] rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden bg-white"
           style={{ maxHeight: 'min(560px, calc(100vh - 120px))' }}
         >
-          <div className="bg-emerald-600 px-4 py-3 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-emerald-500 flex items-center justify-center shrink-0">
+          <div className="bg-[#047857] px-4 py-3 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-[#047857]/100 flex items-center justify-center shrink-0">
               <MessageCircle size={18} className="text-white" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-white font-semibold text-sm leading-none mb-0.5">EseBot</p>
-              <p className="text-emerald-100 text-xs">WhatsApp simulator inbound</p>
+              <p className="text-white/80 text-xs">WhatsApp simulator inbound</p>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
-              <span className="text-emerald-100 text-xs">Online</span>
+              <span className="w-2 h-2 rounded-full bg-[#7E56C2]/60 animate-pulse" />
+              <span className="text-white/80 text-xs">Online</span>
             </div>
           </div>
 
@@ -442,7 +449,7 @@ export function ChatbotWidget() {
             {messages.map((msg) => (
               <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 {msg.role === 'bot' ? (
-                  <div className="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center shrink-0 mt-1 mr-2">
+                  <div className="w-6 h-6 rounded-full bg-[#7E56C2] flex items-center justify-center shrink-0 mt-1 mr-2">
                     <MessageCircle size={12} className="text-white" />
                   </div>
                 ) : null}
@@ -450,7 +457,7 @@ export function ChatbotWidget() {
                   <div
                     className={`px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-line ${
                       msg.role === 'user'
-                        ? 'bg-emerald-600 text-white rounded-tr-sm'
+                        ? 'bg-[#7E56C2] text-white rounded-tr-sm'
                         : 'bg-white text-slate-800 border border-slate-100 shadow-sm rounded-tl-sm'
                     }`}
                   >
@@ -468,7 +475,7 @@ export function ChatbotWidget() {
 
             {typing ? (
               <div className="flex items-end gap-2">
-                <div className="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center shrink-0">
+                <div className="w-6 h-6 rounded-full bg-[#7E56C2] flex items-center justify-center shrink-0">
                   <MessageCircle size={12} className="text-white" />
                 </div>
                 <div className="bg-white border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
@@ -496,12 +503,12 @@ export function ChatbotWidget() {
                     void submitTextMessage();
                   }
                 }}
-                className="flex-1 px-3 py-2.5 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
+                className="flex-1 px-3 py-2.5 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#7E56C2]/30 focus:border-[#7E56C2]"
               />
               <button
                 onClick={() => void submitTextMessage()}
                 disabled={!input.trim() || sending}
-                className="flex items-center justify-center w-10 h-10 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#7E56C2] text-white hover:bg-[#6A48A8] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
               </button>
@@ -516,3 +523,4 @@ export function ChatbotWidget() {
     </>
   );
 }
+
