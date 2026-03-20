@@ -61,7 +61,25 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
   const canPay = !!phone && !!accountNumber && baseAmount > 0 && !amountError;
 
   return (
-    <div className={`${embedded ? '' : 'min-h-screen bg-[#f8fafc] pb-20'} font-sans text-slate-900 overflow-y-auto`}>
+    <div className={`${embedded ? '' : 'min-h-screen bg-[#f8fafc] pb-20'} font-sans text-slate-900 overflow-y-auto emerald-scrollbar`}>
+      <style>{`
+        .emerald-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: #10B981 transparent;
+        }
+        .emerald-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .emerald-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .emerald-scrollbar::-webkit-scrollbar-thumb {
+          background-color: #10B981;
+          border-radius: 999px;
+          border: 2px solid transparent;
+          background-clip: content-box;
+        }
+      `}</style>
       {/* ── Navbar ────────────────────────────────────────────────────────── */}
       {!embedded && (
         <header className="h-20 flex items-center justify-between px-4 sm:px-8 border-b border-slate-200 bg-slate-900 text-white sticky top-0 z-50">

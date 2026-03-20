@@ -73,6 +73,18 @@ body {
   color: #0f172a;
 }
 
+/* Global scrollbar hidden (keep scroll, hide bar) */
+html,
+body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+}
+
 html.dark body {
   background: #0b1220;
   color: #f8fbff;

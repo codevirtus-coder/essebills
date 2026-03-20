@@ -1,7 +1,7 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { Suspense, lazy, useEffect, useId, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import {
   Zap,
   ShieldCheck,
@@ -12,6 +12,7 @@ import {
   Store,
   Building2,
   ChevronRight,
+  ChevronLeft,
   CheckCircle2,
   Smartphone,
   Wifi,
@@ -22,7 +23,6 @@ import {
   ArrowRight,
   Mouse,
 } from "lucide-react";
-import { ChatbotWidget } from "../components/ChatbotWidget";
 import bg1 from "../../../assets/bg1.jpg";
 import ecocashBadge from "../../../assets/ecocash-badge.svg";
 import innbucksBadge from "../../../assets/innbucks-badge.svg";
@@ -32,6 +32,11 @@ import onemoneyBadge from "../../../assets/onemoney-badge.svg";
 import telecashBadge from "../../../assets/telecash-badge.svg";
 import zimswitchBadge from "../../../assets/zimswitch-badge.svg";
 import visaBadge from "../../../assets/visa-badge.svg";
+import zesaLogo from "../../../assets/zesa-logo.png";
+import zolLogo from "../../../assets/zol-logo.jpg";
+import teloneLogo from "../../../assets/telone-logo.png";
+import econetLogo from "../../../assets/econet-logo.png";
+import netoneLogo from "../../../assets/netone-logo.png";
 import { ROUTE_PATHS } from "../../../router/paths";
 import {
   getProducts,
@@ -39,6 +44,35 @@ import {
   getProductsByCategory,
 } from "../../../services/products.service";
 import type { Product, ProductCategory } from "../../../types/products";
+
+const ChatbotWidgetLazy = lazy(() =>
+  import("../components/ChatbotWidget").then((mod) => ({
+    default: mod.ChatbotWidget,
+  })),
+);
+
+type IdleCallbackHandle = number;
+
+const requestIdle = (callback: () => void, timeout: number): IdleCallbackHandle => {
+  if (typeof window === "undefined") return 0;
+  const win = window as Window & {
+    requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+  };
+  if (win.requestIdleCallback) {
+    return win.requestIdleCallback(callback, { timeout });
+  }
+  return window.setTimeout(callback, timeout);
+};
+
+const cancelIdle = (handle: IdleCallbackHandle) => {
+  if (typeof window === "undefined") return;
+  const win = window as Window & { cancelIdleCallback?: (id: number) => void };
+  if (win.cancelIdleCallback) {
+    win.cancelIdleCallback(handle);
+    return;
+  }
+  window.clearTimeout(handle);
+};
 
 // --- Services helpers ----------------------------------------------------------
 
@@ -85,6 +119,19 @@ function categoryIcon(label: string, cls = "w-4 h-4") {
     default:
       return <Zap className={cls} />;
   }
+}
+
+const BILLER_LOGOS = [
+  { pattern: /zesa|zetdc/i, src: zesaLogo, alt: "ZESA" },
+  { pattern: /zol/i, src: zolLogo, alt: "ZOL" },
+  { pattern: /telone/i, src: teloneLogo, alt: "TelOne" },
+  { pattern: /econet/i, src: econetLogo, alt: "Econet" },
+  { pattern: /netone/i, src: netoneLogo, alt: "NetOne" },
+];
+
+function getBillerLogo(name: string) {
+  const match = BILLER_LOGOS.find((logo) => logo.pattern.test(name));
+  return match ?? null;
 }
 
 function inferCategory(
@@ -253,17 +300,86 @@ async function fetchProductsAndCategories(categoryId?: string) {
 
 function Hero() {
   const ref = useRef<HTMLElement>(null);
+  const shouldReduceMotion = useReducedMotion();
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end start"],
   });
   const bgY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
   const contentY = useTransform(scrollYProgress, [0, 1], ["0%", "12%"]);
+  const phrases = useMemo(
+    () =>
+      shouldReduceMotion
+        ? ["Instantly."]
+        : ["Instantly.", "Ipapo Ipapo", "Khonapho Khonapho"],
+    [shouldReduceMotion],
+  );
+  const [typedText, setTypedText] = useState(
+    shouldReduceMotion ? "Instantly." : "",
+  );
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [charIndex, setCharIndex] = useState(0);
+  const [deleting, setDeleting] = useState(false);
+  const [stopped, setStopped] = useState(shouldReduceMotion);
+
+  useEffect(() => {
+    if (!shouldReduceMotion) return;
+    setTypedText("Instantly.");
+    setPhraseIndex(0);
+    setCharIndex(0);
+    setDeleting(false);
+    setStopped(true);
+  }, [shouldReduceMotion]);
+
+  useEffect(() => {
+    if (shouldReduceMotion) return;
+    if (stopped) return;
+    const current = phrases[phraseIndex];
+    const isComplete = charIndex === current.length;
+    const isEmpty = charIndex === 0;
+
+    const delay = deleting ? 50 : 90;
+    const hold = isComplete && !deleting ? 900 : isEmpty && deleting ? 400 : 0;
+
+    const timeoutId = window.setTimeout(() => {
+      if (isComplete && !deleting) {
+        if (phraseIndex === phrases.length - 1) {
+          setTypedText("Instantly.");
+          setStopped(true);
+          return;
+        }
+        setDeleting(true);
+        return;
+      }
+      if (isEmpty && deleting) {
+        setDeleting(false);
+        if (phraseIndex === phrases.length - 1) {
+          setTypedText("Instantly.");
+          setCharIndex(0);
+          setStopped(true);
+          return;
+        }
+        setPhraseIndex(phraseIndex + 1);
+        return;
+      }
+
+      const nextIndex = deleting ? charIndex - 1 : charIndex + 1;
+      setCharIndex(nextIndex);
+      setTypedText(current.slice(0, nextIndex));
+    }, hold || delay);
+
+    // keep typedText in sync when switching phrases
+    if (!deleting && isEmpty) {
+      setTypedText("");
+    }
+
+    return () => window.clearTimeout(timeoutId);
+  }, [charIndex, deleting, phraseIndex, phrases, shouldReduceMotion, stopped]);
 
   return (
     <section
       ref={ref}
-      className="relative min-h-[calc(100vh-5rem)] flex items-center justify-center overflow-x-hidden"
+      className="relative min-h-[calc(100svh-5rem)] sm:min-h-[calc(100vh-5rem)] flex items-center justify-center overflow-x-hidden"
     >
       {/* Pattern background */}
       <motion.div
@@ -272,9 +388,9 @@ function Hero() {
           backgroundColor: "#10B981",
           backgroundImage:
             "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 2000 1500'%3E%3Cdefs%3E%3Crect stroke='%2310B981' stroke-width='0.2' width='1' height='1' id='s'/%3E%3Cpattern id='a' width='3' height='3' patternUnits='userSpaceOnUse' patternTransform='scale(26.55) translate(-962.34 -721.75)'%3E%3Cuse fill='%2327bb85' href='%23s' y='2'/%3E%3Cuse fill='%2327bb85' href='%23s' x='1' y='2'/%3E%3Cuse fill='%2335bc88' href='%23s' x='2' y='2'/%3E%3Cuse fill='%2335bc88' href='%23s'/%3E%3Cuse fill='%2340be8c' href='%23s' x='2'/%3E%3Cuse fill='%2340be8c' href='%23s' x='1' y='1'/%3E%3C/pattern%3E%3Cpattern id='b' width='7' height='11' patternUnits='userSpaceOnUse' patternTransform='scale(26.55) translate(-962.34 -721.75)'%3E%3Cg fill='%234ac08f'%3E%3Cuse href='%23s'/%3E%3Cuse href='%23s' y='5' /%3E%3Cuse href='%23s' x='1' y='10'/%3E%3Cuse href='%23s' x='2' y='1'/%3E%3Cuse href='%23s' x='2' y='4'/%3E%3Cuse href='%23s' x='3' y='8'/%3E%3Cuse href='%23s' x='4' y='3'/%3E%3Cuse href='%23s' x='4' y='7'/%3E%3Cuse href='%23s' x='5' y='2'/%3E%3Cuse href='%23s' x='5' y='6'/%3E%3Cuse href='%23s' x='6' y='9'/%3E%3C/g%3E%3C/pattern%3E%3Cpattern id='h' width='5' height='13' patternUnits='userSpaceOnUse' patternTransform='scale(26.55) translate(-962.34 -721.75)'%3E%3Cg fill='%234ac08f'%3E%3Cuse href='%23s' y='5'/%3E%3Cuse href='%23s' y='8'/%3E%3Cuse href='%23s' x='1' y='1'/%3E%3Cuse href='%23s' x='1' y='9'/%3E%3Cuse href='%23s' x='1' y='12'/%3E%3Cuse href='%23s' x='2'/%3E%3Cuse href='%23s' x='2' y='4'/%3E%3Cuse href='%23s' x='3' y='2'/%3E%3Cuse href='%23s' x='3' y='6'/%3E%3Cuse href='%23s' x='3' y='11'/%3E%3Cuse href='%23s' x='4' y='3'/%3E%3Cuse href='%23s' x='4' y='7'/%3E%3Cuse href='%23s' x='4' y='10'/%3E%3C/g%3E%3C/pattern%3E%3Cpattern id='c' width='17' height='13' patternUnits='userSpaceOnUse' patternTransform='scale(26.55) translate(-962.34 -721.75)'%3E%3Cg fill='%2352c193'%3E%3Cuse href='%23s' y='11'/%3E%3Cuse href='%23s' x='2' y='9'/%3E%3Cuse href='%23s' x='5' y='12'/%3E%3Cuse href='%23s' x='9' y='4'/%3E%3Cuse href='%23s' x='12' y='1'/%3E%3Cuse href='%23s' x='16' y='6'/%3E%3C/g%3E%3C/pattern%3E%3Cpattern id='d' width='19' height='17' patternUnits='userSpaceOnUse' patternTransform='scale(26.55) translate(-962.34 -721.75)'%3E%3Cg fill='%2310B981'%3E%3Cuse href='%23s' y='9'/%3E%3Cuse href='%23s' x='16' y='5'/%3E%3Cuse href='%23s' x='14' y='2'/%3E%3Cuse href='%23s' x='11' y='11'/%3E%3Cuse href='%23s' x='6' y='14'/%3E%3C/g%3E%3Cg fill='%235ac396'%3E%3Cuse href='%23s' x='3' y='13'/%3E%3Cuse href='%23s' x='9' y='7'/%3E%3Cuse href='%23s' x='13' y='10'/%3E%3Cuse href='%23s' x='15' y='4'/%3E%3Cuse href='%23s' x='18' y='1'/%3E%3C/g%3E%3C/pattern%3E%3Cpattern id='e' width='47' height='53' patternUnits='userSpaceOnUse' patternTransform='scale(26.55) translate(-962.34 -721.75)'%3E%3Cg fill='%2310B981'%3E%3Cuse href='%23s' x='2' y='5'/%3E%3Cuse href='%23s' x='16' y='38'/%3E%3Cuse href='%23s' x='46' y='42'/%3E%3Cuse href='%23s' x='29' y='20'/%3E%3C/g%3E%3C/pattern%3E%3Cpattern id='f' width='59' height='71' patternUnits='userSpaceOnUse' patternTransform='scale(26.55) translate(-962.34 -721.75)'%3E%3Cg fill='%2310B981'%3E%3Cuse href='%23s' x='33' y='13'/%3E%3Cuse href='%23s' x='27' y='54'/%3E%3Cuse href='%23s' x='55' y='55'/%3E%3C/g%3E%3C/pattern%3E%3Cpattern id='g' width='139' height='97' patternUnits='userSpaceOnUse' patternTransform='scale(26.55) translate(-962.34 -721.75)'%3E%3Cg fill='%2310B981'%3E%3Cuse href='%23s' x='11' y='8'/%3E%3Cuse href='%23s' x='51' y='13'/%3E%3Cuse href='%23s' x='17' y='73'/%3E%3Cuse href='%23s' x='99' y='57'/%3E%3C/g%3E%3C/pattern%3E%3C/defs%3E%3Crect fill='url(%23a)' width='100%25' height='100%25'/%3E%3Crect fill='url(%23b)' width='100%25' height='100%25'/%3E%3Crect fill='url(%23h)' width='100%25' height='100%25'/%3E%3Crect fill='url(%23c)' width='100%25' height='100%25'/%3E%3Crect fill='url(%23d)' width='100%25' height='100%25'/%3E%3Crect fill='url(%23e)' width='100%25' height='100%25'/%3E%3Crect fill='url(%23f)' width='100%25' height='100%25'/%3E%3Crect fill='url(%23g)' width='100%25' height='100%25'/%3E%3C/svg%3E\")",
-          backgroundAttachment: "fixed",
+          backgroundAttachment: "scroll",
           backgroundSize: "cover",
-          y: bgY,
+          y: shouldReduceMotion ? "0%" : bgY,
         }}
       />
       {/* Ambient glows */}
@@ -282,28 +398,55 @@ function Hero() {
       <div className="absolute bottom-1/4 left-1/3 w-[500px] h-[500px] bg-white/10 rounded-full blur-[120px] pointer-events-none" />
 
       <motion.div
-        style={{ y: contentY }}
-        className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-12 md:pt-16 md:pb-6 w-full"
+        style={{ y: shouldReduceMotion ? "0%" : contentY }}
+        className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-10 sm:pt-12 sm:pb-12 md:pt-16 md:pb-6 w-full"
       >
-        <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-10 items-center">
+        <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-8 sm:gap-10 items-center">
           <div className="max-w-4xl mx-auto lg:mx-0 text-center lg:text-left flex flex-col">
             {/* Headline */}
             <motion.h1
-              initial={{ opacity: 0, y: 24 }}
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, ease: "easeOut", delay: 0.1 }}
-              className="text-4xl sm:text-5xl lg:text-7xl font-black text-white leading-[0.74] tracking-tighter mb-5"
+              transition={{
+                duration: shouldReduceMotion ? 0 : 0.7,
+                ease: "easeOut",
+                delay: shouldReduceMotion ? 0 : 0.1,
+              }}
+              className="text-[clamp(2.25rem,7vw,3.5rem)] sm:text-5xl lg:text-7xl font-black text-white leading-[0.85] sm:leading-[0.78] lg:leading-[0.74] tracking-tighter mb-5"
             >
               Pay any bill.
               <br />
-              <span className="text-white">Instantly.</span>
+              {stopped ? (
+                <motion.span
+                  initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: shouldReduceMotion ? 0 : 0.8,
+                    ease: "easeOut",
+                  }}
+                  className="text-white inline-flex items-center whitespace-nowrap text-[clamp(2rem,6vw,3.25rem)] sm:text-5xl lg:text-7xl"
+                >
+                  {typedText}
+                </motion.span>
+              ) : (
+                <span className="text-white inline-flex items-center whitespace-nowrap text-[clamp(2rem,6vw,3.25rem)] sm:text-5xl lg:text-7xl">
+                  {typedText}
+                  {!shouldReduceMotion && (
+                    <span className="ml-1 w-[2px] h-[0.9em] bg-white/90 animate-pulse" />
+                  )}
+                </span>
+              )}
             </motion.h1>
 
             {/* Subheading */}
             <motion.p
-              initial={{ opacity: 0, y: 20 }}
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
+              transition={{
+                duration: shouldReduceMotion ? 0 : 0.6,
+                ease: "easeOut",
+                delay: shouldReduceMotion ? 0 : 0.2,
+              }}
               className="text-base sm:text-lg lg:text-xl text-white leading-relaxed mb-7 max-w-2xl mx-auto lg:mx-0"
             >
               Say goodbye to long queues and late fees. Pay utility, mobile,
@@ -312,14 +455,18 @@ function Hero() {
 
             {/* CTAs */}
             <motion.div
-              initial={{ opacity: 0, y: 16 }}
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
+              transition={{
+                duration: shouldReduceMotion ? 0 : 0.6,
+                ease: "easeOut",
+                delay: shouldReduceMotion ? 0 : 0.3,
+              }}
               className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
             >
               <a
                 href="#pay-now"
-                className="group inline-flex items-center justify-center gap-2 bg-white text-[#10B981] font-extrabold text-base sm:text-lg px-8 sm:px-10 py-4 sm:py-5 rounded-2xl hover:bg-white/90 transition-all shadow-2xl hover:-translate-y-1 active:translate-y-0"
+                className="group inline-flex w-full sm:w-auto items-center justify-center gap-2 bg-white text-[#10B981] font-extrabold text-base sm:text-lg px-6 sm:px-10 py-4 sm:py-5 rounded-2xl hover:bg-white/90 transition-all shadow-2xl hover:-translate-y-1 active:translate-y-0"
               >
                 Pay a Bill Now
                 <ChevronRight
@@ -329,7 +476,7 @@ function Hero() {
               </a>
               <Link
                 to={ROUTE_PATHS.login}
-                className="inline-flex items-center justify-center gap-2 bg-white text-[#10B981] font-bold text-base sm:text-lg px-8 sm:px-10 py-4 sm:py-5 rounded-2xl border border-white/80 hover:bg-white/90 transition-all"
+                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 bg-white text-[#10B981] font-bold text-base sm:text-lg px-6 sm:px-10 py-4 sm:py-5 rounded-2xl border border-white/80 hover:bg-white/90 transition-all"
               >
                 Sign In
               </Link>
@@ -337,7 +484,7 @@ function Hero() {
           </div>
 
           {/* Hero quick-pay preview */}
-          <div className="w-full max-w-lg mx-auto lg:mx-0">
+          <div className="w-full max-w-md sm:max-w-lg mx-auto lg:mx-0">
             <QuickPayPanel compact showTabs maxCards={6} />
           </div>
         </div>
@@ -363,6 +510,10 @@ function Hero() {
               key={label}
               src={icon}
               alt={`${label} badge`}
+              loading="lazy"
+              decoding="async"
+              width={120}
+              height={40}
               className="h-10 w-auto max-w-[120px] object-contain rounded-lg border border-white/10 bg-white/5 shadow-sm backdrop-blur-sm"
             />
           ))}
@@ -371,14 +522,20 @@ function Hero() {
 
       {/* Scroll indicator */}
       <motion.button
-        initial={{ opacity: 0 }}
+        initial={shouldReduceMotion ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 1.2, duration: 0.8 }}
+        transition={{
+          delay: shouldReduceMotion ? 0 : 1.2,
+          duration: shouldReduceMotion ? 0 : 0.8,
+        }}
         onClick={() =>
           document
             .getElementById("pay-now")
-            ?.scrollIntoView({ behavior: "smooth" })
+            ?.scrollIntoView({
+              behavior: shouldReduceMotion ? "auto" : "smooth",
+            })
         }
+        type="button"
         className="absolute bottom-8 left-1/2 -translate-x-1/2 hidden sm:flex flex-col items-center gap-2 text-white/50 hover:text-white/90 text-xs font-medium tracking-[0.25em] uppercase transition-colors z-20 group"
         aria-label="Scroll to services"
       >
@@ -437,9 +594,16 @@ function QuickPayPanel({
   showTabs = true,
   maxCards,
 }: QuickPayPanelProps) {
+  const shouldReduceMotion = useReducedMotion();
+  const inputIdPrefix = useId();
   const [activeCategory, setActiveCategory] = useState("all");
   const [selectedId, setSelectedId] = useState("");
   const [formValues, setFormValues] = useState<Record<string, string>>({});
+  const [queryEnabled, setQueryEnabled] = useState(false);
+  const [autoScrollEnabled, setAutoScrollEnabled] = useState(true);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  const sliderWrapRef = useRef<HTMLDivElement | null>(null);
+  const sliderRef = useRef<HTMLDivElement | null>(null);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["public-products-categories", activeCategory],
@@ -448,7 +612,10 @@ function QuickPayPanel({
         activeCategory === "all" ? undefined : activeCategory,
       ),
     staleTime: 5 * 60 * 1000,
+    enabled: queryEnabled,
   });
+  const isPending = !queryEnabled || isLoading;
+  const showError = queryEnabled && isError;
 
   const categoryTabs: CategoryTab[] = useMemo(() => {
     const fromApi = (data?.categories ?? [])
@@ -542,6 +709,46 @@ function QuickPayPanel({
   );
 
   useEffect(() => {
+    if (queryEnabled) return;
+    if (compact) {
+      let idleHandle: IdleCallbackHandle | null = null;
+      const enable = () => setQueryEnabled(true);
+      const onFirstInteraction = () => {
+        enable();
+        window.removeEventListener("pointerdown", onFirstInteraction);
+        window.removeEventListener("keydown", onFirstInteraction);
+      };
+      window.addEventListener("pointerdown", onFirstInteraction, {
+        passive: true,
+      });
+      window.addEventListener("keydown", onFirstInteraction);
+      idleHandle = requestIdle(enable, 1500);
+      return () => {
+        window.removeEventListener("pointerdown", onFirstInteraction);
+        window.removeEventListener("keydown", onFirstInteraction);
+        if (idleHandle !== null) cancelIdle(idleHandle);
+      };
+    }
+
+    const el = panelRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") {
+      setQueryEnabled(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setQueryEnabled(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [compact, queryEnabled]);
+
+  useEffect(() => {
     if (!filtered.length) {
       setSelectedId("");
       return;
@@ -567,6 +774,60 @@ function QuickPayPanel({
     setFormValues(next);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected?.id]);
+
+  useEffect(() => {
+    if (!compact || !sliderRef.current || shouldReduceMotion || !autoScrollEnabled)
+      return;
+    if (
+      typeof window !== "undefined" &&
+      "matchMedia" in window &&
+      window.matchMedia("(pointer: coarse)").matches
+    )
+      return;
+    const el = sliderRef.current;
+    let rafId = 0;
+    const step = () => {
+      if (!el) return;
+      el.scrollLeft += 0.6;
+      const half = el.scrollWidth / 2;
+      if (el.scrollLeft >= half) {
+        el.scrollLeft -= half;
+      }
+      rafId = window.requestAnimationFrame(step);
+    };
+    rafId = window.requestAnimationFrame(step);
+    return () => window.cancelAnimationFrame(rafId);
+  }, [autoScrollEnabled, compact, displayBillers.length, shouldReduceMotion]);
+
+  useEffect(() => {
+    if (!compact || !sliderRef.current) return;
+    const el = sliderRef.current;
+    const stopAutoScroll = () => setAutoScrollEnabled(false);
+    el.addEventListener("pointerdown", stopAutoScroll, { passive: true });
+    el.addEventListener("wheel", stopAutoScroll, { passive: true });
+    el.addEventListener("touchstart", stopAutoScroll, { passive: true });
+    el.addEventListener("keydown", stopAutoScroll);
+    return () => {
+      el.removeEventListener("pointerdown", stopAutoScroll);
+      el.removeEventListener("wheel", stopAutoScroll);
+      el.removeEventListener("touchstart", stopAutoScroll);
+      el.removeEventListener("keydown", stopAutoScroll);
+    };
+  }, [compact]);
+
+  useEffect(() => {
+    if (!compact) return;
+    const handleOutside = (event: PointerEvent) => {
+      const wrap = sliderWrapRef.current;
+      if (!wrap) return;
+      const target = event.target as Node | null;
+      if (target && !wrap.contains(target)) {
+        setAutoScrollEnabled(true);
+      }
+    };
+    document.addEventListener("pointerdown", handleOutside, { passive: true });
+    return () => document.removeEventListener("pointerdown", handleOutside);
+  }, [compact]);
 
   const handleContinue = () => {
     if (!selected) return;
@@ -608,36 +869,24 @@ function QuickPayPanel({
   const cardGrid = compact
     ? "grid grid-cols-2 gap-2"
     : "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4";
-  const cardBtn = (active: boolean) =>
+  const cardSurface = (active: boolean) =>
     compact
-      ? `group flex flex-col items-center gap-2 p-3.5 rounded-[1.4rem] border transition-all duration-300 ${
+      ? `relative w-full h-16 rounded-[1.4rem] border p-2 transition-all duration-300 ${
           active
-            ? "border-[#10B981] bg-[#10B981]/10 shadow-xl shadow-[#10B981]/15"
+            ? "border-[#10B981] bg-white shadow-xl shadow-[#10B981]/15"
             : "border-slate-200 bg-white"
         }`
-      : `group flex flex-col items-center gap-3 p-5 rounded-[2rem] border-2 transition-all duration-300 ${
+      : `relative w-full h-24 rounded-[2rem] border-2 p-3 transition-all duration-300 ${
           active
-            ? "border-[#10B981] bg-[#10B981]/10 shadow-xl shadow-[#10B981]/15"
+            ? "border-[#10B981] bg-white shadow-xl shadow-[#10B981]/15"
             : "border-slate-200 bg-white"
-        }`;
-  const iconBox = (active: boolean) =>
-    compact
-      ? `w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-300 ${
-          active
-            ? "bg-[#10B981] text-white scale-105 rotate-2 shadow-md shadow-[#10B981]/25"
-            : "bg-white text-slate-400 border border-slate-100"
-        }`
-      : `w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 ${
-          active
-            ? "bg-[#10B981] text-white scale-110 rotate-3 shadow-md shadow-[#10B981]/25"
-            : "bg-white text-slate-400 border border-slate-100"
         }`;
 
   return (
-    <div className={containerClasses}>
+    <div ref={panelRef} className={containerClasses} aria-busy={isPending}>
       {showTabs && (
         <div className={tabsClasses}>
-          {isLoading ? (
+          {isPending ? (
             <div className="flex gap-3">
               {[1, 2, 3, 4, 5].map((i) => (
                 <div
@@ -667,156 +916,379 @@ function QuickPayPanel({
         </div>
       )}
 
-      <div className={contentGrid}>
-        <div
-          className={`${leftPad} ${compact ? "" : "lg:border-r"} border-slate-100 bg-white min-h-[280px] h-full`}
-        >
-          {isLoading && (
-            <div className={cardGrid}>
-              {[...Array(12)].map((_, i) => (
-                <div
-                  key={i}
-                  className={`${compact ? "h-24" : "h-28"} bg-slate-50 rounded-2xl animate-pulse`}
-                />
-              ))}
-            </div>
-          )}
-
-          {isError && (
-            <div className="py-20 text-center">
-              <p className="text-slate-400 font-bold">
-                Could not load products. Please try again later.
-              </p>
-            </div>
-          )}
-
-          {!isLoading && !isError && filtered.length === 0 && (
-            <div className="py-20 text-center">
-              <p className="text-slate-400 font-bold">
-                No active products in this category.
-              </p>
-            </div>
-          )}
-
-          {!isLoading && filtered.length > 0 && (
-            <div className={cardGrid}>
-              {displayBillers.map((biller) => {
-                const isActive = selected?.id === biller.id;
-                return (
-                  <button
-                    key={biller.id}
-                    onClick={() => setSelectedId(biller.id)}
-                    className={cardBtn(isActive)}
-                  >
-                    <div className={iconBox(isActive)}>
-                      {categoryIcon(
-                        biller.categoryLabel,
-                        compact ? "w-5 h-5" : "w-7 h-7",
-                      )}
-                    </div>
-                    <span
-                      className={`${compact ? "text-[11px]" : "text-sm"} font-bold leading-tight line-clamp-2 text-slate-900`}
-                    >
-                      {biller.name}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        <div
-          className={`${leftPad} ${compact ? "border-t sm:border-t-0 sm:border-l" : ""} border-slate-100 bg-slate-50/30 h-full`}
-        >
-          {!selected ? (
-            <div className="h-full flex flex-col items-center justify-center py-10 text-slate-400 text-center">
-              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm">
-                <Zap size={24} className="text-slate-200" />
-              </div>
-              <p className={`${compact ? "text-xs" : "text-sm"} font-bold`}>
-                Select a biller to
-                <br />
-                see payment details
-              </p>
-            </div>
-          ) : (
-            <div className={compact ? "space-y-4" : "space-y-6"}>
-              <div>
-                <span
-                  className={`inline-block ${compact ? "text-[9px]" : "text-[10px]"} font-black text-[#10B981] uppercase tracking-[0.2em] mb-1`}
-                >
-                  Paying to
-                </span>
-                <h3
-                  className={`${compact ? "text-base" : "text-xl"} font-black text-slate-900 leading-tight`}
-                >
-                  {selected.name}
-                </h3>
-              </div>
-
-              <div className={compact ? "space-y-3" : "space-y-4"}>
-                {selected.fields.map((field) => (
-                  <div key={field.key}>
-                    <label
-                      className={`block ${compact ? "text-[10px]" : "text-xs"} font-black text-slate-500 uppercase tracking-widest mb-2 ml-1`}
-                    >
-                      {field.label}
-                    </label>
-                    {field.prefix ? (
-                      <div className="relative group">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400 group-focus-within:text-[#10B981] transition-colors">
-                          {field.prefix}
-                        </span>
-                        <input
-                          type={field.type ?? "text"}
-                          placeholder={field.placeholder}
-                          value={formValues[field.key] ?? ""}
-                          onChange={(e) =>
-                            setFormValues((prev) => ({
-                              ...prev,
-                              [field.key]: e.target.value,
-                            }))
-                          }
-                          className={`block w-full ${compact ? "pl-8 pr-3 py-3 text-sm" : "pl-8 pr-4 py-4 text-base"} border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#10B981]/10 focus:border-[#10B981] font-bold transition-all bg-white shadow-sm`}
-                        />
-                      </div>
-                    ) : (
-                      <input
-                        type={field.type ?? "text"}
-                        placeholder={field.placeholder}
-                        value={formValues[field.key] ?? ""}
-                        onChange={(e) =>
-                          setFormValues((prev) => ({
-                            ...prev,
-                            [field.key]: e.target.value,
-                          }))
-                        }
-                        className={`block w-full ${compact ? "px-3 py-3 text-sm" : "px-4 py-4 text-base"} border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#10B981]/10 focus:border-[#10B981] font-bold transition-all bg-white shadow-sm`}
-                      />
-                    )}
-                  </div>
+      {compact ? (
+        <div className="flex flex-col">
+          <div className={`${leftPad} bg-white`}>
+            {isPending && (
+              <div className="flex gap-3 overflow-x-auto pb-2">
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="h-24 w-40 bg-slate-50 rounded-2xl animate-pulse shrink-0" />
                 ))}
               </div>
+            )}
 
-              <button
-                type="button"
-                onClick={handleContinue}
-                disabled={!selected}
-                className={`w-full flex justify-center items-center gap-3 ${compact ? "py-3 text-sm" : "py-5 text-base"} px-6 rounded-2xl font-black text-white bg-[#10B981] hover:bg-[#10B981] shadow-xl  disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:-translate-y-1 mt-4`}
-              >
-                Continue to Payment
-                <ArrowRight size={compact ? 18 : 20} />
-              </button>
-
-              <div className="flex items-center gap-2 justify-center text-xs text-slate-400 font-medium">
-                <ShieldCheck size={14} className="text-[#10B981]" />
-                Secure checkout via EseBills
+            {showError && (
+              <div className="py-12 text-center">
+                <p className="text-slate-400 font-bold">
+                  Could not load products. Please try again later.
+                </p>
               </div>
-            </div>
-          )}
+            )}
+
+            {!isPending && !showError && filtered.length === 0 && (
+              <div className="py-12 text-center">
+                <p className="text-slate-400 font-bold">
+                  No active products in this category.
+                </p>
+              </div>
+            )}
+
+            {!isPending && filtered.length > 0 && (
+              <div ref={sliderWrapRef} className="relative">
+                {(() => {
+                  const sliderItems = [...displayBillers, ...displayBillers];
+                  return (
+                    <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAutoScrollEnabled(false);
+                    sliderRef.current?.scrollBy({ left: -220, behavior: "smooth" });
+                  }}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white shadow-sm border border-slate-200 text-[#10B981] flex items-center justify-center hover:scale-105 transition"
+                  aria-label="Scroll left"
+                >
+                  <ChevronLeft className="w-4 h-4 animate-pulse" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAutoScrollEnabled(false);
+                    sliderRef.current?.scrollBy({ left: 220, behavior: "smooth" });
+                  }}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white shadow-sm border border-slate-200 text-[#10B981] flex items-center justify-center hover:scale-105 transition"
+                  aria-label="Scroll right"
+                >
+                  <ChevronRight className="w-4 h-4 animate-pulse" />
+                </button>
+                <div
+                  ref={sliderRef}
+                  className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide px-8"
+                >
+                  {sliderItems.map((biller, idx) => {
+                    const isActive = selected?.id === biller.id;
+                    const logo = getBillerLogo(biller.name);
+                    return (
+                      <button
+                        key={`${biller.id}-${idx}`}
+                        onClick={() => {
+                          setAutoScrollEnabled(false);
+                          setSelectedId(biller.id);
+                        }}
+                        className="shrink-0 w-40 snap-start flex flex-col items-center gap-2"
+                      >
+                        <div className={cardSurface(isActive)}>
+                          {logo ? (
+                            <div className="w-full h-full rounded-xl bg-white flex items-center justify-center overflow-hidden">
+                              <img
+                                src={logo.src}
+                                alt={`${logo.alt} logo`}
+                                loading="lazy"
+                                decoding="async"
+                                width={160}
+                                height={80}
+                                className="w-full h-full object-contain"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-slate-400">
+                              {categoryIcon(biller.categoryLabel, "w-5 h-5")}
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-[11px] font-bold leading-tight line-clamp-2 text-slate-900">
+                          {biller.name}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                    </>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
+
+          <div className={`${leftPad} border-t border-slate-100 bg-slate-50/30`}>
+            {!selected ? (
+              <div className="h-full flex flex-col items-center justify-center py-10 text-slate-400 text-center">
+                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm">
+                  <Zap size={24} className="text-slate-200" />
+                </div>
+                <p className="text-xs font-bold">
+                  Select a biller to
+                  <br />
+                  see payment details
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <span className="inline-block text-[9px] font-black text-[#10B981] uppercase tracking-[0.2em] mb-1">
+                    Paying to
+                  </span>
+                  <h3 className="text-base font-black text-slate-900 leading-tight">
+                    {selected.name}
+                  </h3>
+                </div>
+
+                <div className="space-y-3">
+                  {selected.fields.map((field) => {
+                    const fieldId = `${inputIdPrefix}-${field.key}`;
+                    return (
+                      <div key={field.key}>
+                        <label
+                          htmlFor={fieldId}
+                          className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1"
+                        >
+                          {field.label}
+                        </label>
+                        {field.prefix ? (
+                          <div className="relative group">
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400 group-focus-within:text-[#10B981] transition-colors">
+                              {field.prefix}
+                            </span>
+                            <input
+                              id={fieldId}
+                              type={field.type ?? "text"}
+                              placeholder={field.placeholder}
+                              value={formValues[field.key] ?? ""}
+                              onChange={(e) =>
+                                setFormValues((prev) => ({
+                                  ...prev,
+                                  [field.key]: e.target.value,
+                                }))
+                              }
+                              className="block w-full pl-8 pr-3 py-3 text-sm border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#10B981]/10 focus:border-[#10B981] font-bold transition-all bg-white shadow-sm"
+                            />
+                          </div>
+                        ) : (
+                          <input
+                            id={fieldId}
+                            type={field.type ?? "text"}
+                            placeholder={field.placeholder}
+                            value={formValues[field.key] ?? ""}
+                            onChange={(e) =>
+                              setFormValues((prev) => ({
+                                ...prev,
+                                [field.key]: e.target.value,
+                              }))
+                            }
+                            className="block w-full px-3 py-3 text-sm border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#10B981]/10 focus:border-[#10B981] font-bold transition-all bg-white shadow-sm"
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleContinue}
+                  disabled={!selected}
+                  className="w-full flex justify-center items-center gap-3 py-3 text-sm px-6 rounded-2xl font-black text-white bg-[#10B981] hover:bg-[#10B981] shadow-xl  disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:-translate-y-1 mt-4"
+                >
+                  Continue to Payment
+                  <ArrowRight size={18} />
+                </button>
+
+                <div className="flex items-center gap-2 justify-center text-xs text-slate-400 font-medium">
+                  <ShieldCheck size={14} className="text-[#10B981]" />
+                  Secure checkout via EseBills
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className={contentGrid}>
+          <div
+            className={`${leftPad} ${compact ? "" : "lg:border-r"} border-slate-100 bg-white min-h-[280px] h-full`}
+          >
+            {isPending && (
+              <div className={cardGrid}>
+                {[...Array(12)].map((_, i) => (
+                  <div
+                    key={i}
+                    className={`${compact ? "h-24" : "h-28"} bg-slate-50 rounded-2xl animate-pulse`}
+                  />
+                ))}
+              </div>
+            )}
+
+            {showError && (
+              <div className="py-20 text-center">
+                <p className="text-slate-400 font-bold">
+                  Could not load products. Please try again later.
+                </p>
+              </div>
+            )}
+
+            {!isPending && !showError && filtered.length === 0 && (
+              <div className="py-20 text-center">
+                <p className="text-slate-400 font-bold">
+                  No active products in this category.
+                </p>
+              </div>
+            )}
+
+            {!isPending && filtered.length > 0 && (
+              <div className={cardGrid}>
+                {displayBillers.map((biller) => {
+                  const isActive = selected?.id === biller.id;
+                  const logo = getBillerLogo(biller.name);
+                  return (
+                    <button
+                      key={biller.id}
+                      onClick={() => {
+                        setAutoScrollEnabled(false);
+                        setSelectedId(biller.id);
+                      }}
+                      className="flex w-full flex-col items-center gap-3"
+                    >
+                      <div className={cardSurface(isActive)}>
+                        {logo ? (
+                          <div className="w-full h-full rounded-2xl bg-white flex items-center justify-center overflow-hidden">
+                            <img
+                              src={logo.src}
+                              alt={`${logo.alt} logo`}
+                              loading="lazy"
+                              decoding="async"
+                              width={200}
+                              height={120}
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-400">
+                            {categoryIcon(
+                              biller.categoryLabel,
+                              compact ? "w-5 h-5" : "w-7 h-7",
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <span
+                        className={`${compact ? "text-[11px]" : "text-sm"} font-bold leading-tight line-clamp-2 text-slate-900`}
+                      >
+                        {biller.name}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div
+            className={`${leftPad} ${compact ? "border-t sm:border-t-0 sm:border-l" : ""} border-slate-100 bg-slate-50/30 h-full`}
+          >
+            {!selected ? (
+              <div className="h-full flex flex-col items-center justify-center py-10 text-slate-400 text-center">
+                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm">
+                  <Zap size={24} className="text-slate-200" />
+                </div>
+                <p className={`${compact ? "text-xs" : "text-sm"} font-bold`}>
+                  Select a biller to
+                  <br />
+                  see payment details
+                </p>
+              </div>
+            ) : (
+              <div className={compact ? "space-y-4" : "space-y-6"}>
+                <div>
+                  <span
+                    className={`inline-block ${compact ? "text-[9px]" : "text-[10px]"} font-black text-[#10B981] uppercase tracking-[0.2em] mb-1`}
+                  >
+                    Paying to
+                  </span>
+                  <h3
+                    className={`${compact ? "text-base" : "text-xl"} font-black text-slate-900 leading-tight`}
+                  >
+                    {selected.name}
+                  </h3>
+                </div>
+
+                <div className={compact ? "space-y-3" : "space-y-4"}>
+                  {selected.fields.map((field) => {
+                    const fieldId = `${inputIdPrefix}-${field.key}`;
+                    return (
+                      <div key={field.key}>
+                        <label
+                          htmlFor={fieldId}
+                          className={`block ${compact ? "text-[10px]" : "text-xs"} font-black text-slate-500 uppercase tracking-widest mb-2 ml-1`}
+                        >
+                          {field.label}
+                        </label>
+                        {field.prefix ? (
+                          <div className="relative group">
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400 group-focus-within:text-[#10B981] transition-colors">
+                              {field.prefix}
+                            </span>
+                            <input
+                              id={fieldId}
+                              type={field.type ?? "text"}
+                              placeholder={field.placeholder}
+                              value={formValues[field.key] ?? ""}
+                              onChange={(e) =>
+                                setFormValues((prev) => ({
+                                  ...prev,
+                                  [field.key]: e.target.value,
+                                }))
+                              }
+                              className={`block w-full ${compact ? "pl-8 pr-3 py-3 text-sm" : "pl-8 pr-4 py-4 text-base"} border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#10B981]/10 focus:border-[#10B981] font-bold transition-all bg-white shadow-sm`}
+                            />
+                          </div>
+                        ) : (
+                          <input
+                            id={fieldId}
+                            type={field.type ?? "text"}
+                            placeholder={field.placeholder}
+                            value={formValues[field.key] ?? ""}
+                            onChange={(e) =>
+                              setFormValues((prev) => ({
+                                ...prev,
+                                [field.key]: e.target.value,
+                              }))
+                            }
+                            className={`block w-full ${compact ? "px-3 py-3 text-sm" : "px-4 py-4 text-base"} border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#10B981]/10 focus:border-[#10B981] font-bold transition-all bg-white shadow-sm`}
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleContinue}
+                  disabled={!selected}
+                  className={`w-full flex justify-center items-center gap-3 ${compact ? "py-3 text-sm" : "py-5 text-base"} px-6 rounded-2xl font-black text-white bg-[#10B981] hover:bg-[#10B981] shadow-xl  disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:-translate-y-1 mt-4`}
+                >
+                  Continue to Payment
+                  <ArrowRight size={compact ? 18 : 20} />
+                </button>
+
+                <div className="flex items-center gap-2 justify-center text-xs text-slate-400 font-medium">
+                  <ShieldCheck size={14} className="text-[#10B981]" />
+                  Secure checkout via EseBills
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -897,7 +1369,9 @@ function Overview() {
                 <div className="w-12 h-12 rounded-2xl bg-[#10B981] flex items-center justify-center mb-5 transition-all duration-300">
                   <Icon size={22} className="text-white" />
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">{title}</h3>
+                <h3 className="text-lg font-bold text-slate-900 mb-2">
+                  {title}
+                </h3>
                 <p className="text-slate-500 text-sm leading-relaxed">{desc}</p>
               </motion.div>
             ))}
@@ -1089,95 +1563,11 @@ function ForWho() {
 
 // --- Features -----------------------------------------------------------------
 
-function Features() {
-  const features = [
-    {
-      icon: Zap,
-      title: "Instant Settlement",
-      desc: "Real-time payment processing with instant validation and confirmation.",
-    },
-    {
-      icon: ShieldCheck,
-      title: "No Hidden Fees",
-      desc: "What you see is what you pay. Transparent pricing, always.",
-    },
-    {
-      icon: Headphones,
-      title: "24/7 Support",
-      desc: "Our team is available around the clock to assist with any issues.",
-    },
-    {
-      icon: CreditCard,
-      title: "Multiple Channels",
-      desc: "Pay via card, mobile money, or bank transfer — your choice.",
-    },
-    {
-      icon: BarChart3,
-      title: "Real-time Reports",
-      desc: "Full transaction history and analytics at your fingertips.",
-    },
-    {
-      icon: Store,
-      title: "Agent Network",
-      desc: "Thousands of agents nationwide for cash-in and assisted payments.",
-    },
-    {
-      icon: Building2,
-      title: "Biller Integration",
-      desc: "Connected to ZESA, ZINWA, TelOne, Econet, NetOne, and more.",
-    },
-    {
-      icon: Users,
-      title: "Secure & Compliant",
-      desc: "Bank-level encryption, OTP verification, and full audit trails.",
-    },
-  ];
-
-  return (
-    <section
-      id="features"
-      className="bg-white py-16 sm:py-24 px-4 sm:px-6 lg:px-8"
-    >
-      <div className="max-w-7xl mx-auto">
-        <div className="max-w-2xl mb-10 sm:mb-16">
-          <p className="text-[#10B981] text-xs sm:text-sm font-bold uppercase tracking-widest mb-3">
-            Platform Features
-          </p>
-          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 leading-tight">
-            Everything you need.
-            <br />
-            Nothing you don't.
-          </h2>
-          <p className="text-slate-600 text-base sm:text-lg leading-relaxed mt-4">
-            EseBills covers the full bill payment workflow — purpose-built for
-            the African market.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-          {features.map(({ icon: Icon, title, desc }) => (
-            <div
-              key={title}
-              className="group relative p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-white to-[#10B981]/[0.04] border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all overflow-hidden"
-            >
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#10B981]/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative z-10 w-10 h-10 rounded-xl bg-[#10B981]/12 ring-1 ring-[#10B981]/20 flex items-center justify-center mb-4 group-hover:bg-[#10B981]/20 transition-colors">
-                <Icon size={18} className="text-[#10B981]" />
-              </div>
-              <h3 className="relative z-10 text-slate-900 font-semibold text-sm mb-2">{title}</h3>
-              <p className="relative z-10 text-slate-600 text-xs leading-relaxed">{desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 // --- Banner Break -------------------------------------------------------------
 
 function BannerBreak() {
   const ref = useRef<HTMLDivElement>(null);
+  const shouldReduceMotion = useReducedMotion();
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start end", "end start"],
@@ -1186,14 +1576,15 @@ function BannerBreak() {
 
   return (
     <div ref={ref} className="relative h-52 sm:h-64 overflow-hidden">
-      <motion.div
-        className="absolute inset-0 scale-125"
-        style={{
-          backgroundImage: `url(${bg1})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          y: bgY,
-        }}
+      <motion.img
+        src={bg1}
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        decoding="async"
+        fetchPriority="low"
+        className="absolute inset-0 w-full h-full object-cover scale-110"
+        style={{ y: shouldReduceMotion ? "0%" : bgY }}
       />
       <div className="absolute inset-0 bg-slate-950/70" />
       <div className="relative z-10 h-full flex items-center justify-center px-4 sm:px-6">
@@ -1375,6 +1766,8 @@ function FinalCTA() {
 
 export function HomePage() {
   const location = useLocation();
+  const [showChatbot, setShowChatbot] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
     const scrollTo = (location.state as { scrollTo?: string } | null)?.scrollTo;
@@ -1382,25 +1775,49 @@ export function HomePage() {
     const attempt = (retries: number) => {
       const el = document.getElementById(scrollTo);
       if (el) {
-        el.scrollIntoView({ behavior: "smooth" });
+        el.scrollIntoView({
+          behavior: shouldReduceMotion ? "auto" : "smooth",
+        });
       } else if (retries > 0) {
         setTimeout(() => attempt(retries - 1), 150);
       }
     };
     attempt(5);
-  }, [location.state]);
+  }, [location.state, shouldReduceMotion]);
+
+  useEffect(() => {
+    let idleHandle: IdleCallbackHandle | null = null;
+    const enable = () => setShowChatbot(true);
+    const onFirstInteraction = () => {
+      enable();
+      window.removeEventListener("pointerdown", onFirstInteraction);
+      window.removeEventListener("keydown", onFirstInteraction);
+    };
+    window.addEventListener("pointerdown", onFirstInteraction, {
+      passive: true,
+    });
+    window.addEventListener("keydown", onFirstInteraction);
+    idleHandle = requestIdle(enable, 6000);
+    return () => {
+      window.removeEventListener("pointerdown", onFirstInteraction);
+      window.removeEventListener("keydown", onFirstInteraction);
+      if (idleHandle !== null) cancelIdle(idleHandle);
+    };
+  }, []);
 
   return (
-    <div className="bg-white">
+    <main className="bg-white">
       <Hero />
       <Services />
       <Overview />
       <ForWho />
-      <Features />
       <BannerBreak />
       <HowItWorks />
       <FinalCTA />
-      <ChatbotWidget />
-    </div>
+      <Suspense fallback={null}>
+        {showChatbot && <ChatbotWidgetLazy />}
+      </Suspense>
+    </main>
   );
 }
+
