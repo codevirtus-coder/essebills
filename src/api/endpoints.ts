@@ -32,6 +32,10 @@ export const API_ENDPOINTS = {
     root: '/v1/products',
     byId: (productId: string | number) => `/v1/products/${productId}`,
     byCategory: (id: string | number) => `/v1/products/by-category/${id}`,
+    requiredFields: (productId: string | number) => `/v1/products/${productId}/required-fields`,
+    uploadLogo: (productId: string | number) => `/v1/products/${productId}/logo`,
+    /** Public (no-auth) logo image stream — use directly as <img src> */
+    logo: (productId: string | number) => `/opn/v1/products/${productId}/logo`,
   },
 
   // Product Categories
@@ -450,6 +454,15 @@ export const API_ENDPOINTS = {
   donationCategories: {
     root: '/v1/donation-categories',
     byId: (id: string | number) => `/v1/donation-categories/${id}`,
+  },
+
+  // eSolutions Admin
+  esolutionsAdmin: {
+    balance: '/v1/admin/esolutions/balance',
+    catalog: '/v1/admin/esolutions/catalog',
+    catalogByMerchant: (merchantCode: string) => `/v1/admin/esolutions/catalog/${merchantCode}`,
+    syncAll: '/v1/admin/esolutions/sync',
+    syncMerchant: (merchantCode: string) => `/v1/admin/esolutions/sync/${merchantCode}`,
   },
 } as const
 

@@ -56,7 +56,7 @@ export function Navbar() {
   const navLinks = [
     {
       label: "Services",
-      to: ROUTE_PATHS.services,
+      to: "/#pay-now",
       onClick: undefined as ((e: React.MouseEvent) => void) | undefined,
     },
     { label: "How it Works", to: "#how-it-works", onClick: handleHowItWorks },

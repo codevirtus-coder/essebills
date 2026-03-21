@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { 
   ArrowLeft, 
@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import esebillsLogo from "../../../assets/esebills_logo.png";
 import { ROUTE_PATHS } from "../../../router/paths";
+import type { ProductField } from "../../../types/products";
 
 interface PaymentCheckoutProps {
   billerName: string;
@@ -27,6 +28,10 @@ interface PaymentCheckoutProps {
   onConfirm: (method: PaymentOption, email: string, phone: string, accountNumber: string, amount: number) => void;
   isLoading?: boolean;
   embedded?: boolean;
+  isAuthenticated?: boolean;
+  walletBalance?: number;
+  onLoginRequired?: () => void;
+  productFields?: ProductField[];
 }
 
 export type PaymentOption = "wallet" | "card" | "mobile_money" | "pesepay";
@@ -42,6 +47,10 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
   onConfirm,
   isLoading = false,
   embedded = false,
+  isAuthenticated = false,
+  walletBalance,
+  onLoginRequired,
+  productFields = [],
 }) => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentOption>("pesepay");
   const [email, setEmail] = useState("");
@@ -51,14 +60,36 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
     parseFloat(amount) > 0 ? String(parseFloat(amount)) : ""
   );
 
+  // Derive account field metadata from backend product fields (first non-optional or first field)
+  const accountFieldMeta = useMemo(() => {
+    const fields = productFields.filter((f) => !f.optional);
+    const primary = fields[0] ?? productFields[0];
+    if (!primary) return { label: 'Account / Meter Number', placeholder: 'Enter account or meter number' };
+    return {
+      label: primary.displayName ?? primary.name ?? 'Account / Meter Number',
+      placeholder: primary.hint ?? `Enter ${primary.displayName ?? primary.name ?? 'account'}`,
+    };
+  }, [productFields]);
+
   const baseAmount = parseFloat(amountInput) || 0;
-  const serviceFee = baseAmount * 0.01;
+  const isWallet = paymentMethod === "wallet";
+  const serviceFee = isWallet ? 0 : baseAmount * 0.01;
   const totalAmount = baseAmount + serviceFee;
+
+  const walletInsufficient = isWallet && walletBalance !== undefined && walletBalance < totalAmount;
 
   const amountError = minimumAmount && baseAmount > 0 && baseAmount < minimumAmount
     ? `Minimum amount is ${currencyCode} ${minimumAmount.toFixed(2)}`
     : null;
-  const canPay = !!phone && !!accountNumber && baseAmount > 0 && !amountError;
+  const canPay = !!phone && !!accountNumber && baseAmount > 0 && !amountError && !walletInsufficient;
+
+  function handleSelectWallet() {
+    if (!isAuthenticated) {
+      onLoginRequired?.();
+      return;
+    }
+    setPaymentMethod("wallet");
+  }
 
   return (
     <div className={`${embedded ? '' : 'min-h-screen bg-[#f8fafc] pb-20'} font-sans text-slate-900 overflow-y-auto emerald-scrollbar`}>
@@ -132,13 +163,13 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
               <div className="p-8 grid grid-cols-1 sm:grid-cols-2 gap-8 bg-white">
                 <div>
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
-                    Account / Meter Number <span className="text-emerald-600">*</span>
+                    {accountFieldMeta.label} <span className="text-emerald-600">*</span>
                   </label>
                   <input
                     type="text"
                     value={accountNumber}
                     onChange={(e) => setAccountNumber(e.target.value)}
-                    placeholder="Enter account or meter number"
+                    placeholder={accountFieldMeta.placeholder}
                     className="w-full px-0 py-1 bg-transparent border-0 border-b border-slate-200 focus:outline-none focus:border-emerald-500 text-xl font-black tracking-tight text-slate-900 transition-all placeholder:text-slate-300"
                   />
                 </div>
@@ -257,14 +288,14 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                 </button>
 
                 <button
-                  onClick={() => setPaymentMethod("wallet")}
+                  onClick={handleSelectWallet}
                   className={`p-6 rounded-3xl border-2 transition-all text-left relative overflow-hidden group ${
-                    paymentMethod === "wallet" 
-                    ? "border-emerald-600 bg-emerald-50/50 shadow-xl shadow-emerald-600/10" 
+                    paymentMethod === "wallet"
+                    ? "border-emerald-600 bg-emerald-50/50 shadow-xl shadow-emerald-600/10"
                     : "border-slate-100 bg-white hover:border-slate-300"
-                  }`}
+                  } ${!isAuthenticated ? "opacity-60" : ""}`}
                 >
-                  <div className="flex items-center gap-4 mb-4 relative z-10">
+                  <div className="flex items-center gap-4 mb-2 relative z-10">
                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
                       paymentMethod === "wallet" ? "bg-emerald-600 text-white scale-110 rotate-3" : "bg-slate-100 text-slate-400"
                     }`}>
@@ -275,6 +306,15 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Instant • No Fees</p>
                     </div>
                   </div>
+                  {!isAuthenticated && (
+                    <p className="text-[10px] font-bold text-amber-600 relative z-10">Login required to use wallet</p>
+                  )}
+                  {isAuthenticated && walletBalance !== undefined && (
+                    <p className={`text-[10px] font-bold relative z-10 ${walletInsufficient ? "text-rose-500" : "text-emerald-600"}`}>
+                      Balance: {currencyCode} {walletBalance.toFixed(2)}
+                      {walletInsufficient && " — Insufficient funds"}
+                    </p>
+                  )}
                   {paymentMethod === "wallet" && (
                     <div className="absolute top-4 right-4 text-emerald-600">
                       <CheckCircle2 size={24} />
@@ -303,8 +343,11 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                   <span className="font-black text-lg">{currencyCode} {baseAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center group">
-                  <span className="text-slate-400 font-bold group-hover:text-slate-300 transition-colors text-sm">Service Fee (1%)</span>
-                  <span className="font-black text-lg text-emerald-400">+{currencyCode} {serviceFee.toFixed(2)}</span>
+                  <span className="text-slate-400 font-bold group-hover:text-slate-300 transition-colors text-sm">Service Fee {isWallet ? "" : "(1%)"}</span>
+                  {isWallet
+                    ? <span className="font-black text-sm text-emerald-400 uppercase tracking-widest">No Fees</span>
+                    : <span className="font-black text-lg text-emerald-400">+{currencyCode} {serviceFee.toFixed(2)}</span>
+                  }
                 </div>
                 
                 <div className="pt-8 mt-4 border-t border-white/10">

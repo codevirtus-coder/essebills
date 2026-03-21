@@ -21,6 +21,7 @@ import { ROUTE_PATHS } from '../../../router/paths';
 import toast from 'react-hot-toast';
 import { ServicesMarketplace, type BillerCard } from '../../shared/components/ServicesMarketplace';
 import { ProductPaymentCheckout } from '../../landing/components/ProductPaymentCheckout';
+import { QuickPay } from '../components/QuickPay';
 import WalletTopUpModal from '../components/WalletTopUpModal';
 import CustomerDonationsPage from './CustomerDonationsPage';
 
@@ -331,31 +332,14 @@ export function CustomerDashboardPage() {
   );
 
   const renderPay = () => (
-    <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
       <div className="max-w-2xl">
-        <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Pay a Bill</h2>
-        <p className="text-slate-500 mt-2">Select a service to make an instant payment.</p>
+        <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Quick Pay</h2>
+        <p className="text-slate-500 mt-2">Select a service and pay in seconds.</p>
       </div>
 
-      <div className="glass-card p-8 md:p-10 border-slate-200 dark:border-slate-800 overflow-hidden">
-        {selectedCheckoutProduct ? (
-          <ProductPaymentCheckout 
-            productId={selectedCheckoutProduct.productId}
-            billerName={selectedCheckoutProduct.name}
-            productCategoryId={selectedCheckoutProduct.productCategoryId}
-            embedded={true}
-            onBack={() => setSelectedCheckoutProduct(null)}
-            onSuccess={() => {
-              setSelectedCheckoutProduct(null);
-              setTab('transactions');
-            }}
-          />
-        ) : (
-          <ServicesMarketplace 
-            embedded={true} 
-            onSelectProduct={(p) => setSelectedCheckoutProduct(p)}
-          />
-        )}
+      <div className="glass-card p-6 md:p-8 border-slate-200 dark:border-slate-800 overflow-hidden max-w-xl">
+        <QuickPay />
       </div>
     </div>
   );

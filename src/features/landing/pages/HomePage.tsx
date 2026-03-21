@@ -32,18 +32,16 @@ import onemoneyBadge from "../../../assets/onemoney-badge.svg";
 import telecashBadge from "../../../assets/telecash-badge.svg";
 import zimswitchBadge from "../../../assets/zimswitch-badge.svg";
 import visaBadge from "../../../assets/visa-badge.svg";
-import zesaLogo from "../../../assets/zesa-logo.png";
-import zolLogo from "../../../assets/zol-logo.jpg";
-import teloneLogo from "../../../assets/telone-logo.png";
-import econetLogo from "../../../assets/econet-logo.png";
-import netoneLogo from "../../../assets/netone-logo.png";
 import { ROUTE_PATHS } from "../../../router/paths";
 import {
   getProducts,
   getProductCategories,
   getProductsByCategory,
+  getProductFields,
+  getProductLogoUrl,
 } from "../../../services/products.service";
 import type { Product, ProductCategory } from "../../../types/products";
+import { QuickPay, QuickPaySelector } from "../../customer/components/QuickPay";
 
 const ChatbotWidgetLazy = lazy(() =>
   import("../components/ChatbotWidget").then((mod) => ({
@@ -76,14 +74,6 @@ const cancelIdle = (handle: IdleCallbackHandle) => {
 
 // --- Services helpers ----------------------------------------------------------
 
-type FormField = {
-  key: string;
-  label: string;
-  placeholder: string;
-  type?: string;
-  prefix?: string;
-};
-
 type BillerItem = {
   id: string;
   productId: number;
@@ -91,7 +81,6 @@ type BillerItem = {
   name: string;
   categoryKey: string;
   categoryLabel: string;
-  fields: FormField[];
   minimumPurchaseAmount?: number;
 };
 
@@ -121,17 +110,36 @@ function categoryIcon(label: string, cls = "w-4 h-4") {
   }
 }
 
-const BILLER_LOGOS = [
-  { pattern: /zesa|zetdc/i, src: zesaLogo, alt: "ZESA" },
-  { pattern: /zol/i, src: zolLogo, alt: "ZOL" },
-  { pattern: /telone/i, src: teloneLogo, alt: "TelOne" },
-  { pattern: /econet/i, src: econetLogo, alt: "Econet" },
-  { pattern: /netone/i, src: netoneLogo, alt: "NetOne" },
-];
-
-function getBillerLogo(name: string) {
-  const match = BILLER_LOGOS.find((logo) => logo.pattern.test(name));
-  return match ?? null;
+/** Product logo with automatic fallback to category icon. */
+function ProductLogo({
+  productId,
+  name,
+  categoryLabel,
+  className = "",
+}: {
+  productId: number;
+  name: string;
+  categoryLabel: string;
+  className?: string;
+}) {
+  const [errored, setErrored] = useState(false);
+  if (errored) {
+    return (
+      <div className={`flex items-center justify-center text-slate-400 ${className}`}>
+        {categoryIcon(categoryLabel)}
+      </div>
+    );
+  }
+  return (
+    <img
+      src={getProductLogoUrl(productId)}
+      alt={name}
+      loading="lazy"
+      decoding="async"
+      className={`object-contain ${className}`}
+      onError={() => setErrored(true)}
+    />
+  );
 }
 
 function inferCategory(
@@ -151,132 +159,6 @@ function inferCategory(
   if (/(lottery|loto|jackpot)/.test(v))
     return { key: "lottery", label: "Lottery" };
   return { key: "utilities", label: "Utilities" };
-}
-
-const DEFAULT_FIELDS: FormField[] = [
-  {
-    key: "accountNumber",
-    label: "Account Number",
-    placeholder: "Enter account number",
-  },
-  {
-    key: "mobileNumber",
-    label: "Mobile Number",
-    placeholder: "77*******",
-    type: "tel",
-  },
-  {
-    key: "amount",
-    label: "Amount",
-    placeholder: "0.00",
-    type: "number",
-    prefix: "$",
-  },
-];
-
-function fieldsByProduct(name: string, category: string): FormField[] {
-  const n = name.toLowerCase();
-  if (/(zesa|token|electric)/.test(n))
-    return [
-      {
-        key: "accountNumber",
-        label: "Meter Number",
-        placeholder: "Enter meter number",
-      },
-      {
-        key: "mobileNumber",
-        label: "Mobile Number",
-        placeholder: "77*******",
-        type: "tel",
-      },
-      {
-        key: "amount",
-        label: "Amount",
-        placeholder: "0.00",
-        type: "number",
-        prefix: "$",
-      },
-    ];
-  if (/(airtime|bundle|data)/.test(n) || category === "Airtime")
-    return [
-      {
-        key: "mobileNumber",
-        label: "Mobile Number",
-        placeholder: "77*******",
-        type: "tel",
-      },
-      {
-        key: "amount",
-        label: "Amount",
-        placeholder: "0.00",
-        type: "number",
-        prefix: "$",
-      },
-    ];
-  if (/(dstv|gotv|tv)/.test(n))
-    return [
-      {
-        key: "accountNumber",
-        label: "Smart Card Number",
-        placeholder: "Enter smart card number",
-      },
-      {
-        key: "mobileNumber",
-        label: "Mobile Number",
-        placeholder: "77*******",
-        type: "tel",
-      },
-      {
-        key: "amount",
-        label: "Amount",
-        placeholder: "0.00",
-        type: "number",
-        prefix: "$",
-      },
-    ];
-  if (category === "Education")
-    return [
-      {
-        key: "accountNumber",
-        label: "Student Number",
-        placeholder: "Enter student number",
-      },
-      {
-        key: "mobileNumber",
-        label: "Mobile Number",
-        placeholder: "77*******",
-        type: "tel",
-      },
-      {
-        key: "amount",
-        label: "Amount",
-        placeholder: "0.00",
-        type: "number",
-        prefix: "$",
-      },
-    ];
-  if (category === "Insurance")
-    return [
-      {
-        key: "accountNumber",
-        label: "Policy Number",
-        placeholder: "Enter policy number",
-      },
-      {
-        key: "mobileNumber",
-        label: "Mobile Number",
-        placeholder: "77*******",
-        type: "tel",
-      },
-      {
-        key: "amount",
-        label: "Amount",
-        placeholder: "0.00",
-        type: "number",
-        prefix: "$",
-      },
-    ];
-  return DEFAULT_FIELDS;
 }
 
 async function fetchProductsAndCategories(categoryId?: string) {
@@ -416,26 +298,33 @@ function Hero() {
             >
               Pay any bill.
               <br />
-              {stopped ? (
-                <motion.span
-                  initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    duration: shouldReduceMotion ? 0 : 0.8,
-                    ease: "easeOut",
-                  }}
-                  className="text-white inline-flex items-center whitespace-nowrap text-[clamp(2rem,6vw,3.25rem)] sm:text-5xl lg:text-7xl"
-                >
-                  {typedText}
-                </motion.span>
-              ) : (
-                <span className="text-white inline-flex items-center whitespace-nowrap text-[clamp(2rem,6vw,3.25rem)] sm:text-5xl lg:text-7xl">
-                  {typedText}
-                  {!shouldReduceMotion && (
-                    <span className="ml-1 w-[2px] h-[0.9em] bg-white/90 animate-pulse" />
+              {/* Invisible placeholder reserves space = no layout shift (CLS fix) */}
+              <span
+                className="relative inline-flex items-center whitespace-nowrap text-[clamp(1.5rem,5vw,2.5rem)] sm:text-4xl lg:text-6xl"
+                aria-label={typedText || phrases[phraseIndex]}
+              >
+                <span className="invisible pointer-events-none select-none" aria-hidden="true">
+                  Khonapho Khonapho
+                </span>
+                <span className="absolute left-0 top-0 h-full inline-flex items-center text-white">
+                  {stopped ? (
+                    <motion.span
+                      initial={shouldReduceMotion ? false : { opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: shouldReduceMotion ? 0 : 0.5 }}
+                    >
+                      {typedText}
+                    </motion.span>
+                  ) : (
+                    <>
+                      {typedText}
+                      {!shouldReduceMotion && (
+                        <span className="ml-0.5 w-[2px] h-[0.85em] bg-white/90 animate-pulse inline-block" />
+                      )}
+                    </>
                   )}
                 </span>
-              )}
+              </span>
             </motion.h1>
 
             {/* Subheading */}
@@ -484,8 +373,8 @@ function Hero() {
           </div>
 
           {/* Hero quick-pay preview */}
-          <div className="w-full max-w-md sm:max-w-lg mx-auto lg:mx-0">
-            <QuickPayPanel compact showTabs maxCards={6} />
+          <div className="w-full max-w-md sm:max-w-lg mx-auto lg:mx-0 bg-white/95 rounded-[2rem] border border-white/20 shadow-2xl backdrop-blur-md p-5 min-h-[400px]">
+            <QuickPay />
           </div>
         </div>
 
@@ -569,7 +458,7 @@ function Services() {
             </h2>
           </div>
           <Link
-            to={ROUTE_PATHS.services}
+            to="#pay-now"
             className="inline-flex items-center gap-2 text-base font-bold text-[#10B981] hover:text-[#10B981] transition-all hover:translate-x-1"
           >
             Explore all services
@@ -577,9 +466,226 @@ function Services() {
           </Link>
         </div>
 
-        <QuickPayPanel />
+        <ServicesQuickPay />
       </div>
     </section>
+  );
+}
+
+/** Two-panel quick pay for the services section: selector left, form right. */
+function ServicesQuickPay() {
+  const [selected, setSelected] = useState<BillerItem | null>(null);
+  const [formValues, setFormValues] = useState<Record<string, string>>({});
+  const inputId = useId();
+
+  // Fetch product fields when a biller is selected
+  const { data: productFields = [], isLoading: loadingFields } = useQuery({
+    queryKey: ['services-qp-fields', selected?.productId],
+    queryFn: () => getProductFields(selected!.productId),
+    enabled: !!selected?.productId,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Reset form when selection changes
+  useEffect(() => {
+    if (!selected) return;
+    setFormValues(selected.minimumPurchaseAmount && selected.minimumPurchaseAmount > 0
+      ? { amount: String(selected.minimumPurchaseAmount) }
+      : {});
+  }, [selected?.productId]);
+
+  function handlePick(b: { productId: number; name: string; productCategoryId?: number; minimumPurchaseAmount?: number }) {
+    setSelected(b as BillerItem);
+  }
+
+  function handleContinue() {
+    if (!selected) return;
+    const firstField = productFields[0];
+    const account = firstField ? (formValues[firstField.name ?? ''] ?? '') : '';
+    const q = new URLSearchParams({
+      biller:    selected.name,
+      productId: String(selected.productId),
+      account,
+      amount:    formValues['amount'] ?? '0',
+    });
+    if (selected.productCategoryId != null) q.set('productCategoryId', String(selected.productCategoryId));
+    window.location.assign(`${ROUTE_PATHS.checkout}?${q.toString()}`);
+  }
+
+  const canContinue = !!selected && !!formValues['amount'] && parseFloat(formValues['amount']) > 0;
+
+  return (
+    <div className="grid lg:grid-cols-[400px_1fr] gap-6 items-start">
+      {/* Left: selector */}
+      <div className="bg-white rounded-3xl p-6 shadow-sm h-[460px]">
+        <QuickPaySelector onPick={handlePick} catCols={4} itemCols={3} />
+      </div>
+
+      {/* Right: form */}
+      <div className={`bg-white rounded-3xl p-8 shadow-sm min-h-[460px] flex flex-col transition-opacity duration-300 ${selected ? 'opacity-100' : 'opacity-40 pointer-events-none select-none'}`}>
+        {!selected ? (
+          <div className="flex-1 flex flex-col items-center justify-center gap-3 text-slate-400">
+            <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center">
+              <Zap size={28} className="text-slate-300" />
+            </div>
+            <p className="text-sm font-medium">Select a service to see payment details</p>
+          </div>
+        ) : (
+          <>
+            <div className="mb-6">
+              <p className="text-[10px] font-black text-[#10B981] uppercase tracking-[0.2em] mb-1">Paying to</p>
+              <h3 className="text-2xl font-black text-slate-900 leading-tight">{selected.name}</h3>
+            </div>
+
+            <div className="flex-1 space-y-4">
+              {loadingFields ? (
+                <div className="space-y-3">
+                  {[1, 2].map((i) => <div key={i} className="h-12 bg-slate-100 rounded-xl animate-pulse" />)}
+                </div>
+              ) : (
+                productFields.map((f) => {
+                  const key = f.name ?? String(f.id);
+                  return (
+                    <div key={key}>
+                      <label htmlFor={`${inputId}-${key}`} className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5">
+                        {f.displayName ?? f.name}{!f.optional && <span className="text-rose-400 ml-1">*</span>}
+                      </label>
+                      <input
+                        id={`${inputId}-${key}`}
+                        type="text"
+                        placeholder={f.hint ?? `Enter ${f.displayName ?? f.name ?? 'value'}`}
+                        value={formValues[key] ?? ''}
+                        onChange={(e) => setFormValues((p) => ({ ...p, [key]: e.target.value }))}
+                        className="w-full px-4 py-3 bg-slate-50 rounded-xl text-sm font-semibold text-slate-900 placeholder-slate-300 focus:outline-none focus:bg-slate-100 transition-colors"
+                      />
+                    </div>
+                  );
+                })
+              )}
+
+              <div>
+                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5">
+                  Amount{selected.minimumPurchaseAmount ? <span className="ml-1 normal-case font-bold text-slate-300">(min {formValues['amount'] ? '' : `$${selected.minimumPurchaseAmount?.toFixed(2)}`})</span> : null}
+                  <span className="text-rose-400 ml-1">*</span>
+                </label>
+                <div className="flex items-center bg-slate-50 rounded-xl px-4 focus-within:bg-slate-100 transition-colors">
+                  <span className="text-slate-400 font-bold text-sm mr-1">$</span>
+                  <input
+                    type="number"
+                    min={selected.minimumPurchaseAmount ?? 0.01}
+                    step="0.01"
+                    placeholder="0.00"
+                    value={formValues['amount'] ?? ''}
+                    onChange={(e) => setFormValues((p) => ({ ...p, amount: e.target.value }))}
+                    className="flex-1 py-3 bg-transparent text-sm font-semibold text-slate-900 placeholder-slate-300 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleContinue}
+              disabled={!canContinue}
+              className="mt-6 w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-[#10B981] text-white font-black text-sm uppercase tracking-widest hover:bg-[#0ea472] active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-[#10B981]/20"
+            >
+              Continue to Payment
+              <ArrowRight size={16} />
+            </button>
+
+            <div className="mt-3 flex items-center justify-center gap-1.5 text-xs text-slate-400">
+              <ShieldCheck size={13} className="text-[#10B981]" />
+              Secured by EseBills
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Shared form rendered inside the QuickPayPanel payment detail panel. */
+function QuickPayForm({
+  inputIdPrefix,
+  productFields,
+  isLoadingFields,
+  formValues,
+  setFormValues,
+  minimumPurchaseAmount,
+  compact = false,
+}: {
+  inputIdPrefix: string;
+  productFields: import("../../../types/products").ProductField[];
+  isLoadingFields: boolean;
+  formValues: Record<string, string>;
+  setFormValues: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  minimumPurchaseAmount?: number;
+  compact?: boolean;
+}) {
+  const labelCls = `block ${compact ? "text-[10px]" : "text-xs"} font-black text-slate-500 uppercase tracking-widest mb-2 ml-1`;
+  const inputCls = `block w-full ${compact ? "px-3 py-3 text-sm" : "px-4 py-4 text-base"} border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#10B981]/10 focus:border-[#10B981] font-bold transition-all bg-white shadow-sm`;
+
+  if (isLoadingFields) {
+    return (
+      <div className={compact ? "space-y-3" : "space-y-4"}>
+        {[1, 2].map((i) => (
+          <div key={i} className={`${compact ? "h-11" : "h-14"} bg-slate-100 rounded-xl animate-pulse`} />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className={compact ? "space-y-3" : "space-y-4"}>
+      {/* API-driven product required fields */}
+      {productFields.map((field) => {
+        const key = field.name ?? String(field.id);
+        const fieldId = `${inputIdPrefix}-${key}`;
+        return (
+          <div key={key}>
+            <label htmlFor={fieldId} className={labelCls}>
+              {field.displayName ?? field.name}
+              {!field.optional && <span className="text-rose-400"> *</span>}
+            </label>
+            <input
+              id={fieldId}
+              type="text"
+              placeholder={field.hint ?? `Enter ${field.displayName ?? field.name ?? "value"}`}
+              value={formValues[key] ?? ""}
+              onChange={(e) => setFormValues((prev) => ({ ...prev, [key]: e.target.value }))}
+              className={inputCls}
+            />
+          </div>
+        );
+      })}
+
+      {/* Amount field */}
+      <div>
+        <label className={labelCls}>
+          Amount
+          {minimumPurchaseAmount && minimumPurchaseAmount > 0 && (
+            <span className="ml-1 normal-case font-bold text-slate-400">
+              (min ${minimumPurchaseAmount.toFixed(2)})
+            </span>
+          )}
+          <span className="text-rose-400"> *</span>
+        </label>
+        <div className="relative group">
+          <span className={`absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400 group-focus-within:text-[#10B981] transition-colors ${compact ? "text-sm" : "text-base"}`}>
+            $
+          </span>
+          <input
+            type="number"
+            min={minimumPurchaseAmount ?? 0.01}
+            step="0.01"
+            placeholder="0.00"
+            value={formValues["amount"] ?? ""}
+            onChange={(e) => setFormValues((prev) => ({ ...prev, amount: e.target.value }))}
+            className={`${inputCls} pl-8 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
+          />
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -681,7 +787,6 @@ function QuickPayPanel({
             name,
             categoryKey,
             categoryLabel,
-            fields: fieldsByProduct(name, categoryLabel),
             minimumPurchaseAmount: Number(p.minimumPurchaseAmount ?? 0),
           },
         ];
@@ -757,21 +862,26 @@ function QuickPayPanel({
       setSelectedId(filtered[0].id);
   }, [filtered, selectedId]);
 
+  // Fetch product required fields from API when a biller is selected
+  const { data: productFields = [], isLoading: isLoadingFields } = useQuery({
+    queryKey: ["quick-product-fields", selected?.productId],
+    queryFn: () => getProductFields(selected!.productId),
+    enabled: !!selected?.productId,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Reset form values when selection changes
   useEffect(() => {
     if (!selected) return;
-    const next: Record<string, string> = {};
-    selected.fields.forEach((f) => {
-      if (
-        f.key === "amount" &&
-        selected.minimumPurchaseAmount &&
-        selected.minimumPurchaseAmount > 0
-      ) {
-        next[f.key] = String(selected.minimumPurchaseAmount);
-      } else {
-        next[f.key] = formValues[f.key] ?? "";
-      }
+    setFormValues((prev) => {
+      const next: Record<string, string> = {};
+      // Pre-fill amount with minimum if set
+      next["amount"] =
+        selected.minimumPurchaseAmount && selected.minimumPurchaseAmount > 0
+          ? String(selected.minimumPurchaseAmount)
+          : prev["amount"] ?? "";
+      return next;
     });
-    setFormValues(next);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected?.id]);
 
@@ -831,11 +941,15 @@ function QuickPayPanel({
 
   const handleContinue = () => {
     if (!selected) return;
-    const account = formValues.accountNumber || formValues.mobileNumber || "";
+    // Use the first required product field value as the account number
+    const firstField = productFields[0];
+    const account = firstField
+      ? (formValues[firstField.name ?? ""] ?? "")
+      : "";
     const query = new URLSearchParams({
       biller: selected.name,
       account,
-      amount: formValues.amount || "0",
+      amount: formValues["amount"] || "0",
       productId: String(selected.productId),
     });
     if (selected.productCategoryId !== undefined) {
@@ -977,7 +1091,6 @@ function QuickPayPanel({
                 >
                   {sliderItems.map((biller, idx) => {
                     const isActive = selected?.id === biller.id;
-                    const logo = getBillerLogo(biller.name);
                     return (
                       <button
                         key={`${biller.id}-${idx}`}
@@ -988,23 +1101,12 @@ function QuickPayPanel({
                         className="shrink-0 w-40 snap-start flex flex-col items-center gap-2"
                       >
                         <div className={cardSurface(isActive)}>
-                          {logo ? (
-                            <div className="w-full h-full rounded-xl bg-white flex items-center justify-center overflow-hidden">
-                              <img
-                                src={logo.src}
-                                alt={`${logo.alt} logo`}
-                                loading="lazy"
-                                decoding="async"
-                                width={160}
-                                height={80}
-                                className="w-full h-full object-contain"
-                              />
-                            </div>
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-slate-400">
-                              {categoryIcon(biller.categoryLabel, "w-5 h-5")}
-                            </div>
-                          )}
+                          <ProductLogo
+                            productId={biller.productId}
+                            name={biller.name}
+                            categoryLabel={biller.categoryLabel}
+                            className="w-full h-full rounded-xl"
+                          />
                         </div>
                         <span className="text-[11px] font-bold leading-tight line-clamp-2 text-slate-900">
                           {biller.name}
@@ -1043,55 +1145,15 @@ function QuickPayPanel({
                   </h3>
                 </div>
 
-                <div className="space-y-3">
-                  {selected.fields.map((field) => {
-                    const fieldId = `${inputIdPrefix}-${field.key}`;
-                    return (
-                      <div key={field.key}>
-                        <label
-                          htmlFor={fieldId}
-                          className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1"
-                        >
-                          {field.label}
-                        </label>
-                        {field.prefix ? (
-                          <div className="relative group">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400 group-focus-within:text-[#10B981] transition-colors">
-                              {field.prefix}
-                            </span>
-                            <input
-                              id={fieldId}
-                              type={field.type ?? "text"}
-                              placeholder={field.placeholder}
-                              value={formValues[field.key] ?? ""}
-                              onChange={(e) =>
-                                setFormValues((prev) => ({
-                                  ...prev,
-                                  [field.key]: e.target.value,
-                                }))
-                              }
-                              className="block w-full pl-8 pr-3 py-3 text-sm border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#10B981]/10 focus:border-[#10B981] font-bold transition-all bg-white shadow-sm"
-                            />
-                          </div>
-                        ) : (
-                          <input
-                            id={fieldId}
-                            type={field.type ?? "text"}
-                            placeholder={field.placeholder}
-                            value={formValues[field.key] ?? ""}
-                            onChange={(e) =>
-                              setFormValues((prev) => ({
-                                ...prev,
-                                [field.key]: e.target.value,
-                              }))
-                            }
-                            className="block w-full px-3 py-3 text-sm border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#10B981]/10 focus:border-[#10B981] font-bold transition-all bg-white shadow-sm"
-                          />
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                <QuickPayForm
+                  inputIdPrefix={inputIdPrefix}
+                  productFields={productFields}
+                  isLoadingFields={isLoadingFields}
+                  formValues={formValues}
+                  setFormValues={setFormValues}
+                  minimumPurchaseAmount={selected.minimumPurchaseAmount}
+                  compact
+                />
 
                 <button
                   type="button"
@@ -1147,7 +1209,6 @@ function QuickPayPanel({
               <div className={cardGrid}>
                 {displayBillers.map((biller) => {
                   const isActive = selected?.id === biller.id;
-                  const logo = getBillerLogo(biller.name);
                   return (
                     <button
                       key={biller.id}
@@ -1158,26 +1219,12 @@ function QuickPayPanel({
                       className="flex w-full flex-col items-center gap-3"
                     >
                       <div className={cardSurface(isActive)}>
-                        {logo ? (
-                          <div className="w-full h-full rounded-2xl bg-white flex items-center justify-center overflow-hidden">
-                            <img
-                              src={logo.src}
-                              alt={`${logo.alt} logo`}
-                              loading="lazy"
-                              decoding="async"
-                              width={200}
-                              height={120}
-                              className="w-full h-full object-contain"
-                            />
-                          </div>
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-slate-400">
-                            {categoryIcon(
-                              biller.categoryLabel,
-                              compact ? "w-5 h-5" : "w-7 h-7",
-                            )}
-                          </div>
-                        )}
+                        <ProductLogo
+                          productId={biller.productId}
+                          name={biller.name}
+                          categoryLabel={biller.categoryLabel}
+                          className="w-full h-full rounded-2xl"
+                        />
                       </div>
                       <span
                         className={`${compact ? "text-[11px]" : "text-sm"} font-bold leading-tight line-clamp-2 text-slate-900`}
@@ -1220,55 +1267,15 @@ function QuickPayPanel({
                   </h3>
                 </div>
 
-                <div className={compact ? "space-y-3" : "space-y-4"}>
-                  {selected.fields.map((field) => {
-                    const fieldId = `${inputIdPrefix}-${field.key}`;
-                    return (
-                      <div key={field.key}>
-                        <label
-                          htmlFor={fieldId}
-                          className={`block ${compact ? "text-[10px]" : "text-xs"} font-black text-slate-500 uppercase tracking-widest mb-2 ml-1`}
-                        >
-                          {field.label}
-                        </label>
-                        {field.prefix ? (
-                          <div className="relative group">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400 group-focus-within:text-[#10B981] transition-colors">
-                              {field.prefix}
-                            </span>
-                            <input
-                              id={fieldId}
-                              type={field.type ?? "text"}
-                              placeholder={field.placeholder}
-                              value={formValues[field.key] ?? ""}
-                              onChange={(e) =>
-                                setFormValues((prev) => ({
-                                  ...prev,
-                                  [field.key]: e.target.value,
-                                }))
-                              }
-                              className={`block w-full ${compact ? "pl-8 pr-3 py-3 text-sm" : "pl-8 pr-4 py-4 text-base"} border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#10B981]/10 focus:border-[#10B981] font-bold transition-all bg-white shadow-sm`}
-                            />
-                          </div>
-                        ) : (
-                          <input
-                            id={fieldId}
-                            type={field.type ?? "text"}
-                            placeholder={field.placeholder}
-                            value={formValues[field.key] ?? ""}
-                            onChange={(e) =>
-                              setFormValues((prev) => ({
-                                ...prev,
-                                [field.key]: e.target.value,
-                              }))
-                            }
-                            className={`block w-full ${compact ? "px-3 py-3 text-sm" : "px-4 py-4 text-base"} border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#10B981]/10 focus:border-[#10B981] font-bold transition-all bg-white shadow-sm`}
-                          />
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                <QuickPayForm
+                  inputIdPrefix={inputIdPrefix}
+                  productFields={productFields}
+                  isLoadingFields={isLoadingFields}
+                  formValues={formValues}
+                  setFormValues={setFormValues}
+                  minimumPurchaseAmount={selected.minimumPurchaseAmount}
+                  compact={compact}
+                />
 
                 <button
                   type="button"

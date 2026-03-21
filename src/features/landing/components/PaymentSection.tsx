@@ -1,18 +1,19 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Icon } from "../../../components/ui/Icon";
 import { useScrollDirection } from "../../../hooks/useScrollDirection";
 import { ROUTE_PATHS } from "../../../router/paths";
 import {
   getProducts,
   getProductCategories,
-  getProductsByCategory,
   getCurrencies,
 } from "../../../services/products.service";
 import type { Product, ProductCategory, Currency } from "../../../types/products";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+
+type DrillState = "categories" | "products" | "variants";
 
 type CategoryTab = {
   key: string;
@@ -20,7 +21,7 @@ type CategoryTab = {
   icon: string;
 };
 
-type BillerCardProps = {
+type BillerItem = {
   id: string;
   productRawId?: number;
   icon: string;
@@ -28,52 +29,33 @@ type BillerCardProps = {
   categoryKey: string;
   categoryLabel: string;
   currencyCode?: string;
-  fields: Array<{
-    key: string;
-    label: string;
-    placeholder: string;
-    type?: "text" | "tel" | "number";
-    prefix?: string;
-  }>;
   minimumPurchaseAmount?: number;
-  isDashed?: boolean;
-};
-
-type FieldProps = {
-  label: string;
-  children: ReactNode;
 };
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const CATEGORY_COLORS: Record<string, { bg: string; icon: string }> = {
-  airtime:    { bg: "bg-blue-50",   icon: "text-blue-500" },
-  internet:   { bg: "bg-violet-50", icon: "text-violet-500" },
-  education:  { bg: "bg-amber-50",  icon: "text-amber-500" },
-  insurance:  { bg: "bg-rose-50",   icon: "text-rose-500" },
-  fuel:       { bg: "bg-orange-50", icon: "text-orange-500" },
-  donations:  { bg: "bg-pink-50",   icon: "text-pink-500" },
-  lottery:    { bg: "bg-purple-50", icon: "text-purple-500" },
-  utilities:  { bg: "bg-emerald-50",icon: "text-emerald-600" },
+const CATEGORY_COLORS: Record<string, { bg: string; icon: string; accent: string }> = {
+  airtime:   { bg: "bg-blue-50",    icon: "text-blue-500",    accent: "border-blue-200 hover:border-blue-400" },
+  internet:  { bg: "bg-violet-50",  icon: "text-violet-500",  accent: "border-violet-200 hover:border-violet-400" },
+  education: { bg: "bg-amber-50",   icon: "text-amber-500",   accent: "border-amber-200 hover:border-amber-400" },
+  insurance: { bg: "bg-rose-50",    icon: "text-rose-500",    accent: "border-rose-200 hover:border-rose-400" },
+  fuel:      { bg: "bg-orange-50",  icon: "text-orange-500",  accent: "border-orange-200 hover:border-orange-400" },
+  donations: { bg: "bg-pink-50",    icon: "text-pink-500",    accent: "border-pink-200 hover:border-pink-400" },
+  lottery:   { bg: "bg-purple-50",  icon: "text-purple-500",  accent: "border-purple-200 hover:border-purple-400" },
+  utilities: { bg: "bg-emerald-50", icon: "text-emerald-600", accent: "border-emerald-200 hover:border-emerald-400" },
 };
-
-const DEFAULT_FIELDS: BillerCardProps["fields"] = [
-  { key: "accountNumber", label: "Account / Card Number", placeholder: "Enter biller account", type: "text" },
-  { key: "mobileNumber",  label: "Mobile Number",         placeholder: "77*******",            type: "tel" },
-  { key: "amount",        label: "Amount",                placeholder: "0.00",                 type: "number", prefix: "$" },
-];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function inferCategory(name: string, code: string): { key: string; label: string } {
   const value = `${name} ${code}`.toLowerCase();
-  if (/(airtime|recharge|evd|topup)/.test(value)) return { key: "airtime",    label: "Airtime" };
-  if (/(bundle|data)/.test(value))                 return { key: "internet",  label: "Internet" };
+  if (/(airtime|recharge|evd|topup)/.test(value)) return { key: "airtime",   label: "Airtime" };
+  if (/(bundle|data)/.test(value))                return { key: "internet",  label: "Internet" };
   if (/(school|tuition|fees|university|college|education)/.test(value)) return { key: "education", label: "Education" };
   if (/(insurance|life|medical|health)/.test(value)) return { key: "insurance", label: "Insurance" };
-  if (/(fuel|petrol|diesel|gas)/.test(value))      return { key: "fuel",      label: "Fuel" };
-  if (/(donat)/.test(value))                        return { key: "donations", label: "Donations" };
-  if (/(lottery|loto|jackpot)/.test(value))         return { key: "lottery",   label: "Lottery" };
+  if (/(fuel|petrol|diesel|gas)/.test(value))     return { key: "fuel",      label: "Fuel" };
+  if (/(donat)/.test(value))                       return { key: "donations", label: "Donations" };
+  if (/(lottery|loto|jackpot)/.test(value))        return { key: "lottery",   label: "Lottery" };
   return { key: "utilities", label: "Utilities" };
 }
 
@@ -90,119 +72,137 @@ function iconByCategory(category: string): string {
   }
 }
 
-function fieldsByProduct(name: string, category: string): BillerCardProps["fields"] {
-  const n = name.toLowerCase();
-  if (/(zesa|zesco|token|electric)/.test(n)) return [
-    { key: "accountNumber", label: "Meter Number",  placeholder: "Enter meter number", type: "text" },
-    { key: "mobileNumber",  label: "Mobile Number", placeholder: "77*******",          type: "tel" },
-    { key: "amount",        label: "Amount",        placeholder: "0.00",               type: "number", prefix: "$" },
-  ];
-  if (/(airtime|bundle|data)/.test(n) || category === "Airtime") return [
-    { key: "mobileNumber", label: "Mobile Number", placeholder: "77*******", type: "tel" },
-    { key: "amount",       label: "Amount",        placeholder: "0.00",      type: "number", prefix: "$" },
-  ];
-  if (/(dstv|gotv|tv)/.test(n)) return [
-    { key: "accountNumber", label: "Smart Card Number", placeholder: "Enter smart card number", type: "text" },
-    { key: "mobileNumber",  label: "Mobile Number",     placeholder: "77*******",               type: "tel" },
-    { key: "amount",        label: "Amount",            placeholder: "0.00",                    type: "number", prefix: "$" },
-  ];
-  if (category === "Education") return [
-    { key: "accountNumber", label: "Student Number", placeholder: "Enter student number", type: "text" },
-    { key: "mobileNumber",  label: "Mobile Number",  placeholder: "77*******",            type: "tel" },
-    { key: "amount",        label: "Amount",         placeholder: "0.00",                 type: "number", prefix: "$" },
-  ];
-  if (category === "Insurance") return [
-    { key: "accountNumber", label: "Policy Number", placeholder: "Enter policy number", type: "text" },
-    { key: "mobileNumber",  label: "Mobile Number", placeholder: "77*******",           type: "tel" },
-    { key: "amount",        label: "Amount",        placeholder: "0.00",                type: "number", prefix: "$" },
-  ];
-  return DEFAULT_FIELDS;
-}
-
-async function fetchProductsAndCategories(categoryId?: string): Promise<{
-  products: Product[];
-  categories: ProductCategory[];
-}> {
-  const [productsPage, categories] = await Promise.all([
-    categoryId
-      ? getProductsByCategory(categoryId, { size: 50 })
-      : getProducts({ size: 50 }),
-    getProductCategories(),
-  ]);
-  return {
-    products: Array.isArray(productsPage?.content) ? productsPage.content : [],
-    categories: Array.isArray(categories) ? categories : [],
-  };
+/** Resolve a color palette key from the category label/name */
+function colorKey(categoryLabel: string): string {
+  const v = categoryLabel.toLowerCase();
+  if (/airtime|recharge/.test(v))  return "airtime";
+  if (/bundle|data|internet/.test(v)) return "internet";
+  if (/school|education|tuition/.test(v)) return "education";
+  if (/insurance|health|medical/.test(v)) return "insurance";
+  if (/fuel|petrol/.test(v))        return "fuel";
+  if (/donat/.test(v))              return "donations";
+  if (/lottery|loto/.test(v))       return "lottery";
+  return "utilities";
 }
 
 // ─── Sub-Components ───────────────────────────────────────────────────────────
 
-function CategoryPill({
+function CategoryCard({
   icon,
   label,
-  active = false,
+  categoryKey,
+  count,
   onClick,
-}: { icon: string; label: string; active?: boolean; onClick: () => void }) {
+}: {
+  icon: string;
+  label: string;
+  categoryKey: string;
+  count?: number;
+  onClick: () => void;
+}) {
+  const colors = CATEGORY_COLORS[colorKey(label)] ?? CATEGORY_COLORS.utilities;
   return (
     <button
       type="button"
-      className={`category-pill ${active ? "active" : ""}`}
       onClick={onClick}
+      className={`group flex flex-col items-center gap-2 p-3 rounded-2xl border-2 bg-white cursor-pointer transition-all duration-200 hover:shadow-md active:scale-95 ${colors.accent}`}
     >
-      <Icon name={icon} className="icon-sm" />
-      {label}
+      <div className={`w-11 h-11 rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-110 ${colors.bg}`}>
+        <Icon name={icon} className={`text-xl ${colors.icon}`} />
+      </div>
+      <p className="text-[11px] font-bold text-center leading-tight text-slate-700 line-clamp-2">
+        {label}
+      </p>
+      {count !== undefined && count > 0 && (
+        <span className="text-[10px] text-slate-400 font-medium">{count}</span>
+      )}
     </button>
   );
 }
 
 function BillerCard({
-  id,
   icon,
   name,
-  categoryKey,
-  isSelected = false,
+  categoryLabel,
+  hasVariants,
   onSelect,
-}: BillerCardProps & { isSelected?: boolean; onSelect: (id: string) => void }) {
-  const colors = CATEGORY_COLORS[categoryKey] ?? CATEGORY_COLORS.utilities;
+}: {
+  icon: string;
+  name: string;
+  categoryLabel: string;
+  hasVariants?: boolean;
+  onSelect: () => void;
+}) {
+  const colors = CATEGORY_COLORS[colorKey(categoryLabel)] ?? CATEGORY_COLORS.utilities;
   return (
     <div
-      className={`group relative flex flex-col items-center gap-2 p-3 rounded-2xl border-2 cursor-pointer transition-all duration-200 ${
-        isSelected
-          ? "border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-100"
-          : "border-slate-100 bg-white hover:border-slate-300 hover:shadow-sm"
-      }`}
+      className="group relative flex flex-col items-center gap-2 p-3 rounded-2xl border-2 border-slate-100 bg-white hover:border-slate-300 hover:shadow-sm cursor-pointer transition-all duration-200 active:scale-95"
       role="button"
       tabIndex={0}
-      onClick={() => onSelect(id)}
+      onClick={onSelect}
       onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(id); }
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(); }
       }}
     >
       <div className={`w-11 h-11 rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-110 ${colors.bg}`}>
         <Icon name={icon} className={`text-xl ${colors.icon}`} />
       </div>
-      <p className={`text-[11px] font-bold text-center leading-tight line-clamp-2 ${isSelected ? "text-emerald-700" : "text-slate-700"}`}>
+      <p className="text-[11px] font-bold text-center leading-tight line-clamp-2 text-slate-700">
         {name}
       </p>
-      {isSelected && (
-        <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-emerald-500 rounded-full flex items-center justify-center">
-          <svg width="8" height="6" fill="none" viewBox="0 0 8 6">
-            <path d="M1 3l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
+      {hasVariants && (
+        <span className="text-[9px] text-slate-400 font-medium flex items-center gap-0.5">
+          Plans <Icon name="chevron_right" className="text-xs" />
         </span>
       )}
     </div>
   );
 }
 
-function Field({ label, children }: FieldProps) {
+function VariantCard({
+  name,
+  price,
+  currencyCode,
+  categoryLabel,
+  onSelect,
+}: {
+  name: string;
+  price?: number;
+  currencyCode?: string;
+  categoryLabel: string;
+  onSelect: () => void;
+}) {
+  const colors = CATEGORY_COLORS[colorKey(categoryLabel)] ?? CATEGORY_COLORS.utilities;
   return (
-    <div>
-      <label className="field-label type-label">{label}</label>
-      {children}
-    </div>
+    <button
+      type="button"
+      onClick={onSelect}
+      className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border-2 border-slate-100 bg-white hover:border-slate-300 hover:shadow-sm text-left transition-all duration-150 active:scale-[0.98]`}
+    >
+      <div className="flex items-center gap-2 min-w-0">
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${colors.bg}`}>
+          <Icon name="check_circle" className={`text-sm ${colors.icon}`} />
+        </div>
+        <span className="text-[12px] font-semibold text-slate-700 truncate">{name}</span>
+      </div>
+      {price != null && price > 0 && (
+        <span className={`text-[11px] font-bold shrink-0 ${colors.icon}`}>
+          {currencyCode ?? "USD"} {price.toFixed(2)}
+        </span>
+      )}
+    </button>
   );
 }
+
+// ─── Slide animation variants ─────────────────────────────────────────────────
+
+const slideVariants = {
+  enter: (dir: number) => ({ x: `${dir * 100}%`, opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (dir: number) => ({ x: `${dir * -100}%`, opacity: 0 }),
+};
+
+const slideTransition = { type: "tween", duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] as const };
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -211,16 +211,26 @@ export function PaymentSection() {
   const scrollDirection = useScrollDirection();
   const inViewVariant = scrollDirection === "down" ? "visible" : "visibleInstant";
 
-  const [activeCategory, setActiveCategory]       = useState<string>("");
-  const [selectedBillerId, setSelectedBillerId]   = useState<string>("");
-  const [selectedCurrency, setSelectedCurrency]   = useState<string>("");
-  const [formValues, setFormValues]               = useState<Record<string, string>>({});
+  const [drillState, setDrillState] = useState<DrillState>("categories");
+  const [slideDir, setSlideDir] = useState<1 | -1>(1);
+  const [activeCategory, setActiveCategory] = useState<CategoryTab | null>(null);
+  const [activeBiller, setActiveBiller] = useState<BillerItem | null>(null);
+  const [selectedCurrency, setSelectedCurrency] = useState<string>("");
 
   // ── Data fetching ──────────────────────────────────────────────────────────
 
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["products", "categories", activeCategory],
-    queryFn: () => fetchProductsAndCategories(activeCategory),
+  const { data: productsData, isLoading, isError } = useQuery({
+    queryKey: ["products", "all"],
+    queryFn: async () => {
+      const [productsPage, categories] = await Promise.all([
+        getProducts({ size: 100 }),
+        getProductCategories(),
+      ]);
+      return {
+        products: Array.isArray(productsPage?.content) ? productsPage.content : [] as Product[],
+        categories: Array.isArray(categories) ? categories : [] as ProductCategory[],
+      };
+    },
   });
 
   const { data: currenciesData } = useQuery({
@@ -231,7 +241,7 @@ export function PaymentSection() {
   // ── Derived state ──────────────────────────────────────────────────────────
 
   const categoryTabs: CategoryTab[] = useMemo(() => {
-    const fromBackend = (data?.categories ?? [])
+    const fromBackend = (productsData?.categories ?? [])
       .filter((c) => c.active !== false)
       .map((c) => {
         const key   = String(c.id ?? c.name ?? "").trim();
@@ -240,35 +250,53 @@ export function PaymentSection() {
         return { key, label, icon };
       })
       .filter((c) => c.key.length > 0);
-    return fromBackend.length > 0 ? fromBackend : [{ key: "utilities", label: "Utilities", icon: iconByCategory("Utilities") }];
-  }, [data?.categories]);
+    return fromBackend.length > 0
+      ? fromBackend
+      : [{ key: "utilities", label: "Utilities", icon: iconByCategory("Utilities") }];
+  }, [productsData?.categories]);
 
-  const allDisplayBillers: BillerCardProps[] = useMemo(
+  const allBillers: BillerItem[] = useMemo(
     () =>
-      (data?.products ?? [])
+      (productsData?.products ?? [])
         .filter((p) => p.status === "ACTIVE" && !p.deleted)
         .map((p) => {
           const productName  = String(p.name ?? "Unnamed Product");
           const productCode  = String(p.code ?? "");
           const backendCat   = p.category;
           const inferred     = inferCategory(productName, productCode);
-          const categoryKey  = String(backendCat?.id ?? backendCat?.name ?? inferred.key);
-          const categoryLabel = String(backendCat?.displayName ?? backendCat?.name ?? inferred.label);
-          const categoryIcon = String(backendCat?.emoji ?? "").trim() || iconByCategory(categoryLabel);
+          const catKey       = String(backendCat?.id ?? backendCat?.name ?? inferred.key);
+          const catLabel     = String(backendCat?.displayName ?? backendCat?.name ?? inferred.label);
+          const catIcon      = String(backendCat?.emoji ?? "").trim() || iconByCategory(catLabel);
           return {
             id:                    `api-${String(p.id ?? p.code ?? Math.random())}`,
             productRawId:          typeof p.id === "number" ? p.id : undefined,
-            icon:                  categoryIcon,
+            icon:                  catIcon,
             name:                  productName,
-            categoryKey,
-            categoryLabel,
+            categoryKey:           catKey,
+            categoryLabel:         catLabel,
             currencyCode:          p.defaultCurrency?.code ?? undefined,
-            fields:                fieldsByProduct(productName, categoryLabel),
             minimumPurchaseAmount: Number(p.minimumPurchaseAmount ?? 0),
           };
         }),
-    [data?.products],
+    [productsData?.products],
   );
+
+  /** Count per category for category cards */
+  const productCountByCategory = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const b of allBillers) counts[b.categoryKey] = (counts[b.categoryKey] ?? 0) + 1;
+    return counts;
+  }, [allBillers]);
+
+  /** Products grouped by their exact category key (for variant detection) */
+  const billersByCategory = useMemo(() => {
+    const map: Record<string, BillerItem[]> = {};
+    for (const b of allBillers) {
+      if (!map[b.categoryKey]) map[b.categoryKey] = [];
+      map[b.categoryKey].push(b);
+    }
+    return map;
+  }, [allBillers]);
 
   /** All active currencies from the API */
   const availableCurrencies = useMemo<Array<{ code: string; name: string }>>(() => {
@@ -279,78 +307,72 @@ export function PaymentSection() {
       .map((c) => ({ code: c.code!, name: c.name ?? c.code! }));
   }, [currenciesData]);
 
-  const displayBillers: BillerCardProps[] = useMemo(() => {
-    if (!selectedCurrency) return allDisplayBillers;
-    // Products without a currency code are shown in all currency views
-    return allDisplayBillers.filter((b) => !b.currencyCode || b.currencyCode === selectedCurrency);
-  }, [allDisplayBillers, selectedCurrency]);
-
-  // ── Sync active category ───────────────────────────────────────────────────
-
-  useEffect(() => {
-    if (!categoryTabs.length) return;
-    if (!activeCategory || !categoryTabs.some((c) => c.key === activeCategory)) {
-      setActiveCategory(categoryTabs[0].key);
-    }
-  }, [categoryTabs, activeCategory]);
-
+  /** Products shown in the products panel, filtered by active category + currency */
   const filteredBillers = useMemo(() => {
     if (!activeCategory) return [];
-    return displayBillers.filter((b) => b.categoryKey === activeCategory && !b.isDashed);
-  }, [activeCategory, displayBillers]);
+    return allBillers.filter((b) => {
+      if (b.categoryKey !== activeCategory.key) return false;
+      if (selectedCurrency && b.currencyCode && b.currencyCode !== selectedCurrency) return false;
+      return true;
+    });
+  }, [activeCategory, allBillers, selectedCurrency]);
 
-  const selectedBiller = useMemo(
-    () => filteredBillers.find((b) => b.id === selectedBillerId) ?? filteredBillers[0] ?? null,
-    [filteredBillers, selectedBillerId],
-  );
+  /** Variants for the active biller (other products in same sub-category) */
+  const variants = useMemo<BillerItem[]>(() => {
+    if (!activeBiller) return [];
+    return billersByCategory[activeBiller.categoryKey] ?? [];
+  }, [activeBiller, billersByCategory]);
 
-  useEffect(() => {
-    if (filteredBillers.length === 0) { setSelectedBillerId(""); return; }
-    if (!filteredBillers.some((b) => b.id === selectedBillerId)) {
-      setSelectedBillerId(filteredBillers[0].id);
+  // ── Drill-down navigation ──────────────────────────────────────────────────
+
+  function drillToProducts(cat: CategoryTab) {
+    setSlideDir(1);
+    setActiveCategory(cat);
+    setDrillState("products");
+  }
+
+  function drillToVariants(biller: BillerItem) {
+    setSlideDir(1);
+    setActiveBiller(biller);
+    setDrillState("variants");
+  }
+
+  function drillBack() {
+    setSlideDir(-1);
+    if (drillState === "variants") {
+      setDrillState("products");
+    } else {
+      setActiveCategory(null);
+      setDrillState("categories");
     }
-  }, [filteredBillers, selectedBillerId]);
+  }
 
-  useEffect(() => {
-    if (!selectedBiller) return;
-    const nextValues: Record<string, string> = {};
-    selectedBiller.fields.forEach((f) => {
-      if (f.key === "amount" && selectedBiller.minimumPurchaseAmount && selectedBiller.minimumPurchaseAmount > 0) {
-        nextValues[f.key] = String(selectedBiller.minimumPurchaseAmount);
-        return;
-      }
-      nextValues[f.key] = formValues[f.key] ?? "";
-    });
-    setFormValues(nextValues);
-  }, [selectedBiller]);
+  // ── Navigate to checkout ───────────────────────────────────────────────────
 
-  // ── Derived form values ────────────────────────────────────────────────────
-
-  const accountValue = useMemo(() => {
-    if (formValues.accountNumber) return formValues.accountNumber;
-    if (formValues.mobileNumber)  return formValues.mobileNumber;
-    const fallbackKey = Object.keys(formValues).find((k) => k !== "amount");
-    return fallbackKey ? formValues[fallbackKey] : "";
-  }, [formValues]);
-
-  const amountValue = formValues.amount ?? "";
-
-  // ── Navigation ─────────────────────────────────────────────────────────────
-
-  const handleContinue = () => {
-    if (!selectedBiller) return;
-    const query = new URLSearchParams({
-      biller:  selectedBiller.name,
-      account: accountValue,
-      amount:  amountValue || "0",
-    });
-    if (selectedBiller.productRawId !== undefined) {
-      query.set("productId", String(selectedBiller.productRawId));
+  function goToCheckout(biller: BillerItem) {
+    const query = new URLSearchParams({ biller: biller.name });
+    if (biller.productRawId !== undefined) {
+      query.set("productId", String(biller.productRawId));
     }
     window.location.assign(`${ROUTE_PATHS.checkout}?${query.toString()}`);
-  };
+  }
+
+  function handleBillerClick(biller: BillerItem) {
+    const siblings = billersByCategory[biller.categoryKey] ?? [];
+    if (siblings.length > 1) {
+      // Multiple options in this sub-category → show variant picker inline
+      drillToVariants(biller);
+    } else {
+      goToCheckout(biller);
+    }
+  }
 
   // ── Render ─────────────────────────────────────────────────────────────────
+
+  const panelLabel =
+    drillState === "variants"
+      ? (activeBiller?.name ?? activeCategory?.label)
+      : activeCategory?.label;
 
   return (
     <section className="payment" id="pay-now">
@@ -393,111 +415,162 @@ export function PaymentSection() {
             visibleInstant: { opacity: 1, y: 0,   scale: 1,   transition: { duration: 0 } },
           }}
         >
-          {/* Currency filter */}
-          {availableCurrencies.length > 0 && (
-            <div className="flex items-center gap-2 mb-3 px-1 flex-wrap">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest shrink-0">Currency:</span>
+          {/* Header row: back button + breadcrumb + currency filter */}
+          <div className="flex items-center gap-2 mb-4 min-h-[2rem]">
+            {drillState !== "categories" && (
               <button
                 type="button"
-                onClick={() => setSelectedCurrency("")}
-                className={`px-3 py-1 rounded-full text-[11px] font-bold border transition-all ${
-                  !selectedCurrency
-                    ? "bg-slate-900 text-white border-slate-900"
-                    : "border-slate-200 text-slate-500 hover:border-slate-400"
-                }`}
+                onClick={drillBack}
+                className="flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:border-slate-300 transition-all shrink-0"
+                aria-label="Back"
               >
-                All
+                <Icon name="arrow_back" className="text-base" />
               </button>
-              {availableCurrencies.map((c) => (
+            )}
+
+            {drillState !== "categories" && (
+              <span className="text-sm font-bold text-slate-700 truncate">{panelLabel}</span>
+            )}
+
+            {/* Currency filter pushed to the right */}
+            {availableCurrencies.length > 0 && (
+              <div className="flex items-center gap-1.5 ml-auto flex-wrap justify-end">
                 <button
-                  key={c.code}
                   type="button"
-                  onClick={() => setSelectedCurrency(c.code)}
-                  className={`px-3 py-1 rounded-full text-[11px] font-bold border transition-all ${
-                    selectedCurrency === c.code
-                      ? "bg-emerald-600 text-white border-emerald-600"
+                  onClick={() => setSelectedCurrency("")}
+                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border transition-all ${
+                    !selectedCurrency
+                      ? "bg-slate-900 text-white border-slate-900"
                       : "border-slate-200 text-slate-500 hover:border-slate-400"
                   }`}
                 >
-                  {c.code}
+                  All
                 </button>
-              ))}
-            </div>
-          )}
-
-          {/* Category tabs */}
-          <div>
-            <div className="categories-row">
-              {categoryTabs.map((c) => (
-                <CategoryPill
-                  key={c.key}
-                  icon={c.icon}
-                  label={c.label}
-                  active={c.key === activeCategory}
-                  onClick={() => setActiveCategory(c.key)}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Biller grid – now with Tailwind cards */}
-          <div className="billers-grid">
-            {isLoading && <p className="type-body text-muted">Loading products...</p>}
-            {isError   && <p className="type-body text-muted">Could not load products.</p>}
-            {!isLoading && filteredBillers.length === 0 ? (
-              <div className="billers-empty-state" role="status" aria-live="polite">
-                <span className="material-symbols-outlined">inventory_2</span>
-                <p>
-                  No active products under{" "}
-                  {categoryTabs.find((c) => c.key === activeCategory)?.label ?? "this category"}.
-                </p>
+                {availableCurrencies.map((c) => (
+                  <button
+                    key={c.code}
+                    type="button"
+                    onClick={() => setSelectedCurrency(c.code)}
+                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border transition-all ${
+                      selectedCurrency === c.code
+                        ? "bg-emerald-600 text-white border-emerald-600"
+                        : "border-slate-200 text-slate-500 hover:border-slate-400"
+                    }`}
+                  >
+                    {c.code}
+                  </button>
+                ))}
               </div>
-            ) : (
-              filteredBillers.map((biller) => (
-                <BillerCard
-                  key={biller.id}
-                  {...biller}
-                  isSelected={selectedBiller?.id === biller.id}
-                  onSelect={setSelectedBillerId}
-                />
-              ))
             )}
           </div>
 
-          {/* Payment form */}
-          <div className="payment-form">
-            {(selectedBiller?.fields ?? []).map((field) => (
-              <Field key={field.key} label={field.label}>
-                {field.prefix ? (
-                  <div className="amount-field">
-                    <span>{field.prefix}</span>
-                    <input
-                      type={field.type ?? "text"}
-                      placeholder={field.placeholder}
-                      value={formValues[field.key] ?? ""}
-                      onChange={(e) => setFormValues((prev) => ({ ...prev, [field.key]: e.target.value }))}
-                    />
-                  </div>
-                ) : (
-                  <input
-                    type={field.type ?? "text"}
-                    placeholder={field.placeholder}
-                    value={formValues[field.key] ?? ""}
-                    onChange={(e) => setFormValues((prev) => ({ ...prev, [field.key]: e.target.value }))}
-                  />
-                )}
-              </Field>
-            ))}
+          {/* Drill-down panels */}
+          <div className="relative overflow-hidden" style={{ minHeight: 280 }}>
+            <AnimatePresence custom={slideDir} mode="wait">
 
-            <button
-              type="button"
-              onClick={handleContinue}
-              className="button button-primary button-primary-cta submit-button"
-              disabled={!selectedBiller}
-            >
-              CONTINUE
-              <Icon name="arrow_forward" />
-            </button>
+              {/* ── Panel 1: Categories ─────────────────────────────────── */}
+              {drillState === "categories" && (
+                <motion.div
+                  key="categories"
+                  custom={slideDir}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={slideTransition}
+                >
+                  {isLoading ? (
+                    <p className="text-sm text-slate-400 py-8 text-center">Loading services…</p>
+                  ) : isError ? (
+                    <p className="text-sm text-slate-400 py-8 text-center">Could not load services.</p>
+                  ) : (
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                      {categoryTabs.map((cat) => (
+                        <CategoryCard
+                          key={cat.key}
+                          icon={cat.icon}
+                          label={cat.label}
+                          categoryKey={cat.key}
+                          count={productCountByCategory[cat.key]}
+                          onClick={() => drillToProducts(cat)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
+              {/* ── Panel 2: Products ───────────────────────────────────── */}
+              {drillState === "products" && (
+                <motion.div
+                  key={`products-${activeCategory?.key}`}
+                  custom={slideDir}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={slideTransition}
+                >
+                  {isLoading ? (
+                    <p className="text-sm text-slate-400 py-8 text-center">Loading…</p>
+                  ) : filteredBillers.length === 0 ? (
+                    <div className="flex flex-col items-center gap-2 py-10 text-slate-400">
+                      <span className="material-symbols-outlined text-3xl">inventory_2</span>
+                      <p className="text-sm">No active services in {activeCategory?.label}.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                      {filteredBillers.map((biller) => {
+                        const siblings = billersByCategory[biller.categoryKey] ?? [];
+                        return (
+                          <BillerCard
+                            key={biller.id}
+                            icon={biller.icon}
+                            name={biller.name}
+                            categoryLabel={biller.categoryLabel ?? activeCategory?.label ?? ""}
+                            hasVariants={siblings.length > 1}
+                            onSelect={() => handleBillerClick(biller)}
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
+              {/* ── Panel 3: Variants ───────────────────────────────────── */}
+              {drillState === "variants" && (
+                <motion.div
+                  key={`variants-${activeBiller?.id}`}
+                  custom={slideDir}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={slideTransition}
+                >
+                  {variants.length === 0 ? (
+                    <p className="text-sm text-slate-400 py-8 text-center">No options available.</p>
+                  ) : (
+                    <div className="flex flex-col gap-1.5">
+                      {variants
+                        .filter((v) => !selectedCurrency || !v.currencyCode || v.currencyCode === selectedCurrency)
+                        .map((v) => (
+                          <VariantCard
+                            key={v.id}
+                            name={v.name}
+                            price={v.minimumPurchaseAmount}
+                            currencyCode={v.currencyCode}
+                            categoryLabel={v.categoryLabel ?? ""}
+                            onSelect={() => goToCheckout(v)}
+                          />
+                        ))}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
+            </AnimatePresence>
           </div>
         </motion.div>
       </div>

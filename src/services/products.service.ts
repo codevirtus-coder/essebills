@@ -2,11 +2,19 @@
 // Products Service - Based on API spec
 // ============================================================================
 
-import { apiFetch, toQueryString } from '../api/client'
+import { apiFetch, multipartFetch, toQueryString } from '../api/client'
 import { API_ENDPOINTS } from '../api/endpoints'
+
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim() ?? ''
+
+/** Construct a public URL for a product logo (suitable for use as <img src>). */
+export function getProductLogoUrl(productId: number | string): string {
+  return `${API_BASE_URL}${API_ENDPOINTS.products.logo(productId)}`
+}
 import type {
   Product,
   ProductCategory,
+  ProductField,
   Currency,
   Country,
   Bank,
@@ -59,6 +67,18 @@ export async function getProductsByCategory(
 /** Get product by ID */
 export async function getProductById(productId: string | number): Promise<Product> {
   return apiFetch<Product>(API_ENDPOINTS.products.byId(productId))
+}
+
+/** Get required fields for a product */
+export async function getProductFields(productId: string | number): Promise<ProductField[]> {
+  return apiFetch<ProductField[]>(API_ENDPOINTS.products.requiredFields(productId))
+}
+
+/** Upload a logo image for a product (admin). Returns the updated product. */
+export async function uploadProductLogo(productId: string | number, file: File): Promise<unknown> {
+  const form = new FormData()
+  form.append('file', file)
+  return multipartFetch(API_ENDPOINTS.products.uploadLogo(productId), form, { method: 'POST' })
 }
 
 

@@ -16,6 +16,7 @@ import Support from '../components/Support'
 import WhatsAppCenter from '../components/WhatsAppCenter'
 import Donations from '../components/Donations'
 import AdminFeaturePlaceholder from '../components/AdminFeaturePlaceholder'
+import EsolutionsAdminPanel from '../components/EsolutionsAdminPanel'
 import { NotificationsPage } from '../../../pages/NotificationsPage'
 import {
   createPesepayCredentials,
@@ -160,7 +161,7 @@ export function AdminDashboardPage() {
           />
         )
       case 'providers':
-        return <AdminFeaturePlaceholder title="Providers" description="Enable or disable payment providers (ESOLUTIONS, ECONET_DIRECT, NETONE_DIRECT, ZESA_DIRECT)." />
+        return <EsolutionsAdminPanel />
       case 'commissions':
         return <Commissions />
       case 'bankTopUps':
