@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { 
   Users, 
   Send, 
@@ -21,9 +21,16 @@ import {
   RefreshCw,
   MoreVertical,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Upload,
+  Download,
+  FileSpreadsheet,
+  AlertTriangle,
+  Check,
+  X
 } from 'lucide-react';
 import CRUDLayout, { type CRUDColumn } from '../../shared/components/CRUDLayout';
+import { ProductSelector, RecipientRow } from '../../shared/components/ProductSelector';
 import { 
   getBulkPaymentGroups, 
   createBulkPaymentGroup, 
@@ -37,8 +44,10 @@ import {
   createBulkPaymentSchedule,
   updateBulkPaymentSchedule,
   deleteBulkPaymentSchedule,
-  getProducts
+  getProducts,
+  getProductCategories
 } from '../../../services';
+import { getCurrencies } from '../../../services/products.service';
 import type { 
   BulkPaymentGroup, 
   BulkPaymentGroupItem, 
@@ -46,10 +55,15 @@ import type {
   BulkPaymentSchedule,
   BulkPaymentFrequency,
   Product,
-  BulkItemDto
+  BulkItemDto,
+  ProductCategory,
+  Currency,
+  RecipientItem
 } from '../../../types';
+import type { PageResponse } from '../../../types/common';
 import toast from 'react-hot-toast';
 import CRUDModal from '../../shared/components/CRUDModal';
+import { showConfirmDialog } from '../../shared/components/ConfirmDialog';
 
 type SubTab = 'groups' | 'initiate' | 'schedules' | 'history';
 
@@ -61,7 +75,8 @@ export default function BulkPaymentsPage() {
   const [groups, setGroups] = useState<BulkPaymentGroup[]>([]);
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<BulkPaymentGroup | null>(null);
-  const [groupItems, setGroupItems] = useState<BulkPaymentGroupItem[]>([]);
+  const [groupItems, setGroupItems] = useState<RecipientItem[]>([]);
+  const [groupErrors, setGroupErrors] = useState<Record<number, string>>({});
 
   // Initiate State
   const [isInitiateModalOpen, setIsInitiateModalOpen] = useState(false);
@@ -76,10 +91,12 @@ export default function BulkPaymentsPage() {
   const [requests, setRequests] = useState<BulkPaymentRequest[]>([]);
   const [selectedRequest, setSelectedRequest] = useState<BulkPaymentRequest | null>(null);
   const [isRequestDetailModalOpen, setIsRequestDetailModalOpen] = useState(false);
-  const pollingRef = useRef<NodeJS.Timeout | null>(null);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Products for selections
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [currencies, setCurrencies] = useState<Currency[]>([]);
 
   const coerceGroups = (value: unknown): BulkPaymentGroup[] => {
     if (Array.isArray(value)) return value as BulkPaymentGroup[];
@@ -104,8 +121,14 @@ export default function BulkPaymentsPage() {
       } else if (activeSubTab === 'initiate') {
         const data = await getBulkPaymentGroups();
         setGroups(coerceGroups(data));
-        const prodData = await getProducts({ size: 100 });
-        setProducts(prodData.content);
+        const [prodData, catsData, currData] = await Promise.all([
+          getProducts({ size: 500 }),
+          getProductCategories(),
+          getCurrencies(),
+        ]);
+        setProducts(prodData.content ?? []);
+        setCategories(catsData);
+        setCurrencies((currData.content ?? []).filter((c) => c.active !== false));
       } else if (activeSubTab === 'schedules') {
         const data = await getBulkPaymentSchedules();
         setSchedules(data);
@@ -144,7 +167,18 @@ export default function BulkPaymentsPage() {
   // --------------------------------------------------------------------------
   const handleOpenGroupModal = (group: BulkPaymentGroup | null = null) => {
     setEditingGroup(group);
-    setGroupItems(group?.items ? [...group.items] : []);
+    const items: RecipientItem[] = group?.items ? group.items.map((item) => ({
+      productId: (item as any).productId,
+      productCode: item.productCode,
+      productName: (item as any).productName,
+      recipientIdentifier: item.recipientIdentifier,
+      amount: item.amount,
+      currencyCode: item.currencyCode,
+      recipientName: item.recipientName,
+      metadata: item.metadata,
+    })) : [];
+    setGroupItems(items);
+    setGroupErrors({});
     setIsGroupModalOpen(true);
   };
 
@@ -153,13 +187,104 @@ export default function BulkPaymentsPage() {
   };
 
   const handleRemoveGroupItem = (index: number) => {
+    const newErrors = { ...groupErrors };
+    delete newErrors[index];
+    setGroupErrors(newErrors);
     setGroupItems(groupItems.filter((_, i) => i !== index));
   };
 
-  const handleUpdateGroupItem = (index: number, field: keyof BulkPaymentGroupItem, value: any) => {
+  const handleUpdateGroupItem = (index: number, field: string, value: unknown) => {
     const updated = [...groupItems];
-    updated[index] = { ...updated[index], [field]: value };
+    updated[index] = { ...updated[index], [field]: value } as RecipientItem;
     setGroupItems(updated);
+    if (groupErrors[index]) {
+      const newErrors = { ...groupErrors };
+      delete newErrors[index];
+      setGroupErrors(newErrors);
+    }
+  };
+
+  // CSV Import
+  const handleCSVImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      const lines = text.split('\n').filter((line) => line.trim());
+      if (lines.length < 2) {
+        toast.error('CSV must have header and at least one data row');
+        return;
+      }
+
+      const headers = lines[0].split(',').map((h) => h.trim().toLowerCase());
+      const productCodeIdx = headers.findIndex((h) => h.includes('product') || h.includes('code'));
+      const accountIdx = headers.findIndex((h) => h.includes('account') || h.includes('phone') || h.includes('recipient') || h.includes('number'));
+      const amountIdx = headers.findIndex((h) => h.includes('amount') || h.includes('value'));
+      const currencyIdx = headers.findIndex((h) => h.includes('currency') || h.includes('code'));
+
+      if (productCodeIdx === -1 || accountIdx === -1 || amountIdx === -1) {
+        toast.error('CSV must have columns: productCode, account/phone, amount');
+        return;
+      }
+
+      const importedItems: RecipientItem[] = [];
+      const errors: Record<number, string> = {};
+
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split(',').map((c) => c.trim());
+        const productCode = cols[productCodeIdx] || '';
+        const recipientIdentifier = cols[accountIdx] || '';
+        const amount = parseFloat(cols[amountIdx]) || 0;
+        const currencyCode = currencyIdx >= 0 ? cols[currencyIdx] || 'USD' : 'USD';
+
+        if (!productCode) {
+          errors[i] = 'Missing product code';
+        }
+
+        importedItems.push({
+          productCode,
+          productId: products.find((p) => p.code === productCode)?.id,
+          productName: products.find((p) => p.code === productCode)?.name,
+          recipientIdentifier,
+          amount,
+          currencyCode,
+        });
+      }
+
+      setGroupItems(importedItems);
+      setGroupErrors(errors);
+      toast.success(`Imported ${importedItems.length} recipients`);
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  // CSV Export
+  const handleCSVExport = () => {
+    if (groupItems.length === 0) {
+      toast.error('No recipients to export');
+      return;
+    }
+    const headers = ['productCode', 'productName', 'recipientIdentifier', 'amount', 'currencyCode', 'recipientName'];
+    const rows = groupItems.map((item) => [
+      item.productCode,
+      item.productName || '',
+      item.recipientIdentifier,
+      item.amount.toString(),
+      item.currencyCode,
+      item.recipientName || '',
+    ]);
+    const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${editingGroup?.name || 'recipients'}_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('CSV exported');
   };
 
   const handleSaveGroup = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -173,13 +298,44 @@ export default function BulkPaymentsPage() {
       return;
     }
 
+    // Validate items
+    const errors: Record<number, string> = {};
+    let hasErrors = false;
+    groupItems.forEach((item, idx) => {
+      if (!item.productCode) {
+        errors[idx] = 'Product is required';
+        hasErrors = true;
+      }
+      if (!item.recipientIdentifier) {
+        errors[idx] = (errors[idx] ? errors[idx] + ', ' : '') + 'Account/Phone required';
+        hasErrors = true;
+      }
+      if (item.amount <= 0) {
+        errors[idx] = (errors[idx] ? errors[idx] + ', ' : '') + 'Valid amount required';
+        hasErrors = true;
+      }
+    });
+
+    if (hasErrors) {
+      setGroupErrors(errors);
+      toast.error('Please fix validation errors');
+      return;
+    }
+
     try {
       setLoading(true);
+      const itemsForBackend: BulkPaymentGroupItem[] = groupItems.map((item) => ({
+        productCode: item.productCode,
+        recipientIdentifier: item.recipientIdentifier,
+        amount: item.amount,
+        currencyCode: item.currencyCode,
+        recipientName: item.recipientName,
+      }));
       if (editingGroup) {
-        await updateBulkPaymentGroup(editingGroup.id, { name, description, items: groupItems });
+        await updateBulkPaymentGroup(editingGroup.id, { name, description, items: itemsForBackend });
         toast.success('Group updated successfully');
       } else {
-        await createBulkPaymentGroup({ name, description, items: groupItems });
+        await createBulkPaymentGroup({ name, description, items: itemsForBackend });
         toast.success('Group created successfully');
       }
       setIsGroupModalOpen(false);
@@ -193,14 +349,16 @@ export default function BulkPaymentsPage() {
   };
 
   const handleDeleteGroup = async (group: BulkPaymentGroup) => {
-    if (!window.confirm(`Are you sure you want to delete group "${group.name}"?`)) return;
-    try {
-      await deleteBulkPaymentGroup(group.id);
-      toast.success('Group deleted');
-      fetchData();
-    } catch (error) {
-      toast.error('Failed to delete group');
-    }
+    showConfirmDialog(`Delete recipient group "${group.name}"? This action cannot be undone.`, () => {
+      deleteBulkPaymentGroup(group.id)
+        .then(() => {
+          toast.success('Group deleted');
+          fetchData();
+        })
+        .catch((error) => {
+          toast.error(error instanceof Error ? error.message : 'Failed to delete group');
+        });
+    });
   };
 
   // --------------------------------------------------------------------------
@@ -550,53 +708,40 @@ export default function BulkPaymentsPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
               <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">Recipients ({groupItems.length})</h4>
-              <button 
-                type="button" 
-                onClick={handleAddGroupItem}
-                className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-lg border border-emerald-100 dark:border-emerald-800/50 transition-all"
-              >
-                <Plus size={14} /> Add Recipient
-              </button>
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-1.5 text-[10px] font-bold text-blue-600 hover:text-blue-700 bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-lg border border-blue-100 dark:border-blue-800/50 transition-all cursor-pointer">
+                  <Upload size={14} /> Import CSV
+                  <input type="file" accept=".csv" onChange={handleCSVImport} className="hidden" />
+                </label>
+                <button 
+                  type="button" 
+                  onClick={handleCSVExport}
+                  className="flex items-center gap-1.5 text-[10px] font-bold text-slate-600 hover:text-slate-800 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 transition-all"
+                >
+                  <Download size={14} /> Export CSV
+                </button>
+                <button 
+                  type="button" 
+                  onClick={handleAddGroupItem}
+                  className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-lg border border-emerald-100 dark:border-emerald-800/50 transition-all"
+                >
+                  <Plus size={14} /> Add Recipient
+                </button>
+              </div>
             </div>
 
             <div className="max-h-[350px] overflow-y-auto space-y-3 pr-2 scrollbar-thin">
               {groupItems.map((item, idx) => (
-                <div key={idx} className="p-4 bg-slate-50/50 dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-wrap gap-3 items-end group">
-                  <div className="flex-1 min-w-[120px] space-y-1">
-                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">Product Code</label>
-                    <input 
-                      value={item.productCode}
-                      onChange={(e) => handleUpdateGroupItem(idx, 'productCode', e.target.value)}
-                      placeholder="ECONET_AIRTIME"
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs font-bold"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-[120px] space-y-1">
-                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">Account / Phone</label>
-                    <input 
-                      value={item.recipientIdentifier}
-                      onChange={(e) => handleUpdateGroupItem(idx, 'recipientIdentifier', e.target.value)}
-                      placeholder="0771000000"
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs"
-                    />
-                  </div>
-                  <div className="w-24 space-y-1">
-                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">Amount</label>
-                    <input 
-                      type="number"
-                      value={item.amount}
-                      onChange={(e) => handleUpdateGroupItem(idx, 'amount', parseFloat(e.target.value))}
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs font-black text-emerald-600"
-                    />
-                  </div>
-                  <button 
-                    type="button" 
-                    onClick={() => handleRemoveGroupItem(idx)}
-                    className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
+                <RecipientRow
+                  key={idx}
+                  index={idx}
+                  item={item}
+                  products={products}
+                  currencies={currencies}
+                  onChange={(field, value) => handleUpdateGroupItem(idx, field, value)}
+                  onRemove={() => handleRemoveGroupItem(idx)}
+                  error={groupErrors[idx]}
+                />
               ))}
               {groupItems.length === 0 && (
                 <div className="py-10 text-center border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-3xl">

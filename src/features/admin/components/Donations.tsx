@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import toast from "react-hot-toast";
-import { confirmToast } from "../../../lib/confirmToast";
+import { showConfirmDialog } from "../../shared/components/ConfirmDialog";
 import {
   getDonationsByCampaignV1,
   getDonationSummaryV1,
@@ -134,7 +134,7 @@ const Donations: React.FC = () => {
   };
 
   const handleDelete = (c: DonationCampaignDto) => {
-    confirmToast(`Delete campaign "${c.name}"?`, () => {
+    showConfirmDialog(`Delete campaign "${c.name}"?`, () => {
       deleteDonationCampaign(c.id)
         .then(() => { toast.success("Campaign deleted"); fetchCampaigns(); })
         .catch((err) => toast.error(err instanceof Error ? err.message : "Failed to delete"));

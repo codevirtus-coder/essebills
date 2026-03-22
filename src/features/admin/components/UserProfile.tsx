@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { confirmToast } from '../../../lib/confirmToast';
+import { showConfirmDialog } from '../../shared/components/ConfirmDialog';
 import { changePassword, getCurrentUserProfile, toggleTwoFactor } from '../../auth/auth.service';
 import { getAuthSession, saveAuthSession } from '../../auth/auth.storage';
 import type { Gender, UserProfileDto } from '../../auth/dto/auth.dto';
@@ -206,7 +206,7 @@ const UserProfile: React.FC = () => {
   const handleToggle2FA = () => {
     if (!profile?.id) return;
     const next = !profile.otpEnabled;
-    confirmToast(`${next ? 'Enable' : 'Disable'} Two-Factor Authentication?`, () => {
+    showConfirmDialog(`${next ? 'Enable' : 'Disable'} Two-Factor Authentication?`, () => {
       setIsTogglingOtp(true);
       toggleTwoFactor(profile.id!, next).then((updated) => {
         const nextProfile = { ...profile, otpEnabled: updated.otpEnabled ?? next };
