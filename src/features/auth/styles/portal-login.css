@@ -14,8 +14,8 @@
 }
 
 .login-aside {
-  background: linear-gradient(160deg, #15112f 0%, #1d173f 100%);
-  color: #ddd6fe;
+  background: linear-gradient(160deg, #047857 0%, #059669 50%, #10B981 100%);
+  color: #fff;
   padding: 2.5rem 2rem;
   display: flex;
   flex-direction: column;
@@ -33,18 +33,19 @@
 
 .login-aside-title {
   margin-top: 2rem;
-  max-width: 12ch;
+  max-width: 14ch;
   color: #fff;
   font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.1;
 }
 
 .login-aside-title span {
   display: block;
-  color: #8b5cf6;
+  color: #a7f3d0;
 }
 
 .login-aside .type-body {
-  color: #9f9ac4;
+  color: #d1fae5;
   max-width: 34ch;
   margin: 1rem 0 0;
 }
@@ -55,7 +56,7 @@
   letter-spacing: 0.08em;
   font-size: var(--fs-caption);
   font-weight: var(--fw-bold);
-  color: #9f9ac4;
+  color: #a7f3d0;
 }
 
 .login-pane {
@@ -95,7 +96,7 @@
 .login-forgot {
   border: 0;
   background: transparent;
-  color: #7c3aed;
+  color: #10B981;
   text-transform: uppercase;
   font-size: var(--fs-caption);
   letter-spacing: 0.08em;
@@ -104,11 +105,21 @@
   padding: 0;
 }
 
+.login-forgot:hover {
+  color: #059669;
+}
+
 .login-form input {
   background: #f8fafc;
   border-color: #e5e7eb;
   border-radius: 0.95rem;
   height: 3.1rem;
+}
+
+.login-form input:focus {
+  outline: none;
+  border-color: #10B981;
+  box-shadow: 0 0 0 3px rgb(16 185 129 / 15%);
 }
 
 .login-form textarea {
@@ -162,12 +173,12 @@
 }
 
 .login-password-toggle:hover {
-  background: rgb(107 78 150 / 14%);
-  color: var(--primary);
+  background: rgb(16 185 129 / 14%);
+  color: #10B981;
 }
 
 .login-password-toggle:focus-visible {
-  outline: 2px solid rgb(107 78 150 / 35%);
+  outline: 2px solid rgb(16 185 129 / 35%);
   outline-offset: 2px;
 }
 
@@ -178,6 +189,20 @@
   text-transform: uppercase;
   letter-spacing: 0.16em;
   font-size: var(--fs-caption);
+  background: #10B981;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-weight: var(--fw-bold);
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.login-submit:hover {
+  background: #059669;
+}
+
+.login-submit:active {
+  transform: scale(0.98);
 }
 
 .login-error {
@@ -197,11 +222,21 @@
 
 .login-register-button {
   border-radius: 999px;
+  border: 1.5px solid #10B981;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-size: var(--fs-caption);
   height: 2.8rem;
-  color: var(--primary);
+  color: #10B981;
+  background: transparent;
+  cursor: pointer;
+  font-weight: var(--fw-bold);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.login-register-button:hover {
+  background: #10B981;
+  color: #fff;
 }
 
 .register-form {
@@ -216,9 +251,14 @@
 .register-login-link {
   font-size: var(--fs-small);
   font-weight: var(--fw-bold);
-  color: var(--primary);
+  color: #10B981;
 }
 
+.register-login-link:hover {
+  color: #059669;
+}
+
+/* ── Dark mode ──────────────────────────────────────────────────────────── */
 html.dark .login-card {
   background: #0c1528;
   border-color: #2e3f57;
@@ -242,17 +282,28 @@ html.dark .login-label {
 }
 
 html.dark .login-forgot {
-  color: #a78bfa;
+  color: #34d399;
+}
+
+html.dark .login-forgot:hover {
+  color: #10B981;
 }
 
 html.dark .login-form input {
   background: #0d1728;
   border-color: #34455d;
+  color: #f1f5f9;
+}
+
+html.dark .login-form input:focus {
+  border-color: #10B981;
+  box-shadow: 0 0 0 3px rgb(16 185 129 / 20%);
 }
 
 html.dark .login-form textarea {
   background: #0d1728;
   border-color: #34455d;
+  color: #f1f5f9;
 }
 
 html.dark .login-input-with-icon .material-symbols-outlined {
@@ -264,21 +315,38 @@ html.dark .login-password-toggle {
 }
 
 html.dark .login-password-toggle:hover {
-  background: rgb(167 139 250 / 20%);
-  color: #c4b5fd;
+  background: rgb(52 211 153 / 20%);
+  color: #34d399;
 }
 
 html.dark .login-register-button {
-  border-color: #4c5f7d;
-  color: #c7b5ff;
+  border-color: #10B981;
+  color: #34d399;
+}
+
+html.dark .login-register-button:hover {
+  background: #10B981;
+  color: #fff;
 }
 
 html.dark .register-login-link {
-  color: #c7b5ff;
+  color: #34d399;
+}
+
+html.dark .register-login-link:hover {
+  color: #10B981;
 }
 
 html.dark .login-back-link {
-  color: #b8aee6;
+  color: #a7f3d0;
+}
+
+html.dark .login-submit {
+  background: #10B981;
+}
+
+html.dark .login-submit:hover {
+  background: #059669;
 }
 
 @media (min-width: 768px) {

@@ -27,7 +27,7 @@ export function HomeOverview() {
   ];
 
   return (
-    <section id="overview" className="bg-white py-20 sm:py-28 px-4 sm:px-6 lg:px-8">
+    <section id="overview" className="bg-white dark:bg-slate-900 py-20 sm:py-28 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="grid lg:grid-cols-[1fr_1.2fr] gap-10 items-start">
           <motion.div
@@ -40,12 +40,12 @@ export function HomeOverview() {
             <p className="text-[#10B981] text-xs sm:text-sm font-black uppercase tracking-[0.2em] mb-3">
               The Platform
             </p>
-            <h2 className="text-3xl sm:text-5xl font-black text-slate-900 leading-tight mb-4">
+            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white leading-tight mb-4">
               One platform.
               <br />
               Pay anything.
             </h2>
-            <p className="text-slate-500 text-base sm:text-lg leading-relaxed">
+            <p className="text-slate-500 dark:text-slate-400 text-base sm:text-lg leading-relaxed">
               EseBills connects customers, agents, and businesses on a single payment platform — eliminating queues, delays, and cash handling.
             </p>
           </motion.div>
@@ -58,17 +58,17 @@ export function HomeOverview() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.5, ease: "easeOut", delay: i * 0.1 }}
-                className={`group relative p-7 sm:p-8 rounded-3xl border border-slate-200 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden bg-white ${i === 2 ? "sm:col-span-2" : ""}`}
+                className={`group relative p-5 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden bg-white dark:bg-slate-800 ${i === 2 ? "sm:col-span-2" : ""}`}
               >
-                <div className="absolute top-0 right-0 pr-6 pt-5 text-right">
-                  <p className="text-2xl font-black text-[#10B981]">{stat}</p>
+                <div className="absolute top-0 right-0 pr-4 pt-4 sm:pr-6 sm:pt-5 text-right">
+                  <p className="text-xl sm:text-2xl font-black text-[#10B981]">{stat}</p>
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#10B981]">{statLabel}</p>
                 </div>
-                <div className="w-12 h-12 rounded-2xl bg-[#10B981] flex items-center justify-center mb-5">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-[#10B981] flex items-center justify-center mb-4 sm:mb-5">
                   <Icon size={22} className="text-white" />
                 </div>
-                <h3 className="text-lg font-black text-slate-900 mb-2">{title}</h3>
-                <p className="text-slate-500 text-sm leading-relaxed">{desc}</p>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white mb-2">{title}</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">{desc}</p>
               </motion.div>
             ))}
           </div>

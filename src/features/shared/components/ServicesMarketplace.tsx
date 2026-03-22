@@ -436,24 +436,26 @@ export function ServicesMarketplace({ embedded = false, showTitle = true, liftSe
         )}
 
         {isInitialLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
-            {[...Array(10)].map((_, i) => (
-              <div key={i} className="rounded-2xl border border-slate-100 dark:border-slate-800 p-5 animate-pulse bg-slate-50/50 dark:bg-slate-900/50">
-                <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-xl mb-4" />
-                <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded-full mb-2 w-3/4" />
-                <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded-full w-1/2 mb-5" />
-                <div className="h-9 bg-slate-100 dark:bg-slate-800 rounded-xl" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            {[...Array(12)].map((_, i) => (
+              <div key={i} className="rounded-2xl animate-pulse bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                <div className="aspect-[4/3] bg-slate-200 dark:bg-slate-700" />
+                <div className="p-4 space-y-3">
+                  <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded-full w-3/4" />
+                  <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded-full w-1/2" />
+                  <div className="h-10 bg-slate-200 dark:bg-slate-700 rounded-xl mt-2" />
+                </div>
               </div>
             ))}
           </div>
         ) : isError ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center bg-red-50 dark:bg-red-900/10 rounded-3xl border border-red-100 dark:border-red-800/50">
+          <div className="h-[420px] sm:h-[500px] lg:h-[540px] xl:h-[560px] flex flex-col items-center justify-center text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl">
             <AlertCircle size={40} className="text-red-400 mb-4" />
             <p className="text-red-900 dark:text-red-400 font-bold">Could not load services</p>
             <button onClick={() => window.location.reload()} className="mt-4 px-6 py-2 bg-red-600 text-white font-bold rounded-xl text-xs uppercase tracking-widest">Retry</button>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-center bg-slate-50 dark:bg-slate-900/50 rounded-3xl border border-slate-100 dark:border-slate-800 border-dashed">
+          <div className="h-[420px] sm:h-[500px] lg:h-[540px] xl:h-[560px] flex flex-col items-center justify-center text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl">
             <Search size={32} className="text-slate-300 mb-4" />
             <p className="text-slate-800 dark:text-slate-200 font-bold">No services found</p>
             {hasActiveFilters && (
@@ -461,62 +463,90 @@ export function ServicesMarketplace({ embedded = false, showTitle = true, liftSe
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
-            {filtered.map((biller) => {
-              const color = getColor(biller.categoryKey);
-              return (
-                <div
-                  key={biller.id}
-                  className="group relative flex flex-col rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 hover:border-emerald-500/40 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden"
-                  onClick={() => handlePay(biller)}
-                >
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 overflow-hidden ${color.bg} dark:bg-opacity-10`}>
-                    {biller.productId > 0 ? (
-                      <img
-                        src={getProductLogoUrl(biller.productId)}
-                        alt={biller.name}
-                        className="w-full h-full object-contain p-1"
-                        onError={(e) => {
-                          const target = e.currentTarget;
-                          target.style.display = 'none';
-                          const fallback = target.nextElementSibling as HTMLElement | null;
-                          if (fallback) fallback.style.display = 'flex';
-                        }}
-                      />
-                    ) : null}
-                    <span
-                      className={`w-full h-full items-center justify-center ${biller.productId > 0 ? 'hidden' : 'flex'}`}
+            <div className="relative">
+            <div className="absolute inset-0 rounded-2xl sm:rounded-3xl pointer-events-none z-10 shadow-[inset_0_-48px_60px_-20px_rgba(255,255,255,1),inset_0_-48px_60px_-20px_rgba(248,250,252,1)] dark:shadow-[inset_0_-48px_60px_-20px_rgba(15,23,42,1)]" />
+            <div className="h-[420px] sm:h-[500px] lg:h-[540px] xl:h-[560px] overflow-y-auto pr-1 scrollbar-hide">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 pb-4">
+                {filtered.map((biller) => {
+                  const color = getColor(biller.categoryKey);
+                  return (
+                    <div
+                      key={biller.id}
+                      className="group relative flex flex-col rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-emerald-500/50 dark:hover:border-emerald-500/40 hover:shadow-xl hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
+                      onClick={() => handlePay(biller)}
                     >
-                      <CategoryIcon label={biller.categoryLabel} className={`w-6 h-6 ${color.icon}`} />
-                    </span>
-                  </div>
+                      {/* ── Logo Header Area ── */}
+                      <div className={`relative aspect-[4/3] w-full overflow-hidden ${color.bg} dark:bg-slate-800`}>
+                        {/* Ambient top glow */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-transparent dark:from-white/10 dark:via-transparent dark:to-transparent pointer-events-none" />
+                        
+                        {/* Bottom fade to card */}
+                        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white dark:from-slate-900 to-transparent pointer-events-none" />
 
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white leading-tight line-clamp-2 mb-1 flex-1 group-hover:text-emerald-600 transition-colors">
-                    {biller.name}
-                  </h3>
+                        {biller.productId > 0 ? (
+                          <img
+                            src={getProductLogoUrl(biller.productId)}
+                            alt={biller.name}
+                            className="absolute inset-0 w-full h-full object-contain p-4 sm:p-5 transition-transform duration-500 group-hover:scale-110"
+                            onError={(e) => {
+                              const target = e.currentTarget;
+                              target.style.display = 'none';
+                              const fallback = target.nextElementSibling as HTMLElement | null;
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        
+                        {/* Fallback icon when no logo */}
+                        <div
+                          className={`absolute inset-0 flex items-center justify-center ${biller.productId > 0 ? 'hidden' : ''}`}
+                        >
+                          <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-white/80 dark:bg-slate-700/80 shadow-sm">
+                            <CategoryIcon label={biller.categoryLabel} className={`w-7 h-7 ${color.icon}`} />
+                          </div>
+                        </div>
 
-                  <div className="flex items-center justify-between mb-4 flex-wrap gap-1">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                      {biller.categoryLabel}
-                    </p>
-                    {biller.currencyCode && (
-                      <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded-md border border-emerald-100 dark:border-emerald-800/50">
-                        {biller.currencyCode}
-                      </span>
-                    )}
-                  </div>
+                        {/* Category accent pill */}
+                        <div className="absolute top-3 left-3">
+                          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest backdrop-blur-md ${color.bg} dark:bg-slate-900/80 ${color.icon}`}>
+                            <CategoryIcon label={biller.categoryLabel} className="w-2.5 h-2.5" />
+                            {biller.categoryLabel}
+                          </span>
+                        </div>
 
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); handlePay(biller); }}
-                    className="mt-auto w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[10px] font-bold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-700 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-600 transition-all duration-300 uppercase tracking-widest"
-                  >
-                    Pay Now
-                    <ChevronRight size={12} />
-                  </button>
-                </div>
-              );
-            })}
+                        {/* Currency badge */}
+                        {biller.currencyCode && (
+                          <div className="absolute top-3 right-3">
+                            <span className="inline-flex items-center px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider bg-emerald-600 text-white shadow-sm">
+                              {biller.currencyCode}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* ── Card Content ── */}
+                      <div className="flex flex-col flex-1 p-4 pt-3">
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white leading-tight line-clamp-2 mb-1 flex-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                          {biller.name}
+                        </h3>
+                      </div>
+
+                      {/* ── CTA Button ── */}
+                      <div className="px-4 pb-4 -mt-1">
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); handlePay(biller); }}
+                          className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[10px] font-bold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-700 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-600 group-hover:shadow-lg group-hover:shadow-emerald-500/25 transition-all duration-300 uppercase tracking-widest"
+                        >
+                          Pay Now
+                          <ChevronRight size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         )}
       </div>

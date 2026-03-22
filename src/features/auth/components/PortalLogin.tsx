@@ -5,6 +5,7 @@ import { Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-react';
 import { useLoginMutation } from '../auth.hooks';
 import type { PortalLoginResult } from '../portal-auth.service';
 import { finalizePortalSession } from '../portal-auth.service';
+import '../styles/portal-login.css';
 import {
   buildAuthSession,
   clearPendingOtpChallenge,

@@ -44,7 +44,7 @@ export function HomeForWho() {
   ];
 
   return (
-    <section id="audience" className="bg-slate-50/60 py-20 sm:py-28 px-4 sm:px-6 lg:px-8">
+    <section id="audience" className="bg-slate-50/60 dark:bg-slate-950 py-20 sm:py-28 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
@@ -54,7 +54,7 @@ export function HomeForWho() {
           className="max-w-2xl mb-12 sm:mb-16"
         >
           <p className="text-[#10B981] text-xs sm:text-sm font-black uppercase tracking-[0.2em] mb-3">Who It's For</p>
-          <h2 className="text-3xl sm:text-5xl font-black text-slate-900 leading-tight">
+          <h2 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white leading-tight">
             Built for the full
             <br />
             payment ecosystem.
@@ -71,24 +71,24 @@ export function HomeForWho() {
               transition={{ duration: 0.5, ease: "easeOut", delay: i * 0.1 }}
               className={`relative rounded-3xl p-7 sm:p-8 flex flex-col overflow-hidden ${
                 featured
-                  ? "bg-[#10B981]/15 border-2 border-[#10B981]/50 shadow-2xl shadow-[#10B981]/15"
-                  : "bg-white border border-slate-100 hover:border-slate-300 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
+                  ? "bg-[#10B981]/15 dark:bg-[#10B981]/10 border-2 border-[#10B981]/50 dark:border-[#10B981]/30 shadow-2xl shadow-[#10B981]/15"
+                  : "bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
               }`}
             >
               {featured && (
                 <div className="absolute top-0 right-0 w-48 h-48 bg-[#10B981]/15 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
               )}
               <div className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full mb-5 self-start ${
-                featured ? "bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/20" : "bg-slate-100 text-slate-600"
+                featured ? "bg-[#10B981]/15 dark:bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/20 dark:border-[#10B981]/30" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
               }`}>
                 <Icon size={12} />
                 {tag}
               </div>
-              <h3 className="text-lg sm:text-xl font-black mb-3 text-slate-900">{title}</h3>
-              <p className={`text-sm leading-relaxed mb-5 ${featured ? "text-slate-700" : "text-slate-500"}`}>{description}</p>
+              <h3 className="text-lg sm:text-xl font-black mb-3 text-slate-900 dark:text-white">{title}</h3>
+              <p className={`text-sm leading-relaxed mb-5 ${featured ? "text-slate-700 dark:text-slate-300" : "text-slate-500 dark:text-slate-400"}`}>{description}</p>
               <ul className="space-y-2.5 mb-7 flex-1">
                 {perks.map((perk) => (
-                  <li key={perk} className={`flex items-center gap-2.5 text-sm ${featured ? "text-slate-700" : "text-slate-600"}`}>
+                  <li key={perk} className={`flex items-center gap-2.5 text-sm ${featured ? "text-slate-700 dark:text-slate-300" : "text-slate-600 dark:text-slate-400"}`}>
                     <CheckCircle2 size={14} className="text-[#10B981] shrink-0" />
                     {perk}
                   </li>
@@ -97,7 +97,7 @@ export function HomeForWho() {
               <Link
                 to={href}
                 className={`inline-flex items-center justify-center gap-2 font-bold text-sm px-5 py-3.5 rounded-2xl transition-all ${
-                  featured ? "bg-[#10B981] text-white hover:bg-[#0ea472] shadow-lg shadow-[#10B981]/20" : "bg-slate-900 text-white hover:bg-slate-800 shadow-sm"
+                  featured ? "bg-[#10B981] text-white hover:bg-[#0ea472] shadow-lg shadow-[#10B981]/20" : "bg-slate-900 dark:bg-slate-800 text-white hover:bg-slate-800 dark:hover:bg-slate-700 shadow-sm"
                 }`}
               >
                 {cta}
@@ -105,7 +105,7 @@ export function HomeForWho() {
               </Link>
               <Link
                 to={loginHref}
-                className={`mt-3 text-center text-xs transition-colors font-medium ${featured ? "text-slate-600 hover:text-slate-900" : "text-slate-400 hover:text-slate-600"}`}
+                className={`mt-3 text-center text-xs transition-colors font-medium ${featured ? "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"}`}
               >
                 {loginLabel}
               </Link>

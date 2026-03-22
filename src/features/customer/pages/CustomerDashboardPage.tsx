@@ -351,7 +351,7 @@ export function CustomerDashboardPage() {
         <div className="relative z-10">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-400 mb-4">Personal Wallet</p>
           <div className="flex flex-col md:flex-row md:items-end gap-2 md:gap-6">
-            <h3 className="text-6xl font-black tracking-tighter">${walletBalance.toFixed(2)}</h3>
+            <h3 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter">${walletBalance.toFixed(2)}</h3>
             <p className="text-slate-400 font-medium mb-2">Available Balance</p>
           </div>
           <div className="mt-10 flex flex-wrap gap-4">

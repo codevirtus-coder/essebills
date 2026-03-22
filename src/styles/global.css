@@ -1,13 +1,6 @@
-@import './tokens.css';
-
-/* Global resets & utility tokens
-   Use this file as the single entrypoint for app-wide styles.
- */
-
-:root {
-  /* Example global fallbacks (tokens are in tokens.css) */
-  --app-font-sans: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-}
+/* Global resets & base styles
+   Design tokens are centralized in src/index.css (Tailwind @theme)
+*/
 
 * {
   box-sizing: border-box;
@@ -19,15 +12,15 @@ html, body, #root {
 
 body {
   margin: 0;
-  font-family: var(--app-font-sans);
+  font-family: var(--font-family-base);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: var(--text-color, #111827);
+  color: var(--color-text, #111827);
 }
 
 a {
   text-decoration: none;
 }
 
-/* App level helpers (small set to start) */
+/* App level helpers */
 .container { max-width: 1200px; margin: 0 auto; padding-left: 1rem; padding-right: 1rem }

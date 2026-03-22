@@ -4,7 +4,7 @@ import { ROUTE_PATHS } from "../../../router/paths";
 
 export function HomeFinalCTA() {
   return (
-    <section className="bg-slate-900 py-16 sm:py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <section className="bg-slate-900 dark:bg-slate-950 py-16 sm:py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-48 bg-[#10B981]/20 rounded-full blur-3xl pointer-events-none" />
       <div className="max-w-4xl mx-auto text-center relative z-10">
         <p className="text-[#10B981] text-xs sm:text-sm font-black uppercase tracking-[0.2em] mb-4">Get Started</p>
