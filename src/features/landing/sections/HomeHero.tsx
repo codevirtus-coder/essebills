@@ -99,40 +99,40 @@ export function HomeHero() {
               initial={shouldReduceMotion ? false : { opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: shouldReduceMotion ? 0 : 0.7, ease: "easeOut", delay: shouldReduceMotion ? 0 : 0.1 }}
-              className="text-[2rem] sm:text-[3rem] lg:text-[4.5rem] xl:text-7xl font-black text-white leading-[1] sm:leading-[0.9] lg:leading-[0.85] tracking-tighter mb-4 sm:mb-6"
+              className="text-[2.5rem] sm:text-[3.5rem] lg:text-[5rem] xl:text-7xl font-black text-white leading-[0.95] sm:leading-[0.9] lg:leading-[0.85] tracking-tighter mb-4 sm:mb-6"
             >
               Pay any bill.
               <br />
               <span
-                className="text-[1.25rem] sm:text-[2rem] lg:text-[3rem] text-emerald-300"
-                aria-label={typedText || phrases[phraseIndex]}
-              >
-                <span className="invisible pointer-events-none select-none" aria-hidden="true">Khonapho Khonapho</span>
-                <span className="absolute left-0 top-0 h-full inline-flex items-center text-white">
-                  {stopped ? (
-                    <motion.span
-                      className="relative"
-                      initial={shouldReduceMotion ? false : { opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: shouldReduceMotion ? 0 : 0.5 }}
-                    >
-                      {typedText}
+                  className="relative text-[1.5rem] sm:text-[2.25rem] lg:text-[3.5rem] text-white"
+                  aria-label={typedText || phrases[phraseIndex]}
+                >
+                  <span className="invisible pointer-events-none select-none" aria-hidden="true">Khonapho Khonapho</span>
+                  <span className="absolute left-0 top-0 h-full w-full inline-flex items-center text-white">
+                    {stopped ? (
                       <motion.span
-                        className="absolute -bottom-1 left-0 h-[3px] rounded-full bg-white/70"
-                        initial={{ width: "0%" }}
-                        animate={{ width: "100%" }}
-                        transition={{ duration: shouldReduceMotion ? 0 : 0.5, delay: shouldReduceMotion ? 0 : 0.3, ease: "easeOut" }}
-                        aria-hidden="true"
-                      />
-                    </motion.span>
-                  ) : (
-                    <>
-                      {typedText}
-                      {!shouldReduceMotion && <span className="ml-0.5 w-[2px] h-[0.85em] bg-white/90 animate-pulse inline-block" />}
-                    </>
-                  )}
+                        className="relative"
+                        initial={shouldReduceMotion ? false : { opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: shouldReduceMotion ? 0 : 0.5 }}
+                      >
+                        {typedText}
+                        <motion.span
+                          className="absolute -bottom-1 left-0 h-[3px] rounded-full bg-white/70"
+                          initial={{ width: "0%" }}
+                          animate={{ width: "100%" }}
+                          transition={{ duration: shouldReduceMotion ? 0 : 0.5, delay: shouldReduceMotion ? 0 : 0.3, ease: "easeOut" }}
+                          aria-hidden="true"
+                        />
+                      </motion.span>
+                    ) : (
+                      <>
+                        {typedText}
+                        {!shouldReduceMotion && <span className="ml-0.5 w-[2px] h-[0.85em] bg-white/90 animate-pulse inline-block" />}
+                      </>
+                    )}
+                  </span>
                 </span>
-              </span>
             </motion.h1>
 
             <motion.p

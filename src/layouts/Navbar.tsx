@@ -73,7 +73,9 @@ export function Navbar() {
   return (
     <header
       className={`sticky top-0 inset-x-0 z-50 transition-all duration-300 ${
-        scrolled || !isHome ? "bg-[#10B981] shadow-md" : "bg-transparent"
+        mobileOpen || scrolled || !isHome
+          ? "bg-[#10B981]/95 backdrop-blur-md shadow-md"
+          : "bg-transparent"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">

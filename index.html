@@ -22,6 +22,22 @@
     <title>EseBills | Fast Bill Payments</title>
   </head>
   <body>
+    <script>
+      (function() {
+        // Prevent white flash on dark mode — apply dark hero bg to navbar before React hydrates
+        // Only applies when dark mode is detected/stored, since light mode has no flash
+        try {
+          var t = localStorage.getItem('esebills-theme');
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (t === 'dark' || (!t && prefersDark)) {
+            document.documentElement.classList.add('dark');
+            var s = document.createElement('style');
+            s.textContent = 'header.sticky{z-index:50;position:sticky;top:0;background-color:#047857!important}';
+            document.head.appendChild(s);
+          }
+        } catch(e) {}
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
