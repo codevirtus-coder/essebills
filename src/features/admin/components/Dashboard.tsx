@@ -23,6 +23,7 @@ import {
   type DashboardStats,
   type AnalyticsDashboardStats,
   type RevenueDataPoint,
+  type RevenueChartResponse,
   type TopBiller,
   type TransactionFeedItem,
 } from "../services/admin-api.service";
@@ -88,7 +89,7 @@ const Dashboard: React.FC = () => {
     // Use new analytics endpoints as primary, fall back to legacy if needed
     Promise.all([
       getAnalyticsDashboardStats().catch(() => getDashboardStats().catch(() => DEFAULT_STATS)),
-      getAnalyticsRevenueChart({ period: 'monthly', startDate, endDate }).catch(() => getDashboardRevenue({ period: 'monthly' }).catch(() => DEFAULT_REVENUE_DATA)),
+      getAnalyticsRevenueChart({ period: 'monthly', startDate, endDate }).catch(() => null),
       getAnalyticsTransactionFeed({ size: 10 }).catch(() => getActivityFeed(10).catch(() => [])),
       getDonationsSummary().catch(() => ({} as Record<string, unknown>)),
       getWhatsAppSessionsSummary().catch(() => ({} as Record<string, unknown>)),
@@ -103,7 +104,21 @@ const Dashboard: React.FC = () => {
           setStats(dashboardStats as DashboardStats);
         }
         
-        setRevenueData(revenue);
+        // Normalise revenue — backend returns { data: DataPoint[], period } not a plain array
+        const normalised: RevenueDataPoint[] = (() => {
+          if (!revenue) return DEFAULT_REVENUE_DATA
+          if (Array.isArray(revenue)) return revenue as RevenueDataPoint[]
+          const chart = revenue as RevenueChartResponse
+          if (Array.isArray(chart.data) && chart.data.length > 0) {
+            return chart.data.map(dp => ({
+              month: new Date(dp.date).toLocaleString('default', { month: 'short' }),
+              revenue: dp.revenue,
+              transactionCount: dp.transactionCount,
+            }))
+          }
+          return DEFAULT_REVENUE_DATA
+        })()
+        setRevenueData(normalised);
         // Handle transaction feed
         if (activity && typeof activity === 'object' && 'content' in activity) {
           setTransactions(((activity as { content: unknown }).content as PaymentTransaction[]) || []);

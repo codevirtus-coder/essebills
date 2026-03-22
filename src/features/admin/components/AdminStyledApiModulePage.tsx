@@ -68,6 +68,7 @@ const AdminStyledApiModulePage: React.FC<AdminStyledApiModulePageProps> = ({
   onDelete,
 }) => {
   const [rows, setRows] = useState<UnknownRecord[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
@@ -296,6 +297,14 @@ const AdminStyledApiModulePage: React.FC<AdminStyledApiModulePageProps> = ({
     return cols
   }, [columns, columnKeys, tableMode])
 
+  const filteredRows = useMemo(() => {
+    if (!searchQuery.trim()) return rows
+    const q = searchQuery.toLowerCase()
+    return rows.filter((row) =>
+      Object.values(row).some((v) => v != null && String(v).toLowerCase().includes(q))
+    )
+  }, [rows, searchQuery])
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="glass-card p-6 border-slate-200 dark:border-slate-800 flex items-start gap-4">
@@ -316,11 +325,12 @@ const AdminStyledApiModulePage: React.FC<AdminStyledApiModulePageProps> = ({
       <CRUDLayout
         title=""
         columns={crudColumns}
-        data={rows}
+        data={filteredRows}
         loading={isLoading}
-        pageable={{ page: 1, size: 50, totalElements: rows.length, totalPages: 1 }}
+        pageable={{ page: 1, size: 50, totalElements: filteredRows.length, totalPages: 1 }}
         onPageChange={() => {}}
         onSizeChange={() => {}}
+        onSearch={(q) => setSearchQuery(q)}
         onRefresh={() => void loadRows()}
         onAdd={showCreateButton ? () => setIsCreateOpen(true) : undefined}
         addButtonText="Create New"

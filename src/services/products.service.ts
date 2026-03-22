@@ -74,6 +74,44 @@ export async function getProductFields(productId: string | number): Promise<Prod
   return apiFetch<ProductField[]>(API_ENDPOINTS.products.requiredFields(productId))
 }
 
+export interface ProductAvailability {
+  available: boolean
+  reason?: string
+  lowStock?: boolean
+}
+
+export interface ProductPreCheckRequest {
+  requiredFields: Record<string, string>
+  amount?: number
+  currencyCode?: string
+  phoneNumber?: string
+  email?: string
+}
+
+export interface ProductPreCheckResult {
+  valid: boolean
+  accountNarrative?: string
+  settlementCurrencyCode?: string
+  errorMessage?: string
+  supportsPreCheck: boolean
+}
+
+/** Check if a product is currently available (public, no auth). */
+export async function checkProductAvailability(productId: string | number): Promise<ProductAvailability> {
+  return apiFetch<ProductAvailability>(API_ENDPOINTS.products.availability(productId))
+}
+
+/** Validate account/meter fields against the provider without charging (public, no auth). */
+export async function preCheckProduct(
+  productId: string | number,
+  data: ProductPreCheckRequest
+): Promise<ProductPreCheckResult> {
+  return apiFetch<ProductPreCheckResult>(API_ENDPOINTS.products.preCheck(productId), {
+    method: 'POST',
+    body: data,
+  })
+}
+
 /** Upload a logo image for a product (admin). Returns the updated product. */
 export async function uploadProductLogo(productId: string | number, file: File): Promise<unknown> {
   const form = new FormData()

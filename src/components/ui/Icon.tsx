@@ -9,7 +9,7 @@ import {
   CheckCircle, AlertTriangle, Info, Trash2, RefreshCw, FilterX,
   History, Lock, LockOpen, ShieldCheck, ShieldOff, Flag, Building,
   Calendar, Filter, Search, ExternalLink, Copy, RotateCcw, XCircle,
-  Heart, Globe, Droplets, Zap, Headphones,
+  Heart, Globe, Droplets, Zap, Headphones, Network, Layers, Tag,
   type LucideIcon, type LucideProps
 } from 'lucide-react'
 import * as LucideIcons from 'lucide-react'
@@ -84,6 +84,24 @@ const ICON_MAP: Record<string, LucideIcon> = {
   storefront: Store,
   inventory_2: Package,
   table_chart: Table2,
+  hub: Network,
+  layers: Layers,
+  category: Tag,
+
+  // Admin / security
+  admin_panel_settings: ShieldCheck,
+  shield: ShieldCheck,
+
+  // Global / geography
+  public: Globe,
+
+  // Calendar / scheduling
+  event: Calendar,
+  event_note: Calendar,
+
+  // Currency / exchange
+  currency_exchange: ArrowLeftRight,
+  swap_vert: ArrowLeftRight,
 
   // Comms
   sms: MessageSquare,

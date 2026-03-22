@@ -55,3 +55,30 @@ export async function patchUser(userId: string | number, updates: Partial<AdminU
     body: updates,
   })
 }
+
+// Admin actions on user accounts
+export async function adminSendPasswordReset(userId: string | number) {
+  return adminJsonFetch<{ message: string }>(ADMIN_ENDPOINTS.adminUserActions.sendPasswordReset(userId), {
+    method: 'POST',
+  })
+}
+
+export async function adminSetPassword(userId: string | number, newPassword: string) {
+  return adminJsonFetch<{ message: string }>(ADMIN_ENDPOINTS.adminUserActions.setPassword(userId), {
+    method: 'POST',
+    body: { newPassword },
+  })
+}
+
+export async function adminResendInvite(userId: string | number) {
+  return adminJsonFetch<{ message: string }>(ADMIN_ENDPOINTS.adminUserActions.resendInvite(userId), {
+    method: 'POST',
+  })
+}
+
+export async function adminSetOtp(userId: string | number, otpEnabled: boolean) {
+  return adminJsonFetch<{ otpEnabled: boolean; message: string }>(ADMIN_ENDPOINTS.adminUserActions.setOtp(userId), {
+    method: 'PATCH',
+    body: { otpEnabled },
+  })
+}

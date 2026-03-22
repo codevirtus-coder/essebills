@@ -9,6 +9,8 @@ import { LoginPage } from "../features/auth/pages/LoginPage";
 import { RegisterPage } from "../features/auth/pages/RegisterPage";
 import { BuyerRegisterPage } from "../features/auth/pages/BuyerRegisterPage";
 import { PaymentCheckoutPage } from "../features/landing/pages/PaymentCheckoutPage";
+import { PaymentReturnPage } from "../features/landing/pages/PaymentReturnPage";
+import { ServicesPage } from "../features/landing/pages/ServicesPage";
 import { AgentRegisterPage } from "../features/auth/pages/AgentRegisterPage";
 import { BillerRegisterPage } from "../features/auth/pages/BillerRegisterPage";
 import { AdminAccessRequestPage } from "../features/auth/pages/AdminAccessRequestPage";
@@ -32,6 +34,10 @@ const routes: RouteObject[] = [
     element: <PaymentCheckoutPage />,
   },
   {
+    path: "/payment/return",
+    element: <PaymentReturnPage />,
+  },
+  {
     path: "/",
     element: <MainLayout />,
     children: [
@@ -41,7 +47,7 @@ const routes: RouteObject[] = [
       },
       {
         path: "services",
-        element: <Navigate to={ROUTE_PATHS.home} replace />,
+        element: <ServicesPage />,
       },
       {
         path: "biller",

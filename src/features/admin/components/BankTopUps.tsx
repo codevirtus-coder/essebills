@@ -38,7 +38,7 @@ function StatusBadge({ status }: { status: AdminBankTopUp['status'] }) {
 function RejectModal({ onConfirm, onCancel, loading }: { onConfirm: (reason: string) => void; onCancel: () => void; loading: boolean }) {
   const [reason, setReason] = useState('')
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 backdrop-blur-sm">
       <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl space-y-6">
         <h3 className="text-lg font-bold text-slate-900">Reject Top-Up</h3>
         <div className="space-y-2">

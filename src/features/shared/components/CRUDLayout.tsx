@@ -28,6 +28,8 @@ export interface CRUDActions<T> {
   onView?: (item: T) => void;
   canEdit?: (item: T) => boolean;
   canDelete?: (item: T) => boolean;
+  /** Render extra action buttons/menus alongside (or instead of) the standard edit/delete buttons. */
+  renderCustom?: (item: T) => React.ReactNode;
 }
 
 export interface PageableState {
@@ -111,7 +113,7 @@ export default function CRUDLayout<T extends { uid?: string; id?: number }>({
   };
 
   const pageNumbers = [];
-  const hasActions = Boolean(actions?.onEdit || actions?.onDelete || actions?.onView);
+  const hasActions = Boolean(actions?.onEdit || actions?.onDelete || actions?.onView || actions?.renderCustom);
   const maxVisiblePages = 5;
   let startPage = Math.max(1, pageable.page - Math.floor(maxVisiblePages / 2));
   const endPage = Math.min(pageable.totalPages, startPage + maxVisiblePages - 1);
@@ -221,7 +223,7 @@ export default function CRUDLayout<T extends { uid?: string; id?: number }>({
                   </th>
                 ))}
                 {hasActions && (
-                  <th className="sticky right-0 z-20 border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-6 py-3 text-right text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                  <th className="sticky right-0 z-[70] border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-6 py-3 text-right text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                     Actions
                   </th>
                 )}
@@ -257,7 +259,7 @@ export default function CRUDLayout<T extends { uid?: string; id?: number }>({
                       </td>
                     ))}
                     {hasActions && (
-                      <td className="sticky right-0 z-10 border-l border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-4 text-right group-hover:bg-slate-50 dark:group-hover:bg-slate-800/50">
+                      <td className="sticky right-0 z-[70] border-l border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-4 text-right group-hover:bg-slate-50 dark:group-hover:bg-slate-800/50">
                         <div className="flex items-center justify-end gap-2">
                           {actions?.onView && (
                             <button
@@ -287,6 +289,7 @@ export default function CRUDLayout<T extends { uid?: string; id?: number }>({
                               <Trash2 className="w-4 h-4" />
                             </button>
                           )}
+                          {actions?.renderCustom?.(item)}
                         </div>
                       </td>
                     )}

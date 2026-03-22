@@ -5,7 +5,6 @@ export type MenuItem = {
   label: string;
   icon: string;
   path?: string;
-  children?: MenuItem[];
 };
 
 export type MenuSection = {
@@ -14,186 +13,168 @@ export type MenuSection = {
   items: MenuItem[];
 };
 
+// ─── ADMIN ───────────────────────────────────────────────────────────────────
+
 export const ADMIN_MENU: MenuSection[] = [
   {
-    id: "payments",
-    title: "Payments",
+    id: "overview",
+    title: "Overview",
     items: [
-      { id: "dashboard", label: "Dashboard", icon: "dashboard" },
-      { id: "transactions", label: "Transactions", icon: "sync_alt" },
-    ],
-  },
-  {
-    id: "donations",
-    title: "Donations",
-    items: [{ id: "donations", label: "Donations", icon: "favorite" }],
-  },
-  {
-    id: "catalog",
-    title: "Product Catalog",
-    items: [
-      { id: "products", label: "Manage Products", icon: "inventory_2" },
-      {
-        id: "parametersProductCategories",
-        label: "Product Categories",
-        icon: "layers",
-      },
-    ],
-  },
-
-  {
-    id: "platform",
-    title: "Platform",
-    items: [
-      {
-        id: "parameters",
-        label: "Parameters",
-        icon: "tune",
-        children: [
-          {
-            id: "parametersCurrencies",
-            label: "Currencies",
-            icon: "subdirectory_arrow_right",
-          },
-          {
-            id: "parametersCountries",
-            label: "Countries",
-            icon: "subdirectory_arrow_right",
-          },
-          {
-            id: "parametersHolidays",
-            label: "Holidays",
-            icon: "subdirectory_arrow_right",
-          },
-          {
-            id: "parametersBanks",
-            label: "Banks",
-            icon: "subdirectory_arrow_right",
-          },
-        ],
-      },
-      {
-        id: "esebillsAccounts",
-        label: "EseBills Accounts",
-        icon: "account_balance",
-      },
-      { id: "providers", label: "Providers", icon: "hub" },
-      {
-        id: "userSettings",
-        label: "User Settings",
-        icon: "manage_accounts",
-        children: [
-          {
-            id: "userSettingsUsers",
-            label: "Users",
-            icon: "subdirectory_arrow_right",
-          },
-          {
-            id: "userSettingsGroups",
-            label: "Groups",
-            icon: "subdirectory_arrow_right",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: "integrations",
-    title: "Integrations",
-    items: [
-      {
-        id: "credentialsPesepay",
-        label: "Pesepay Credentials",
-        icon: "vpn_key",
-      },
+      { id: "dashboard",     label: "Dashboard",     icon: "dashboard" },
+      { id: "transactions",  label: "Transactions",  icon: "sync_alt" },
+      { id: "bulkPayments",  label: "Bulk Payments", icon: "groups" },
+      { id: "donations",     label: "Donations",     icon: "favorite" },
     ],
   },
   {
     id: "ops",
     title: "Operations",
     items: [
-      { id: "billers", label: "Billers", icon: "corporate_fare" },
-      { id: "agents", label: "Agents", icon: "storefront" },
-      { id: "commissions", label: "Commissions", icon: "payments" },
-      {
-        id: "bankTopUps",
-        label: "Bank Top-Ups",
-        icon: "account_balance_wallet",
-      },
-      { id: "whatsapp", label: "WhatsApp Center", icon: "mark_chat_read" },
+      { id: "billers",                       label: "Billers",            icon: "corporate_fare" },
+      { id: "agents",                        label: "Agents",             icon: "storefront" },
+      { id: "products",                      label: "Products",           icon: "inventory_2" },
+      { id: "parametersProductCategories",   label: "Categories",         icon: "layers" },
+      { id: "providers",                     label: "Providers",          icon: "hub" },
+    ],
+  },
+  {
+    id: "users",
+    title: "Users & Groups",
+    items: [
+      { id: "userSettingsUsers",  label: "All Users", icon: "group" },
+      { id: "userSettingsGroups", label: "Groups",    icon: "admin_panel_settings" },
+    ],
+  },
+  {
+    id: "financials",
+    title: "Financials",
+    items: [
+      { id: "commissions",    label: "Commissions",  icon: "payments" },
+      { id: "bankTopUps",     label: "Bank Top-Ups", icon: "account_balance_wallet" },
+      { id: "esebillsAccounts", label: "Bank Accounts", icon: "account_balance" },
+    ],
+  },
+  {
+    id: "catalog",
+    title: "Parameters",
+    items: [
+      { id: "parametersCurrencies",  label: "Currencies",  icon: "currency_exchange" },
+      { id: "parametersCountries",   label: "Countries",   icon: "public" },
+      { id: "parametersBanks",       label: "Banks",       icon: "account_balance" },
+      { id: "parametersHolidays",    label: "Holidays",    icon: "event" },
+    ],
+  },
+  {
+    id: "integrations",
+    title: "Integrations",
+    items: [
+      { id: "credentialsPesepay", label: "Pesepay",  icon: "vpn_key" },
+      { id: "whatsapp",           label: "WhatsApp", icon: "mark_chat_read" },
     ],
   },
 ];
 
 export const ADMIN_PREFERENCE_ITEMS: MenuItem[] = [
-  { id: "profile", label: "Profile", icon: "account_circle" },
-  { id: "notifications", label: "Notifications", icon: "notifications" },
-  { id: "settings", label: "Settings", icon: "settings" },
-  { id: "support", label: "Support", icon: "help" },
+  { id: "profile",       label: "Profile",        icon: "account_circle" },
+  { id: "notifications", label: "Notifications",  icon: "notifications" },
+  { id: "settings",      label: "Settings",       icon: "settings" },
+  { id: "support",       label: "Support",        icon: "help" },
 ];
 
-// Agent menu
+// ─── AGENT ────────────────────────────────────────────────────────────────────
+
 export const AGENT_MENU: MenuSection[] = [
   {
-    id: "main",
+    id: "sales",
+    title: "Sales",
     items: [
-      { id: "overview", label: "Dashboard", icon: "home" },
-      { id: "sell", label: "Make a Sale", icon: "point_of_sale" },
-      { id: "donations", label: "Donations", icon: "favorite" },
+      { id: "overview",      label: "Dashboard",     icon: "home" },
+      { id: "sell",          label: "Make a Sale",   icon: "point_of_sale" },
       { id: "bulk-payments", label: "Bulk Payments", icon: "groups" },
-      { id: "commissions", label: "Earnings Analysis", icon: "payments" },
-      { id: "schedule", label: "Commission Schedule", icon: "table_chart" },
-      { id: "float", label: "Float Wallet", icon: "account_balance_wallet" },
+      { id: "donations",     label: "Donations",     icon: "favorite" },
+    ],
+  },
+  {
+    id: "finances",
+    title: "Finances",
+    items: [
+      { id: "float",       label: "Float Wallet", icon: "account_balance_wallet" },
+      { id: "commissions", label: "Commissions",  icon: "payments" },
+    ],
+  },
+  {
+    id: "account",
+    title: "Account",
+    items: [
       { id: "notifications", label: "Notifications", icon: "notifications" },
-      { id: "profile", label: "Profile", icon: "person" },
+      { id: "profile",       label: "Profile",       icon: "person" },
     ],
   },
 ];
 
-// Biller menu
+// ─── BILLER ───────────────────────────────────────────────────────────────────
+
 export const BILLER_MENU: MenuSection[] = [
   {
-    id: "main",
+    id: "business",
+    title: "Business",
     items: [
-      { id: "overview", label: "Dashboard", icon: "home" },
-      { id: "collections", label: "Collections", icon: "payments" },
-      { id: "settlements", label: "Settlements", icon: "account_balance" },
-      { id: "donations", label: "Donations", icon: "favorite" },
+      { id: "overview",     label: "Dashboard",   icon: "home" },
+      { id: "collections",  label: "Collections", icon: "payments" },
+      { id: "settlements",  label: "Settlements", icon: "account_balance" },
+      { id: "donations",    label: "Donations",   icon: "favorite" },
+    ],
+  },
+  {
+    id: "account",
+    title: "Account",
+    items: [
       { id: "notifications", label: "Notifications", icon: "notifications" },
-      { id: "settings", label: "Settings", icon: "settings" },
-      { id: "profile", label: "Profile", icon: "person" },
+      { id: "settings",      label: "Settings",      icon: "settings" },
+      { id: "profile",       label: "Profile",       icon: "person" },
     ],
   },
 ];
 
-// Customer menu
+// ─── CUSTOMER ─────────────────────────────────────────────────────────────────
+
 export const CUSTOMER_MENU: MenuSection[] = [
   {
-    id: "main",
+    id: "services",
+    title: "Services",
     items: [
-      { id: "overview", label: "Dashboard", icon: "home" },
-      { id: "pay", label: "Pay a Bill", icon: "payments" },
-      { id: "donations", label: "Donations", icon: "favorite" },
+      { id: "overview",      label: "Dashboard",     icon: "home" },
+      { id: "pay",           label: "Pay a Bill",    icon: "payments" },
       { id: "bulk-payments", label: "Bulk Payments", icon: "groups" },
-      { id: "wallet", label: "Wallet", icon: "account_balance_wallet" },
-      { id: "transactions", label: "My Transactions", icon: "receipt_long" },
+      { id: "donations",     label: "Donations",     icon: "favorite" },
+    ],
+  },
+  {
+    id: "finances",
+    title: "Finances",
+    items: [
+      { id: "wallet",       label: "Wallet",       icon: "account_balance_wallet" },
+      { id: "transactions", label: "Transactions", icon: "receipt_long" },
+    ],
+  },
+  {
+    id: "account",
+    title: "Account",
+    items: [
       { id: "notifications", label: "Notifications", icon: "notifications" },
-      { id: "profile", label: "Profile", icon: "person" },
+      { id: "profile",       label: "Profile",       icon: "person" },
     ],
   },
 ];
+
+// ─── Resolver ─────────────────────────────────────────────────────────────────
 
 export function getMenuByGroup(group: UserGroup): MenuSection[] {
   switch (group) {
-    case "ADMIN":
-      return ADMIN_MENU;
-    case "AGENT":
-      return AGENT_MENU;
-    case "BILLER":
-      return BILLER_MENU;
-    case "CUSTOMER":
-      return CUSTOMER_MENU;
-    default:
-      return CUSTOMER_MENU;
+    case "ADMIN":    return ADMIN_MENU;
+    case "AGENT":    return AGENT_MENU;
+    case "BILLER":   return BILLER_MENU;
+    case "CUSTOMER": return CUSTOMER_MENU;
+    default:         return CUSTOMER_MENU;
   }
 }

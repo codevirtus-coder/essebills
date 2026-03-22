@@ -61,6 +61,13 @@ export interface PageTransactionFeedDto {
 export interface RevenueDataPoint {
   month: string
   revenue: number
+  transactionCount?: number
+}
+
+/** Shape returned by GET /v1/analytics/admin/dashboard/revenue */
+export interface RevenueChartResponse {
+  data: { date: string; revenue: number; transactionCount: number }[]
+  period: string
 }
 
 export interface TopBiller {
@@ -254,17 +261,17 @@ export async function getAnalyticsRevenueChart(params?: {
   period?: string
   startDate?: string
   endDate?: string
-}): Promise<RevenueDataPoint[]> {
+}): Promise<RevenueChartResponse> {
   const query = new URLSearchParams()
   if (params?.period) query.set('period', params.period)
   if (params?.startDate) query.set('startDate', params.startDate)
   if (params?.endDate) query.set('endDate', params.endDate)
-  
+
   const queryString = query.toString()
   const baseUrl = API_ENDPOINTS.analytics.admin.dashboard.revenue({})
-  return adminJsonFetch<RevenueDataPoint[]>(
-    queryString 
-      ? `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}${queryString}` 
+  return adminJsonFetch<RevenueChartResponse>(
+    queryString
+      ? `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}${queryString}`
       : baseUrl
   )
 }

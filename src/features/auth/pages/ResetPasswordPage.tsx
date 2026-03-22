@@ -95,7 +95,7 @@ export function ResetPasswordPage() {
       setIsSubmitting(true);
       await resetPassword({ resetToken: resetToken.trim(), password });
       toast.success('Password reset successful. Please log in.');
-      navigate(ROUTE_PATHS.login, { replace: true });
+      navigate(config.loginPath, { replace: true });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to reset password');
     } finally {

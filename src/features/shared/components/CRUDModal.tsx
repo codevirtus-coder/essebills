@@ -45,7 +45,7 @@ export default function CRUDModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/50 z-[80] backdrop-blur-sm"
           />
           
           {/* Modal */}
@@ -54,7 +54,7 @@ export default function CRUDModal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className={`fixed inset-0 z-50 ${isFullscreen ? 'flex items-stretch justify-stretch' : 'flex items-center justify-center p-4'}`}
+            className={`fixed inset-0 z-[80] ${isFullscreen ? 'flex items-stretch justify-stretch' : 'flex items-center justify-center p-4'}`}
           >
             <div
               className={`bg-white dark:bg-slate-900 shadow-2xl w-full ${sizeClasses[size]} flex flex-col ${

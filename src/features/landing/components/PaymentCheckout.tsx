@@ -1,18 +1,20 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { 
-  ArrowLeft, 
-  ShieldCheck, 
-  Zap, 
-  CreditCard, 
-  Smartphone, 
-  Wallet, 
+import {
+  ArrowLeft,
+  ShieldCheck,
+  Zap,
+  CreditCard,
+  Smartphone,
+  Wallet,
   CheckCircle2,
   AlertCircle,
   Clock,
   ChevronRight,
+  Loader2,
   Verified
 } from "lucide-react";
+import type { ProductPreCheckResult } from "../../../services/products.service";
 import esebillsLogo from "../../../assets/esebills_logo.png";
 import { ROUTE_PATHS } from "../../../router/paths";
 import type { ProductField } from "../../../types/products";
@@ -24,6 +26,7 @@ interface PaymentCheckoutProps {
   categoryLabel?: string;
   currencyCode?: string;
   minimumAmount?: number;
+  serviceChargeRate?: number;
   onBack: () => void;
   onConfirm: (method: PaymentOption, email: string, phone: string, accountNumber: string, amount: number) => void;
   isLoading?: boolean;
@@ -32,9 +35,12 @@ interface PaymentCheckoutProps {
   walletBalance?: number;
   onLoginRequired?: () => void;
   productFields?: ProductField[];
+  onPreCheck?: (requiredFields: Record<string, string>, amount?: number) => void;
+  preCheckResult?: ProductPreCheckResult | null;
+  isPreChecking?: boolean;
 }
 
-export type PaymentOption = "wallet" | "card" | "mobile_money" | "pesepay";
+export type PaymentOption = "wallet" | "card" | "mobile_money" | "pesepay" | "ecocash_seamless";
 
 const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
   billerName = "ZESA Prepaid",
@@ -43,6 +49,7 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
   categoryLabel,
   currencyCode = "USD",
   minimumAmount,
+  serviceChargeRate = 0.01,
   onBack,
   onConfirm,
   isLoading = false,
@@ -51,6 +58,9 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
   walletBalance,
   onLoginRequired,
   productFields = [],
+  onPreCheck,
+  preCheckResult,
+  isPreChecking = false,
 }) => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentOption>("pesepay");
   const [email, setEmail] = useState("");
@@ -73,7 +83,7 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
 
   const baseAmount = parseFloat(amountInput) || 0;
   const isWallet = paymentMethod === "wallet";
-  const serviceFee = isWallet ? 0 : baseAmount * 0.01;
+  const serviceFee = isWallet ? 0 : baseAmount * serviceChargeRate;
   const totalAmount = baseAmount + serviceFee;
 
   const walletInsufficient = isWallet && walletBalance !== undefined && walletBalance < totalAmount;
@@ -81,7 +91,15 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
   const amountError = minimumAmount && baseAmount > 0 && baseAmount < minimumAmount
     ? `Minimum amount is ${currencyCode} ${minimumAmount.toFixed(2)}`
     : null;
-  const canPay = !!phone && !!accountNumber && baseAmount > 0 && !amountError && !walletInsufficient;
+
+  const preCheckFailed = preCheckResult != null && preCheckResult.supportsPreCheck && !preCheckResult.valid;
+  const canPay = !!phone && !!accountNumber && baseAmount > 0 && !amountError && !walletInsufficient && !preCheckFailed;
+
+  const handleAccountBlur = useCallback(() => {
+    if (onPreCheck && accountNumber.trim()) {
+      onPreCheck({ accountNumber }, parseFloat(amountInput) || undefined);
+    }
+  }, [onPreCheck, accountNumber, amountInput]);
 
   function handleSelectWallet() {
     if (!isAuthenticated) {
@@ -165,13 +183,31 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
                     {accountFieldMeta.label} <span className="text-emerald-600">*</span>
                   </label>
-                  <input
-                    type="text"
-                    value={accountNumber}
-                    onChange={(e) => setAccountNumber(e.target.value)}
-                    placeholder={accountFieldMeta.placeholder}
-                    className="w-full px-0 py-1 bg-transparent border-0 border-b border-slate-200 focus:outline-none focus:border-emerald-500 text-xl font-black tracking-tight text-slate-900 transition-all placeholder:text-slate-300"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={accountNumber}
+                      onChange={(e) => setAccountNumber(e.target.value)}
+                      onBlur={handleAccountBlur}
+                      placeholder={accountFieldMeta.placeholder}
+                      className="w-full px-0 py-1 bg-transparent border-0 border-b border-slate-200 focus:outline-none focus:border-emerald-500 text-xl font-black tracking-tight text-slate-900 transition-all placeholder:text-slate-300 pr-6"
+                    />
+                    {isPreChecking && (
+                      <Loader2 size={16} className="absolute right-0 top-2 text-slate-400 animate-spin" />
+                    )}
+                  </div>
+                  {preCheckResult?.supportsPreCheck && preCheckResult.valid && preCheckResult.accountNarrative && (
+                    <p className="text-[10px] text-emerald-600 font-bold mt-1 flex items-center gap-1">
+                      <CheckCircle2 size={11} />
+                      {preCheckResult.accountNarrative}
+                    </p>
+                  )}
+                  {preCheckResult?.supportsPreCheck && !preCheckResult.valid && preCheckResult.errorMessage && (
+                    <p className="text-[10px] text-rose-500 font-bold mt-1 flex items-center gap-1">
+                      <AlertCircle size={11} />
+                      {preCheckResult.errorMessage}
+                    </p>
+                  )}
                 </div>
 
                 {/* Editable amount */}
@@ -211,16 +247,24 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                 <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
-                      Notification Phone <span className="text-emerald-600">*</span>
+                      {paymentMethod === "ecocash_seamless" ? (
+                        <>EcoCash Number <span className="text-emerald-600">*</span></>
+                      ) : (
+                        <>Notification Phone <span className="text-emerald-600">*</span></>
+                      )}
                     </label>
-                    <input 
+                    <input
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      placeholder="e.g. 0771234567"
+                      placeholder={paymentMethod === "ecocash_seamless" ? "e.g. 0771234567 (EcoCash)" : "e.g. 0771234567"}
                       className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold transition-all"
                     />
-                    <p className="text-[9px] text-slate-400 mt-1">Where to send your token or receipt</p>
+                    <p className="text-[9px] text-slate-400 mt-1">
+                      {paymentMethod === "ecocash_seamless"
+                        ? "EcoCash number that will be charged"
+                        : "Where to send your token or receipt"}
+                    </p>
                   </div>
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
@@ -264,8 +308,8 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                 <button
                   onClick={() => setPaymentMethod("pesepay")}
                   className={`p-6 rounded-3xl border-2 transition-all text-left relative overflow-hidden group ${
-                    paymentMethod === "pesepay" 
-                    ? "border-emerald-600 bg-emerald-50/50 shadow-xl shadow-emerald-600/10" 
+                    paymentMethod === "pesepay"
+                    ? "border-emerald-600 bg-emerald-50/50 shadow-xl shadow-emerald-600/10"
                     : "border-slate-100 bg-white hover:border-slate-300"
                   }`}
                 >
@@ -281,6 +325,32 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                     </div>
                   </div>
                   {paymentMethod === "pesepay" && (
+                    <div className="absolute top-4 right-4 text-emerald-600">
+                      <CheckCircle2 size={24} />
+                    </div>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => setPaymentMethod("ecocash_seamless")}
+                  className={`p-6 rounded-3xl border-2 transition-all text-left relative overflow-hidden group ${
+                    paymentMethod === "ecocash_seamless"
+                    ? "border-emerald-600 bg-emerald-50/50 shadow-xl shadow-emerald-600/10"
+                    : "border-slate-100 bg-white hover:border-slate-300"
+                  }`}
+                >
+                  <div className="flex items-center gap-4 mb-4 relative z-10">
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
+                      paymentMethod === "ecocash_seamless" ? "bg-emerald-600 text-white scale-110 rotate-3" : "bg-slate-100 text-slate-400"
+                    }`}>
+                      <Smartphone size={24} />
+                    </div>
+                    <div>
+                      <p className={`text-sm font-black ${paymentMethod === "ecocash_seamless" ? "text-emerald-900" : "text-slate-900"}`}>EcoCash Seamless</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pay without redirect</p>
+                    </div>
+                  </div>
+                  {paymentMethod === "ecocash_seamless" && (
                     <div className="absolute top-4 right-4 text-emerald-600">
                       <CheckCircle2 size={24} />
                     </div>
@@ -326,7 +396,8 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
               <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-start gap-3">
                 <AlertCircle className="text-amber-500 shrink-0 mt-0.5" size={18} />
                 <p className="text-xs text-amber-800 font-medium leading-relaxed">
-                  <strong>Notice:</strong> For PesePay transactions, you will be redirected to a secure gateway to complete your payment using EcoCash, OneMoney, or Bank Cards.
+                  <strong>PesePay Gateway:</strong> You will be redirected to a secure page to pay with EcoCash, OneMoney, or Bank Cards.{" "}
+                  <strong>EcoCash Seamless:</strong> Enter your EcoCash number below and pay directly without a redirect.
                 </p>
               </div>
             </div>
@@ -343,7 +414,7 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                   <span className="font-black text-lg">{currencyCode} {baseAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center group">
-                  <span className="text-slate-400 font-bold group-hover:text-slate-300 transition-colors text-sm">Service Fee {isWallet ? "" : "(1%)"}</span>
+                  <span className="text-slate-400 font-bold group-hover:text-slate-300 transition-colors text-sm">Service Fee {isWallet ? "" : `(${(serviceChargeRate * 100).toFixed(1)}%)`}</span>
                   {isWallet
                     ? <span className="font-black text-sm text-emerald-400 uppercase tracking-widest">No Fees</span>
                     : <span className="font-black text-lg text-emerald-400">+{currencyCode} {serviceFee.toFixed(2)}</span>

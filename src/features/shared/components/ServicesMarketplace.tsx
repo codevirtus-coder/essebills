@@ -20,7 +20,7 @@ import {
 import { ROUTE_PATHS } from '../../../router/paths';
 import { getActiveCampaigns, type DonationCampaign } from '../../../services/donations.service';
 import { getDonationCampaignsV1, type DonationCampaignV1 } from '../../../services/donationsV1.service';
-import { getProducts, getProductCategories, getProductsByCategory, getCurrencies } from '../../../services/products.service';
+import { getProducts, getProductCategories, getProductsByCategory, getCurrencies, getProductLogoUrl } from '../../../services/products.service';
 import type { Product, ProductCategory, Currency } from '../../../types/products';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -470,8 +470,25 @@ export function ServicesMarketplace({ embedded = false, showTitle = true, liftSe
                   className="group relative flex flex-col rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 hover:border-emerald-500/40 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden"
                   onClick={() => handlePay(biller)}
                 >
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 ${color.bg} dark:bg-opacity-10`}>
-                    <CategoryIcon label={biller.categoryLabel} className={`w-6 h-6 ${color.icon}`} />
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 overflow-hidden ${color.bg} dark:bg-opacity-10`}>
+                    {biller.productId > 0 ? (
+                      <img
+                        src={getProductLogoUrl(biller.productId)}
+                        alt={biller.name}
+                        className="w-full h-full object-contain p-1"
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          target.style.display = 'none';
+                          const fallback = target.nextElementSibling as HTMLElement | null;
+                          if (fallback) fallback.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <span
+                      className={`w-full h-full items-center justify-center ${biller.productId > 0 ? 'hidden' : 'flex'}`}
+                    >
+                      <CategoryIcon label={biller.categoryLabel} className={`w-6 h-6 ${color.icon}`} />
+                    </span>
                   </div>
 
                   <h3 className="text-sm font-bold text-slate-900 dark:text-white leading-tight line-clamp-2 mb-1 flex-1 group-hover:text-emerald-600 transition-colors">

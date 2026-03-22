@@ -81,7 +81,7 @@ export function ForgotPasswordPage() {
       setIsSubmitting(true);
       await requestPasswordReset(email.trim());
       toast.success(config.successMessage);
-      navigate(ROUTE_PATHS.home, { replace: true });
+      navigate(config.loginPath, { replace: true });
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : 'Failed to request password reset',

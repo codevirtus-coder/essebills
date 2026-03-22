@@ -62,7 +62,7 @@ export function ProfileDrawer({ open, onClose, title = "Profile" }: ProfileDrawe
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/30">
+    <div className="fixed inset-0 z-[80] flex items-center justify-end bg-black/30">
       <div className="w-full max-w-md h-full bg-white shadow-2xl border-l border-neutral-light overflow-y-auto">
         <div className="flex items-center justify-between px-6 py-5 border-b border-neutral-light">
           <div>

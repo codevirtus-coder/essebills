@@ -52,7 +52,7 @@ const AdminTransactionsPage: React.FC = () => {
     try {
       setIsLoading(true)
       const payload: any = await adminJsonFetch<unknown>(ADMIN_ENDPOINTS.paymentTransactions.root, {
-        filters: { page: pageIndex, size, search: q || undefined },
+        filters: { page: pageIndex, size, search: q || undefined, sort: 'dateTimeOfTransaction,desc' },
       })
       
       const content = toRows(payload)

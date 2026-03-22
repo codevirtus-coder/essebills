@@ -64,7 +64,7 @@ export function DashboardLayout() {
 
       {/* Mobile Navigation Overlay */}
       {isMobileNavOpen && (
-        <div className="fixed inset-0 z-120 md:hidden">
+        <div className="fixed inset-0 z-[120] md:hidden">
           <button
             type="button"
             onClick={() => setIsMobileNavOpen(false)}

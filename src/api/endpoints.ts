@@ -36,6 +36,10 @@ export const API_ENDPOINTS = {
     uploadLogo: (productId: string | number) => `/v1/products/${productId}/logo`,
     /** Public (no-auth) logo image stream — use directly as <img src> */
     logo: (productId: string | number) => `/opn/v1/products/${productId}/logo`,
+    /** Public availability check — no auth required */
+    availability: (productId: string | number) => `/v1/opn/products/${productId}/availability`,
+    /** Public provider pre-check (account validation) — no auth required */
+    preCheck: (productId: string | number) => `/v1/opn/products/${productId}/pre-check`,
   },
 
   // Product Categories
@@ -81,11 +85,22 @@ export const API_ENDPOINTS = {
     all: '/v1/payment-transactions', // Alias for all payments
     byId: (id: string | number) => `/v1/payment-transactions/${id}`,
     productPayment: '/v1/product-payment',
+    paymentStatus: (transactionId: string | number) => `/v1/product-payment/${transactionId}/status`,
+    serviceChargeApplicable: (group?: string) =>
+      `/v1/service-charges/applicable${group ? `?group=${group}` : ''}`,
     portal: {
       root: '/v1/portal/product-payment',
       transactions: '/v1/portal/product-payment/transactions',
       repeat: (id: string | number) => `/v1/portal/product-payment/repeat/${id}`,
     },
+  },
+
+  // Service Charges (admin CRUD + public applicable)
+  serviceCharges: {
+    root: '/v1/service-charges',
+    byId: (id: string | number) => `/v1/service-charges/${id}`,
+    applicable: (group?: string) =>
+      `/v1/service-charges/applicable${group ? `?group=${encodeURIComponent(group)}` : ''}`,
   },
 
   // Bulk Payments
