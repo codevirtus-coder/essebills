@@ -7,19 +7,28 @@ import { useNavigate } from 'react-router-dom';
 import { ROUTE_PATHS } from '../../../router/paths';
 import type { BillerCard } from '../../shared/components/ServicesMarketplace';
 
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debouncedValue;
+}
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const LS_KEY = 'esebills.quickpay.last';
 
 const ICON_BG: Record<string, string> = {
-  airtime:   'bg-blue-100 text-blue-600',
-  internet:  'bg-violet-100 text-violet-600',
-  education: 'bg-amber-100 text-amber-600',
-  insurance: 'bg-rose-100 text-rose-600',
-  fuel:      'bg-orange-100 text-orange-600',
-  donations: 'bg-pink-100 text-pink-600',
-  lottery:   'bg-purple-100 text-purple-600',
-  utilities: 'bg-emerald-100 text-emerald-700',
+  airtime:   'bg-blue-100 text-blue-800',
+  internet:  'bg-violet-100 text-violet-800',
+  education: 'bg-amber-100 text-amber-800',
+  insurance: 'bg-rose-100 text-rose-800',
+  fuel:      'bg-orange-100 text-orange-800',
+  donations: 'bg-pink-100 text-pink-800',
+  lottery:   'bg-purple-100 text-purple-800',
+  utilities: 'bg-emerald-100 text-emerald-800',
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -73,11 +82,11 @@ function saveLast(s: LastSelection) {
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Step = 'categories' | 'products';
-type Cat  = { key: string; label: string; emoji: string };
+type Cat  = { key: string; productCategoryId?: number; label: string; emoji: string };
 
 // ─── Flat card sub-components ─────────────────────────────────────────────────
 
-/** Category grid tile — centred icon + label, flat, pale bg on focus */
+/** Category grid tile — centred icon + label, flat, pale bg on focus, square */
 function CatCard({ cat, count, focused, onClick, itemRef }: {
   cat: Cat; count: number; focused: boolean;
   onClick: () => void; itemRef?: React.Ref<HTMLButtonElement>;
@@ -87,22 +96,23 @@ function CatCard({ cat, count, focused, onClick, itemRef }: {
       ref={itemRef}
       type="button"
       onClick={onClick}
-      className={`flex flex-col items-center justify-center gap-1.5 p-2.5 rounded-xl outline-none
+      aria-selected={focused}
+      className={`flex flex-col items-center justify-center gap-1.5 p-2.5 rounded-xl outline-none aspect-square w-full min-w-[70px] max-w-[100px]
         transition-all duration-150 active:scale-95 cursor-pointer hover:-translate-y-0.5
-        ${focused ? 'bg-emerald-50 shadow-md shadow-emerald-100 ring-1 ring-emerald-200' : 'bg-slate-50 hover:bg-white hover:shadow-md border border-transparent hover:border-slate-100'}`}
+        ${focused ? 'bg-emerald-50 ring-2 ring-emerald-500/20 shadow-[0_4px_20px_rgb(16,185,129,0.15)]' : 'bg-slate-50 hover:bg-white hover:shadow-md border border-slate-200/50 hover:border-slate-200'}`}
     >
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${ICON_BG[colorKey(cat.label, cat.key)] ?? ICON_BG.utilities}`}>
-        <span className="text-lg leading-none">{cat.emoji}</span>
+        <span className="text-lg sm:text-xl leading-none drop-shadow-sm">{cat.emoji}</span>
       </div>
-      <p className={`text-[10px] font-semibold text-center leading-tight line-clamp-2 w-full px-0.5 transition-colors ${focused ? 'text-emerald-700' : 'text-slate-600'}`}>
+      <p className={`text-[9px] sm:text-[10px] font-semibold text-center leading-tight line-clamp-2 w-full px-0.5 transition-colors ${focused ? 'text-emerald-800' : 'text-slate-600'}`}>
         {cat.label}
       </p>
-      {count > 0 && <span className="text-[9px] text-slate-400">{count}</span>}
+      {count > 0 && <span className="text-[8px] sm:text-[9px] text-slate-400 font-medium">{count}</span>}
     </button>
   );
 }
 
-/** Product card — flat, pale emerald bg on focus/selected */
+/** Product card — flat, pale emerald bg on focus/selected, square */
 function ProductCard({ biller, focused, onClick, itemRef }: {
   biller: BillerCard; focused: boolean;
   onClick: () => void; itemRef?: React.Ref<HTMLButtonElement>;
@@ -113,62 +123,39 @@ function ProductCard({ biller, focused, onClick, itemRef }: {
       ref={itemRef}
       type="button"
       onClick={onClick}
-      className={`flex items-center gap-2.5 p-3 rounded-xl text-left outline-none
-        transition-all duration-150 active:scale-[0.98] cursor-pointer w-full hover:-translate-y-0.5
-        ${focused ? 'bg-emerald-50 shadow-md shadow-emerald-100 ring-1 ring-emerald-200' : 'bg-slate-50 hover:bg-white hover:shadow-md border border-transparent hover:border-slate-100'}`}
+      aria-selected={focused}
+      className={`flex flex-col items-center justify-center gap-1.5 p-2.5 rounded-xl text-center outline-none aspect-square w-full min-w-[70px] max-w-[100px]
+        transition-all duration-150 active:scale-[0.98] cursor-pointer hover:-translate-y-0.5
+        ${focused ? 'bg-emerald-50 ring-2 ring-emerald-500/20 shadow-[0_4px_20px_rgb(16,185,129,0.15)]' : 'bg-slate-50 hover:bg-white hover:shadow-md border border-slate-200/50 hover:border-slate-200'}`}
     >
-      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-sm ${ICON_BG[ck] ?? ICON_BG.utilities}`}>
+      <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-base sm:text-lg ${ICON_BG[ck] ?? ICON_BG.utilities}`}>
         {catEmoji(biller.categoryLabel)}
       </div>
-      <div className="flex-1 min-w-0">
-        <p className={`text-xs font-semibold truncate leading-tight transition-colors ${focused ? 'text-emerald-800' : 'text-slate-700'}`}>
+      <div className="flex flex-col items-center min-w-0">
+        <p className={`text-[9px] sm:text-[10px] font-semibold text-center leading-tight line-clamp-2 transition-colors ${focused ? 'text-emerald-800' : 'text-slate-700'}`}>
           {biller.name}
         </p>
         {biller.currencyCode && (
-          <span className="text-[9px] font-bold text-slate-400">{biller.currencyCode}</span>
+          <span className="text-[8px] sm:text-[9px] font-bold text-slate-400">{biller.currencyCode}</span>
         )}
       </div>
-      <ChevronRight size={12} className={`shrink-0 transition-colors ${focused ? 'text-emerald-400' : 'text-slate-300'}`} />
     </button>
   );
 }
 
-/** Variant card — flat, 2-col grid tile */
-function VariantCard({ biller, focused, onClick, itemRef }: {
-  biller: BillerCard; focused: boolean;
-  onClick: () => void; itemRef?: React.Ref<HTMLButtonElement>;
-}) {
-  return (
-    <button
-      ref={itemRef}
-      type="button"
-      onClick={onClick}
-      className={`flex flex-col gap-0.5 p-3 rounded-xl text-left outline-none
-        transition-all duration-150 active:scale-[0.98] cursor-pointer w-full hover:-translate-y-0.5
-        ${focused ? 'bg-emerald-50 shadow-md shadow-emerald-100 ring-1 ring-emerald-200' : 'bg-slate-50 hover:bg-white hover:shadow-md border border-transparent hover:border-slate-100'}`}
-    >
-      <p className={`text-xs font-semibold line-clamp-2 leading-tight transition-colors ${focused ? 'text-emerald-800' : 'text-slate-700'}`}>
-        {biller.name}
-      </p>
-      {biller.minimumPurchaseAmount != null && biller.minimumPurchaseAmount > 0 && (
-        <p className="text-[10px] font-bold text-emerald-600">
-          {biller.currencyCode ?? 'USD'} {biller.minimumPurchaseAmount.toFixed(2)}
-        </p>
-      )}
-    </button>
-  );
-}
+
 
 // ─── Shared data + logic hook ─────────────────────────────────────────────────
 
 export function useQuickPayData() {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['quickpay-data'],
     queryFn: async () => {
-      const [page, cats] = await Promise.all([getProducts({ size: 100 }), getProductCategories()]);
+      const [page, cats] = await Promise.all([getProducts({ size: 500 }), getProductCategories()]);
       return { products: page.content ?? [], categories: cats };
     },
     staleTime: 5 * 60 * 1000,
+    retry: 1,
   });
 
   const categories = useMemo<Cat[]>(() => (
@@ -176,9 +163,10 @@ export function useQuickPayData() {
       .filter((c) => c.active !== false)
       .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
       .map((c) => ({
-        key:   String(c.id ?? c.name ?? '').trim(),
-        label: String(c.displayName ?? c.name ?? 'Category'),
-        emoji: String(c.emoji ?? '').trim() || catEmoji(String(c.displayName ?? c.name ?? '')),
+        key:               String(c.id ?? '').trim(),
+        productCategoryId: typeof c.id === 'number' ? c.id : undefined,
+        label:             String(c.displayName ?? c.name ?? 'Category'),
+        emoji:             String(c.emoji ?? '').trim() || catEmoji(String(c.displayName ?? c.name ?? '')),
       }))
       .filter((c) => c.key.length > 0)
   ), [data?.categories]);
@@ -191,13 +179,14 @@ export function useQuickPayData() {
         const code = String(p.code ?? '');
         const cat  = p.category;
         const ik   = inferKey(name, code);
+        const catId = typeof cat?.id === 'number' ? String(cat.id) : undefined;
         return {
           id:                    `p-${p.id}`,
           productId:             p.id as number,
           productCategoryId:     typeof cat?.id === 'number' ? cat.id : undefined,
           name,
           description:           p.description ?? undefined,
-          categoryKey:           String(cat?.id ?? cat?.name ?? ik),
+          categoryKey:           catId ?? String(cat?.name ?? ik),
           categoryLabel:         String(cat?.displayName ?? cat?.name ?? ik),
           currencyCode:          p.defaultCurrency?.code ?? undefined,
           minimumPurchaseAmount: Number(p.minimumPurchaseAmount ?? 0) || undefined,
@@ -211,7 +200,7 @@ export function useQuickPayData() {
     return m;
   }, [allProducts]);
 
-  return { categories, allProducts, countByCategory, isLoading };
+  return { categories, allProducts, countByCategory, isLoading, isError };
 }
 
 // ─── Shared selector panel (used by both QuickPay and QuickPayWide) ───────────
@@ -237,13 +226,15 @@ export function QuickPaySelector({ onPick, catCols = 3, itemCols = 2 }: Selector
   const scrollRef = useRef<HTMLDivElement>(null);
   const itemRefs  = useRef<(HTMLButtonElement | null)[]>([]);
   const lastSel   = useMemo(() => readLast(), []);
+  const [searchInput, setSearchInput] = useState('');
+  const debouncedSearch = useDebounce(searchInput, 50);
 
   const visibleProducts = useMemo<BillerCard[]>(() => {
-    const q = search.trim().toLowerCase();
+    const q = debouncedSearch.trim().toLowerCase();
     if (q) return allProducts.filter((b) => b.name.toLowerCase().includes(q) || (b.description ?? '').toLowerCase().includes(q));
     if (selectedCat) return allProducts.filter((b) => b.categoryKey === selectedCat.key);
     return allProducts;
-  }, [allProducts, search, selectedCat]);
+  }, [allProducts, debouncedSearch, selectedCat]);
 
   const resetFocus = useCallback(() => { setFocusedIdx(0); scrollRef.current?.scrollTo({ top: 0 }); }, []);
 
@@ -256,13 +247,13 @@ export function QuickPaySelector({ onPick, catCols = 3, itemCols = 2 }: Selector
   }
 
   function goBack() {
-    if (step === 'variants') setStep('products');
-    else if (step === 'products') { if (search) { setSearch(''); setSelectedCat(null); } setStep('categories'); }
+    if (searchInput) { setSearchInput(''); setSelectedCat(null); }
+    setStep('categories');
     resetFocus();
   }
 
   function onSearch(v: string) {
-    setSearch(v);
+    setSearchInput(v);
     if (v.trim()) { setSelectedCat(null); setStep('products'); }
     else if (step === 'products' && !selectedCat) setStep('categories');
     resetFocus();
@@ -275,16 +266,22 @@ export function QuickPaySelector({ onPick, catCols = 3, itemCols = 2 }: Selector
   useEffect(() => { searchRef.current?.focus(); }, [step]);
 
   const breadcrumb = step === 'products'
-    ? (search ? `"${search}"` : (selectedCat?.label ?? 'Products'))
+    ? (searchInput ? `"${searchInput}"` : (selectedCat?.label ?? 'Products'))
     : null;
 
-  const catColClass  = catCols  === 4 ? 'grid-cols-4' : 'grid-cols-3';
-  const itemColClass = itemCols === 3 ? 'grid-cols-3' : 'grid-cols-2';
+  const catColClass  = catCols  === 4 ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' : 'grid-cols-3 sm:grid-cols-3 lg:grid-cols-4';
+  const itemColClass = itemCols === 3 ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-3';
+  const cols = step === 'categories' ? catCols : itemCols;
 
   function handleKeyDown(e: React.KeyboardEvent) {
+    if (itemCount === 0) return;
     switch (e.key) {
-      case 'ArrowDown':  case 'ArrowRight': e.preventDefault(); setFocusedIdx((i) => Math.min(i + 1, itemCount - 1)); break;
-      case 'ArrowUp':    case 'ArrowLeft':  e.preventDefault(); setFocusedIdx((i) => Math.max(i - 1, 0)); break;
+      case 'ArrowRight': e.preventDefault(); setFocusedIdx((i) => Math.min(i + 1, itemCount - 1)); break;
+      case 'ArrowLeft':  e.preventDefault(); setFocusedIdx((i) => Math.max(i - 1, 0)); break;
+      case 'ArrowDown':  e.preventDefault(); setFocusedIdx((i) => Math.min(i + cols, itemCount - 1)); break;
+      case 'ArrowUp':    e.preventDefault(); setFocusedIdx((i) => Math.max(i - cols, 0)); break;
+      case 'Home':       e.preventDefault(); setFocusedIdx(0); break;
+      case 'End':        e.preventDefault(); setFocusedIdx(itemCount - 1); break;
       case 'Enter': e.preventDefault();
         if (step === 'categories') { const c = categories[focusedIdx]; if (c) goToProducts(c); }
         else if (step === 'products') { const p = visibleProducts[focusedIdx]; if (p) pickProduct(p); }
@@ -294,22 +291,23 @@ export function QuickPaySelector({ onPick, catCols = 3, itemCols = 2 }: Selector
   }
 
   return (
-    <div className="flex flex-col h-full outline-none" onKeyDown={handleKeyDown} tabIndex={-1}>
+    <div className="flex flex-col h-full outline-none p-3" onKeyDown={handleKeyDown} tabIndex={-1} role="application" aria-label="Quick Pay service selector">
       {/* Fixed header */}
-      <div className="shrink-0 space-y-2 pb-2">
+      <div className="shrink-0 space-y-2 pb-3">
         <div className="relative">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           <input
             ref={searchRef}
             type="text"
-            value={search}
+            value={searchInput}
             onChange={(e) => onSearch(e.target.value)}
             placeholder="Search services…"
+            aria-label="Search services"
             className="w-full pl-8 pr-8 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#10B981] focus:ring-2 focus:ring-[#10B981]/10 transition-all shadow-sm"
           />
-          {search && (
+          {searchInput && (
             <button type="button" onClick={() => onSearch('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600" aria-label="Clear search">
               <X size={13} />
             </button>
           )}
@@ -350,15 +348,21 @@ export function QuickPaySelector({ onPick, catCols = 3, itemCols = 2 }: Selector
             )}
 
             {isLoading ? (
-              <div className={`grid ${catColClass} gap-1.5`}>
-                {Array(9).fill(0).map((_, i) => <div key={i} className="h-20 bg-slate-100 rounded-xl animate-pulse" />)}
+              <div className={`grid ${catColClass} gap-4`}>
+                {Array(9).fill(0).map((_, i) => (
+                  <div key={i} className="aspect-square rounded-xl animate-pulse bg-slate-100 flex flex-col items-center justify-center gap-1.5 p-2.5">
+                    <div className="w-10 h-10 rounded-xl bg-slate-200" />
+                    <div className="w-16 h-2 rounded bg-slate-200" />
+                    <div className="w-8 h-1.5 rounded bg-slate-200" />
+                  </div>
+                ))}
               </div>
             ) : categories.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-8 text-slate-400">
+              <div className="flex flex-col items-center gap-2 py-8 text-slate-300">
                 <Zap size={22} /><p className="text-xs">No services available.</p>
               </div>
             ) : (
-              <div className={`grid ${catColClass} gap-1.5`}>
+              <div className={`grid ${catColClass} gap-4`}>
                 {categories.map((cat, i) => (
                   <CatCard key={cat.key} cat={cat} count={countByCategory[cat.key] ?? 0}
                     focused={focusedIdx === i} onClick={() => goToProducts(cat)}
@@ -371,15 +375,21 @@ export function QuickPaySelector({ onPick, catCols = 3, itemCols = 2 }: Selector
 
         {step === 'products' && (
           isLoading ? (
-            <div className={`grid ${itemColClass} gap-1.5`}>
-              {Array(6).fill(0).map((_, i) => <div key={i} className="h-12 bg-slate-100 rounded-xl animate-pulse" />)}
+            <div className={`grid ${itemColClass} gap-4`}>
+              {Array(6).fill(0).map((_, i) => (
+                <div key={i} className="aspect-square rounded-xl animate-pulse bg-slate-100 flex flex-col items-center justify-center gap-1.5 p-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-slate-200" />
+                  <div className="w-14 h-2 rounded bg-slate-200" />
+                  <div className="w-8 h-1.5 rounded bg-slate-200" />
+                </div>
+              ))}
             </div>
           ) : visibleProducts.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 py-8 text-slate-400">
+            <div className="flex flex-col items-center gap-2 py-8 text-slate-300">
               <Search size={22} /><p className="text-xs">No services found.</p>
             </div>
           ) : (
-            <div className={`grid ${itemColClass} gap-1.5`}>
+            <div className={`grid ${itemColClass} gap-4`}>
               {visibleProducts.map((b, i) => (
                 <ProductCard key={b.id} biller={b} focused={focusedIdx === i}
                   onClick={() => pickProduct(b)} itemRef={(el) => { itemRefs.current[i] = el; }} />
@@ -390,7 +400,7 @@ export function QuickPaySelector({ onPick, catCols = 3, itemCols = 2 }: Selector
 
       </div>
 
-      <p className="shrink-0 pt-1 text-[10px] text-slate-300 text-right hidden sm:block">↑↓←→ · Enter · Esc</p>
+      <p className="shrink-0 pt-1 text-[9px] text-slate-300 text-right hidden sm:block">↑↓ ←→ · Enter · Esc · Home · End</p>
     </div>
   );
 }

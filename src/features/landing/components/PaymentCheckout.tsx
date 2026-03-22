@@ -133,7 +133,7 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
       {!embedded && (
         <header className="h-20 flex items-center justify-between px-4 sm:px-8 border-b border-slate-200 bg-slate-900 text-white sticky top-0 z-50">
           <Link to={ROUTE_PATHS.home} className="flex items-center">
-            <img src={esebillsLogo} alt="EseBills" className="h-10 w-auto brightness-0 invert" />
+            <img src={esebillsLogo} alt="EseBills" className="h-16 w-auto brightness-0 invert" />
           </Link>
           <div className="flex items-center gap-4">
             <div className="hidden sm:flex flex-col items-end mr-2">

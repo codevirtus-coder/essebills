@@ -13,7 +13,10 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(node:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(sed -i '' 's/className=\"\"h-16 w-auto brightness-0 invert mb-8\"\"/className=\"\"h-24 w-auto brightness-0 invert mb-8\"\"/g' /Users/tendaikatsande/Documents/PROJECTS/ESEBILLS/essebills-web/src/features/auth/components/PortalLogin.tsx /Users/tendaikatsande/Documents/PROJECTS/ESEBILLS/essebills-web/src/features/auth/pages/ForgotPasswordPage.tsx /Users/tendaikatsande/Documents/PROJECTS/ESEBILLS/essebills-web/src/features/auth/pages/ResetPasswordPage.tsx)",
+      "Bash(sed -i '' 's/className=\"\"h-16 w-auto brightness-0 invert mb-12\"\"/className=\"\"h-24 w-auto brightness-0 invert mb-12\"\"/g' /Users/tendaikatsande/Documents/PROJECTS/ESEBILLS/essebills-web/src/features/auth/components/PortalRegister.tsx)",
+      "Bash(sed -i '' 's/className=\"\"h-14 w-auto\"\"/className=\"\"h-20 w-auto\"\"/g' /Users/tendaikatsande/Documents/PROJECTS/ESEBILLS/essebills-web/src/features/auth/components/PortalLogin.tsx /Users/tendaikatsande/Documents/PROJECTS/ESEBILLS/essebills-web/src/features/auth/components/PortalRegister.tsx /Users/tendaikatsande/Documents/PROJECTS/ESEBILLS/essebills-web/src/features/auth/pages/ForgotPasswordPage.tsx /Users/tendaikatsande/Documents/PROJECTS/ESEBILLS/essebills-web/src/features/auth/pages/ResetPasswordPage.tsx)"
     ]
   }
 }

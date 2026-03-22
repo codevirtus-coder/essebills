@@ -81,7 +81,7 @@ export function PaymentReturnPage() {
       {/* Header */}
       <header className="h-16 flex items-center justify-between px-6 sm:px-10 border-b border-slate-200 bg-slate-900 text-white">
         <Link to={ROUTE_PATHS.home}>
-          <img src={esebillsLogo} alt="EseBills" className="h-8 w-auto brightness-0 invert" />
+          <img src={esebillsLogo} alt="EseBills" className="h-12 w-auto brightness-0 invert" />
         </Link>
         <div className="flex items-center gap-2 text-[10px] font-bold text-emerald-400 uppercase tracking-widest">
           <ShieldCheck size={16} />
