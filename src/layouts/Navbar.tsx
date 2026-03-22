@@ -19,6 +19,16 @@ export function Navbar() {
   const navigate = useNavigate();
   const isHome = pathname === "/";
 
+  function handleServices(e: React.MouseEvent) {
+    e.preventDefault();
+    setMobileOpen(false);
+    if (isHome) {
+      document.getElementById("pay-now")?.scrollIntoView({ behavior: "smooth" });
+    } else {
+      navigate("/", { state: { scrollTo: "pay-now" } });
+    }
+  }
+
   function handleHowItWorks(e: React.MouseEvent) {
     e.preventDefault();
     setMobileOpen(false);
@@ -54,18 +64,14 @@ export function Navbar() {
     : null;
 
   const navLinks = [
-    {
-      label: "Services",
-      to: "/#pay-now",
-      onClick: undefined as ((e: React.MouseEvent) => void) | undefined,
-    },
+    { label: "Services", to: "#pay-now", onClick: handleServices },
     { label: "How it Works", to: "#how-it-works", onClick: handleHowItWorks },
   ];
 
   return (
     <header
-      className={`sticky top-0 inset-x-0 z-50 transition-all duration-500 backdrop-blur-xl border border-[#10B981]/25 shadow-[0_8px_30px_rgba(16,185,129,0.12)] ${
-        scrolled || !isHome ? "bg-[#10B981]" : "bg-[#10B981]"
+      className={`sticky top-0 inset-x-0 z-50 transition-all duration-300 ${
+        scrolled || !isHome ? "bg-[#10B981] shadow-md" : "bg-transparent"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">

@@ -58,16 +58,16 @@ export function HomeOverview() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.5, ease: "easeOut", delay: i * 0.1 }}
-                className={`group relative p-7 sm:p-8 rounded-3xl border border-slate-200 shadow-xl transition-all duration-300 overflow-hidden bg-white ${i === 2 ? "sm:col-span-2" : ""}`}
+                className={`group relative p-7 sm:p-8 rounded-3xl border border-slate-200 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden bg-white ${i === 2 ? "sm:col-span-2" : ""}`}
               >
                 <div className="absolute top-0 right-0 pr-6 pt-5 text-right">
                   <p className="text-2xl font-black text-[#10B981]">{stat}</p>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#10B981]">{statLabel}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#10B981]">{statLabel}</p>
                 </div>
                 <div className="w-12 h-12 rounded-2xl bg-[#10B981] flex items-center justify-center mb-5">
                   <Icon size={22} className="text-white" />
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">{title}</h3>
+                <h3 className="text-lg font-black text-slate-900 mb-2">{title}</h3>
                 <p className="text-slate-500 text-sm leading-relaxed">{desc}</p>
               </motion.div>
             ))}

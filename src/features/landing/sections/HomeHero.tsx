@@ -67,7 +67,7 @@ export function HomeHero() {
   return (
     <section
       ref={ref}
-      className="relative min-h-[calc(100svh-5rem)] sm:min-h-[calc(100vh-5rem)] flex items-center justify-center overflow-x-hidden"
+      className="-mt-20 relative min-h-[100svh] sm:min-h-screen flex items-center justify-center overflow-hidden"
     >
       <motion.div
         className="absolute inset-0"
@@ -80,15 +80,20 @@ export function HomeHero() {
           y: shouldReduceMotion ? "0%" : bgY,
         }}
       />
+      {/* Vignette: darkens edges, spotlights centre */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: "radial-gradient(ellipse 80% 70% at 50% 50%, transparent 40%, rgba(5,90,60,0.45) 100%)" }}
+      />
       <div className="absolute top-1/3 right-1/4 w-[600px] h-[600px] bg-white/10 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute bottom-1/4 left-1/3 w-[500px] h-[500px] bg-white/10 rounded-full blur-[120px] pointer-events-none" />
 
       <motion.div
         style={{ y: shouldReduceMotion ? "0%" : contentY }}
-        className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-10 sm:pt-12 sm:pb-12 md:pt-16 md:pb-6 w-full"
+        className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-[7.5rem] pb-10 sm:pt-32 sm:pb-12 md:pt-36 md:pb-6 w-full"
       >
-        <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-8 sm:gap-10 items-center">
-          <div className="max-w-4xl mx-auto lg:mx-0 text-center lg:text-left flex flex-col">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-14 items-center">
+          <div className="flex flex-col text-center lg:text-left">
             <motion.h1
               initial={shouldReduceMotion ? false : { opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
@@ -104,8 +109,20 @@ export function HomeHero() {
                 <span className="invisible pointer-events-none select-none" aria-hidden="true">Khonapho Khonapho</span>
                 <span className="absolute left-0 top-0 h-full inline-flex items-center text-white">
                   {stopped ? (
-                    <motion.span initial={shouldReduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: shouldReduceMotion ? 0 : 0.5 }}>
+                    <motion.span
+                      className="relative"
+                      initial={shouldReduceMotion ? false : { opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: shouldReduceMotion ? 0 : 0.5 }}
+                    >
                       {typedText}
+                      <motion.span
+                        className="absolute -bottom-1 left-0 h-[3px] rounded-full bg-white/70"
+                        initial={{ width: "0%" }}
+                        animate={{ width: "100%" }}
+                        transition={{ duration: shouldReduceMotion ? 0 : 0.5, delay: shouldReduceMotion ? 0 : 0.3, ease: "easeOut" }}
+                        aria-hidden="true"
+                      />
                     </motion.span>
                   ) : (
                     <>
@@ -130,7 +147,7 @@ export function HomeHero() {
               initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: shouldReduceMotion ? 0 : 0.6, ease: "easeOut", delay: shouldReduceMotion ? 0 : 0.3 }}
-              className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
+              className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start flex-wrap"
             >
               <a
                 href="#pay-now"
@@ -140,46 +157,99 @@ export function HomeHero() {
               </a>
               <Link
                 to={ROUTE_PATHS.login}
-                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 bg-white text-[#10B981] font-bold text-base sm:text-lg px-6 sm:px-10 py-4 sm:py-5 rounded-2xl border border-white/80 hover:bg-white/90 transition-all"
+                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 bg-transparent text-white font-bold text-base sm:text-lg px-6 sm:px-10 py-4 sm:py-5 rounded-2xl border border-white/60 hover:bg-white/10 transition-all"
               >
                 Sign In
               </Link>
             </motion.div>
+
+            <motion.div
+              initial={shouldReduceMotion ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: shouldReduceMotion ? 0 : 0.5, delay: shouldReduceMotion ? 0 : 0.45 }}
+              className="mt-4 flex flex-col items-center lg:items-start gap-2"
+            >
+              <p className="text-xs text-white/60 text-center lg:text-left">
+                No account needed to pay instantly
+              </p>
+              <div className="flex items-center gap-2 text-xs text-white/70 font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-white/50 shrink-0">
+                  <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
+                </svg>
+                Trusted by <span className="text-white font-bold">50,000+</span> customers across Zimbabwe
+              </div>
+              <p className="text-[10px] font-semibold text-white/50 tracking-wide text-center lg:text-left">
+                &lt; 3s settlement &nbsp;·&nbsp; 256-bit encrypted &nbsp;·&nbsp; 24/7 support
+              </p>
+
+              {/* Marquee — sits naturally below the stat line */}
+              <div className="w-full pt-3">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/35 mb-2.5 text-center lg:text-left">
+                  Accepted payments &amp; partners
+                </p>
+                <div className="relative overflow-hidden">
+                  <div className="absolute left-0 top-0 h-full w-8 bg-gradient-to-r from-[#0d9e6e]/80 to-transparent z-10 pointer-events-none" />
+                  <div className="absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-[#0d9e6e]/80 to-transparent z-10 pointer-events-none" />
+                  <div
+                    className="flex gap-2.5 w-max"
+                    style={{ animation: shouldReduceMotion ? "none" : "marquee 22s linear infinite" }}
+                  >
+                    {[
+                      { icon: visaBadge, label: "Visa" },
+                      { icon: mastercardBadge, label: "Mastercard" },
+                      { icon: onemoneyBadge, label: "OneMoney" },
+                      { icon: ecocashBadge, label: "EcoCash" },
+                      { icon: innbucksBadge, label: "InnBucks" },
+                      { icon: omariBadge, label: "Omari" },
+                      { icon: telecashBadge, label: "Telecash" },
+                      { icon: zimswitchBadge, label: "ZimSwitch" },
+                      { icon: visaBadge, label: "Visa-2" },
+                      { icon: mastercardBadge, label: "Mastercard-2" },
+                      { icon: onemoneyBadge, label: "OneMoney-2" },
+                      { icon: ecocashBadge, label: "EcoCash-2" },
+                      { icon: innbucksBadge, label: "InnBucks-2" },
+                      { icon: omariBadge, label: "Omari-2" },
+                      { icon: telecashBadge, label: "Telecash-2" },
+                      { icon: zimswitchBadge, label: "ZimSwitch-2" },
+                    ].map(({ icon, label }) => (
+                      <img
+                        key={label}
+                        src={icon}
+                        alt={label.replace(/-\d$/, "") + " badge"}
+                        loading="lazy"
+                        decoding="async"
+                        width={110}
+                        height={36}
+                        className="h-8 w-auto max-w-[110px] object-contain shrink-0 opacity-80 hover:opacity-100 transition-opacity"
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           </div>
 
-          <div className="w-full max-w-md sm:max-w-lg mx-auto lg:mx-0 bg-white/95 rounded-[2rem] border border-white/20 shadow-2xl backdrop-blur-md p-5 min-h-[400px]">
-            <QuickPay />
+          <div id="quick-pay-hero" className="w-full bg-white/95 rounded-[2rem] border border-white/20 shadow-2xl backdrop-blur-md p-5 flex flex-col gap-4 min-h-[480px]">
+            <div className="flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-[#10B981] flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-white">
+                    <path fillRule="evenodd" d="M14.615 1.595a.75.75 0 01.359.852L12.982 9.75h7.268a.75.75 0 01.548 1.262l-10.5 11.25a.75.75 0 01-1.272-.71l1.992-7.302H3.75a.75.75 0 01-.548-1.262l10.5-11.25a.75.75 0 01.913-.143z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <span className="font-black text-slate-900 text-sm tracking-tight">Quick Pay</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse inline-block" />
+                Live · 24/7
+              </div>
+            </div>
+            <div className="flex-1 min-h-0">
+              <QuickPay />
+            </div>
           </div>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-          className="mt-8 sm:mt-10 flex flex-wrap justify-center gap-2.5"
-        >
-          {[
-            { icon: visaBadge, label: "Visa" },
-            { icon: mastercardBadge, label: "Mastercard" },
-            { icon: onemoneyBadge, label: "OneMoney" },
-            { icon: ecocashBadge, label: "EcoCash" },
-            { icon: innbucksBadge, label: "InnBucks" },
-            { icon: omariBadge, label: "Omari" },
-            { icon: telecashBadge, label: "Telecash" },
-            { icon: zimswitchBadge, label: "ZimSwitch" },
-          ].map(({ icon, label }) => (
-            <img
-              key={label}
-              src={icon}
-              alt={`${label} badge`}
-              loading="lazy"
-              decoding="async"
-              width={120}
-              height={40}
-              className="h-10 w-auto max-w-[120px] object-contain rounded-lg border border-white/10 bg-white/5 shadow-sm backdrop-blur-sm"
-            />
-          ))}
-        </motion.div>
       </motion.div>
 
       <motion.button
@@ -188,15 +258,22 @@ export function HomeHero() {
         transition={{ delay: shouldReduceMotion ? 0 : 1.2, duration: shouldReduceMotion ? 0 : 0.8 }}
         onClick={() => document.getElementById("pay-now")?.scrollIntoView({ behavior: shouldReduceMotion ? "auto" : "smooth" })}
         type="button"
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 hidden sm:flex flex-col items-center gap-2 text-white/50 hover:text-white/90 text-xs font-medium tracking-[0.25em] uppercase transition-colors z-20 group"
+        className="absolute bottom-20 left-3/4 -translate-x-1/2 hidden lg:flex flex-col items-center gap-2 text-white/50 hover:text-white/90 text-xs font-medium tracking-[0.25em] uppercase transition-colors z-20 group"
         aria-label="Scroll to services"
       >
         <div className="flex items-center gap-2">
           <Mouse className="w-4 h-4" />
           <span>Scroll</span>
         </div>
-        <div className="w-px h-10 bg-gradient-to-b from-white/40 to-transparent group-hover:h-14 transition-all duration-500" />
+        <div className="w-px h-8 bg-gradient-to-b from-white/40 to-transparent group-hover:h-12 transition-all duration-500" />
       </motion.button>
+
+      {/* Wave transition into next section */}
+      <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none z-10 pointer-events-none">
+        <svg viewBox="0 0 1440 64" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full h-10 sm:h-16 block">
+          <path d="M0,32 C240,64 480,0 720,32 C960,64 1200,0 1440,32 L1440,64 L0,64 Z" fill="white" />
+        </svg>
+      </div>
     </section>
   );
 }

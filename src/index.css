@@ -162,3 +162,10 @@ html.dark .glass-card {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* ── Hero payment badge marquee ──────────────────────────────────────────── */
+
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Search, ArrowLeft, X, Zap, Clock, ChevronRight } from 'lucide-react';
 import { getProducts, getProductCategories } from '../../../services/products.service';
 import type { ProductCategory } from '../../../types/products';
+import { useNavigate } from 'react-router-dom';
 import { ROUTE_PATHS } from '../../../router/paths';
 import type { BillerCard } from '../../shared/components/ServicesMarketplace';
 
@@ -87,8 +88,8 @@ function CatCard({ cat, count, focused, onClick, itemRef }: {
       type="button"
       onClick={onClick}
       className={`flex flex-col items-center justify-center gap-1.5 p-2.5 rounded-xl outline-none
-        transition-colors duration-150 active:scale-95 cursor-pointer
-        ${focused ? 'bg-emerald-50' : 'bg-slate-50 hover:bg-slate-100'}`}
+        transition-all duration-150 active:scale-95 cursor-pointer hover:-translate-y-0.5
+        ${focused ? 'bg-emerald-50 shadow-md shadow-emerald-100 ring-1 ring-emerald-200' : 'bg-slate-50 hover:bg-white hover:shadow-md border border-transparent hover:border-slate-100'}`}
     >
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${ICON_BG[colorKey(cat.label, cat.key)] ?? ICON_BG.utilities}`}>
         <span className="text-lg leading-none">{cat.emoji}</span>
@@ -113,8 +114,8 @@ function ProductCard({ biller, focused, onClick, itemRef }: {
       type="button"
       onClick={onClick}
       className={`flex items-center gap-2.5 p-3 rounded-xl text-left outline-none
-        transition-colors duration-150 active:scale-[0.98] cursor-pointer w-full
-        ${focused ? 'bg-emerald-50' : 'bg-slate-50 hover:bg-slate-100'}`}
+        transition-all duration-150 active:scale-[0.98] cursor-pointer w-full hover:-translate-y-0.5
+        ${focused ? 'bg-emerald-50 shadow-md shadow-emerald-100 ring-1 ring-emerald-200' : 'bg-slate-50 hover:bg-white hover:shadow-md border border-transparent hover:border-slate-100'}`}
     >
       <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-sm ${ICON_BG[ck] ?? ICON_BG.utilities}`}>
         {catEmoji(biller.categoryLabel)}
@@ -143,8 +144,8 @@ function VariantCard({ biller, focused, onClick, itemRef }: {
       type="button"
       onClick={onClick}
       className={`flex flex-col gap-0.5 p-3 rounded-xl text-left outline-none
-        transition-colors duration-150 active:scale-[0.98] cursor-pointer w-full
-        ${focused ? 'bg-emerald-50' : 'bg-slate-50 hover:bg-slate-100'}`}
+        transition-all duration-150 active:scale-[0.98] cursor-pointer w-full hover:-translate-y-0.5
+        ${focused ? 'bg-emerald-50 shadow-md shadow-emerald-100 ring-1 ring-emerald-200' : 'bg-slate-50 hover:bg-white hover:shadow-md border border-transparent hover:border-slate-100'}`}
     >
       <p className={`text-xs font-semibold line-clamp-2 leading-tight transition-colors ${focused ? 'text-emerald-800' : 'text-slate-700'}`}>
         {biller.name}
@@ -304,7 +305,7 @@ export function QuickPaySelector({ onPick, catCols = 3, itemCols = 2 }: Selector
             value={search}
             onChange={(e) => onSearch(e.target.value)}
             placeholder="Search services…"
-            className="w-full pl-8 pr-8 py-2 bg-slate-100 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-slate-200 transition-colors"
+            className="w-full pl-8 pr-8 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#10B981] focus:ring-2 focus:ring-[#10B981]/10 transition-all shadow-sm"
           />
           {search && (
             <button type="button" onClick={() => onSearch('')}
@@ -389,7 +390,7 @@ export function QuickPaySelector({ onPick, catCols = 3, itemCols = 2 }: Selector
 
       </div>
 
-      <p className="shrink-0 pt-1 text-[9px] text-slate-300 text-right">↑↓←→ · Enter · Esc</p>
+      <p className="shrink-0 pt-1 text-[10px] text-slate-300 text-right hidden sm:block">↑↓←→ · Enter · Esc</p>
     </div>
   );
 }
@@ -397,11 +398,13 @@ export function QuickPaySelector({ onPick, catCols = 3, itemCols = 2 }: Selector
 // ─── Compact fixed-height widget (dashboard / hero) ───────────────────────────
 
 export function QuickPay() {
+  const navigate = useNavigate();
+
   function handlePick(b: BillerCard) {
     saveLast({ productId: b.productId, productName: b.name });
     const q = new URLSearchParams({ biller: b.name, productId: String(b.productId) });
     if (b.productCategoryId != null) q.set('productCategoryId', String(b.productCategoryId));
-    window.location.assign(`${ROUTE_PATHS.checkout}?${q.toString()}`);
+    navigate(`${ROUTE_PATHS.checkout}?${q.toString()}`);
   }
 
   return (

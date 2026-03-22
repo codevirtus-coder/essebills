@@ -6,7 +6,7 @@ export function HomeMakeSale() {
   return (
     <section
       id="pay-now"
-      className="bg-slate-50/50 py-24 sm:py-32 px-4 sm:px-6 lg:px-8 relative overflow-hidden"
+      className="bg-white py-20 sm:py-28 px-4 sm:px-6 lg:px-8 relative overflow-hidden"
     >
       <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
 
@@ -23,7 +23,7 @@ export function HomeMakeSale() {
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="max-w-2xl"
           >
-            <p className="text-[#10B981] text-sm font-black uppercase tracking-[0.2em] mb-4">
+            <p className="text-[#10B981] text-xs sm:text-sm font-black uppercase tracking-[0.2em] mb-4">
               Direct Payments
             </p>
             <h2 className="text-4xl sm:text-5xl font-black text-slate-900 leading-tight">

@@ -84,7 +84,7 @@ export function Footer() {
 
         <div className="pt-8 border-t border-white/20 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-white/80 text-xs">
-            Â© {new Date().getFullYear()} EseBills. All Rights Reserved.
+            &copy; {new Date().getFullYear()} EseBills. All Rights Reserved.
           </p>
           <div className="flex flex-wrap justify-center gap-5">
             <Link

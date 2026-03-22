@@ -23,8 +23,8 @@ export function HomeHowItWorks() {
     <section id="how-it-works" className="bg-white py-16 sm:py-24 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="max-w-2xl mb-8 sm:mb-12">
-          <p className="text-[#10B981] text-xs sm:text-sm font-bold uppercase tracking-widest mb-3">How It Works</p>
-          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 leading-tight">
+          <p className="text-[#10B981] text-xs sm:text-sm font-black uppercase tracking-[0.2em] mb-3">How It Works</p>
+          <h2 className="text-3xl sm:text-5xl font-black text-slate-900 leading-tight">
             Up and running
             <br />
             in minutes.
@@ -62,10 +62,10 @@ export function HomeHowItWorks() {
                 />
               )}
               <div className="relative z-10">
-                <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-[#10B981] text-white font-bold text-sm flex items-center justify-center mb-4 sm:mb-5">
+                <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-[#10B981] text-white font-black text-sm flex items-center justify-center mb-4 sm:mb-5">
                   {n}
                 </div>
-                <h3 className="text-slate-900 font-bold text-sm sm:text-base mb-2">{title}</h3>
+                <h3 className="text-slate-900 font-black text-sm sm:text-base mb-2">{title}</h3>
                 <p className="text-slate-500 text-xs sm:text-sm leading-relaxed">{desc}</p>
               </div>
             </div>

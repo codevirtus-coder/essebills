@@ -71,8 +71,8 @@ export function HomeForWho() {
               transition={{ duration: 0.5, ease: "easeOut", delay: i * 0.1 }}
               className={`relative rounded-3xl p-7 sm:p-8 flex flex-col overflow-hidden ${
                 featured
-                  ? "bg-[#10B981]/10 border border-[#10B981]/40 shadow-xl shadow-[#10B981]/20"
-                  : "bg-white border border-slate-100 hover:border-slate-200 hover:shadow-lg transition-all"
+                  ? "bg-[#10B981]/15 border-2 border-[#10B981]/50 shadow-2xl shadow-[#10B981]/15"
+                  : "bg-white border border-slate-100 hover:border-slate-300 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
               }`}
             >
               {featured && (
@@ -84,7 +84,7 @@ export function HomeForWho() {
                 <Icon size={12} />
                 {tag}
               </div>
-              <h3 className="text-lg sm:text-xl font-bold mb-3 text-slate-900">{title}</h3>
+              <h3 className="text-lg sm:text-xl font-black mb-3 text-slate-900">{title}</h3>
               <p className={`text-sm leading-relaxed mb-5 ${featured ? "text-slate-700" : "text-slate-500"}`}>{description}</p>
               <ul className="space-y-2.5 mb-7 flex-1">
                 {perks.map((perk) => (
@@ -97,7 +97,7 @@ export function HomeForWho() {
               <Link
                 to={href}
                 className={`inline-flex items-center justify-center gap-2 font-bold text-sm px-5 py-3.5 rounded-2xl transition-all ${
-                  featured ? "bg-[#10B981] text-white hover:bg-[#0ea472] shadow-lg" : "bg-slate-900 text-white hover:bg-slate-800"
+                  featured ? "bg-[#10B981] text-white hover:bg-[#0ea472] shadow-lg shadow-[#10B981]/20" : "bg-slate-900 text-white hover:bg-slate-800 shadow-sm"
                 }`}
               >
                 {cta}
