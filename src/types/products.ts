@@ -122,6 +122,7 @@ export interface Product extends BaseEntity {
   countryId?: number
   defaultCurrency?: Currency
   minimumPurchaseAmount?: number
+  parentProductId?: number
 }
 
 /** Product creation context */

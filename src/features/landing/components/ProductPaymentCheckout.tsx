@@ -4,7 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import PaymentCheckout, { type PaymentOption } from "./PaymentCheckout";
 import PaymentStatusModal from "./PaymentStatusModal";
 import ProductVariantPicker from "./ProductVariantPicker";
-import { getProducts, getCurrencies, getProductById, getProductFields, checkProductAvailability, preCheckProduct, type ProductPreCheckResult } from "../../../services/products.service";
+import { getProducts, getCurrencies, getProductById, getProductFields, getProductVariants, checkProductAvailability, preCheckProduct, type ProductPreCheckResult } from "../../../services/products.service";
 import { processProductPayment, getApplicableServiceCharge } from "../../../services/payments.service";
 import { getMyWalletBalances } from "../../../services/wallet.service";
 import { isAuthenticated, getAuthSession } from "../../../features/auth/auth.storage";
@@ -65,17 +65,19 @@ export function ProductPaymentCheckout({
     enabled: hasValidProductId || !!billerName,
   });
 
-  // 2. Fetch sibling products in the same category (for bundle/plan variant selection)
-  const categoryId = product?.category?.id ?? productCategoryId;
-  const { data: siblingsPage } = useQuery({
-    queryKey: ['category-products', categoryId],
-    queryFn: () => getProducts({ categoryId, size: 100 }),
-    enabled: !!categoryId && !!product,
+  // 2. Fetch variants (children) for this product.
+  //    The backend explicitly links children to their parent via parentProductId.
+  //    If the product has no variants, the array is empty and we skip the picker.
+  const { data: variants = [] } = useQuery({
+    queryKey: ['product-variants', product?.id],
+    queryFn: () => getProductVariants(product!.id!),
+    enabled: !!product?.id,
+    staleTime: 60_000,
   });
-  const siblings = useMemo<Product[]>(() => siblingsPage?.content ?? [], [siblingsPage]);
-  // Show variant picker only when no specific productId was given (user hasn't pre-selected)
-  // and the category contains multiple products
-  const showVariantPicker = siblings.length > 1 && !selectedVariant && !hasValidProductId;
+
+  // Show variant picker when this product has children and the user hasn't chosen one yet
+  const showVariantPicker = variants.length > 0 && !selectedVariant;
+
   // The active product is either the user-selected variant or the base product
   const activeProduct = selectedVariant ?? product;
 
@@ -192,7 +194,7 @@ export function ProductPaymentCheckout({
     }
   });
 
-  const handleConfirm = (method: PaymentOption, email: string, phone: string, enteredAccountNumber: string, enteredAmount: number) => {
+  const handleConfirm = (method: PaymentOption, email: string, phone: string, requiredFields: Record<string, string>, enteredAmount: number) => {
     setLastMethod(method);
     if (!activeProduct) {
       toast.error("Product information not found.");
@@ -224,9 +226,7 @@ export function ProductPaymentCheckout({
       paymentMethodCode,
       currencyCode: currency,
       productCode: activeProduct,
-      productRequiredFields: {
-        accountNumber: enteredAccountNumber,
-      },
+      productRequiredFields: requiredFields,
       paymentMethodRequiredFields,
       productMetadata: JSON.stringify({
         productId: activeProduct.id,
@@ -257,8 +257,8 @@ export function ProductPaymentCheckout({
     return (
       <div className={embedded ? '' : 'min-h-screen bg-[#f8fafc] pb-20 pt-8 px-4 sm:px-6 max-w-5xl mx-auto'}>
         <ProductVariantPicker
-          categoryLabel={product?.category?.displayName || product?.category?.name || billerName}
-          variants={siblings}
+          categoryLabel={product?.name || product?.category?.displayName || product?.category?.name || billerName}
+          variants={variants}
           onSelect={(variant) => setSelectedVariant(variant)}
           onBack={onBack}
           currencyCode={currency?.code ?? "USD"}
@@ -337,7 +337,7 @@ export function ProductPaymentCheckout({
         currencyCode={currency?.code ?? "USD"}
         minimumAmount={activeProduct?.minimumPurchaseAmount}
         productFields={productFields}
-        onBack={selectedVariant ? () => setSelectedVariant(null) : onBack}
+        onBack={selectedVariant && variants.length > 0 ? () => setSelectedVariant(null) : onBack}
         onConfirm={handleConfirm}
         isLoading={mutation.isPending || isLoadingProduct || isLoadingCurrencies}
         embedded={embedded}

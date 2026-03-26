@@ -98,8 +98,20 @@ export function ProductSelector({
     }
   }, [isOpen])
 
+  // Products that are parents (have at least one child pointing to them) should not be
+  // directly selectable for bulk payments — the user must pick a specific variant instead.
+  const parentProductIds = useMemo(() => {
+    const ids = new Set<number>()
+    for (const p of products) {
+      if (p.parentProductId != null) ids.add(p.parentProductId)
+    }
+    return ids
+  }, [products])
+
   const filteredProducts = useMemo(() => {
-    let filtered = products.filter((p) => p.status === 'ACTIVE' && p.code && p.id)
+    let filtered = products.filter(
+      (p) => p.status === 'ACTIVE' && p.code && p.id && !parentProductIds.has(p.id as number)
+    )
 
     if (search.trim()) {
       const q = search.toLowerCase()

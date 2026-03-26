@@ -328,7 +328,7 @@ const Dashboard: React.FC = () => {
         <div className="glass-card p-5 border-slate-200 dark:border-slate-800 col-span-1 md:col-span-2 lg:col-span-2">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              {esBalance?.responseCode === "00"
+              {esBalance && Object.values(esBalance).some(b => b.responseCode === "00")
                 ? <Wifi size={16} className="text-emerald-500" />
                 : <WifiOff size={16} className="text-amber-500" />
               }
@@ -343,22 +343,41 @@ const Dashboard: React.FC = () => {
               <RefreshCw size={14} className={esBalanceFetching ? "animate-spin" : ""} />
             </button>
           </div>
-          {esBalance?.responseCode === "00" && esBalance ? (
-            <div>
-              <p className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                {esBalance.currencyCode ?? "USD"}{" "}
-                {esBalance.balanceUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </p>
-              {esBalance.accountName && (
-                <p className="text-xs text-slate-500 mt-1 font-medium">
-                  {esBalance.accountName} · {esBalance.accountNumber}
-                </p>
-              )}
+          {esBalanceFetching ? (
+            <div className="flex gap-4">
+              <div className="h-8 w-36 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />
+              <div className="h-8 w-36 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />
             </div>
-          ) : esBalanceFetching ? (
-            <div className="h-8 w-36 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />
+          ) : esBalance && Object.keys(esBalance).length > 0 ? (
+            <div className="flex flex-wrap gap-4">
+              {Object.entries(esBalance).map(([currency, bal]) => (
+                <div key={currency} className={cn(
+                  "flex-1 min-w-[140px] rounded-xl p-3 border",
+                  bal.responseCode === "00"
+                    ? "bg-emerald-50 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-800/50"
+                    : "bg-amber-50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-800/50"
+                )}>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">{currency}</p>
+                  {bal.responseCode === "00" ? (
+                    <>
+                      <p className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                        {bal.currencyCode ?? currency}{" "}
+                        {bal.balanceUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                      {bal.accountName && (
+                        <p className="text-[10px] text-slate-500 mt-0.5 font-medium">
+                          {bal.accountName} · {bal.accountNumber}
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-xs font-bold text-amber-600">{bal.narrative ?? "Unavailable"}</p>
+                  )}
+                </div>
+              ))}
+            </div>
           ) : (
-            <p className="text-sm font-bold text-amber-600">{esBalance?.narrative ?? "Unable to fetch balance"}</p>
+            <p className="text-sm font-bold text-amber-600">Unable to fetch balance</p>
           )}
         </div>
       </div>

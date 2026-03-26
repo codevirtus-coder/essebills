@@ -126,7 +126,9 @@ export default function BulkPaymentsPage() {
           getProductCategories(),
           getCurrencies(),
         ]);
-        setProducts(prodData.content ?? []);
+        const allProds = prodData.content ?? [];
+        const parentIds = new Set(allProds.map((p: Product) => p.parentProductId).filter(Boolean));
+        setProducts(allProds.filter((p: Product) => !parentIds.has(p.id as number)));
         setCategories(catsData);
         setCurrencies((currData.content ?? []).filter((c) => c.active !== false));
       } else if (activeSubTab === 'schedules') {

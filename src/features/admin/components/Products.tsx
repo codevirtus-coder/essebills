@@ -71,6 +71,8 @@ const Products: React.FC = () => {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<ProductStatus>("ACTIVE");
+  const [parentProductId, setParentProductId] = useState<string>("");
+  const [parentSearch, setParentSearch] = useState("");
 
   const loadProducts = async () => {
     try {
@@ -168,6 +170,7 @@ const Products: React.FC = () => {
     setDescription(""); setReturnUrl(""); setProductLogoFileName(""); setStatus("ACTIVE");
     setCountryId(""); setCurrencyId("");
     setLogoFile(null); setLogoPreview(null);
+    setParentProductId(""); setParentSearch("");
   };
 
   const handleSave = async () => {
@@ -189,6 +192,7 @@ const Products: React.FC = () => {
         returnUrl: returnUrl.trim() || "-",
         productLogoFileName: productLogoFileName.trim(),
         status,
+        parentProductId: parentProductId ? Number(parentProductId) : null,
       };
 
       let savedProduct;
@@ -235,6 +239,9 @@ const Products: React.FC = () => {
     setLogoFile(null);
     setLogoPreview(p.id ? getProductLogoUrl(p.id) : null);
     setStatus(normalizeStatus(p.status));
+    const pid = (p as any).parentProductId;
+    setParentProductId(pid ? String(pid) : "");
+    setParentSearch("");
     setIsModalOpen(true);
   };
 
@@ -348,6 +355,48 @@ const Products: React.FC = () => {
           <div className="md:col-span-2 space-y-4">
             <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 pb-2">Extended Parameters</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               {/* Parent product — makes this product a variant/child of the selected parent */}
+               <div className="space-y-1.5 md:col-span-2">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">
+                    Parent Product <span className="font-normal text-slate-400">(optional — set to make this a variant)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={parentSearch}
+                    onChange={e => setParentSearch(e.target.value)}
+                    placeholder="Search by name or code…"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 mb-1"
+                  />
+                  <select
+                    value={parentProductId}
+                    onChange={e => setParentProductId(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none"
+                    size={4}
+                  >
+                    <option value="">— No parent (standalone product) —</option>
+                    {products
+                      .filter(p =>
+                        // exclude the product being edited from its own parent list
+                        String(p.id) !== String(editingProductId) &&
+                        (parentSearch.trim() === '' ||
+                          String(p.name ?? '').toLowerCase().includes(parentSearch.toLowerCase()) ||
+                          String(p.code ?? '').toLowerCase().includes(parentSearch.toLowerCase()))
+                      )
+                      .map(p => (
+                        <option key={p.id} value={String(p.id)}>
+                          {p.name} ({p.code})
+                        </option>
+                      ))
+                    }
+                  </select>
+                  {parentProductId && (
+                    <p className="text-[10px] text-emerald-600 font-bold mt-1">
+                      Variant of: {products.find(p => String(p.id) === parentProductId)?.name ?? `#${parentProductId}`}
+                      {' '}·{' '}
+                      <button type="button" className="underline" onClick={() => { setParentProductId(''); setParentSearch(''); }}>clear</button>
+                    </p>
+                  )}
+               </div>
                <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Min Purchase Amount</label>
                   <input type="number" value={minimumPurchaseAmount} onChange={e => setMinimumPurchaseAmount(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold" placeholder="0.00" />

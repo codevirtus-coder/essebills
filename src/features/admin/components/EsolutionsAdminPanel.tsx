@@ -1,12 +1,17 @@
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { RefreshCw, Wifi, WifiOff, ChevronDown, ChevronRight, RotateCcw, Search } from 'lucide-react'
+import { RefreshCw, Wifi, WifiOff, ChevronDown, ChevronRight, RotateCcw, Search, Plus, Trash2, ToggleLeft, ToggleRight } from 'lucide-react'
 import {
   getEsolutionsBalance,
   getEsolutionsCatalog,
   triggerEsolutionsSyncAll,
   triggerEsolutionsSyncMerchant,
+  getEsolutionsMerchants,
+  createEsolutionsMerchant,
+  updateEsolutionsMerchant,
+  deleteEsolutionsMerchant,
   type EsolutionsCatalogItem,
+  type EsolutionsMerchant,
 } from '../services/esolutions.service'
 import { toast } from 'react-hot-toast'
 
@@ -15,6 +20,8 @@ const EsolutionsAdminPanel: React.FC = () => {
   const [merchantFilter, setMerchantFilter] = useState('')
   const [expandedMerchants, setExpandedMerchants] = useState<Set<string>>(new Set())
   const [syncingMerchant, setSyncingMerchant] = useState<string | null>(null)
+  const [newMerchantCode, setNewMerchantCode] = useState('')
+  const [newMerchantName, setNewMerchantName] = useState('')
 
   const { data: balance, isFetching: balanceFetching, refetch: refetchBalance } = useQuery({
     queryKey: ['esolutions-balance'],
@@ -48,6 +55,39 @@ const EsolutionsAdminPanel: React.FC = () => {
     onError: (err: any) => toast.error(err?.message ?? 'Sync failed'),
   })
 
+  const { data: merchants = [], isFetching: merchantsFetching } = useQuery({
+    queryKey: ['esolutions-merchants'],
+    queryFn: getEsolutionsMerchants,
+    retry: 1,
+  })
+
+  const createMerchantMutation = useMutation({
+    mutationFn: createEsolutionsMerchant,
+    onSuccess: () => {
+      toast.success('Merchant added')
+      setNewMerchantCode('')
+      setNewMerchantName('')
+      queryClient.invalidateQueries({ queryKey: ['esolutions-merchants'] })
+    },
+    onError: (err: any) => toast.error(err?.message ?? 'Failed to add merchant'),
+  })
+
+  const toggleMerchantActiveMutation = useMutation({
+    mutationFn: ({ merchant, active }: { merchant: EsolutionsMerchant; active: boolean }) =>
+      updateEsolutionsMerchant(merchant.id, { code: merchant.code, name: merchant.name ?? undefined, active }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['esolutions-merchants'] }),
+    onError: (err: any) => toast.error(err?.message ?? 'Update failed'),
+  })
+
+  const deleteMerchantMutation = useMutation({
+    mutationFn: (id: number) => deleteEsolutionsMerchant(id),
+    onSuccess: () => {
+      toast.success('Merchant removed')
+      queryClient.invalidateQueries({ queryKey: ['esolutions-merchants'] })
+    },
+    onError: (err: any) => toast.error(err?.message ?? 'Delete failed'),
+  })
+
   // Group catalog by merchant
   const catalogByMerchant = catalog.reduce<Record<string, EsolutionsCatalogItem[]>>((acc, item) => {
     if (!acc[item.merchantCode]) acc[item.merchantCode] = []
@@ -68,7 +108,8 @@ const EsolutionsAdminPanel: React.FC = () => {
     })
   }
 
-  const isBalanceOk = balance?.responseCode === '00'
+  const balanceEntries = balance ? Object.entries(balance) : []
+  const isAnyBalanceOk = balanceEntries.some(([, b]) => b.responseCode === '00')
 
   return (
     <div className="p-6 space-y-6">
@@ -89,26 +130,42 @@ const EsolutionsAdminPanel: React.FC = () => {
       </div>
 
       {/* Balance Card */}
-      <div className={`rounded-2xl border-2 p-6 ${isBalanceOk ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50'}`}>
+      <div className={`rounded-2xl border-2 p-6 ${isAnyBalanceOk ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50'}`}>
         <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-3">
-            {isBalanceOk
-              ? <Wifi className="text-emerald-600" size={24} />
-              : <WifiOff className="text-amber-600" size={24} />
+          <div className="flex items-center gap-3 flex-1">
+            {isAnyBalanceOk
+              ? <Wifi className="text-emerald-600 shrink-0" size={24} />
+              : <WifiOff className="text-amber-600 shrink-0" size={24} />
             }
-            <div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Vendor Balance</p>
-              {isBalanceOk && balance ? (
-                <>
-                  <p className="text-3xl font-black text-slate-900 tracking-tight">
-                    {balance.currencyCode ?? 'USD'} {balance.balanceUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </p>
-                  {balance.accountName && (
-                    <p className="text-xs text-slate-500 mt-1">{balance.accountName} · {balance.accountNumber}</p>
-                  )}
-                </>
+            <div className="flex-1">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Vendor Balance</p>
+              {balanceFetching ? (
+                <div className="flex gap-4">
+                  <div className="h-10 w-40 bg-white/60 rounded-xl animate-pulse" />
+                  <div className="h-10 w-40 bg-white/60 rounded-xl animate-pulse" />
+                </div>
+              ) : balanceEntries.length > 0 ? (
+                <div className="flex flex-wrap gap-4">
+                  {balanceEntries.map(([currency, bal]) => (
+                    <div key={currency} className={`rounded-xl p-3 border ${bal.responseCode === '00' ? 'bg-white border-emerald-100' : 'bg-amber-50 border-amber-200'}`}>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">{currency}</p>
+                      {bal.responseCode === '00' ? (
+                        <>
+                          <p className="text-2xl font-black text-slate-900 tracking-tight">
+                            {bal.currencyCode ?? currency} {bal.balanceUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </p>
+                          {bal.accountName && (
+                            <p className="text-xs text-slate-500 mt-1">{bal.accountName} · {bal.accountNumber}</p>
+                          )}
+                        </>
+                      ) : (
+                        <p className="text-sm font-bold text-amber-700">{bal.narrative ?? 'Unavailable'}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
               ) : (
-                <p className="text-lg font-bold text-amber-700">{balance?.narrative ?? 'Unable to fetch balance'}</p>
+                <p className="text-lg font-bold text-amber-700">Unable to fetch balance</p>
               )}
             </div>
           </div>
@@ -121,6 +178,99 @@ const EsolutionsAdminPanel: React.FC = () => {
             Refresh
           </button>
         </div>
+      </div>
+
+      {/* Merchant Configuration */}
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div className="p-5 border-b border-slate-100">
+          <h2 className="text-base font-black text-slate-900">Configured Merchants</h2>
+          <p className="text-xs text-slate-500 mt-0.5">Active merchants are included in catalog sync runs</p>
+        </div>
+
+        {/* Add merchant form */}
+        <div className="p-5 border-b border-slate-100 flex items-end gap-3 flex-wrap">
+          <div className="flex-1 min-w-[140px]">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1">Merchant Code</label>
+            <input
+              type="text"
+              placeholder="e.g. ZETDC"
+              value={newMerchantCode}
+              onChange={(e) => setNewMerchantCode(e.target.value.toUpperCase())}
+              className="w-full px-3 py-2 text-sm font-mono border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400"
+            />
+          </div>
+          <div className="flex-1 min-w-[160px]">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1">Display Name (optional)</label>
+            <input
+              type="text"
+              placeholder="e.g. Zimbabwe Electricity"
+              value={newMerchantName}
+              onChange={(e) => setNewMerchantName(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400"
+            />
+          </div>
+          <button
+            onClick={() => {
+              if (!newMerchantCode.trim()) return
+              createMerchantMutation.mutate({ code: newMerchantCode.trim(), name: newMerchantName.trim() || undefined, active: true })
+            }}
+            disabled={!newMerchantCode.trim() || createMerchantMutation.isPending}
+            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-500 disabled:opacity-50 transition-all shrink-0"
+          >
+            <Plus size={14} />
+            Add
+          </button>
+        </div>
+
+        {/* Merchant list */}
+        {merchantsFetching && merchants.length === 0 ? (
+          <div className="p-6 space-y-2">
+            {[1, 2, 3].map((i) => <div key={i} className="h-10 bg-slate-100 rounded-xl animate-pulse" />)}
+          </div>
+        ) : merchants.length === 0 ? (
+          <div className="p-8 text-center text-sm text-slate-400 font-bold">
+            No merchants configured yet. Add one above.
+          </div>
+        ) : (
+          <div className="divide-y divide-slate-100">
+            {merchants.map((m) => (
+              <div key={m.id} className="flex items-center justify-between px-5 py-3 hover:bg-slate-50 transition-colors">
+                <div className="flex items-center gap-3">
+                  <span className="font-black text-sm font-mono text-slate-900">{m.code}</span>
+                  {m.name && <span className="text-xs text-slate-400">— {m.name}</span>}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => toggleMerchantActiveMutation.mutate({ merchant: m, active: !m.active })}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border transition-all ${
+                      m.active
+                        ? 'text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-100'
+                        : 'text-slate-500 bg-slate-50 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    {m.active ? <ToggleRight size={13} /> : <ToggleLeft size={13} />}
+                    {m.active ? 'Active' : 'Inactive'}
+                  </button>
+                  <button
+                    onClick={() => syncMerchantMutation.mutate(m.code)}
+                    disabled={syncingMerchant === m.code}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-all"
+                  >
+                    <RotateCcw size={12} className={syncingMerchant === m.code ? 'animate-spin' : ''} />
+                    Sync
+                  </button>
+                  <button
+                    onClick={() => deleteMerchantMutation.mutate(m.id)}
+                    className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Remove merchant"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Catalog Section */}

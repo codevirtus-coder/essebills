@@ -32,6 +32,7 @@ export interface ProductQueryParams extends Record<string, unknown> {
   order?: 'ASC' | 'DESC'
   search?: string
   categoryId?: string | number
+  codePrefix?: string
 }
 
 // --------------------------------------------------------------------------
@@ -62,6 +63,11 @@ export async function getProductsByCategory(
     const query = params ? toQueryString(params) : ''
     return apiFetch<PageResponse<Product>>(`${API_ENDPOINTS.products.byCategory(categoryId)}${query}`)
   }
+}
+
+/** Get active variants (children) of a product, ordered by price asc. Empty array if none. */
+export async function getProductVariants(productId: string | number): Promise<Product[]> {
+  return apiFetch<Product[]>(API_ENDPOINTS.products.variants(productId))
 }
 
 /** Get product by ID */

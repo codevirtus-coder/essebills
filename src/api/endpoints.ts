@@ -40,6 +40,8 @@ export const API_ENDPOINTS = {
     availability: (productId: string | number) => `/v1/opn/products/${productId}/availability`,
     /** Public provider pre-check (account validation) — no auth required */
     preCheck: (productId: string | number) => `/v1/opn/products/${productId}/pre-check`,
+    /** Public variants list — returns active child products ordered by price asc */
+    variants: (productId: string | number) => `/opn/v1/products/${productId}/variants`,
   },
 
   // Product Categories
@@ -478,6 +480,8 @@ export const API_ENDPOINTS = {
     catalogByMerchant: (merchantCode: string) => `/v1/admin/esolutions/catalog/${merchantCode}`,
     syncAll: '/v1/admin/esolutions/sync',
     syncMerchant: (merchantCode: string) => `/v1/admin/esolutions/sync/${merchantCode}`,
+    merchants: '/v1/admin/esolutions/merchants',
+    merchantById: (id: number) => `/v1/admin/esolutions/merchants/${id}`,
   },
 } as const
 

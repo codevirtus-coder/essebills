@@ -26,8 +26,8 @@ export interface EsolutionsCatalogItem {
   active: boolean
 }
 
-export async function getEsolutionsBalance(): Promise<VendorBalanceSummary> {
-  return apiFetch<VendorBalanceSummary>(API_ENDPOINTS.esolutionsAdmin.balance)
+export async function getEsolutionsBalance(): Promise<Record<string, VendorBalanceSummary>> {
+  return apiFetch<Record<string, VendorBalanceSummary>>(API_ENDPOINTS.esolutionsAdmin.balance)
 }
 
 export async function getEsolutionsCatalog(): Promise<EsolutionsCatalogItem[]> {
@@ -44,4 +44,34 @@ export async function triggerEsolutionsSyncAll(): Promise<{ status: string }> {
 
 export async function triggerEsolutionsSyncMerchant(merchantCode: string): Promise<{ status: string }> {
   return apiFetch<{ status: string }>(API_ENDPOINTS.esolutionsAdmin.syncMerchant(merchantCode), { method: 'POST' })
+}
+
+export interface EsolutionsMerchant {
+  id: number
+  code: string
+  name: string | null
+  active: boolean
+  createdDate?: string
+}
+
+export interface EsolutionsMerchantCommand {
+  code: string
+  name?: string
+  active: boolean
+}
+
+export async function getEsolutionsMerchants(): Promise<EsolutionsMerchant[]> {
+  return apiFetch<EsolutionsMerchant[]>(API_ENDPOINTS.esolutionsAdmin.merchants)
+}
+
+export async function createEsolutionsMerchant(cmd: EsolutionsMerchantCommand): Promise<EsolutionsMerchant> {
+  return apiFetch<EsolutionsMerchant>(API_ENDPOINTS.esolutionsAdmin.merchants, { method: 'POST', body: cmd })
+}
+
+export async function updateEsolutionsMerchant(id: number, cmd: EsolutionsMerchantCommand): Promise<EsolutionsMerchant> {
+  return apiFetch<EsolutionsMerchant>(API_ENDPOINTS.esolutionsAdmin.merchantById(id), { method: 'PUT', body: cmd })
+}
+
+export async function deleteEsolutionsMerchant(id: number): Promise<void> {
+  return apiFetch<void>(API_ENDPOINTS.esolutionsAdmin.merchantById(id), { method: 'DELETE' })
 }

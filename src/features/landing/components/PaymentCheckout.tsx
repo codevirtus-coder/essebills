@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useMemo, useState, useCallback, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowLeft,
@@ -28,7 +28,7 @@ interface PaymentCheckoutProps {
   minimumAmount?: number;
   serviceChargeRate?: number;
   onBack: () => void;
-  onConfirm: (method: PaymentOption, email: string, phone: string, accountNumber: string, amount: number) => void;
+  onConfirm: (method: PaymentOption, email: string, phone: string, requiredFields: Record<string, string>, amount: number) => void;
   isLoading?: boolean;
   embedded?: boolean;
   isAuthenticated?: boolean;
@@ -41,6 +41,18 @@ interface PaymentCheckoutProps {
 }
 
 export type PaymentOption = "wallet" | "card" | "mobile_money" | "pesepay" | "ecocash_seamless";
+
+/** Maps backend FieldType enum to HTML input type */
+function fieldInputType(fieldType?: string): string {
+  switch (fieldType) {
+    case 'NUMBER':   return 'number';
+    case 'DATE':     return 'date';
+    case 'PASSWORD': return 'password';
+    case 'EMAIL':    return 'email';
+    case 'PHONE_NUMBER': return 'tel';
+    default:         return 'text';
+  }
+}
 
 const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
   billerName = "ZESA Prepaid",
@@ -65,21 +77,37 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
   const [paymentMethod, setPaymentMethod] = useState<PaymentOption>("pesepay");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [accountNumber, setAccountNumber] = useState(initialAccountNumber);
   const [amountInput, setAmountInput] = useState(
     parseFloat(amount) > 0 ? String(parseFloat(amount)) : ""
   );
 
-  // Derive account field metadata from backend product fields (first non-optional or first field)
-  const accountFieldMeta = useMemo(() => {
-    const fields = productFields.filter((f) => !f.optional);
-    const primary = fields[0] ?? productFields[0];
-    if (!primary) return { label: 'Account / Meter Number', placeholder: 'Enter account or meter number' };
-    return {
-      label: primary.displayName ?? primary.name ?? 'Account / Meter Number',
-      placeholder: primary.hint ?? `Enter ${primary.displayName ?? primary.name ?? 'account'}`,
-    };
-  }, [productFields]);
+  // Dynamic field values keyed by field.name (e.g. "meterNumber", "targetMobile", "accountNumber")
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
+
+  // When productFields load, initialise state (and pre-fill first field from accountNumber prop if provided)
+  useEffect(() => {
+    if (productFields.length === 0) return;
+    setFieldValues((prev) => {
+      const next: Record<string, string> = {};
+      productFields.forEach((f, idx) => {
+        // Keep existing value if already entered; pre-fill first field from prop
+        next[f.name!] = prev[f.name!] ?? (idx === 0 ? initialAccountNumber : '');
+      });
+      return next;
+    });
+  }, [productFields, initialAccountNumber]);
+
+  // Fallback when no product fields are defined — generic account number field
+  const showFallbackField = productFields.length === 0;
+  const [fallbackAccount, setFallbackAccount] = useState(initialAccountNumber);
+
+  // The full set of field values to pass to backend / pre-check
+  const effectiveRequiredFields = useMemo<Record<string, string>>(() => {
+    if (showFallbackField) {
+      return fallbackAccount ? { accountNumber: fallbackAccount } : {};
+    }
+    return fieldValues;
+  }, [showFallbackField, fallbackAccount, fieldValues]);
 
   const baseAmount = parseFloat(amountInput) || 0;
   const isWallet = paymentMethod === "wallet";
@@ -93,13 +121,26 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
     : null;
 
   const preCheckFailed = preCheckResult != null && preCheckResult.supportsPreCheck && !preCheckResult.valid;
-  const canPay = !!phone && !!accountNumber && baseAmount > 0 && !amountError && !walletInsufficient && !preCheckFailed;
 
-  const handleAccountBlur = useCallback(() => {
-    if (onPreCheck && accountNumber.trim()) {
-      onPreCheck({ accountNumber }, parseFloat(amountInput) || undefined);
+  // All required (non-optional) fields must have a non-empty value
+  const requiredFieldsFilled = useMemo(() => {
+    if (showFallbackField) return !!fallbackAccount.trim();
+    const required = productFields.filter((f) => !f.optional);
+    if (required.length === 0) return true; // no required fields (e.g. fuel)
+    return required.every((f) => !!fieldValues[f.name!]?.trim());
+  }, [showFallbackField, fallbackAccount, productFields, fieldValues]);
+
+  const canPay = !!phone && requiredFieldsFilled && baseAmount > 0 && !amountError && !walletInsufficient && !preCheckFailed;
+
+  // Trigger pre-check when the user leaves any field — pass all collected values
+  const handleFieldBlur = useCallback(() => {
+    if (!onPreCheck) return;
+    const vals = effectiveRequiredFields;
+    const hasAny = Object.values(vals).some((v) => v.trim());
+    if (hasAny) {
+      onPreCheck(vals, parseFloat(amountInput) || undefined);
     }
-  }, [onPreCheck, accountNumber, amountInput]);
+  }, [onPreCheck, effectiveRequiredFields, amountInput]);
 
   function handleSelectWallet() {
     if (!isAuthenticated) {
@@ -179,36 +220,62 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
               </div>
 
               <div className="p-8 grid grid-cols-1 sm:grid-cols-2 gap-8 bg-white">
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
-                    {accountFieldMeta.label} <span className="text-emerald-600">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={accountNumber}
-                      onChange={(e) => setAccountNumber(e.target.value)}
-                      onBlur={handleAccountBlur}
-                      placeholder={accountFieldMeta.placeholder}
-                      className="w-full px-0 py-1 bg-transparent border-0 border-b border-slate-200 focus:outline-none focus:border-emerald-500 text-xl font-black tracking-tight text-slate-900 transition-all placeholder:text-slate-300 pr-6"
-                    />
-                    {isPreChecking && (
-                      <Loader2 size={16} className="absolute right-0 top-2 text-slate-400 animate-spin" />
-                    )}
+
+                {/* ── Dynamic product fields ─────────────────────────────── */}
+                {showFallbackField ? (
+                  /* Fallback when no fields are defined for this product */
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                      Account / Meter Number <span className="text-emerald-600">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={fallbackAccount}
+                        onChange={(e) => setFallbackAccount(e.target.value)}
+                        onBlur={handleFieldBlur}
+                        placeholder="Enter account or meter number"
+                        className="w-full px-0 py-1 bg-transparent border-0 border-b border-slate-200 focus:outline-none focus:border-emerald-500 text-xl font-black tracking-tight text-slate-900 transition-all placeholder:text-slate-300"
+                      />
+                    </div>
                   </div>
-                  {preCheckResult?.supportsPreCheck && preCheckResult.valid && preCheckResult.accountNarrative && (
-                    <p className="text-[10px] text-emerald-600 font-bold mt-1 flex items-center gap-1">
-                      <CheckCircle2 size={11} />
-                      {preCheckResult.accountNarrative}
-                    </p>
-                  )}
-                  {preCheckResult?.supportsPreCheck && !preCheckResult.valid && preCheckResult.errorMessage && (
-                    <p className="text-[10px] text-rose-500 font-bold mt-1 flex items-center gap-1">
-                      <AlertCircle size={11} />
-                      {preCheckResult.errorMessage}
-                    </p>
-                  )}
-                </div>
+                ) : (
+                  /* Render each product field from backend definition */
+                  productFields.map((field, idx) => (
+                    <div key={field.name} className={productFields.length === 1 ? '' : 'sm:col-span-1'}>
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                        {field.displayName ?? field.name}
+                        {!field.optional && <span className="text-emerald-600 ml-1">*</span>}
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={fieldInputType(field.fieldType)}
+                          value={fieldValues[field.name!] ?? ''}
+                          onChange={(e) => setFieldValues((prev) => ({ ...prev, [field.name!]: e.target.value }))}
+                          onBlur={idx === 0 ? handleFieldBlur : undefined}
+                          placeholder={field.hint ?? `Enter ${field.displayName ?? field.name}`}
+                          className="w-full px-0 py-1 bg-transparent border-0 border-b border-slate-200 focus:outline-none focus:border-emerald-500 text-xl font-black tracking-tight text-slate-900 transition-all placeholder:text-slate-300 pr-6"
+                        />
+                        {idx === 0 && isPreChecking && (
+                          <Loader2 size={16} className="absolute right-0 top-2 text-slate-400 animate-spin" />
+                        )}
+                      </div>
+                      {/* Pre-check feedback on the first field */}
+                      {idx === 0 && preCheckResult?.supportsPreCheck && preCheckResult.valid && preCheckResult.accountNarrative && (
+                        <p className="text-[10px] text-emerald-600 font-bold mt-1 flex items-center gap-1">
+                          <CheckCircle2 size={11} />
+                          {preCheckResult.accountNarrative}
+                        </p>
+                      )}
+                      {idx === 0 && preCheckResult?.supportsPreCheck && !preCheckResult.valid && preCheckResult.errorMessage && (
+                        <p className="text-[10px] text-rose-500 font-bold mt-1 flex items-center gap-1">
+                          <AlertCircle size={11} />
+                          {preCheckResult.errorMessage}
+                        </p>
+                      )}
+                    </div>
+                  ))
+                )}
 
                 {/* Editable amount */}
                 <div>
@@ -242,7 +309,7 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Transaction Type</p>
                   <p className="text-sm font-bold text-slate-600">{categoryLabel ?? "Bill Payment"}</p>
                 </div>
-                
+
                 {/* Notification Fields */}
                 <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
                   <div>
@@ -270,7 +337,7 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
                       Notification Email (Optional)
                     </label>
-                    <input 
+                    <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -407,7 +474,7 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
           <aside className="sticky top-28">
             <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-slate-900/40">
               <h3 className="text-lg font-black uppercase tracking-[0.2em] mb-8 text-emerald-400">Order Summary</h3>
-              
+
               <div className="space-y-6">
                 <div className="flex justify-between items-center group">
                   <span className="text-slate-400 font-bold group-hover:text-slate-300 transition-colors text-sm">Base Amount</span>
@@ -420,7 +487,7 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                     : <span className="font-black text-lg text-emerald-400">+{currencyCode} {serviceFee.toFixed(2)}</span>
                   }
                 </div>
-                
+
                 <div className="pt-8 mt-4 border-t border-white/10">
                   <div className="flex justify-between items-end mb-8">
                     <div>
@@ -433,7 +500,7 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                   </div>
 
                   <button
-                    onClick={() => onConfirm(paymentMethod, email, phone, accountNumber, baseAmount)}
+                    onClick={() => onConfirm(paymentMethod, email, phone, effectiveRequiredFields, baseAmount)}
                     disabled={isLoading || !canPay}
                     className="w-full bg-emerald-600 py-5 rounded-2xl font-black text-base uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-emerald-500 active:scale-[0.98] transition-all shadow-xl shadow-emerald-900/20 disabled:opacity-50 disabled:cursor-not-allowed group"
                   >
