@@ -194,7 +194,7 @@ export function PortalRegister({
           </Link>
 
           <div>
-            <img src={esebillsLogo} alt="EseBills" className="h-12 w-auto brightness-0 invert mb-12" />
+            <img src={esebillsLogo} alt="EseBills" className="h-24 w-auto brightness-0 invert mb-12" />
             <h1 className="text-5xl font-black text-white leading-tight tracking-tighter">
               {asideTitle}<br />
               <span className="text-emerald-400">{asideAccent}</span>
@@ -218,7 +218,7 @@ export function PortalRegister({
       {/* Right panel — Stepper form */}
       <div className="flex-1 flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-20 bg-white">
         <div className="lg:hidden flex justify-center mb-12">
-          <img src={esebillsLogo} alt="EseBills" className="h-10 w-auto" />
+          <img src={esebillsLogo} alt="EseBills" className="h-20 w-auto" />
         </div>
 
         <div className="mx-auto w-full max-w-lg">

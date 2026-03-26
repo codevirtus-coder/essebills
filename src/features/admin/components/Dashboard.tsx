@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   AreaChart,
   Area,
@@ -22,13 +23,18 @@ import {
   type DashboardStats,
   type AnalyticsDashboardStats,
   type RevenueDataPoint,
+  type RevenueChartResponse,
   type TopBiller,
   type TransactionFeedItem,
 } from "../services/admin-api.service";
-import { 
-  Download, 
+import { getEsolutionsBalance } from "../services/esolutions.service";
+import {
+  Download,
   MoreVertical,
-  Layers
+  Layers,
+  Wifi,
+  WifiOff,
+  RefreshCw,
 } from "lucide-react";
 import { cn } from "../../../lib/utils";
 import type { PaymentTransaction } from "../../../types";
@@ -65,13 +71,25 @@ const Dashboard: React.FC = () => {
   const [donationsSummary, setDonationsSummary] = useState<Record<string, unknown>>({});
   const [whatsAppSummary, setWhatsAppSummary] = useState<Record<string, unknown>>({});
 
+  const { data: esBalance, isFetching: esBalanceFetching, refetch: refetchEsBalance } = useQuery({
+    queryKey: ["esolutions-balance-dashboard"],
+    queryFn: getEsolutionsBalance,
+    retry: 1,
+    staleTime: 5 * 60 * 1000,
+  });
+
   useEffect(() => {
     let mounted = true;
-    
+
+    const now = new Date();
+    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 6, 1);
+    const startDate = sixMonthsAgo.toISOString().split('T')[0];
+    const endDate = now.toISOString().split('T')[0];
+
     // Use new analytics endpoints as primary, fall back to legacy if needed
     Promise.all([
       getAnalyticsDashboardStats().catch(() => getDashboardStats().catch(() => DEFAULT_STATS)),
-      getAnalyticsRevenueChart({ period: 'monthly' }).catch(() => getDashboardRevenue({ period: 'monthly' }).catch(() => DEFAULT_REVENUE_DATA)),
+      getAnalyticsRevenueChart({ period: 'monthly', startDate, endDate }).catch(() => null),
       getAnalyticsTransactionFeed({ size: 10 }).catch(() => getActivityFeed(10).catch(() => [])),
       getDonationsSummary().catch(() => ({} as Record<string, unknown>)),
       getWhatsAppSessionsSummary().catch(() => ({} as Record<string, unknown>)),
@@ -86,7 +104,21 @@ const Dashboard: React.FC = () => {
           setStats(dashboardStats as DashboardStats);
         }
         
-        setRevenueData(revenue);
+        // Normalise revenue — backend returns { data: DataPoint[], period } not a plain array
+        const normalised: RevenueDataPoint[] = (() => {
+          if (!revenue) return DEFAULT_REVENUE_DATA
+          if (Array.isArray(revenue)) return revenue as RevenueDataPoint[]
+          const chart = revenue as RevenueChartResponse
+          if (Array.isArray(chart.data) && chart.data.length > 0) {
+            return chart.data.map(dp => ({
+              month: new Date(dp.date).toLocaleString('default', { month: 'short' }),
+              revenue: dp.revenue,
+              transactionCount: dp.transactionCount,
+            }))
+          }
+          return DEFAULT_REVENUE_DATA
+        })()
+        setRevenueData(normalised);
         // Handle transaction feed
         if (activity && typeof activity === 'object' && 'content' in activity) {
           setTransactions(((activity as { content: unknown }).content as PaymentTransaction[]) || []);
@@ -279,7 +311,7 @@ const Dashboard: React.FC = () => {
         />
       </div>
 
-      {/* Donations & Additional Metrics */}
+      {/* Donations & Vendor Balance */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           label="Total Donations"
@@ -291,6 +323,63 @@ const Dashboard: React.FC = () => {
           chartPath="M0 20 Q 50 5, 100 20"
           strokeColor="#f43f5e"
         />
+
+        {/* eSolutions Vendor Balance */}
+        <div className="glass-card p-5 border-slate-200 dark:border-slate-800 col-span-1 md:col-span-2 lg:col-span-2">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              {esBalance && Object.values(esBalance).some(b => b.responseCode === "00")
+                ? <Wifi size={16} className="text-emerald-500" />
+                : <WifiOff size={16} className="text-amber-500" />
+              }
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">eSolutions Vendor Balance</p>
+            </div>
+            <button
+              onClick={() => refetchEsBalance()}
+              disabled={esBalanceFetching}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              title="Refresh balance"
+            >
+              <RefreshCw size={14} className={esBalanceFetching ? "animate-spin" : ""} />
+            </button>
+          </div>
+          {esBalanceFetching ? (
+            <div className="flex gap-4">
+              <div className="h-8 w-36 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />
+              <div className="h-8 w-36 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />
+            </div>
+          ) : esBalance && Object.keys(esBalance).length > 0 ? (
+            <div className="flex flex-wrap gap-4">
+              {Object.entries(esBalance).map(([currency, bal]) => (
+                <div key={currency} className={cn(
+                  "flex-1 min-w-[140px] rounded-xl p-3 border",
+                  bal.responseCode === "00"
+                    ? "bg-emerald-50 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-800/50"
+                    : "bg-amber-50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-800/50"
+                )}>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">{currency}</p>
+                  {bal.responseCode === "00" ? (
+                    <>
+                      <p className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                        {bal.currencyCode ?? currency}{" "}
+                        {bal.balanceUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                      {bal.accountName && (
+                        <p className="text-[10px] text-slate-500 mt-0.5 font-medium">
+                          {bal.accountName} · {bal.accountNumber}
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-xs font-bold text-amber-600">{bal.narrative ?? "Unavailable"}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm font-bold text-amber-600">Unable to fetch balance</p>
+          )}
+        </div>
       </div>
 
       {/* Charts Section */}

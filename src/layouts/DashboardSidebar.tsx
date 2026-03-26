@@ -249,25 +249,6 @@ export function DashboardSidebar({
                             )}
                           </button>
 
-                          {/* Nested Items */}
-                          {!collapsed && item.children && (
-                            <div className="ml-9 mt-1 space-y-1 border-l border-slate-800 pl-3">
-                              {item.children.map((child) => (
-                                <button
-                                  key={child.id}
-                                  onClick={() => handleItemClick(child)}
-                                  className={cn(
-                                    "w-full text-left py-1.5 px-2 rounded-lg text-xs transition-colors",
-                                    activeTab === child.id
-                                      ? "text-emerald-400 font-semibold"
-                                      : "text-slate-500 hover:text-slate-300",
-                                  )}
-                                >
-                                  {child.label}
-                                </button>
-                              ))}
-                            </div>
-                          )}
                         </div>
                       );
                     })}

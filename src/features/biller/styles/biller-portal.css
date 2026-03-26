@@ -1,24 +1,7 @@
-.font-display {
-  font-family: var(--font-family-base);
-}
+/* Biller portal — imports shared design system */
+@import '../../shared/styles/shared-dashboard.css';
 
-.animate-in,
-.fade-in {
-  transition: all 0.3s ease;
-}
-
-@keyframes billerFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-
-  to {
-    opacity: 2;
-    transform: translateY(0);
-  }
-}
-
+/* ── Biller-specific layout ────────────────────────────────────────────────── */
 .biller-portal {
   min-height: 100vh;
   display: grid;
@@ -51,8 +34,12 @@
   height: 320px;
   position: relative;
   border-radius: 1.3rem;
-  border: 1px dashed #dfdbea;
+  border: 1px dashed var(--color-border, #dfdbea);
   padding: 0.7rem;
+}
+
+html.dark .biller-chart {
+  border-color: var(--color-border-dark, #334155);
 }
 
 .biller-chart svg {
@@ -67,10 +54,14 @@
   bottom: 0.9rem;
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  color: #706693;
+  color: var(--color-text-muted, #706693);
   font-size: 0.72rem;
   font-weight: var(--fw-semibold);
   letter-spacing: 0.01em;
+}
+
+html.dark .biller-chart-days {
+  color: var(--color-text-muted-dark, #94a3b8);
 }
 
 .biller-chart-days span {

@@ -2,11 +2,19 @@
 // Products Service - Based on API spec
 // ============================================================================
 
-import { apiFetch, toQueryString } from '../api/client'
+import { apiFetch, multipartFetch, toQueryString } from '../api/client'
 import { API_ENDPOINTS } from '../api/endpoints'
+
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim() ?? ''
+
+/** Construct a public URL for a product logo (suitable for use as <img src>). */
+export function getProductLogoUrl(productId: number | string): string {
+  return `${API_BASE_URL}${API_ENDPOINTS.products.logo(productId)}`
+}
 import type {
   Product,
   ProductCategory,
+  ProductField,
   Currency,
   Country,
   Bank,
@@ -24,6 +32,7 @@ export interface ProductQueryParams extends Record<string, unknown> {
   order?: 'ASC' | 'DESC'
   search?: string
   categoryId?: string | number
+  codePrefix?: string
 }
 
 // --------------------------------------------------------------------------
@@ -56,9 +65,64 @@ export async function getProductsByCategory(
   }
 }
 
+/** Get active variants (children) of a product, ordered by price asc. Empty array if none. */
+export async function getProductVariants(productId: string | number): Promise<Product[]> {
+  return apiFetch<Product[]>(API_ENDPOINTS.products.variants(productId))
+}
+
 /** Get product by ID */
 export async function getProductById(productId: string | number): Promise<Product> {
   return apiFetch<Product>(API_ENDPOINTS.products.byId(productId))
+}
+
+/** Get required fields for a product */
+export async function getProductFields(productId: string | number): Promise<ProductField[]> {
+  return apiFetch<ProductField[]>(API_ENDPOINTS.products.requiredFields(productId))
+}
+
+export interface ProductAvailability {
+  available: boolean
+  reason?: string
+  lowStock?: boolean
+}
+
+export interface ProductPreCheckRequest {
+  requiredFields: Record<string, string>
+  amount?: number
+  currencyCode?: string
+  phoneNumber?: string
+  email?: string
+}
+
+export interface ProductPreCheckResult {
+  valid: boolean
+  accountNarrative?: string
+  settlementCurrencyCode?: string
+  errorMessage?: string
+  supportsPreCheck: boolean
+}
+
+/** Check if a product is currently available (public, no auth). */
+export async function checkProductAvailability(productId: string | number): Promise<ProductAvailability> {
+  return apiFetch<ProductAvailability>(API_ENDPOINTS.products.availability(productId))
+}
+
+/** Validate account/meter fields against the provider without charging (public, no auth). */
+export async function preCheckProduct(
+  productId: string | number,
+  data: ProductPreCheckRequest
+): Promise<ProductPreCheckResult> {
+  return apiFetch<ProductPreCheckResult>(API_ENDPOINTS.products.preCheck(productId), {
+    method: 'POST',
+    body: data,
+  })
+}
+
+/** Upload a logo image for a product (admin). Returns the updated product. */
+export async function uploadProductLogo(productId: string | number, file: File): Promise<unknown> {
+  const form = new FormData()
+  form.append('file', file)
+  return multipartFetch(API_ENDPOINTS.products.uploadLogo(productId), form, { method: 'POST' })
 }
 
 

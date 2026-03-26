@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useCallback, useEffect } from 'react'
 import toast from 'react-hot-toast'
-import { confirmToast } from '../../../lib/confirmToast'
+import { showConfirmDialog } from '../../shared/components/ConfirmDialog'
 import CRUDLayout, { type CRUDColumn } from '../../shared/components/CRUDLayout'
 import CRUDModal from '../../shared/components/CRUDModal'
 import {
@@ -486,7 +486,7 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
     const id = Number(row.id)
     const name = String(row.name ?? row.code ?? row.date ?? `#${id}`)
     
-    confirmToast(`Delete ${name}?`, () => {
+    showConfirmDialog(`Delete ${name}?`, () => {
       let action: Promise<any>
       if (module === 'currencies') action = deleteCurrency(id)
       else if (module === 'countries') action = deleteCountry(id)

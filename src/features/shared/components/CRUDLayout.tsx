@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
   Search,
   Plus,
@@ -11,7 +11,11 @@ import {
   ChevronDown,
   ChevronsUpDown,
   Loader2,
-  Filter
+  Filter,
+  Download,
+  Columns,
+  X,
+  MoreHorizontal
 } from 'lucide-react';
 
 export interface CRUDColumn<T> {
@@ -19,7 +23,11 @@ export interface CRUDColumn<T> {
   header: string;
   render?: (item: T) => React.ReactNode;
   sortable?: boolean;
+  filterable?: boolean;
+  filterType?: 'text' | 'select' | 'date' | 'number';
+  filterOptions?: { label: string; value: string }[];
   className?: string;
+  visible?: boolean;
 }
 
 export interface CRUDActions<T> {
@@ -28,6 +36,7 @@ export interface CRUDActions<T> {
   onView?: (item: T) => void;
   canEdit?: (item: T) => boolean;
   canDelete?: (item: T) => boolean;
+  renderCustom?: (item: T) => React.ReactNode;
 }
 
 export interface PageableState {
@@ -42,6 +51,10 @@ export interface SortState {
   direction: 'asc' | 'desc';
 }
 
+export interface FilterState {
+  [key: string]: string;
+}
+
 interface CRUDLayoutProps<T> {
   title: string;
   columns: CRUDColumn<T>[];
@@ -52,14 +65,18 @@ interface CRUDLayoutProps<T> {
   onSizeChange: (size: number) => void;
   onSearch?: (search: string) => void;
   onRefresh?: () => void;
+  onExport?: (data: T[]) => void;
   actions?: CRUDActions<T>;
   onAdd?: () => void;
   addButtonText?: string;
   children?: React.ReactNode;
   searchable?: boolean;
+  filterable?: boolean;
   filterComponent?: React.ReactNode;
   sortState?: SortState | null;
   onSort?: (column: string, direction: 'asc' | 'desc') => void;
+  enableClientSideFilter?: boolean;
+  exportFilename?: string;
 }
 
 export default function CRUDLayout<T extends { uid?: string; id?: number }>({
@@ -72,17 +89,26 @@ export default function CRUDLayout<T extends { uid?: string; id?: number }>({
   onSizeChange,
   onSearch,
   onRefresh,
+  onExport,
   actions,
   onAdd,
   addButtonText = 'Add New',
   children,
   searchable = true,
+  filterable = false,
   filterComponent,
   sortState,
   onSort,
+  enableClientSideFilter = false,
+  exportFilename,
 }: CRUDLayoutProps<T>) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [showColumnToggle, setShowColumnToggle] = useState(false);
+  const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>(
+    columns.reduce((acc, col) => ({ ...acc, [String(col.key)]: col.visible !== false }), {})
+  );
+  const [clientFilters, setClientFilters] = useState<FilterState>({});
 
   const handleSort = (column: string) => {
     if (!onSort) return;
@@ -110,8 +136,61 @@ export default function CRUDLayout<T extends { uid?: string; id?: number }>({
     }
   };
 
+  const toggleColumn = (key: string) => {
+    setColumnVisibility((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const handleExport = () => {
+    if (onExport) {
+      onExport(data);
+    } else {
+      const visibleColumns = columns.filter((col) => columnVisibility[String(col.key)]);
+      const headers = visibleColumns.map((col) => col.header);
+      const rows = data.map((item) =>
+        visibleColumns.map((col) => {
+          if (col.render) {
+            const rendered = col.render(item);
+            return typeof rendered === 'string' ? rendered : '';
+          }
+          return String(item[col.key as keyof T] ?? '');
+        })
+      );
+      const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${exportFilename || title}_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  const filteredData = useMemo(() => {
+    if (!enableClientSideFilter) return data;
+
+    return data.filter((item) => {
+      const searchLower = searchQuery.toLowerCase();
+      const matchesSearch = !searchQuery || 
+        Object.keys(item).some((key) => {
+          const value = item[key as keyof T];
+          return String(value).toLowerCase().includes(searchLower);
+        });
+
+      const matchesFilters = Object.entries(clientFilters).every(([key, filterValue]) => {
+        if (!filterValue) return true;
+        const value = item[key as keyof T];
+        return String(value).toLowerCase().includes(filterValue.toLowerCase());
+      });
+
+      return matchesSearch && matchesFilters;
+    });
+  }, [data, searchQuery, clientFilters, enableClientSideFilter]);
+
+  const visibleColumns = columns.filter((col) => columnVisibility[String(col.key)] !== false);
+
   const pageNumbers = [];
-  const hasActions = Boolean(actions?.onEdit || actions?.onDelete || actions?.onView);
+  const hasActions = Boolean(actions?.onEdit || actions?.onDelete || actions?.onView || actions?.renderCustom);
   const maxVisiblePages = 5;
   let startPage = Math.max(1, pageable.page - Math.floor(maxVisiblePages / 2));
   const endPage = Math.min(pageable.totalPages, startPage + maxVisiblePages - 1);
@@ -140,6 +219,46 @@ export default function CRUDLayout<T extends { uid?: string; id?: number }>({
               <Loader2 className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
             </button>
           )}
+          
+          {data.length > 0 && (
+            <button
+              onClick={handleExport}
+              className="flex items-center gap-2 px-3 py-2 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 rounded-lg transition-colors border border-slate-200 dark:border-slate-700"
+              title="Export CSV"
+            >
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline text-sm">Export</span>
+            </button>
+          )}
+          
+          <div className="relative">
+            <button
+              onClick={() => setShowColumnToggle(!showColumnToggle)}
+              className="flex items-center gap-2 px-3 py-2 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 rounded-lg transition-colors border border-slate-200 dark:border-slate-700"
+              title="Toggle columns"
+            >
+              <Columns className="w-4 h-4" />
+              <span className="hidden sm:inline text-sm">Columns</span>
+            </button>
+            {showColumnToggle && (
+              <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-50 py-2">
+                {columns.map((col) => (
+                  <label
+                    key={String(col.key)}
+                    className="flex items-center gap-2 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={columnVisibility[String(col.key)] !== false}
+                      onChange={() => toggleColumn(String(col.key))}
+                      className="rounded text-emerald-600"
+                    />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">{col.header}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
           
           {onAdd && (
             <button
@@ -172,12 +291,12 @@ export default function CRUDLayout<T extends { uid?: string; id?: number }>({
             </form>
           )}
           
-          {filterComponent && (
+          {(filterComponent || filterable) && (
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors ${
                 showFilters 
-                  ? 'bg-emerald-50 border-emerald-500 text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-500/50 dark:text-emerald-400' 
+                  ? 'bg-emerald-50 border-emerald-500 text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-500/50 dark:text-emerald-400'
                   : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
               }`}
             >
@@ -200,10 +319,10 @@ export default function CRUDLayout<T extends { uid?: string; id?: number }>({
           <table className="w-full">
             <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
               <tr>
-                {columns.map((column) => (
+                {visibleColumns.map((column) => (
                   <th
                     key={String(column.key)}
-                    className={`px-6 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider ${
+                    className={`px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider ${
                       column.className || ''
                     }`}
                   >
@@ -221,7 +340,7 @@ export default function CRUDLayout<T extends { uid?: string; id?: number }>({
                   </th>
                 ))}
                 {hasActions && (
-                  <th className="sticky right-0 z-20 border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-6 py-3 text-right text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                  <th className="sticky right-0 z-[70] border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-4 py-3 text-right text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                     Actions
                   </th>
                 )}
@@ -230,24 +349,26 @@ export default function CRUDLayout<T extends { uid?: string; id?: number }>({
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={columns.length + (hasActions ? 1 : 0)} className="px-6 py-12 text-center">
+                  <td colSpan={visibleColumns.length + (hasActions ? 1 : 0)} className="px-6 py-12 text-center">
                     <Loader2 className="w-8 h-8 animate-spin text-emerald-600 mx-auto" />
                     <p className="mt-2 text-slate-500 dark:text-slate-400">Loading...</p>
                   </td>
                 </tr>
-              ) : data.length === 0 ? (
+              ) : filteredData.length === 0 ? (
                 <tr>
-                  <td colSpan={columns.length + (hasActions ? 1 : 0)} className="px-6 py-12 text-center">
-                    <p className="text-slate-500 dark:text-slate-400">No data found</p>
+                  <td colSpan={visibleColumns.length + (hasActions ? 1 : 0)} className="px-6 py-12 text-center">
+                    <p className="text-slate-500 dark:text-slate-400">
+                      {data.length > 0 ? 'No matching results found' : 'No data found'}
+                    </p>
                   </td>
                 </tr>
               ) : (
-                data.map((item, index) => (
+                filteredData.map((item, index) => (
                   <tr key={item.uid || item.id || index} className="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                    {columns.map((column) => (
+                    {visibleColumns.map((column) => (
                       <td
                         key={String(column.key)}
-                        className={`px-6 py-4 text-sm text-slate-700 dark:text-slate-300 ${
+                        className={`px-4 py-4 text-sm text-slate-700 dark:text-slate-300 ${
                           column.className || ''
                         }`}
                       >
@@ -257,7 +378,7 @@ export default function CRUDLayout<T extends { uid?: string; id?: number }>({
                       </td>
                     ))}
                     {hasActions && (
-                      <td className="sticky right-0 z-10 border-l border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-4 text-right group-hover:bg-slate-50 dark:group-hover:bg-slate-800/50">
+                      <td className="sticky right-0 z-[70] border-l border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-4 text-right group-hover:bg-slate-50 dark:group-hover:bg-slate-800/50">
                         <div className="flex items-center justify-end gap-2">
                           {actions?.onView && (
                             <button
@@ -287,6 +408,7 @@ export default function CRUDLayout<T extends { uid?: string; id?: number }>({
                               <Trash2 className="w-4 h-4" />
                             </button>
                           )}
+                          {actions?.renderCustom?.(item)}
                         </div>
                       </td>
                     )}
@@ -299,20 +421,36 @@ export default function CRUDLayout<T extends { uid?: string; id?: number }>({
 
         {/* Pagination */}
         {pageable.totalPages > 0 && (
-          <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/30">
+          <div className="px-4 py-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/30">
             <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-              <span>Show</span>
-              <select
-                value={pageable.size}
-                onChange={(e) => onSizeChange(Number(e.target.value))}
-                className="border border-slate-200 dark:border-slate-700 dark:bg-slate-800 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-              >
-                <option value={10}>10</option>
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-              </select>
-              <span>of {pageable.totalElements} entries</span>
+              {enableClientSideFilter && data.length !== filteredData.length ? (
+                <span>
+                  Showing {filteredData.length} of {data.length} entries
+                  {data.length > 0 && (
+                    <button
+                      onClick={() => { setSearchQuery(''); setClientFilters({}); }}
+                      className="ml-2 text-emerald-600 hover:text-emerald-700 font-medium"
+                    >
+                      Clear filters
+                    </button>
+                  )}
+                </span>
+              ) : (
+                <>
+                  <span>Show</span>
+                  <select
+                    value={pageable.size}
+                    onChange={(e) => onSizeChange(Number(e.target.value))}
+                    className="border border-slate-200 dark:border-slate-700 dark:bg-slate-800 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  >
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                  <span>of {pageable.totalElements} entries</span>
+                </>
+              )}
             </div>
             
             <div className="flex items-center gap-1">

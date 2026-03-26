@@ -6,7 +6,8 @@ import { useCurrentUser } from '../features/auth/hooks/useCurrentUser'
 import { clearAuthSession } from '../features/auth/auth.storage'
 import { ROUTE_PATHS } from '../router/paths'
 import { cn } from '../lib/utils'
-import { User, LogOut, Settings, HelpCircle, ChevronDown, Menu, X, Bell } from 'lucide-react'
+import { User, LogOut, Settings, HelpCircle, ChevronDown, Menu, X, Bell, Sun, Moon } from 'lucide-react'
+import { useTheme } from '../contexts/ThemeContext'
 
 interface DashboardHeaderProps {
   onToggleMobileNav?: () => void
@@ -21,6 +22,7 @@ export function DashboardHeader({
   const { profile, group, loading } = useCurrentUser()
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const { theme, toggleTheme } = useTheme()
 
   const displayName = useMemo(() => {
     const first = profile?.firstName ?? ''
@@ -74,6 +76,14 @@ export function DashboardHeader({
       </div>
 
       <div className="flex items-center gap-4">
+        <button
+          onClick={toggleTheme}
+          aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+          className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center transition-all hover:bg-slate-200 dark:hover:bg-slate-700"
+        >
+          {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+        </button>
+
         <NotificationMenu />
 
         <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 mx-2" />

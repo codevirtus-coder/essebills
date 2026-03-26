@@ -64,6 +64,8 @@ export interface ProductPaymentContext {
   productMetadata?: string
   currencyCode: Currency
   productCode: Product
+  userId?: number
+  userGroup?: string
 }
 
 /** Product payment response */

@@ -74,3 +74,18 @@ export async function processProductPayment(context: ProductPaymentContext): Pro
     body: context,
   })
 }
+
+/** Poll payment transaction status by ID (public, no auth required) */
+export async function getPaymentStatus(transactionId: string | number): Promise<PaymentTransaction> {
+  return apiFetch<PaymentTransaction>(API_ENDPOINTS.payments.paymentStatus(transactionId))
+}
+
+export interface ServiceChargeRate {
+  userGroup: string
+  ratePercent: number
+}
+
+/** Fetch the applicable service charge rate for the given user group (public) */
+export async function getApplicableServiceCharge(group?: string): Promise<ServiceChargeRate> {
+  return apiFetch<ServiceChargeRate>(API_ENDPOINTS.payments.serviceChargeApplicable(group))
+}

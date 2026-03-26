@@ -1,5 +1,5 @@
 import { Icon } from '../../../components/ui/Icon'
-import '../../shared/styles/role-dashboard.css'
+import '../../shared/styles/shared-dashboard.css'
 
 type Metric = {
   label: string

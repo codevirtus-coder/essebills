@@ -5,7 +5,7 @@ import { ROUTE_PATHS } from "../router/paths";
 
 export function Footer() {
   return (
-    <footer className="bg-[#10B981] border-t border-[#10B981] py-12 px-4 sm:px-6 lg:px-8">
+    <footer className="bg-[#10B981] dark:bg-[#047857] border-t border-[#10B981] dark:border-[#047857] py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
           <div>
@@ -84,7 +84,7 @@ export function Footer() {
 
         <div className="pt-8 border-t border-white/20 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-white/80 text-xs">
-            Â© {new Date().getFullYear()} EseBills. All Rights Reserved.
+            &copy; {new Date().getFullYear()} EseBills. All Rights Reserved.
           </p>
           <div className="flex flex-wrap justify-center gap-5">
             <Link

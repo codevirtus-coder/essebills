@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import type {
   AdminCountryDto,
@@ -15,21 +15,24 @@ import {
   getPaginatedProducts,
   updateProduct,
 } from "../services";
+import { getProductLogoUrl, uploadProductLogo } from "../../../services/products.service";
 import CRUDLayout, { type CRUDColumn } from "../../shared/components/CRUDLayout";
 import CRUDModal from "../../shared/components/CRUDModal";
-import { 
-  Package, 
-  Tag, 
-  Globe, 
-  DollarSign, 
-  Settings, 
-  Info, 
-  CheckCircle2, 
-  XCircle, 
+import {
+  Package,
+  Tag,
+  Globe,
+  DollarSign,
+  Settings,
+  Info,
+  CheckCircle2,
+  XCircle,
   Plus,
   Layers,
   ArrowRight,
-  ShoppingCart
+  ShoppingCart,
+  Upload,
+  Image,
 } from "lucide-react";
 import { cn } from "../../../lib/utils";
 
@@ -56,15 +59,20 @@ const Products: React.FC = () => {
   const [editingProductId, setEditingProductId] = useState<string | number | null>(null);
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
-  const [countryCode, setCountryCode] = useState("");
-  const [defaultCurrencyCode, setDefaultCurrencyCode] = useState("");
+  const [countryId, setCountryId] = useState("");
+  const [currencyId, setCurrencyId] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [minimumDisablingBalance, setMinimumDisablingBalance] = useState("");
   const [minimumPurchaseAmount, setMinimumPurchaseAmount] = useState("");
   const [description, setDescription] = useState("");
   const [returnUrl, setReturnUrl] = useState("");
   const [productLogoFileName, setProductLogoFileName] = useState("");
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<ProductStatus>("ACTIVE");
+  const [parentProductId, setParentProductId] = useState<string>("");
+  const [parentSearch, setParentSearch] = useState("");
 
   const loadProducts = async () => {
     try {
@@ -160,10 +168,13 @@ const Products: React.FC = () => {
     setName(""); setCode(""); setCountryCode(""); setDefaultCurrencyCode("");
     setCategoryId(""); setMinimumDisablingBalance(""); setMinimumPurchaseAmount("");
     setDescription(""); setReturnUrl(""); setProductLogoFileName(""); setStatus("ACTIVE");
+    setCountryId(""); setCurrencyId("");
+    setLogoFile(null); setLogoPreview(null);
+    setParentProductId(""); setParentSearch("");
   };
 
   const handleSave = async () => {
-    if (!name || !code || !countryCode || !defaultCurrencyCode) {
+    if (!name || !code || !countryId || !currencyId) {
       toast.error("Required fields are missing");
       return;
     }
@@ -172,19 +183,29 @@ const Products: React.FC = () => {
       const payload = {
         name: name.trim(),
         code: code.trim().toUpperCase(),
-        countryCode,
-        defaultCurrencyCode,
-        category: categoryId ? { id: Number(categoryId) } : null,
+        countryId: Number(countryId),
+        currencyId: Number(currencyId),
+        categoryId: categoryId ? Number(categoryId) : null,
         minimumDisablingBalance: Number(minimumDisablingBalance || 0),
         minimumPurchaseAmount: Number(minimumPurchaseAmount || 0),
         description: description.trim(),
-        returnUrl: returnUrl.trim(),
+        returnUrl: returnUrl.trim() || "-",
         productLogoFileName: productLogoFileName.trim(),
         status,
+        parentProductId: parentProductId ? Number(parentProductId) : null,
       };
 
-      if (editingProductId) await updateProduct({ id: editingProductId, ...payload });
-      else await createProduct(payload);
+      let savedProduct;
+      if (editingProductId) savedProduct = await updateProduct({ id: editingProductId, ...payload });
+      else savedProduct = await createProduct(payload);
+
+      if (logoFile && savedProduct?.id) {
+        try {
+          await uploadProductLogo(savedProduct.id, logoFile);
+        } catch {
+          toast.error("Product saved but logo upload failed");
+        }
+      }
 
       toast.success(`Product ${editingProductId ? 'updated' : 'added'} successfully`);
       setIsModalOpen(false);
@@ -200,15 +221,27 @@ const Products: React.FC = () => {
     setEditingProductId(p.id ?? null);
     setName(String(p.name ?? ""));
     setCode(String(p.code ?? ""));
-    setCountryCode(String(p.countryCode ?? (p.country as any)?.code ?? ""));
-    setDefaultCurrencyCode(String(p.defaultCurrencyCode ?? (p.defaultCurrency as any)?.code ?? ""));
+    // Resolve country ID: prefer explicit id, otherwise match by code from loaded list
+    const resolvedCountryId = (p.country as any)?.id
+      ?? countries.find(c => c.code === (p.countryCode ?? (p.country as any)?.code))?.id
+      ?? "";
+    const resolvedCurrencyId = (p.defaultCurrency as any)?.id
+      ?? currencies.find(c => c.code === (p.defaultCurrencyCode ?? (p.defaultCurrency as any)?.code))?.id
+      ?? "";
+    setCountryId(String(resolvedCountryId));
+    setCurrencyId(String(resolvedCurrencyId));
     setCategoryId(String((p.category as any)?.id ?? ""));
     setMinimumDisablingBalance(String(p.minimumDisablingBalance ?? ""));
     setMinimumPurchaseAmount(String(p.minimumPurchaseAmount ?? ""));
     setDescription(String(p.description ?? ""));
     setReturnUrl(String(p.returnUrl ?? ""));
     setProductLogoFileName(String(p.productLogoFileName ?? ""));
+    setLogoFile(null);
+    setLogoPreview(p.id ? getProductLogoUrl(p.id) : null);
     setStatus(normalizeStatus(p.status));
+    const pid = (p as any).parentProductId;
+    setParentProductId(pid ? String(pid) : "");
+    setParentSearch("");
     setIsModalOpen(true);
   };
 
@@ -296,16 +329,16 @@ const Products: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Country</label>
-                <select value={countryCode} onChange={e => setCountryCode(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none">
+                <select value={countryId} onChange={e => setCountryId(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none">
                   <option value="">Select Country</option>
-                  {countries.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
+                  {countries.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Currency</label>
-                <select value={defaultCurrencyCode} onChange={e => setDefaultCurrencyCode(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none">
+                <select value={currencyId} onChange={e => setCurrencyId(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none">
                   <option value="">Select Currency</option>
-                  {currencies.map(c => <option key={c.code} value={c.code}>{c.code}</option>)}
+                  {currencies.map(c => <option key={c.id} value={c.id}>{c.code}</option>)}
                 </select>
               </div>
             </div>
@@ -322,13 +355,89 @@ const Products: React.FC = () => {
           <div className="md:col-span-2 space-y-4">
             <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 pb-2">Extended Parameters</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               {/* Parent product — makes this product a variant/child of the selected parent */}
+               <div className="space-y-1.5 md:col-span-2">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">
+                    Parent Product <span className="font-normal text-slate-400">(optional — set to make this a variant)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={parentSearch}
+                    onChange={e => setParentSearch(e.target.value)}
+                    placeholder="Search by name or code…"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 mb-1"
+                  />
+                  <select
+                    value={parentProductId}
+                    onChange={e => setParentProductId(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none"
+                    size={4}
+                  >
+                    <option value="">— No parent (standalone product) —</option>
+                    {products
+                      .filter(p =>
+                        // exclude the product being edited from its own parent list
+                        String(p.id) !== String(editingProductId) &&
+                        (parentSearch.trim() === '' ||
+                          String(p.name ?? '').toLowerCase().includes(parentSearch.toLowerCase()) ||
+                          String(p.code ?? '').toLowerCase().includes(parentSearch.toLowerCase()))
+                      )
+                      .map(p => (
+                        <option key={p.id} value={String(p.id)}>
+                          {p.name} ({p.code})
+                        </option>
+                      ))
+                    }
+                  </select>
+                  {parentProductId && (
+                    <p className="text-[10px] text-emerald-600 font-bold mt-1">
+                      Variant of: {products.find(p => String(p.id) === parentProductId)?.name ?? `#${parentProductId}`}
+                      {' '}·{' '}
+                      <button type="button" className="underline" onClick={() => { setParentProductId(''); setParentSearch(''); }}>clear</button>
+                    </p>
+                  )}
+               </div>
                <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Min Purchase Amount</label>
                   <input type="number" value={minimumPurchaseAmount} onChange={e => setMinimumPurchaseAmount(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold" placeholder="0.00" />
                </div>
                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Logo Filename</label>
-                  <input value={productLogoFileName} onChange={e => setProductLogoFileName(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold" placeholder="logo.png" />
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Product Logo</label>
+                  <div
+                    className="relative flex items-center gap-3 w-full bg-slate-50 dark:bg-slate-950 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 cursor-pointer hover:border-emerald-400 transition-colors"
+                    onClick={() => logoInputRef.current?.click()}
+                  >
+                    {logoPreview ? (
+                      <img
+                        src={logoPreview}
+                        alt="logo"
+                        className="w-10 h-10 rounded-lg object-contain bg-white border border-slate-100"
+                        onError={() => setLogoPreview(null)}
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                        <Image size={18} className="text-slate-400" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 truncate">
+                        {logoFile ? logoFile.name : productLogoFileName || "Click to upload logo"}
+                      </p>
+                      <p className="text-[10px] text-slate-400">PNG, JPG, SVG, WebP</p>
+                    </div>
+                    <Upload size={14} className="text-slate-400 shrink-0" />
+                    <input
+                      ref={logoInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] ?? null;
+                        setLogoFile(file);
+                        if (file) setLogoPreview(URL.createObjectURL(file));
+                      }}
+                    />
+                  </div>
                </div>
             </div>
             <div className="space-y-1.5">

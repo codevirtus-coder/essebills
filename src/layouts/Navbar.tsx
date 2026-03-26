@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Sun, Moon } from "lucide-react";
 import esebillsLogo from "../assets/esebills_logo.png";
 import { ROUTE_PATHS, getDashboardRouteByGroup } from "../router/paths";
 import {
@@ -9,6 +9,7 @@ import {
   isAuthenticated,
   subscribeToAuthChanges,
 } from "../features/auth/auth.storage";
+import { useTheme } from "../contexts/ThemeContext";
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -18,6 +19,17 @@ export function Navbar() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const isHome = pathname === "/";
+  const { theme, toggleTheme } = useTheme();
+
+  function handleServices(e: React.MouseEvent) {
+    e.preventDefault();
+    setMobileOpen(false);
+    if (isHome) {
+      document.getElementById("pay-now")?.scrollIntoView({ behavior: "smooth" });
+    } else {
+      navigate("/", { state: { scrollTo: "pay-now" } });
+    }
+  }
 
   function handleHowItWorks(e: React.MouseEvent) {
     e.preventDefault();
@@ -54,18 +66,16 @@ export function Navbar() {
     : null;
 
   const navLinks = [
-    {
-      label: "Services",
-      to: ROUTE_PATHS.services,
-      onClick: undefined as ((e: React.MouseEvent) => void) | undefined,
-    },
+    { label: "Services", to: "#pay-now", onClick: handleServices },
     { label: "How it Works", to: "#how-it-works", onClick: handleHowItWorks },
   ];
 
   return (
     <header
-      className={`sticky top-0 inset-x-0 z-50 transition-all duration-500 backdrop-blur-xl border border-[#10B981]/25 shadow-[0_8px_30px_rgba(16,185,129,0.12)] ${
-        scrolled || !isHome ? "bg-[#10B981]" : "bg-[#10B981]"
+      className={`sticky top-0 inset-x-0 z-50 transition-all duration-300 ${
+        mobileOpen || scrolled || !isHome
+          ? "bg-[#10B981]/95 backdrop-blur-md shadow-md"
+          : "bg-transparent"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
@@ -102,6 +112,13 @@ export function Navbar() {
               </Link>
             ),
           )}
+          <button
+            onClick={toggleTheme}
+            aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+            className="p-2 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+          >
+            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
         </nav>
 
         <div className="hidden md:flex items-center gap-3">
@@ -175,6 +192,13 @@ export function Navbar() {
               </Link>
             ),
           )}
+          <button
+            onClick={toggleTheme}
+            className="flex items-center gap-3 text-sm text-white/90 hover:text-white py-2.5 font-medium transition-colors w-full"
+          >
+            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+            {theme === "dark" ? "Light Mode" : "Dark Mode"}
+          </button>
           <div className="pt-3 flex flex-col gap-2 border-t border-white/10">
             {authenticated ? (
               <>

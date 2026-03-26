@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
-import { confirmToast } from '../../../lib/confirmToast'
+import { showConfirmDialog } from '../../shared/components/ConfirmDialog'
 import type { AdminGroupDto } from '../dto/admin-api.dto'
 import { createGroup, deleteGroup, getPaginatedGroups, updateGroup } from '../services'
 import CRUDLayout, { type CRUDColumn } from '../../shared/components/CRUDLayout'
@@ -105,7 +105,7 @@ const AdminUserGroupsPage: React.FC = () => {
   }
 
   const handleDelete = (id: string | number) => {
-    confirmToast(`Delete this group?`, () => {
+    showConfirmDialog(`Delete this group?`, () => {
       deleteGroup(id)
         .then(() => {
           toast.success('Group deleted')

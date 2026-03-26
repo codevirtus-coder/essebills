@@ -81,7 +81,7 @@ export function ForgotPasswordPage() {
       setIsSubmitting(true);
       await requestPasswordReset(email.trim());
       toast.success(config.successMessage);
-      navigate(ROUTE_PATHS.home, { replace: true });
+      navigate(config.loginPath, { replace: true });
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : 'Failed to request password reset',
@@ -111,7 +111,7 @@ export function ForgotPasswordPage() {
         </Link>
 
         <div className="relative z-10 flex flex-col justify-end p-12 pb-16">
-          <img src={esebillsLogo} alt="EseBills" className="h-9 w-auto brightness-0 invert mb-8" />
+          <img src={esebillsLogo} alt="EseBills" className="h-24 w-auto brightness-0 invert mb-8" />
           <h1 className="text-4xl font-bold text-white leading-snug">
             {config.asideTitle}<br />
             <span className="text-emerald-400">{config.asideAccent}</span>
@@ -125,7 +125,7 @@ export function ForgotPasswordPage() {
       {/* Right panel */}
       <div className="flex-1 flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-16 bg-white">
         <div className="lg:hidden flex justify-center mb-8">
-          <img src={esebillsLogo} alt="EseBills" className="h-9 w-auto" />
+          <img src={esebillsLogo} alt="EseBills" className="h-20 w-auto" />
         </div>
 
         <div className="mx-auto w-full max-w-sm">

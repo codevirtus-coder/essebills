@@ -12,6 +12,27 @@ export const ADMIN_ENDPOINTS = {
     myAccount: '/v1/users/my-account',
     byId: (userId: string | number) => `/v1/users/${userId}`,
   },
+  adminUserActions: {
+    sendPasswordReset: (userId: string | number) => `/v1/admin/users/${userId}/send-password-reset`,
+    setPassword: (userId: string | number) => `/v1/admin/users/${userId}/set-password`,
+    resendInvite: (userId: string | number) => `/v1/admin/users/${userId}/resend-invite`,
+    setOtp: (userId: string | number) => `/v1/admin/users/${userId}/otp`,
+  },
+  passwords: {
+    forgot: '/v1/users/forgot-password',
+    reset: '/v1/users/reset-password',
+    update: '/v1/users/update-password',
+  },
+  bulkPayments: {
+    groups: '/v1/bulk-payments/groups',
+    groupById: (id: string | number) => `/v1/bulk-payments/groups/${id}`,
+    initiate: '/v1/bulk-payments/initiate',
+    initiateFromGroup: (groupId: string | number) => `/v1/bulk-payments/initiate/from-group/${groupId}`,
+    schedules: '/v1/bulk-payments/schedules',
+    scheduleById: (id: string | number) => `/v1/bulk-payments/schedules/${id}`,
+    requests: '/v1/bulk-payments/requests',
+    requestById: (id: string | number) => `/v1/bulk-payments/requests/${id}`,
+  },
   groups: {
     root: '/v1/groups',
     byId: (groupId: string | number) => `/v1/groups/${groupId}`,
@@ -100,6 +121,10 @@ export const ADMIN_ENDPOINTS = {
     rates: (agentId: string | number) => `/v1/admin/agents/${agentId}/commission-rates`,
     rateById: (agentId: string | number, id: string | number) =>
       `/v1/admin/agents/${agentId}/commission-rates/${id}`,
+  },
+  serviceCharges: {
+    root: '/v1/service-charges',
+    byId: (id: string | number) => `/v1/service-charges/${id}`,
   },
   registration: {
     customer: '/v1/register/customer',

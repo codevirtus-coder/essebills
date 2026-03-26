@@ -32,6 +32,16 @@ export const API_ENDPOINTS = {
     root: '/v1/products',
     byId: (productId: string | number) => `/v1/products/${productId}`,
     byCategory: (id: string | number) => `/v1/products/by-category/${id}`,
+    requiredFields: (productId: string | number) => `/v1/products/${productId}/required-fields`,
+    uploadLogo: (productId: string | number) => `/v1/products/${productId}/logo`,
+    /** Public (no-auth) logo image stream — use directly as <img src> */
+    logo: (productId: string | number) => `/opn/v1/products/${productId}/logo`,
+    /** Public availability check — no auth required */
+    availability: (productId: string | number) => `/v1/opn/products/${productId}/availability`,
+    /** Public provider pre-check (account validation) — no auth required */
+    preCheck: (productId: string | number) => `/v1/opn/products/${productId}/pre-check`,
+    /** Public variants list — returns active child products ordered by price asc */
+    variants: (productId: string | number) => `/opn/v1/products/${productId}/variants`,
   },
 
   // Product Categories
@@ -77,11 +87,22 @@ export const API_ENDPOINTS = {
     all: '/v1/payment-transactions', // Alias for all payments
     byId: (id: string | number) => `/v1/payment-transactions/${id}`,
     productPayment: '/v1/product-payment',
+    paymentStatus: (transactionId: string | number) => `/v1/product-payment/${transactionId}/status`,
+    serviceChargeApplicable: (group?: string) =>
+      `/v1/service-charges/applicable${group ? `?group=${group}` : ''}`,
     portal: {
       root: '/v1/portal/product-payment',
       transactions: '/v1/portal/product-payment/transactions',
       repeat: (id: string | number) => `/v1/portal/product-payment/repeat/${id}`,
     },
+  },
+
+  // Service Charges (admin CRUD + public applicable)
+  serviceCharges: {
+    root: '/v1/service-charges',
+    byId: (id: string | number) => `/v1/service-charges/${id}`,
+    applicable: (group?: string) =>
+      `/v1/service-charges/applicable${group ? `?group=${encodeURIComponent(group)}` : ''}`,
   },
 
   // Bulk Payments
@@ -450,6 +471,17 @@ export const API_ENDPOINTS = {
   donationCategories: {
     root: '/v1/donation-categories',
     byId: (id: string | number) => `/v1/donation-categories/${id}`,
+  },
+
+  // eSolutions Admin
+  esolutionsAdmin: {
+    balance: '/v1/admin/esolutions/balance',
+    catalog: '/v1/admin/esolutions/catalog',
+    catalogByMerchant: (merchantCode: string) => `/v1/admin/esolutions/catalog/${merchantCode}`,
+    syncAll: '/v1/admin/esolutions/sync',
+    syncMerchant: (merchantCode: string) => `/v1/admin/esolutions/sync/${merchantCode}`,
+    merchants: '/v1/admin/esolutions/merchants',
+    merchantById: (id: number) => `/v1/admin/esolutions/merchants/${id}`,
   },
 } as const
 

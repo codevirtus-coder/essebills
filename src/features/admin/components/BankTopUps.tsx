@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { CheckCircle, XCircle, Clock, RefreshCw } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, RefreshCw, Eye } from 'lucide-react'
+import CRUDLayout, { type CRUDColumn } from '../../shared/components/CRUDLayout'
+import CRUDModal from '../../shared/components/CRUDModal'
 import {
   listBankTopUps,
   confirmTopUp,
@@ -19,14 +21,14 @@ const STATUS_TABS: { label: string; value: StatusFilter }[] = [
 
 function StatusBadge({ status }: { status: AdminBankTopUp['status'] }) {
   const styles = {
-    PENDING:   'bg-amber-50 text-amber-600 border-amber-100',
+    PENDING: 'bg-amber-50 text-amber-600 border-amber-100',
     CONFIRMED: 'bg-emerald-50 text-emerald-600 border-emerald-100',
-    REJECTED:  'bg-red-50 text-red-600 border-red-100',
+    REJECTED: 'bg-red-50 text-red-600 border-red-100',
   }
   const icons = {
-    PENDING:   <Clock size={11} />,
+    PENDING: <Clock size={11} />,
     CONFIRMED: <CheckCircle size={11} />,
-    REJECTED:  <XCircle size={11} />,
+    REJECTED: <XCircle size={11} />,
   }
   return (
     <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider ${styles[status]}`}>
@@ -35,12 +37,38 @@ function StatusBadge({ status }: { status: AdminBankTopUp['status'] }) {
   )
 }
 
-function RejectModal({ onConfirm, onCancel, loading }: { onConfirm: (reason: string) => void; onCancel: () => void; loading: boolean }) {
+interface RejectModalProps {
+  item: AdminBankTopUp
+  onConfirm: (reason: string) => void
+  onCancel: () => void
+  loading: boolean
+}
+
+function RejectModal({ item, onConfirm, onCancel, loading }: RejectModalProps) {
   const [reason, setReason] = useState('')
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl space-y-6">
-        <h3 className="text-lg font-bold text-slate-900">Reject Top-Up</h3>
+    <CRUDModal isOpen={true} onClose={onCancel} title="Reject Bank Top-Up">
+      <div className="space-y-4">
+        <div className="p-4 bg-slate-50 rounded-xl">
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase">Agent</p>
+              <p className="font-semibold text-slate-900">{item.user?.firstName} {item.user?.lastName}</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase">Amount</p>
+              <p className="font-bold text-emerald-600">{item.currencyCode} {Number(item.amount).toFixed(2)}</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase">Bank</p>
+              <p className="font-medium text-slate-700">{item.eseBillsAccount?.bank ?? '—'}</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase">Reference</p>
+              <p className="font-mono text-xs text-emerald-600">{item.depositReference ?? '—'}</p>
+            </div>
+          </div>
+        </div>
         <div className="space-y-2">
           <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Rejection Reason</label>
           <textarea
@@ -51,7 +79,7 @@ function RejectModal({ onConfirm, onCancel, loading }: { onConfirm: (reason: str
             className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 resize-none"
           />
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 pt-2">
           <button
             onClick={onCancel}
             className="flex-1 py-3 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
@@ -67,14 +95,91 @@ function RejectModal({ onConfirm, onCancel, loading }: { onConfirm: (reason: str
           </button>
         </div>
       </div>
-    </div>
+    </CRUDModal>
+  )
+}
+
+interface ViewModalProps {
+  item: AdminBankTopUp
+  onClose: () => void
+  onConfirm: () => void
+  onReject: () => void
+  confirmLoading: boolean
+  rejectLoading: boolean
+}
+
+function ViewModal({ item, onClose, onConfirm, onReject, confirmLoading, rejectLoading }: ViewModalProps) {
+  return (
+    <CRUDModal isOpen={true} onClose={onClose} title="Bank Top-Up Details">
+      <div className="space-y-6">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="p-4 bg-slate-50 rounded-xl">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Agent</p>
+            <p className="font-semibold text-slate-900">{item.user?.firstName} {item.user?.lastName}</p>
+            <p className="text-xs text-slate-500">{item.user?.email ?? ''}</p>
+          </div>
+          <div className="p-4 bg-emerald-50 rounded-xl">
+            <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">Amount</p>
+            <p className="text-2xl font-black text-emerald-700">{item.currencyCode} {Number(item.amount).toFixed(2)}</p>
+          </div>
+          <div className="p-4 bg-slate-50 rounded-xl">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Bank</p>
+            <p className="font-semibold text-slate-900">{item.eseBillsAccount?.bank ?? '—'}</p>
+            <p className="text-xs font-mono text-slate-600">{item.eseBillsAccount?.accountNumber ?? ''}</p>
+          </div>
+          <div className="p-4 bg-slate-50 rounded-xl">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Reference</p>
+            <p className="font-mono text-sm text-emerald-600">{item.depositReference ?? '—'}</p>
+          </div>
+          <div className="p-4 bg-slate-50 rounded-xl">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Submitted</p>
+            <p className="text-sm text-slate-700">{item.createdDate ? new Date(item.createdDate).toLocaleString() : '—'}</p>
+          </div>
+          <div className="p-4 bg-slate-50 rounded-xl">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Status</p>
+            <StatusBadge status={item.status} />
+          </div>
+        </div>
+        {item.status === 'REJECTED' && item.rejectionReason && (
+          <div className="p-4 bg-red-50 rounded-xl border border-red-100">
+            <p className="text-[10px] font-bold text-red-600 uppercase tracking-widest mb-1">Rejection Reason</p>
+            <p className="text-sm text-red-700">{item.rejectionReason}</p>
+          </div>
+        )}
+        {item.status === 'PENDING' && (
+          <div className="flex gap-3 pt-2">
+            <button
+              onClick={onClose}
+              className="flex-1 py-3 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+            >
+              Close
+            </button>
+            <button
+              onClick={onReject}
+              disabled={rejectLoading}
+              className="flex-1 py-3 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors disabled:opacity-50"
+            >
+              Reject
+            </button>
+            <button
+              onClick={onConfirm}
+              disabled={confirmLoading}
+              className="flex-1 py-3 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-50"
+            >
+              Confirm
+            </button>
+          </div>
+        )}
+      </div>
+    </CRUDModal>
   )
 }
 
 export default function BankTopUps() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('PENDING')
   const [page, setPage] = useState(0)
-  const [rejectTarget, setRejectTarget] = useState<AdminBankTopUp | null>(null)
+  const [viewItem, setViewItem] = useState<AdminBankTopUp | null>(null)
+  const [rejectItem, setRejectItem] = useState<AdminBankTopUp | null>(null)
   const queryClient = useQueryClient()
 
   const { data, isLoading, refetch } = useQuery({
@@ -84,20 +189,24 @@ export default function BankTopUps() {
 
   const confirmMutation = useMutation({
     mutationFn: (id: number) => confirmTopUp(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-bank-top-ups'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-bank-top-ups'] })
+      setViewItem(null)
+      setRejectItem(null)
+    },
   })
 
   const rejectMutation = useMutation({
     mutationFn: ({ id, reason }: { id: number; reason: string }) => rejectTopUp(id, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-bank-top-ups'] })
-      setRejectTarget(null)
+      setRejectItem(null)
     },
   })
 
   const items = data?.content ?? []
   const totalElements = data?.totalElements ?? 0
-  const totalPages = Math.ceil(totalElements / 20)
+  const totalPages = Math.ceil(totalElements / 20) || 1
 
   function userName(u?: AdminBankTopUp['user']) {
     if (!u) return '—'
@@ -109,140 +218,135 @@ export default function BankTopUps() {
     return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
   }
 
+  const columns: CRUDColumn<AdminBankTopUp>[] = [
+    {
+      key: 'user',
+      header: 'Agent',
+      render: (item) => (
+        <div>
+          <p className="font-semibold text-slate-900">{userName(item.user)}</p>
+          <p className="text-[11px] text-slate-400">{item.user?.email ?? ''}</p>
+        </div>
+      ),
+      sortable: true,
+    },
+    {
+      key: 'bankAccount',
+      header: 'Bank Account',
+      render: (item) => (
+        <div>
+          <p className="font-medium text-slate-700">{item.eseBillsAccount?.bank ?? '—'}</p>
+          <p className="text-[11px] text-slate-400 font-mono">{item.eseBillsAccount?.accountNumber ?? ''}</p>
+        </div>
+      ),
+    },
+    {
+      key: 'currencyCode',
+      header: 'Currency',
+      render: (item) => <span className="font-bold text-slate-700">{item.currencyCode}</span>,
+      sortable: true,
+    },
+    {
+      key: 'amount',
+      header: 'Amount',
+      render: (item) => <span className="font-bold text-emerald-600">{Number(item.amount).toFixed(2)}</span>,
+      sortable: true,
+    },
+    {
+      key: 'depositReference',
+      header: 'Reference',
+      render: (item) => <span className="font-mono text-xs text-emerald-600">{item.depositReference ?? '—'}</span>,
+    },
+    {
+      key: 'createdDate',
+      header: 'Submitted',
+      render: (item) => <span className="text-slate-500 text-xs whitespace-nowrap">{formatDate(item.createdDate)}</span>,
+      sortable: true,
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (item) => (
+        <div className="flex flex-col gap-1">
+          <StatusBadge status={item.status} />
+          {item.status === 'REJECTED' && item.rejectionReason && (
+            <p className="text-[10px] text-red-500 max-w-[140px] truncate" title={item.rejectionReason}>{item.rejectionReason}</p>
+          )}
+        </div>
+      ),
+      sortable: true,
+    },
+  ]
+
+  const StatusFilterComponent = (
+    <div className="flex gap-1 p-1 bg-slate-100 rounded-xl w-fit">
+      {STATUS_TABS.map((t) => (
+        <button
+          key={t.value}
+          onClick={() => { setStatusFilter(t.value); setPage(0) }}
+          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+            statusFilter === t.value
+              ? 'bg-white text-slate-900 shadow-sm'
+              : 'text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          {t.label}
+        </button>
+      ))}
+    </div>
+  )
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-slate-900">Bank Top-Up Requests</h2>
-          <p className="text-sm text-slate-500 mt-0.5">Review and process agent wallet top-up submissions</p>
-        </div>
-        <button
-          onClick={() => refetch()}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
-        >
-          <RefreshCw size={15} />
-          Refresh
-        </button>
-      </div>
-
-      {/* Status filter tabs */}
-      <div className="flex gap-1 p-1 bg-slate-100 rounded-xl w-fit">
-        {STATUS_TABS.map((t) => (
-          <button
-            key={t.value}
-            onClick={() => { setStatusFilter(t.value); setPage(0) }}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-              statusFilter === t.value
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Table */}
-      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-20 text-slate-400 text-sm">Loading...</div>
-        ) : items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-slate-400 gap-2">
-            <CheckCircle size={32} className="text-slate-200" />
-            <span className="text-sm font-medium">No top-up requests found</span>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-100 bg-slate-50">
-                  {['Agent', 'Bank Account', 'Currency', 'Amount', 'Reference', 'Submitted', 'Status', 'Actions'].map((h) => (
-                    <th key={h} className="text-left px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {items.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="px-4 py-3">
-                      <p className="font-semibold text-slate-900">{userName(item.user)}</p>
-                      <p className="text-[11px] text-slate-400">{item.user?.email ?? ''}</p>
-                    </td>
-                    <td className="px-4 py-3 text-slate-600">
-                      <p className="font-medium">{item.eseBillsAccount?.bank ?? '—'}</p>
-                      <p className="text-[11px] text-slate-400 font-mono">{item.eseBillsAccount?.accountNumber ?? ''}</p>
-                    </td>
-                    <td className="px-4 py-3 font-bold text-slate-700">{item.currencyCode}</td>
-                    <td className="px-4 py-3 font-bold text-slate-900">{Number(item.amount).toFixed(2)}</td>
-                    <td className="px-4 py-3">
-                      <span className="font-mono text-xs text-emerald-600">{item.depositReference ?? '—'}</span>
-                    </td>
-                    <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">{formatDate(item.createdDate)}</td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={item.status} />
-                      {item.status === 'REJECTED' && item.rejectionReason && (
-                        <p className="text-[10px] text-red-500 mt-1 max-w-[140px] truncate" title={item.rejectionReason}>{item.rejectionReason}</p>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      {item.status === 'PENDING' ? (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => confirmMutation.mutate(item.id)}
-                            disabled={confirmMutation.isPending}
-                            className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-[11px] font-bold hover:bg-emerald-700 disabled:opacity-50 transition-colors"
-                          >
-                            Confirm
-                          </button>
-                          <button
-                            onClick={() => setRejectTarget(item)}
-                            className="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 border border-red-100 text-[11px] font-bold hover:bg-red-100 transition-colors"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-slate-400">{formatDate(item.processedAt)}</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100">
-            <span className="text-xs text-slate-400">{totalElements} total</span>
-            <div className="flex gap-2">
+      <CRUDLayout
+        title="Bank Top-Up Requests"
+        columns={columns}
+        data={items}
+        loading={isLoading}
+        pageable={{ page: page + 1, size: 20, totalElements, totalPages }}
+        onPageChange={(p) => setPage(p - 1)}
+        onSizeChange={() => {}}
+        onRefresh={refetch}
+        filterComponent={StatusFilterComponent}
+        filterable
+        actions={{
+          onView: (item) => setViewItem(item),
+          onEdit: (item) => {
+            if (item.status === 'PENDING') {
+              confirmMutation.mutate(item.id)
+            }
+          },
+          renderCustom: (item) => {
+            if (item.status !== 'PENDING') return null
+            return (
               <button
-                onClick={() => setPage((p) => Math.max(0, p - 1))}
-                disabled={page === 0}
-                className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 disabled:opacity-40 hover:bg-slate-50"
+                onClick={() => setRejectItem(item)}
+                className="p-1 text-red-400 hover:text-red-600 dark:text-red-500 dark:hover:text-red-400"
+                title="Reject"
               >
-                Previous
+                <XCircle size={14} />
               </button>
-              <span className="px-3 py-1.5 text-xs text-slate-500">Page {page + 1} of {totalPages}</span>
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                disabled={page >= totalPages - 1}
-                className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 disabled:opacity-40 hover:bg-slate-50"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+            )
+          },
+        }}
+      />
 
-      {/* Reject modal */}
-      {rejectTarget && (
+      {viewItem && (
+        <ViewModal
+          item={viewItem}
+          onClose={() => setViewItem(null)}
+          onConfirm={() => confirmMutation.mutate(viewItem.id)}
+          onReject={() => setRejectItem(viewItem)}
+          confirmLoading={confirmMutation.isPending}
+          rejectLoading={rejectMutation.isPending}
+        />
+      )}
+
+      {rejectItem && (
         <RejectModal
-          onConfirm={(reason) => rejectMutation.mutate({ id: rejectTarget.id, reason })}
-          onCancel={() => setRejectTarget(null)}
+          item={rejectItem}
+          onConfirm={(reason) => rejectMutation.mutate({ id: rejectItem.id, reason })}
+          onCancel={() => setRejectItem(null)}
           loading={rejectMutation.isPending}
         />
       )}

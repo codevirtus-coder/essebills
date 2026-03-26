@@ -15,7 +15,9 @@ export enum BulkPaymentFrequency {
 
 export interface BulkPaymentGroupItem {
   id?: number;
+  productId?: number;
   productCode: string;
+  productName?: string;
   recipientIdentifier: string;
   amount: number;
   currencyCode: string;
@@ -23,6 +25,18 @@ export interface BulkPaymentGroupItem {
   metadata?: string;
   createdDate?: string;
   updatedDate?: string;
+}
+
+export interface RecipientItem {
+  productId?: number;
+  productCode: string;
+  productName?: string;
+  recipientIdentifier: string;
+  amount: number;
+  currencyCode: string;
+  recipientName?: string;
+  metadata?: string;
+  error?: string;
 }
 
 export interface BulkPaymentGroup {

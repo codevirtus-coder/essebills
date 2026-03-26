@@ -2,13 +2,15 @@ import { createBrowserRouter, type RouteObject, Navigate } from "react-router-do
 import { MainLayout } from "../layouts/MainLayout";
 import { DashboardLayout } from "../layouts/DashboardLayout";
 import { HomePage } from "../features/landing/pages/HomePage";
-import { ServicesPage } from "../features/landing/pages/ServicesPage";
+
 import { UnifiedDashboardPage } from "../features/portal/UnifiedDashboardPage";
 import { PortalProfilePage } from "../features/portal/PortalProfilePage";
 import { LoginPage } from "../features/auth/pages/LoginPage";
 import { RegisterPage } from "../features/auth/pages/RegisterPage";
 import { BuyerRegisterPage } from "../features/auth/pages/BuyerRegisterPage";
 import { PaymentCheckoutPage } from "../features/landing/pages/PaymentCheckoutPage";
+import { PaymentReturnPage } from "../features/landing/pages/PaymentReturnPage";
+import { ServicesPage } from "../features/landing/pages/ServicesPage";
 import { AgentRegisterPage } from "../features/auth/pages/AgentRegisterPage";
 import { BillerRegisterPage } from "../features/auth/pages/BillerRegisterPage";
 import { AdminAccessRequestPage } from "../features/auth/pages/AdminAccessRequestPage";
@@ -30,6 +32,10 @@ const routes: RouteObject[] = [
   {
     path: "/checkout",
     element: <PaymentCheckoutPage />,
+  },
+  {
+    path: "/payment/return",
+    element: <PaymentReturnPage />,
   },
   {
     path: "/",

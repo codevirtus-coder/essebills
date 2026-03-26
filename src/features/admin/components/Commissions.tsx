@@ -3,11 +3,18 @@ import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import CRUDLayout, { type CRUDColumn } from '../../shared/components/CRUDLayout';
 import CRUDModal from '../../shared/components/CRUDModal';
-import { 
-  getAgentCommissionRates, 
-  createAgentCommissionRate, 
-  updateAgentCommissionRate 
+import {
+  getAgentCommissionRates,
+  createAgentCommissionRate,
+  updateAgentCommissionRate
 } from '../../../services/agentCommission.service';
+import {
+  getAllServiceCharges,
+  createServiceCharge,
+  updateServiceCharge,
+  deleteServiceCharge,
+  type ServiceCharge,
+} from '../../../services/serviceCharge.service';
 import { getPaginatedUsers } from '../services/adminUsers.service';
 import { getPaginatedCurrencies } from '../services/adminLookups.service';
 import { getAllProductCategories } from '../services/adminProducts.service';
@@ -27,7 +34,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 
-type TabId = 'agent-rates' | 'revenue-split';
+type TabId = 'agent-rates' | 'service-charges' | 'revenue-split';
 
 export default function Commissions() {
   const [activeTab, setActiveCategory] = useState<TabId>('agent-rates');
@@ -46,8 +53,15 @@ export default function Commissions() {
   // Revenue Split State (Categories)
   const [categories, setCategories] = useState(INITIAL_CATEGORIES);
 
+  // Service Charge State
+  const [serviceCharges, setServiceCharges] = useState<ServiceCharge[]>([]);
+  const [isScModalOpen, setIsScModalOpen] = useState(false);
+  const [isSavingSc, setIsSavingSc] = useState(false);
+  const [editingSc, setEditingSc] = useState<Partial<ServiceCharge> | null>(null);
+
   const tabs = [
     { id: 'agent-rates', label: 'Agent Commission Rates', icon: UserCircle },
+    { id: 'service-charges', label: 'Service Charge Rates', icon: DollarSign },
     { id: 'revenue-split', label: 'Service Revenue Split', icon: Percent },
   ];
 
@@ -89,6 +103,62 @@ export default function Commissions() {
   useEffect(() => {
     void loadRates();
   }, [loadRates]);
+
+  const loadServiceCharges = React.useCallback(async () => {
+    try {
+      const data = await getAllServiceCharges();
+      setServiceCharges(data);
+    } catch {
+      toast.error("Failed to load service charge rates");
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadServiceCharges();
+  }, [loadServiceCharges]);
+
+  const handleSaveSc = async () => {
+    const ratePercent = Number(editingSc?.ratePercent);
+    if (!Number.isFinite(ratePercent) || ratePercent < 0) {
+      toast.error("Rate percent must be a non-negative number");
+      return;
+    }
+    if (!String(editingSc?.userGroup ?? "").trim()) {
+      toast.error("User group is required");
+      return;
+    }
+    try {
+      setIsSavingSc(true);
+      const payload = {
+        userGroup: String(editingSc!.userGroup).trim().toUpperCase(),
+        ratePercent,
+        description: String(editingSc?.description ?? "").trim() || undefined,
+        active: editingSc?.active !== false,
+      };
+      if (editingSc?.id) {
+        await updateServiceCharge(editingSc.id, payload);
+      } else {
+        await createServiceCharge(payload);
+      }
+      toast.success("Service charge rate saved");
+      setIsScModalOpen(false);
+      await loadServiceCharges();
+    } catch {
+      toast.error("Failed to save service charge rate");
+    } finally {
+      setIsSavingSc(false);
+    }
+  };
+
+  const handleDeleteSc = async (id: number) => {
+    try {
+      await deleteServiceCharge(id);
+      toast.success("Deleted");
+      await loadServiceCharges();
+    } catch {
+      toast.error("Failed to delete service charge rate");
+    }
+  };
 
   const agentRateColumns: CRUDColumn<any>[] = [
     {
@@ -151,6 +221,38 @@ export default function Commissions() {
       className: 'text-right',
       render: (cat) => <span className="font-bold text-slate-900 dark:text-white">{(cat.agentRate + cat.platformRate).toFixed(1)}%</span>
     }
+  ];
+
+  const serviceChargeColumns: CRUDColumn<ServiceCharge>[] = [
+    {
+      key: 'userGroup',
+      header: 'User Group',
+      render: (r) => (
+        <span className="px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-widest border border-emerald-100 dark:border-emerald-800">
+          {r.userGroup}
+        </span>
+      ),
+    },
+    {
+      key: 'ratePercent',
+      header: 'Rate (%)',
+      className: 'text-right',
+      render: (r) => <span className="font-bold text-emerald-600 dark:text-emerald-400">{r.ratePercent}%</span>,
+    },
+    {
+      key: 'description',
+      header: 'Description',
+      render: (r) => <span className="text-sm text-slate-500">{r.description ?? '—'}</span>,
+    },
+    {
+      key: 'active',
+      header: 'Active',
+      render: (r) => (
+        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest border ${r.active ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
+          {r.active ? 'Yes' : 'No'}
+        </span>
+      ),
+    },
   ];
 
   const handleSaveRate = async () => {
@@ -283,6 +385,36 @@ export default function Commissions() {
           </div>
         )}
 
+        {activeTab === 'service-charges' && (
+          <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 rounded-2xl flex items-start gap-3">
+              <Info className="text-blue-600 shrink-0" size={18} />
+              <p className="text-xs text-blue-700 dark:text-blue-400 font-medium">
+                Service charges are applied to every non-wallet payment. Configure per user group (e.g. CUSTOMER at 1%, AGENT at 0%). A fallback "ALL" group rate can be set as a catch-all.
+              </p>
+            </div>
+            <CRUDLayout
+              title="Service Charge Rates"
+              columns={serviceChargeColumns}
+              data={serviceCharges}
+              loading={loading}
+              pageable={{ page: 1, size: 50, totalElements: serviceCharges.length, totalPages: 1 }}
+              onPageChange={() => {}}
+              onSizeChange={() => {}}
+              onRefresh={loadServiceCharges}
+              onAdd={() => {
+                setEditingSc({ userGroup: '', ratePercent: 1, description: '', active: true });
+                setIsScModalOpen(true);
+              }}
+              addButtonText="Add Rate"
+              actions={{
+                onEdit: (r) => { setEditingSc(r); setIsScModalOpen(true); },
+                onDelete: (r) => r.id && handleDeleteSc(r.id),
+              }}
+            />
+          </div>
+        )}
+
         {activeTab === 'revenue-split' && (
           <div className="animate-in slide-in-from-bottom-4 duration-300">
             <CRUDLayout
@@ -383,6 +515,74 @@ export default function Commissions() {
                 <option value="PERCENTAGE">Percentage</option>
                 <option value="FIXED">Fixed Amount</option>
               </select>
+            </div>
+          </div>
+        )}
+      </CRUDModal>
+
+      {/* Service Charge Modal */}
+      <CRUDModal
+        isOpen={isScModalOpen}
+        onClose={() => setIsScModalOpen(false)}
+        title={editingSc?.id ? "Update Service Charge Rate" : "New Service Charge Rate"}
+        onSubmit={handleSaveSc}
+        isSubmitting={isSavingSc}
+        submitLabel="Save Rate"
+      >
+        {editingSc && (
+          <div className="space-y-5">
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/50 flex items-start gap-3">
+              <Info className="text-blue-600 shrink-0" size={18} />
+              <p className="text-xs text-blue-700 dark:text-blue-400 font-medium">
+                Set the group to "ALL" to apply this rate as a fallback for any group that does not have a specific rate configured.
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">User Group</label>
+              <input
+                type="text"
+                value={editingSc.userGroup ?? ''}
+                onChange={(e) => setEditingSc({ ...editingSc, userGroup: e.target.value })}
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                placeholder="e.g. CUSTOMER, AGENT, ALL"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Rate Percent</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                value={editingSc.ratePercent ?? ''}
+                onChange={(e) => setEditingSc({ ...editingSc, ratePercent: parseFloat(e.target.value) })}
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                placeholder="e.g. 1.0"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Description (Optional)</label>
+              <input
+                type="text"
+                value={editingSc.description ?? ''}
+                onChange={(e) => setEditingSc({ ...editingSc, description: e.target.value })}
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                placeholder="e.g. Standard customer service fee"
+              />
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
+              <input
+                type="checkbox"
+                id="sc-active"
+                checked={editingSc.active !== false}
+                onChange={(e) => setEditingSc({ ...editingSc, active: e.target.checked })}
+                className="w-4 h-4 accent-emerald-600 rounded"
+              />
+              <label htmlFor="sc-active" className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">Active</label>
             </div>
           </div>
         )}

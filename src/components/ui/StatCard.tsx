@@ -14,6 +14,7 @@ type StatCardProps = {
   iconColor?: string;
   chartPath?: string;
   strokeColor?: string;
+  onClick?: () => void;
 };
 
 export default function StatCard({
@@ -27,12 +28,22 @@ export default function StatCard({
   iconColor,
   chartPath,
   strokeColor = '#10b981',
+  onClick,
 }: StatCardProps) {
   const displayTitle = title ?? label ?? '';
   const isPositive = change?.startsWith('+');
 
   return (
-    <div className="glass-card p-6 border-slate-200 dark:border-slate-800 flex flex-col justify-between group hover:shadow-lg transition-all duration-300 overflow-hidden relative">
+    <div
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); } : undefined}
+      className={cn(
+        "glass-card p-6 border-slate-200 dark:border-slate-800 flex flex-col justify-between group hover:shadow-lg transition-all duration-300 overflow-hidden relative bg-white dark:bg-slate-800",
+        onClick && "cursor-pointer hover:-translate-y-0.5"
+      )}
+    >
       {/* Background Chart Sparkline (Simplified) */}
       {chartPath && (
         <div className="absolute bottom-0 left-0 right-0 h-12 opacity-10 group-hover:opacity-20 transition-opacity">

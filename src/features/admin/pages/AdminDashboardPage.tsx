@@ -7,6 +7,7 @@ import Agents from '../components/Agents'
 import AdminUsersPage from '../components/AdminUsersPage'
 import AdminUserGroupsPage from '../components/AdminUserGroupsPage'
 import AdminTransactionsPage from '../components/AdminTransactionsPage'
+import BulkPaymentsPage from '../../agent/pages/BulkPaymentsPage'
 import AdminParametersPage from '../components/AdminParametersPage'
 import AdminStyledApiModulePage from '../components/AdminStyledApiModulePage'
 import Settings from '../components/Settings'
@@ -15,7 +16,7 @@ import BankTopUps from '../components/BankTopUps'
 import Support from '../components/Support'
 import WhatsAppCenter from '../components/WhatsAppCenter'
 import Donations from '../components/Donations'
-import AdminFeaturePlaceholder from '../components/AdminFeaturePlaceholder'
+import EsolutionsAdminPanel from '../components/EsolutionsAdminPanel'
 import { NotificationsPage } from '../../../pages/NotificationsPage'
 import {
   createPesepayCredentials,
@@ -59,25 +60,8 @@ export function AdminDashboardPage() {
       case 'transactionsZambiaProducts':
       case 'transactionsZimProducts':
         return <AdminTransactionsPage />
-      case 'vouchersZambiaProducts':
-        return <AdminFeaturePlaceholder title="Zambia Vouchers" description="Manage and distribute digital vouchers for the Zambian market." />
-      case 'vouchersZimProducts':
-        return <AdminFeaturePlaceholder title="Zim Vouchers" description="Manage and distribute digital vouchers for the Zimbabwean market." />
-      case 'rongekaAccounts':
-        return (
-          <AdminStyledApiModulePage
-            key="rongekaAccounts"
-            title="Rongeka Accounts"
-            description="Manage Rongeka integration bank accounts and settlement parameters."
-            endpoint="/v1/rongeka-accounts"
-            loadData={getPaginatedEsebillsAccounts} // Fallback or dedicated service
-            tableMode="auto"
-          />
-        )
-      case 'tuitionTransactions':
-        return <AdminTransactionsPage />
-      case 'tuitionInstitutions':
-        return <AdminFeaturePlaceholder title="Tuition Institutions" description="Configure educational institutions for tuition fee collections." />
+      case 'bulkPayments':
+        return <BulkPaymentsPage />
       case 'billers':
         return (
           <Billers
@@ -160,7 +144,7 @@ export function AdminDashboardPage() {
           />
         )
       case 'providers':
-        return <AdminFeaturePlaceholder title="Providers" description="Enable or disable payment providers (ESOLUTIONS, ECONET_DIRECT, NETONE_DIRECT, ZESA_DIRECT)." />
+        return <EsolutionsAdminPanel />
       case 'commissions':
         return <Commissions />
       case 'bankTopUps':
