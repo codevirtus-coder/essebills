@@ -21,6 +21,8 @@ import { NotificationsPage } from '../../../pages/NotificationsPage'
 import {
   createPesepayCredentials,
   getPaginatedPesepayCredentials,
+  updatePesepayCredentials,
+  deletePesepayCredentials,
   getPaginatedEsebillsAccounts,
   createEsebillsAccount,
   updateEsebillsAccount,
@@ -101,6 +103,8 @@ export function AdminDashboardPage() {
             createEndpoint="/v1/pesepay-integration-credentials"
             createData={createPesepayCredentials}
             loadData={getPaginatedPesepayCredentials}
+            onUpdate={updatePesepayCredentials}
+            onDelete={deletePesepayCredentials}
           />
         )
       case 'esebillsAccounts':

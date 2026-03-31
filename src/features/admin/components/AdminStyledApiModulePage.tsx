@@ -65,6 +65,7 @@ const AdminStyledApiModulePage: React.FC<AdminStyledApiModulePageProps> = ({
   columns,
   emptyLabel,
   createFields = [],
+  onUpdate,
   onDelete,
 }) => {
   const [rows, setRows] = useState<UnknownRecord[]>([])
@@ -72,9 +73,15 @@ const AdminStyledApiModulePage: React.FC<AdminStyledApiModulePageProps> = ({
   const [isLoading, setIsLoading] = useState(false)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [editingId, setEditingId] = useState<string | number | null>(null)
   const [integrationKey, setIntegrationKey] = useState('')
   const [encryptionKey, setEncryptionKey] = useState('')
   const [active, setActive] = useState(true)
+  const [editIntegrationKey, setEditIntegrationKey] = useState('')
+  const [editEncryptionKey, setEditEncryptionKey] = useState('')
+  const [editActive, setEditActive] = useState(true)
   const [payloadText, setPayloadText] = useState(
     JSON.stringify(createJsonTemplate, null, 2) || '{\n\n}',
   )
@@ -228,6 +235,67 @@ const AdminStyledApiModulePage: React.FC<AdminStyledApiModulePageProps> = ({
     }
   }
 
+  const resolveRowId = (row: UnknownRecord): string | number | null => {
+    const id =
+      (row.id as string | number | undefined) ??
+      (row.pesepayIntegrationDetailsId as string | number | undefined) ??
+      (row.pesepayIntegrationCredentialsId as string | number | undefined)
+    return id ?? null
+  }
+
+  const resolveIntegrationKey = (row: UnknownRecord) =>
+    String(row.integrationKey ?? row.apiKey ?? row.clientId ?? row.username ?? row.name ?? '')
+
+  const resolveEncryptionKey = (row: UnknownRecord) =>
+    String(row.encryptionKey ?? row.secretKey ?? row.secret ?? '')
+
+  const resolveActive = (row: UnknownRecord) => {
+    const raw = row.active ?? row.enabled ?? row.isActive
+    return typeof raw === 'boolean' ? raw : true
+  }
+
+  const openEdit = (row: UnknownRecord) => {
+    if (!onUpdate) return
+    const id = resolveRowId(row)
+    if (id == null) {
+      toast.error('Unable to edit: missing record id')
+      return
+    }
+    setEditingId(id)
+    setEditIntegrationKey(resolveIntegrationKey(row))
+    setEditEncryptionKey(resolveEncryptionKey(row))
+    setEditActive(resolveActive(row))
+    setIsEditOpen(true)
+  }
+
+  const handleUpdate = async () => {
+    if (!onUpdate || editingId == null) return
+    const trimmedIntegrationKey = editIntegrationKey.trim()
+    const trimmedEncryptionKey = editEncryptionKey.trim()
+    if (!trimmedIntegrationKey || !trimmedEncryptionKey) {
+      toast.error('Integration key and encryption key are required')
+      return
+    }
+    try {
+      setIsUpdating(true)
+      await onUpdate(editingId, {
+        integrationKey: trimmedIntegrationKey,
+        encryptionKey: trimmedEncryptionKey,
+        apiKey: trimmedIntegrationKey,
+        secretKey: trimmedEncryptionKey,
+        name: trimmedIntegrationKey,
+        active: editActive,
+      })
+      toast.success(`${title} updated`)
+      setIsEditOpen(false)
+      await loadRows()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update credentials')
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
   const crudColumns: CRUDColumn<UnknownRecord>[] = useMemo(() => {
     const cols: CRUDColumn<UnknownRecord>[] = []
     
@@ -335,10 +403,15 @@ const AdminStyledApiModulePage: React.FC<AdminStyledApiModulePageProps> = ({
         onAdd={showCreateButton ? () => setIsCreateOpen(true) : undefined}
         addButtonText="Create New"
         actions={{
+          onEdit: onUpdate ? (item) => openEdit(item) : undefined,
           onDelete: onDelete ? (item) => {
-            if (window.confirm('Are you sure you want to delete this item?')) {
-              void onDelete(item.id as string | number).then(() => void loadRows())
+            if (!window.confirm('Are you sure you want to delete this item?')) return
+            const id = resolveRowId(item)
+            if (id == null) {
+              toast.error('Unable to delete: missing record id')
+              return
             }
+            void onDelete(id).then(() => void loadRows())
           } : undefined
         }}
       />
@@ -439,6 +512,45 @@ const AdminStyledApiModulePage: React.FC<AdminStyledApiModulePageProps> = ({
               />
             </div>
           )}
+        </div>
+      </CRUDModal>
+
+      <CRUDModal
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        title={`Edit ${title}`}
+        onSubmit={handleUpdate}
+        isSubmitting={isUpdating}
+        submitLabel="Update Item"
+      >
+        <div className="space-y-5">
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Integration Key</label>
+            <input
+              value={editIntegrationKey}
+              onChange={(event) => setEditIntegrationKey(event.target.value)}
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              placeholder="e.g. PK_LIVE_..."
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Encryption Key</label>
+            <input
+              value={editEncryptionKey}
+              onChange={(event) => setEditEncryptionKey(event.target.value)}
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              placeholder="e.g. SK_LIVE_..."
+            />
+          </div>
+          <label className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={editActive}
+              onChange={(event) => setEditActive(event.target.checked)}
+              className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+            />
+            <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Set as Active Credentials</span>
+          </label>
         </div>
       </CRUDModal>
     </div>
