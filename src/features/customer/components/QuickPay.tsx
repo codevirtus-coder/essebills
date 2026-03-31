@@ -2,11 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Search, ArrowLeft, X, Zap, Clock, ChevronRight } from 'lucide-react';
 import { Icon } from '../../../components/ui/Icon';
-import { getProducts, getProductCategories } from '../../../services/products.service';
-import type { ProductCategory } from '../../../types/products';
+import { getProducts, getProductCategories, getProductVariants } from '../../../services/products.service';
+import type { Product, ProductCategory } from '../../../types/products';
 import { useNavigate } from 'react-router-dom';
 import { ROUTE_PATHS } from '../../../router/paths';
 import type { BillerCard } from '../../shared/components/ServicesMarketplace';
+import ProductVariantPicker from '../../landing/components/ProductVariantPicker';
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -86,7 +87,7 @@ function saveLast(s: LastSelection) {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Step = 'categories' | 'products';
+type Step = 'categories' | 'products' | 'variants';
 type Cat  = { key: string; productCategoryId?: number; label: string; emoji: string };
 
 // ─── Flat card sub-components ─────────────────────────────────────────────────
@@ -228,9 +229,9 @@ export function QuickPaySelector({ onPick, catCols = 3, itemCols = 2 }: Selector
   const { categories, allProducts, countByCategory, isLoading } = useQuickPayData();
 
   const [step, setStep]           = useState<Step>('categories');
-  const [search, setSearch]       = useState('');
   const [selectedCat, setSelectedCat] = useState<Cat | null>(null);
   const [focusedIdx, setFocusedIdx] = useState(0);
+  const [selectedBase, setSelectedBase] = useState<BillerCard | null>(null);
 
   const searchRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -238,6 +239,13 @@ export function QuickPaySelector({ onPick, catCols = 3, itemCols = 2 }: Selector
   const lastSel   = useMemo(() => readLast(), []);
   const [searchInput, setSearchInput] = useState('');
   const debouncedSearch = useDebounce(searchInput, 50);
+
+  const { data: variants = [], isLoading: isVariantsLoading } = useQuery({
+    queryKey: ['quickpay-variants', selectedBase?.productId],
+    queryFn: () => getProductVariants(selectedBase!.productId),
+    enabled: step === 'variants' && !!selectedBase?.productId,
+    staleTime: 60_000,
+  });
 
   const visibleProducts = useMemo<BillerCard[]>(() => {
     const q = debouncedSearch.trim().toLowerCase();
@@ -256,7 +264,37 @@ export function QuickPaySelector({ onPick, catCols = 3, itemCols = 2 }: Selector
     onPick(b);
   }
 
+  function openVariants(b: BillerCard) {
+    setSelectedBase(b);
+    setStep('variants');
+    resetFocus();
+  }
+
+  function pickVariant(variant: Product) {
+    if (!selectedBase) return;
+    const name = String(variant.name ?? selectedBase.name ?? 'Product');
+    const cat = variant.category as any;
+    pickProduct({
+      id:                    `p-${String(variant.id ?? selectedBase.productId)}`,
+      productId:             Number(variant.id ?? selectedBase.productId),
+      productCategoryId:     typeof cat?.id === 'number' ? cat.id : selectedBase.productCategoryId,
+      name,
+      description:           variant.description ?? selectedBase.description,
+      categoryKey:           selectedBase.categoryKey,
+      categoryLabel:         selectedBase.categoryLabel,
+      currencyCode:          (variant as any).defaultCurrency?.code ?? selectedBase.currencyCode,
+      minimumPurchaseAmount: Number((variant as any).minimumPurchaseAmount ?? selectedBase.minimumPurchaseAmount ?? 0) || undefined,
+      isDonationCampaign:    selectedBase.isDonationCampaign,
+    });
+  }
+
   function goBack() {
+    if (step === 'variants') {
+      setSelectedBase(null);
+      setStep('products');
+      resetFocus();
+      return;
+    }
     if (searchInput) { setSearchInput(''); setSelectedCat(null); }
     setStep('categories');
     resetFocus();
@@ -269,21 +307,31 @@ export function QuickPaySelector({ onPick, catCols = 3, itemCols = 2 }: Selector
     resetFocus();
   }
 
-  const itemCount = step === 'categories' ? categories.length : visibleProducts.length;
+  const itemCount = step === 'categories'
+    ? categories.length
+    : step === 'products'
+      ? visibleProducts.length
+      : 0;
 
   useEffect(() => { setFocusedIdx(0); }, [step]);
   useEffect(() => { itemRefs.current[focusedIdx]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, [focusedIdx]);
-  useEffect(() => { searchRef.current?.focus(); }, [step]);
+  useEffect(() => { if (step !== 'variants') searchRef.current?.focus(); }, [step]);
 
   const breadcrumb = step === 'products'
     ? (searchInput ? `"${searchInput}"` : (selectedCat?.label ?? 'Products'))
-    : null;
+    : step === 'variants'
+      ? (selectedBase?.name ?? 'Plans')
+      : null;
 
   const catColClass  = catCols  === 4 ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' : 'grid-cols-3 sm:grid-cols-3 lg:grid-cols-4';
   const itemColClass = itemCols === 3 ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-3';
   const cols = step === 'categories' ? catCols : itemCols;
 
   function handleKeyDown(e: React.KeyboardEvent) {
+    if (step === 'variants') {
+      if (e.key === 'Escape') { e.preventDefault(); goBack(); }
+      return;
+    }
     if (itemCount === 0) return;
     switch (e.key) {
       case 'ArrowRight': e.preventDefault(); setFocusedIdx((i) => Math.min(i + 1, itemCount - 1)); break;
@@ -294,7 +342,7 @@ export function QuickPaySelector({ onPick, catCols = 3, itemCols = 2 }: Selector
       case 'End':        e.preventDefault(); setFocusedIdx(itemCount - 1); break;
       case 'Enter': e.preventDefault();
         if (step === 'categories') { const c = categories[focusedIdx]; if (c) goToProducts(c); }
-        else if (step === 'products') { const p = visibleProducts[focusedIdx]; if (p) pickProduct(p); }
+        else if (step === 'products') { const p = visibleProducts[focusedIdx]; if (p) openVariants(p); }
         break;
       case 'Escape': e.preventDefault(); if (step !== 'categories') goBack(); break;
     }
@@ -304,6 +352,7 @@ export function QuickPaySelector({ onPick, catCols = 3, itemCols = 2 }: Selector
     <div className="flex flex-col h-full outline-none p-3" onKeyDown={handleKeyDown} tabIndex={-1} role="application" aria-label="Quick Pay service selector">
       {/* Fixed header */}
       <div className="shrink-0 space-y-2 pb-3">
+        {step !== 'variants' && (
         <div className="relative">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           <input
@@ -322,8 +371,9 @@ export function QuickPaySelector({ onPick, catCols = 3, itemCols = 2 }: Selector
             </button>
           )}
         </div>
+        )}
 
-        {step !== 'categories' && (
+        {step !== 'categories' && step !== 'variants' && (
           <div className="flex items-center gap-1.5">
             <button type="button" onClick={goBack}
               className="w-6 h-6 rounded-md bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 shrink-0 transition-colors"
@@ -344,7 +394,7 @@ export function QuickPaySelector({ onPick, catCols = 3, itemCols = 2 }: Selector
         {step === 'categories' && (
           <div className="space-y-2">
             {lastSel && (
-              <button type="button" onClick={() => { const b = allProducts.find((x) => x.productId === lastSel.productId); if (b) onPick(b); }}
+              <button type="button" onClick={() => { const b = allProducts.find((x) => x.productId === lastSel.productId); if (b) openVariants(b); }}
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 transition-colors text-left">
                 <div className="w-7 h-7 rounded-lg bg-emerald-200 flex items-center justify-center shrink-0">
                   <Clock size={13} className="text-emerald-700" />
@@ -402,8 +452,39 @@ export function QuickPaySelector({ onPick, catCols = 3, itemCols = 2 }: Selector
             <div className={`grid ${itemColClass} gap-4`}>
               {visibleProducts.map((b, i) => (
                 <ProductCard key={b.id} biller={b} focused={focusedIdx === i}
-                  onClick={() => pickProduct(b)} itemRef={(el) => { itemRefs.current[i] = el; }} />
+                  onClick={() => openVariants(b)} itemRef={(el) => { itemRefs.current[i] = el; }} />
               ))}
+            </div>
+          )
+        )}
+
+        {step === 'variants' && selectedBase && (
+          isVariantsLoading ? (
+            <div className="flex flex-col items-center justify-center py-12 text-slate-300">
+              <Zap size={22} />
+              <p className="text-xs mt-2">Loading plans...</p>
+            </div>
+          ) : variants.length === 0 ? (
+            <div className="flex flex-col items-center gap-3 py-10 text-slate-400">
+              <p className="text-xs font-semibold text-slate-500">No plans found for this service.</p>
+              <button
+                type="button"
+                onClick={() => pickProduct(selectedBase)}
+                className="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold uppercase tracking-widest hover:bg-emerald-500 transition-colors"
+              >
+                Continue with {selectedBase.name}
+              </button>
+            </div>
+          ) : (
+            <div className="px-1">
+              <ProductVariantPicker
+                categoryLabel={selectedBase.name}
+                variants={variants}
+                onSelect={pickVariant}
+                onBack={goBack}
+                currencyCode={selectedBase.currencyCode ?? 'USD'}
+                compact={true}
+              />
             </div>
           )
         )}
