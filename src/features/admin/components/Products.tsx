@@ -165,7 +165,7 @@ const Products: React.FC = () => {
 
   const resetForm = () => {
     setEditingProductId(null);
-    setName(""); setCode(""); setCountryCode(""); setDefaultCurrencyCode("");
+    setName(""); setCode("");
     setCategoryId(""); setMinimumDisablingBalance(""); setMinimumPurchaseAmount("");
     setDescription(""); setReturnUrl(""); setProductLogoFileName(""); setStatus("ACTIVE");
     setCountryId(""); setCurrencyId("");

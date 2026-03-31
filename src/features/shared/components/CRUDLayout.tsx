@@ -77,6 +77,7 @@ interface CRUDLayoutProps<T> {
   onSort?: (column: string, direction: 'asc' | 'desc') => void;
   enableClientSideFilter?: boolean;
   exportFilename?: string;
+  headerActions?: React.ReactNode;
 }
 
 export default function CRUDLayout<T extends { uid?: string; id?: number }>({
@@ -101,6 +102,7 @@ export default function CRUDLayout<T extends { uid?: string; id?: number }>({
   onSort,
   enableClientSideFilter = false,
   exportFilename,
+  headerActions,
 }: CRUDLayoutProps<T>) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -259,6 +261,8 @@ export default function CRUDLayout<T extends { uid?: string; id?: number }>({
               </div>
             )}
           </div>
+
+          {headerActions}
           
           {onAdd && (
             <button

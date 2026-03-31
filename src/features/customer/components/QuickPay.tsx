@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Search, ArrowLeft, X, Zap, Clock, ChevronRight } from 'lucide-react';
+import { Icon } from '../../../components/ui/Icon';
 import { getProducts, getProductCategories } from '../../../services/products.service';
 import type { ProductCategory } from '../../../types/products';
 import { useNavigate } from 'react-router-dom';
@@ -57,6 +58,10 @@ function catEmoji(label: string): string {
   return '⚡';
 }
 
+function isLikelyIconName(value: string): boolean {
+  return /^[a-z0-9][a-z0-9_-]*$/i.test(value.trim());
+}
+
 function inferKey(name: string, code: string): string {
   const v = `${name} ${code}`.toLowerCase();
   if (/(airtime|recharge|evd|topup)/.test(v))                       return 'airtime';
@@ -91,6 +96,7 @@ function CatCard({ cat, count, focused, onClick, itemRef }: {
   cat: Cat; count: number; focused: boolean;
   onClick: () => void; itemRef?: React.Ref<HTMLButtonElement>;
 }) {
+  const showLucide = isLikelyIconName(cat.emoji);
   return (
     <button
       ref={itemRef}
@@ -99,10 +105,14 @@ function CatCard({ cat, count, focused, onClick, itemRef }: {
       aria-selected={focused}
       className={`flex flex-col items-center justify-center gap-1.5 p-2.5 rounded-xl outline-none aspect-square w-full min-w-[70px] max-w-[100px]
         transition-all duration-150 active:scale-95 cursor-pointer hover:-translate-y-0.5
-        ${focused ? 'bg-emerald-50 ring-2 ring-emerald-500/20 shadow-[0_4px_20px_rgb(16,185,129,0.15)]' : 'bg-slate-50 hover:bg-white hover:shadow-md border border-slate-200/50 hover:border-slate-200'}`}
+        ${focused ? 'bg-emerald-50 border border-emerald-200/70 ring-2 ring-emerald-400/60 ring-inset shadow-[0_4px_20px_rgb(16,185,129,0.15)]' : 'bg-slate-50 hover:bg-white hover:shadow-md border border-slate-200/50 hover:border-slate-200'}`}
     >
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${ICON_BG[colorKey(cat.label, cat.key)] ?? ICON_BG.utilities}`}>
-        <span className="text-lg sm:text-xl leading-none drop-shadow-sm">{cat.emoji}</span>
+        {showLucide ? (
+          <Icon name={cat.emoji} size={18} className="text-current" aria-hidden="true" />
+        ) : (
+          <span className="text-lg sm:text-xl leading-none drop-shadow-sm">{cat.emoji}</span>
+        )}
       </div>
       <p className={`text-[9px] sm:text-[10px] font-semibold text-center leading-tight line-clamp-2 w-full px-0.5 transition-colors ${focused ? 'text-emerald-800' : 'text-slate-600'}`}>
         {cat.label}
@@ -126,7 +136,7 @@ function ProductCard({ biller, focused, onClick, itemRef }: {
       aria-selected={focused}
       className={`flex flex-col items-center justify-center gap-1.5 p-2.5 rounded-xl text-center outline-none aspect-square w-full min-w-[70px] max-w-[100px]
         transition-all duration-150 active:scale-[0.98] cursor-pointer hover:-translate-y-0.5
-        ${focused ? 'bg-emerald-50 ring-2 ring-emerald-500/20 shadow-[0_4px_20px_rgb(16,185,129,0.15)]' : 'bg-slate-50 hover:bg-white hover:shadow-md border border-slate-200/50 hover:border-slate-200'}`}
+        ${focused ? 'bg-emerald-50 border border-emerald-200/70 ring-2 ring-emerald-400/60 ring-inset shadow-[0_4px_20px_rgb(16,185,129,0.15)]' : 'bg-slate-50 hover:bg-white hover:shadow-md border border-slate-200/50 hover:border-slate-200'}`}
     >
       <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-base sm:text-lg ${ICON_BG[ck] ?? ICON_BG.utilities}`}>
         {catEmoji(biller.categoryLabel)}

@@ -86,6 +86,7 @@ export const ADMIN_ENDPOINTS = {
   pesepayCredentials: {
     root: '/v1/pesepay-integration-credentials',
     byId: (id: string | number) => `/v1/pesepay-integration-credentials/${id}`,
+    syncCurrencies: '/v1/pesepay-integration-credentials/sync-currencies',
   },
   pesepayPayments: {
     updateTransaction: (paymentTransactionId: string | number) =>

@@ -25,6 +25,10 @@ export async function deleteCurrency(currencyId: string | number) {
   return adminVoidFetch(ADMIN_ENDPOINTS.currencies.byId(currencyId), { method: 'DELETE' })
 }
 
+export async function syncPesepayCurrencies() {
+  return adminVoidFetch(ADMIN_ENDPOINTS.pesepayCredentials.syncCurrencies, { method: 'POST' })
+}
+
 // Countries
 export async function getPaginatedCountries(filters?: QueryFilters) {
   return adminJsonFetch<PageDto<AdminCountryDto>>(ADMIN_ENDPOINTS.countries.root, { filters })

@@ -18,6 +18,7 @@ import {
   getPaginatedCountries,
   getPaginatedCurrencies,
   getAllProductCategories,
+  syncPesepayCurrencies,
   updateBank,
   updateCountry,
   updateCurrency,
@@ -40,6 +41,7 @@ import {
   ArrowDown,
   GripVertical,
   Save,
+  RefreshCw,
 } from 'lucide-react'
 import { cn } from '../../../lib/utils'
 
@@ -306,6 +308,7 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
   const [editForm, setEditForm] = useState<Record<string, string | boolean>>({})
   const [isUpdating, setIsUpdating] = useState(false)
   const [selectedRow, setSelectedRow] = useState<UnknownRecord | null>(null)
+  const [isSyncing, setIsSyncing] = useState(false)
   
   const canEdit = module !== 'holidays'
   const canDelete = module !== 'holidays'
@@ -404,6 +407,22 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
   useEffect(() => {
     void load()
   }, [load, module])
+
+  const handleSyncCurrencies = useCallback(() => {
+    if (module !== 'currencies' || isSyncing) return
+    ;(async () => {
+      try {
+        setIsSyncing(true)
+        await syncPesepayCurrencies()
+        toast.success('Currencies synced successfully')
+        await load()
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Currency sync failed')
+      } finally {
+        setIsSyncing(false)
+      }
+    })()
+  }, [isSyncing, load, module])
 
   const handleCreate = async () => {
     for (const field of config.fields) {
@@ -511,6 +530,23 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
     }))
   ], [config])
 
+  const headerActions = module === 'currencies' ? (
+    <button
+      type="button"
+      onClick={handleSyncCurrencies}
+      disabled={isSyncing}
+      className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+        isSyncing
+          ? 'bg-emerald-50 text-emerald-600 border-emerald-200 cursor-not-allowed opacity-70'
+          : 'bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50'
+      }`}
+      title="Sync currencies from PesePay"
+    >
+      <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+      <span className="hidden sm:inline text-sm font-semibold">Sync Currencies</span>
+    </button>
+  ) : null
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="glass-card p-6 border-slate-200 dark:border-slate-800 flex items-start gap-4">
@@ -589,6 +625,7 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
           onPageChange={() => {}}
           onSizeChange={() => {}}
           onRefresh={load}
+          headerActions={headerActions}
           onAdd={() => { setForm({}); setIsCreateOpen(true); }}
           addButtonText={`Add ${config.title.slice(0, -1)}`}
           actions={{
