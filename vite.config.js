@@ -9,6 +9,9 @@ export default defineConfig({
   resolve: {
     alias: {
       'react-hot-toast': resolve(__dirname, 'src/lib/react-hot-toast-shim.tsx'),
+      // Workaround for a corrupted/incomplete framer-motion install where `dist/es/*.mjs` is missing.
+      // Alias to the CJS entry (which Vite can pre-bundle) to keep dev server running.
+      'framer-motion': resolve(__dirname, 'node_modules/framer-motion/dist/cjs/index.js'),
     },
   },
 })

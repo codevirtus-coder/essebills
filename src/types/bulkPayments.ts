@@ -56,7 +56,8 @@ export interface BulkPaymentGroup {
 export interface CreateBulkPaymentGroupRequest {
   name: string;
   description?: string;
-  items: BulkPaymentGroupItem[];
+  // Matches API schema `GroupCreateRequest` (items are `BulkItemDto`)
+  items: BulkItemDto[];
 }
 
 export interface BulkPaymentSchedule {

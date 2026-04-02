@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { CheckCircle2, XCircle, Clock, Loader2, ShieldCheck, ArrowLeft, Home, Receipt } from "lucide-react";
 import { getPaymentStatus } from "../../../services/payments.service";
@@ -75,6 +75,21 @@ export function PaymentReturnPage() {
 
     return () => stopPolling();
   }, [transactionId]);
+
+  const retryTo = useMemo(() => {
+    // Default fallback: plain checkout (user can re-select).
+    if (!tx) return ROUTE_PATHS.checkout;
+
+    const params = new URLSearchParams();
+    if (tx.productName) params.set("biller", tx.productName);
+    if (typeof tx.productId === "number" && tx.productId > 0) params.set("productId", String(tx.productId));
+
+    // If the gateway sent back an amount, prefill it. Otherwise let checkout default.
+    if (typeof tx.amount === "number" && tx.amount > 0) params.set("amount", String(tx.amount));
+
+    const qs = params.toString();
+    return qs ? `${ROUTE_PATHS.checkout}?${qs}` : ROUTE_PATHS.checkout;
+  }, [tx]);
 
   return (
     <div className="min-h-screen bg-[#f8fafc] flex flex-col font-sans">
@@ -214,7 +229,7 @@ export function PaymentReturnPage() {
                   Home
                 </Link>
                 <Link
-                  to={ROUTE_PATHS.checkout}
+                  to={retryTo}
                   className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-emerald-600 text-white text-sm font-black uppercase tracking-widest hover:bg-emerald-500 transition-all"
                 >
                   Try Again

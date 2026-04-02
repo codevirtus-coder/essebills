@@ -1,23 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  X, 
-  CreditCard, 
-  Landmark, 
-  ChevronRight, 
-  Upload, 
-  CheckCircle2, 
-  Copy, 
+import React, { useEffect, useState } from 'react';
+import {
+  X,
+  CreditCard,
+  Landmark,
+  ChevronRight,
+  Upload,
+  CheckCircle2,
+  Copy,
   AlertCircle,
   Loader2,
-  FileText
+  FileText,
 } from 'lucide-react';
-import { 
-  getEseBillsAccounts, 
-  initiateBankTopUp, 
-  uploadProofOfPayment,
-  type EseBillsAccount,
-  type BankTopUp
-} from '../../../services/wallet.service';
+import { initiateWalletTopUp, uploadProofOfPayment, type BankTopUp } from '../../../services/wallet.service';
 import toast from 'react-hot-toast';
 
 interface WalletTopUpModalProps {
@@ -26,52 +20,97 @@ interface WalletTopUpModalProps {
   onSuccess: () => void;
 }
 
-type Step = 'method' | 'bank-select' | 'details' | 'confirm' | 'upload' | 'success';
+type Step = 'method' | 'bank' | 'online' | 'upload' | 'success';
 
 export default function WalletTopUpModal({ isOpen, onClose, onSuccess }: WalletTopUpModalProps) {
   const [step, setStep] = useState<Step>('method');
   const [loading, setLoading] = useState(false);
-  const [accounts, setAccounts] = useState<EseBillsAccount[]>([]);
-  const [selectedAccount, setSelectedAccount] = useState<EseBillsAccount | null>(null);
   const [amount, setAmount] = useState('');
-  const [reference, setReference] = useState('');
+  const [currencyCode, setCurrencyCode] = useState('USD');
   const [createdTopUp, setCreatedTopUp] = useState<BankTopUp | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
+  const reset = () => {
+    setStep('method');
+    setLoading(false);
+    setAmount('');
+    setCurrencyCode('USD');
+    setCreatedTopUp(null);
+    setSelectedFile(null);
+  };
+
   useEffect(() => {
-    if (isOpen && step === 'bank-select') {
-      setLoading(true);
-      getEseBillsAccounts()
-        .then(data => setAccounts(data.filter(a => a.active)))
-        .catch(() => toast.error("Failed to load bank accounts"))
-        .finally(() => setLoading(false));
-    }
-  }, [isOpen, step]);
+    if (!isOpen) return;
+    reset();
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success("Copied to clipboard");
+  const handleClose = () => {
+    reset();
+    onClose();
   };
 
-  const handleInitiate = async () => {
-    if (!selectedAccount || !amount || !reference) {
-      toast.error("Please fill in all details");
+  const handleCopy = (text: string) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    toast.success('Copied to clipboard');
+  };
+
+  const handleInitiateBankTransfer = async () => {
+    if (!amount || Number(amount) <= 0 || !currencyCode) {
+      toast.error('Please enter a valid amount and currency');
       return;
     }
+
     setLoading(true);
     try {
-      const data = await initiateBankTopUp({
-        eseBillsAccountId: selectedAccount.id,
+      const res = await initiateWalletTopUp({
         amount: parseFloat(amount),
-        currencyCode: selectedAccount.currencyCode,
-        depositReference: reference
+        currencyCode,
+        topUpMethod: 'BANK_TRANSFER',
       });
-      setCreatedTopUp(data);
+      setCreatedTopUp(res.topUp);
       setStep('upload');
     } catch (error: any) {
-      toast.error(error.message || "Failed to initiate top-up");
+      const msg = String(error?.message ?? error ?? 'Failed to initiate top-up');
+      toast.error(msg.includes('404') ? 'Top-up endpoint not available (needs backend update): /v1/wallet/top-ups' : msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInitiateOnline = async () => {
+    if (!amount || Number(amount) <= 0 || !currencyCode) {
+      toast.error('Please enter a valid amount and currency');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await initiateWalletTopUp({
+        amount: parseFloat(amount),
+        currencyCode,
+        topUpMethod: 'WALLET_PAYMENT',
+      });
+
+      const redirectUrl =
+        (res as any)?.redirectUrl ||
+        (res as any)?.topUp?.redirectUrl ||
+        (res as any)?.paymentUrl ||
+        (res as any)?.topUp?.paymentUrl;
+
+      if (typeof redirectUrl === 'string' && redirectUrl.length > 0) {
+        window.location.assign(redirectUrl);
+        return;
+      }
+
+      toast.success('Top-up initiated');
+      setStep('success');
+      onSuccess();
+    } catch (error: any) {
+      const msg = String(error?.message ?? error ?? 'Failed to initiate top-up');
+      toast.error(msg.includes('404') ? 'Top-up endpoint not available (needs backend update): /v1/wallet/top-ups' : msg);
     } finally {
       setLoading(false);
     }
@@ -83,14 +122,15 @@ export default function WalletTopUpModal({ isOpen, onClose, onSuccess }: WalletT
       onSuccess();
       return;
     }
+
     setLoading(true);
     try {
       await uploadProofOfPayment(createdTopUp.id, selectedFile);
-      toast.success("Proof of payment uploaded");
+      toast.success('Proof of payment uploaded');
       setStep('success');
       onSuccess();
     } catch (error: any) {
-      toast.error("Failed to upload proof, but top-up was notified.");
+      toast.error('Failed to upload proof, but top-up was created.');
       setStep('success');
       onSuccess();
     } finally {
@@ -100,16 +140,15 @@ export default function WalletTopUpModal({ isOpen, onClose, onSuccess }: WalletT
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
-      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
-      
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={handleClose} />
+
       <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in duration-300">
-        {/* Header */}
         <div className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <div>
             <h3 className="text-xl font-bold text-slate-900 dark:text-white">Top Up Wallet</h3>
             <p className="text-xs text-slate-500 font-medium">Add funds to your digital wallet</p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-400 transition-colors">
+          <button onClick={handleClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-400 transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -117,93 +156,42 @@ export default function WalletTopUpModal({ isOpen, onClose, onSuccess }: WalletT
         <div className="p-8">
           {step === 'method' && (
             <div className="space-y-4">
-              <button 
-                onClick={() => setStep('bank-select')}
+              <button
+                onClick={() => setStep('bank')}
                 className="w-full p-6 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-emerald-500/50 hover:bg-emerald-50/30 dark:hover:bg-emerald-900/10 transition-all text-left flex items-center gap-4 group"
               >
                 <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Landmark size={24} />
                 </div>
                 <div className="flex-1">
-                  <p className="font-bold text-slate-900 dark:text-white text-sm">Bank Deposit / Transfer</p>
-                  <p className="text-xs text-slate-500">Pay into our local bank accounts</p>
+                  <p className="font-bold text-slate-900 dark:text-white text-sm">Bank Transfer</p>
+                  <p className="text-xs text-slate-500">Upload proof, then checker confirms</p>
                 </div>
                 <ChevronRight size={18} className="text-slate-300 group-hover:text-emerald-500 transition-colors" />
               </button>
 
-              <button 
-                disabled
-                className="w-full p-6 rounded-2xl border border-slate-100 dark:border-slate-800 opacity-50 cursor-not-allowed text-left flex items-center gap-4 group"
+              <button
+                onClick={() => setStep('online')}
+                className="w-full p-6 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-blue-500/50 hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-all text-left flex items-center gap-4 group"
               >
-                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                   <CreditCard size={24} />
                 </div>
                 <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="font-bold text-slate-900 dark:text-white text-sm">Card / Mobile Money</p>
-                    <span className="text-[8px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-500 uppercase font-black tracking-widest">Coming Soon</span>
-                  </div>
-                  <p className="text-xs text-slate-500">Instant top-up via payment gateway</p>
+                  <p className="font-bold text-slate-900 dark:text-white text-sm">Online Payment</p>
+                  <p className="text-xs text-slate-500">Auto-credit on success</p>
                 </div>
+                <ChevronRight size={18} className="text-slate-300 group-hover:text-blue-500 transition-colors" />
               </button>
             </div>
           )}
 
-          {step === 'bank-select' && (
+          {step === 'bank' && (
             <div className="space-y-6">
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Select EseBills Account</p>
-              <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
-                {loading ? (
-                  Array(3).fill(0).map((_, i) => <div key={i} className="h-20 bg-slate-50 dark:bg-slate-800 rounded-xl animate-pulse" />)
-                ) : accounts.map(acc => (
-                  <button 
-                    key={acc.id}
-                    onClick={() => { setSelectedAccount(acc); setStep('details'); }}
-                    className="w-full p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-emerald-500 transition-all text-left flex items-center gap-4"
-                  >
-                    <div className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center font-bold text-slate-400">
-                      {acc.bank.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="font-bold text-slate-900 dark:text-white text-sm">{acc.bank}</p>
-                      <p className="text-[10px] font-mono text-slate-500">{acc.accountNumber}</p>
-                    </div>
-                    <span className="ml-auto text-xs font-bold text-emerald-600">{acc.currencyCode}</span>
-                  </button>
-                ))}
-              </div>
-              <button onClick={() => setStep('method')} className="text-xs font-bold text-slate-400 hover:text-slate-600 flex items-center gap-1.5">
-                Back to methods
-              </button>
-            </div>
-          )}
-
-          {step === 'details' && selectedAccount && (
-            <div className="space-y-6">
-              <div className="p-5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-3">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Deposit Instructions</p>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-500">Bank:</span>
-                    <span className="font-bold text-slate-900 dark:text-white">{selectedAccount.bank}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-500">Account Name:</span>
-                    <span className="font-bold text-slate-900 dark:text-white">{selectedAccount.accountName}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-500">Account #:</span>
-                    <button onClick={() => handleCopy(selectedAccount.accountNumber)} className="flex items-center gap-1.5 font-mono font-bold text-emerald-600 hover:underline">
-                      {selectedAccount.accountNumber} <Copy size={12} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
               <div className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Amount ({selectedAccount.currencyCode})</label>
-                  <input 
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Amount</label>
+                  <input
                     type="number"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
@@ -211,28 +199,73 @@ export default function WalletTopUpModal({ isOpen, onClose, onSuccess }: WalletT
                     className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-lg font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                   />
                 </div>
+
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Deposit Reference / Slip #</label>
-                  <input 
-                    type="text"
-                    value={reference}
-                    onChange={(e) => setReference(e.target.value)}
-                    placeholder="Enter reference from your bank"
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Currency</label>
+                  <select
+                    value={currencyCode}
+                    onChange={(e) => setCurrencyCode(e.target.value)}
                     className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                  />
+                  >
+                    <option value="USD">USD</option>
+                    <option value="ZWG">ZWG</option>
+                    <option value="ZWL">ZWL</option>
+                  </select>
                 </div>
               </div>
 
-              <button 
-                onClick={handleInitiate}
-                disabled={loading || !amount || !reference}
+              <button
+                onClick={handleInitiateBankTransfer}
+                disabled={loading || !amount || Number(amount) <= 0}
                 className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {loading ? <Loader2 className="animate-spin" size={16} /> : "Notify Deposit"}
+                {loading ? <Loader2 className="animate-spin" size={16} /> : 'Generate Deposit Reference'}
               </button>
-              
-              <button onClick={() => setStep('bank-select')} className="w-full text-xs font-bold text-slate-400 hover:text-slate-600">
-                Choose a different bank
+
+              <button onClick={() => setStep('method')} className="w-full text-xs font-bold text-slate-400 hover:text-slate-600">
+                Back to methods
+              </button>
+            </div>
+          )}
+
+          {step === 'online' && (
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Amount</label>
+                  <input
+                    type="number"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="0.00"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-lg font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Currency</label>
+                  <select
+                    value={currencyCode}
+                    onChange={(e) => setCurrencyCode(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  >
+                    <option value="USD">USD</option>
+                    <option value="ZWG">ZWG</option>
+                    <option value="ZWL">ZWL</option>
+                  </select>
+                </div>
+              </div>
+
+              <button
+                onClick={handleInitiateOnline}
+                disabled={loading || !amount || Number(amount) <= 0}
+                className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {loading ? <Loader2 className="animate-spin" size={16} /> : 'Proceed to Payment'}
+              </button>
+
+              <button onClick={() => setStep('method')} className="w-full text-xs font-bold text-slate-400 hover:text-slate-600">
+                Back to methods
               </button>
             </div>
           )}
@@ -240,20 +273,62 @@ export default function WalletTopUpModal({ isOpen, onClose, onSuccess }: WalletT
           {step === 'upload' && (
             <div className="space-y-8 text-center">
               <div className="space-y-2">
-                <h4 className="font-bold text-slate-900 dark:text-white">Success! Deposit Notified</h4>
+                <h4 className="font-bold text-slate-900 dark:text-white">Top-Up Created</h4>
                 <p className="text-xs text-slate-500 leading-relaxed">
-                  Your top-up request has been created. Please upload a clear photo or screenshot of your deposit slip to speed up verification.
+                  Use the deposit reference below when making your bank transfer, then upload proof of payment to speed up verification.
                 </p>
               </div>
 
+              <div className="p-5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-3 text-left">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Deposit Instructions</p>
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between items-center gap-3">
+                    <span className="text-slate-500">Deposit Reference:</span>
+                    <button
+                      onClick={() => handleCopy(createdTopUp?.depositReference ?? '')}
+                      disabled={!createdTopUp?.depositReference}
+                      className="flex items-center gap-1.5 font-mono font-bold text-emerald-600 hover:underline disabled:opacity-50"
+                      title="Copy deposit reference"
+                    >
+                      {createdTopUp?.depositReference ?? '—'} <Copy size={12} />
+                    </button>
+                  </div>
+                  <div className="flex justify-between items-center gap-3">
+                    <span className="text-slate-500">Bank:</span>
+                    <span className="font-bold text-slate-900 dark:text-white text-right">{createdTopUp?.eseBillsAccount?.bank ?? '—'}</span>
+                  </div>
+                  <div className="flex justify-between items-center gap-3">
+                    <span className="text-slate-500">Account Name:</span>
+                    <span className="font-bold text-slate-900 dark:text-white text-right">{createdTopUp?.eseBillsAccount?.accountName ?? '—'}</span>
+                  </div>
+                  <div className="flex justify-between items-center gap-3">
+                    <span className="text-slate-500">Account #:</span>
+                    <button
+                      onClick={() => handleCopy(createdTopUp?.eseBillsAccount?.accountNumber ?? '')}
+                      disabled={!createdTopUp?.eseBillsAccount?.accountNumber}
+                      className="flex items-center gap-1.5 font-mono font-bold text-emerald-600 hover:underline disabled:opacity-50"
+                      title="Copy account number"
+                    >
+                      {createdTopUp?.eseBillsAccount?.accountNumber ?? '—'} <Copy size={12} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               <div className="relative group">
-                <input 
-                  type="file" 
+                <input
+                  type="file"
                   accept="image/*,application/pdf"
                   onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                 />
-                <div className={`p-10 border-2 border-dashed rounded-[2rem] transition-all flex flex-col items-center justify-center gap-4 ${selectedFile ? 'border-emerald-500 bg-emerald-50/30 dark:bg-emerald-900/10' : 'border-slate-200 dark:border-slate-800 group-hover:border-emerald-500/50 group-hover:bg-slate-50 dark:group-hover:bg-slate-800/50'}`}>
+                <div
+                  className={`p-10 border-2 border-dashed rounded-[2rem] transition-all flex flex-col items-center justify-center gap-4 ${
+                    selectedFile
+                      ? 'border-emerald-500 bg-emerald-50/30 dark:bg-emerald-900/10'
+                      : 'border-slate-200 dark:border-slate-800 group-hover:border-emerald-500/50 group-hover:bg-slate-50 dark:group-hover:bg-slate-800/50'
+                  }`}
+                >
                   {selectedFile ? (
                     <>
                       <FileText size={48} className="text-emerald-500" />
@@ -277,12 +352,12 @@ export default function WalletTopUpModal({ isOpen, onClose, onSuccess }: WalletT
               </div>
 
               <div className="flex flex-col gap-3">
-                <button 
+                <button
                   onClick={handleFileUpload}
                   disabled={loading}
                   className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  {loading ? <Loader2 className="animate-spin" size={16} /> : selectedFile ? "Upload & Complete" : "Skip for now"}
+                  {loading ? <Loader2 className="animate-spin" size={16} /> : selectedFile ? 'Upload & Complete' : 'Skip for now'}
                 </button>
                 <div className="flex items-center justify-center gap-2 text-[10px] text-amber-600 font-bold bg-amber-50 dark:bg-amber-900/20 py-2 rounded-lg border border-amber-100 dark:border-amber-800/50">
                   <AlertCircle size={14} />
@@ -303,8 +378,8 @@ export default function WalletTopUpModal({ isOpen, onClose, onSuccess }: WalletT
                   Your top-up request is being processed. Funds will be available in your wallet once confirmed.
                 </p>
               </div>
-              <button 
-                onClick={onClose}
+              <button
+                onClick={handleClose}
                 className="w-full py-4 bg-slate-900 dark:bg-slate-800 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-all"
               >
                 Back to Dashboard

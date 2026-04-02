@@ -392,6 +392,9 @@ export function RecipientRow({
   onRemove,
   error,
 }: RecipientRowProps) {
+  // Ensure we never render/select products without ids (would break controlled <select> value matching).
+  const productsWithIds = products.filter((p) => p.id != null)
+
   return (
     <div className="p-4 bg-slate-50/50 dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-wrap gap-3 items-end group">
       <div className="w-12 text-center">
@@ -400,23 +403,33 @@ export function RecipientRow({
       <div className="flex-1 min-w-[180px] space-y-1">
         <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">Product</label>
         <select
-          value={item.productId ?? ''}
+          value={item.productId != null ? String(item.productId) : ''}
           onChange={(e) => {
-            const prod = products.find((p) => p.id === Number(e.target.value))
-            if (prod) {
-              onChange('productId', prod.id)
-              onChange('productCode', prod.code ?? '')
-              onChange('productName', prod.name ?? '')
-              if (prod.defaultCurrency?.code) {
-                onChange('currencyCode', prod.defaultCurrency.code)
-              }
+            const selectedId = e.target.value
+            if (!selectedId) {
+              onChange('productId', undefined)
+              onChange('productCode', '')
+              onChange('productName', '')
+              return
+            }
+
+            // Compare as strings to avoid subtle mismatch issues (DOM values are strings).
+            const prod = productsWithIds.find((p) => String(p.id) === selectedId)
+            if (!prod) return
+
+            const prodId = typeof prod.id === 'number' ? prod.id : Number(prod.id)
+            onChange('productId', prodId)
+            onChange('productCode', prod.code ?? '')
+            onChange('productName', prod.name ?? '')
+            if (prod.defaultCurrency?.code) {
+              onChange('currencyCode', prod.defaultCurrency.code)
             }
           }}
           className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs font-medium"
         >
           <option value="">Select product...</option>
-          {products.map((p) => (
-            <option key={p.id} value={p.id}>
+          {productsWithIds.map((p) => (
+            <option key={p.id} value={String(p.id)}>
               {p.name} ({p.code})
             </option>
           ))}

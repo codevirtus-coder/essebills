@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import {
+  motion,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+} from "framer-motion";
 import { ChevronRight, Mouse } from "lucide-react";
 import ecocashBadge from "../../../assets/ecocash-badge.svg";
 import innbucksBadge from "../../../assets/innbucks-badge.svg";
@@ -16,15 +21,23 @@ import { QuickPay } from "../../customer/components/QuickPay";
 export function HomeHero() {
   const ref = useRef<HTMLElement>(null);
   const shouldReduceMotion = useReducedMotion();
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start start", "end start"],
+  });
   const bgY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
   const contentY = useTransform(scrollYProgress, [0, 1], ["0%", "12%"]);
 
   const phrases = useMemo(
-    () => (shouldReduceMotion ? ["Instantly."] : ["Instantly.", "Ipapo Ipapo", "Khonapho Khonapho"]),
+    () =>
+      shouldReduceMotion
+        ? ["Instantly."]
+        : ["Instantly.", "Ipapo Ipapo", "Khonapho Khonapho"],
     [shouldReduceMotion],
   );
-  const [typedText, setTypedText] = useState(shouldReduceMotion ? "Instantly." : "");
+  const [typedText, setTypedText] = useState(
+    shouldReduceMotion ? "Instantly." : "",
+  );
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [charIndex, setCharIndex] = useState(0);
   const [deleting, setDeleting] = useState(false);
@@ -48,13 +61,24 @@ export function HomeHero() {
     const hold = isComplete && !deleting ? 900 : isEmpty && deleting ? 400 : 0;
     const timeoutId = window.setTimeout(() => {
       if (isComplete && !deleting) {
-        if (phraseIndex === phrases.length - 1) { setTypedText("Instantly."); setStopped(true); return; }
-        setDeleting(true); return;
+        if (phraseIndex === phrases.length - 1) {
+          setTypedText("Instantly.");
+          setStopped(true);
+          return;
+        }
+        setDeleting(true);
+        return;
       }
       if (isEmpty && deleting) {
         setDeleting(false);
-        if (phraseIndex === phrases.length - 1) { setTypedText("Instantly."); setCharIndex(0); setStopped(true); return; }
-        setPhraseIndex(phraseIndex + 1); return;
+        if (phraseIndex === phrases.length - 1) {
+          setTypedText("Instantly.");
+          setCharIndex(0);
+          setStopped(true);
+          return;
+        }
+        setPhraseIndex(phraseIndex + 1);
+        return;
       }
       const nextIndex = deleting ? charIndex - 1 : charIndex + 1;
       setCharIndex(nextIndex);
@@ -83,7 +107,10 @@ export function HomeHero() {
       {/* Vignette: darkens edges, spotlights centre */}
       <div
         className="absolute inset-0 pointer-events-none"
-        style={{ background: "radial-gradient(ellipse 80% 70% at 50% 50%, transparent 40%, rgba(5,90,60,0.45) 100%)" }}
+        style={{
+          background:
+            "radial-gradient(ellipse 80% 70% at 50% 50%, transparent 40%, rgba(5,90,60,0.45) 100%)",
+        }}
       />
       <div className="absolute top-1/3 -right-20 sm:right-1/4 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-white/10 rounded-full blur-[80px] sm:blur-[140px] pointer-events-none" />
       <div className="absolute bottom-1/4 -left-20 sm:left-1/3 w-[250px] sm:w-[400px] h-[250px] sm:h-[400px] bg-white/10 rounded-full blur-[60px] sm:blur-[120px] pointer-events-none" />
@@ -98,63 +125,89 @@ export function HomeHero() {
             <motion.h1
               initial={shouldReduceMotion ? false : { opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: shouldReduceMotion ? 0 : 0.7, ease: "easeOut", delay: shouldReduceMotion ? 0 : 0.1 }}
+              transition={{
+                duration: shouldReduceMotion ? 0 : 0.7,
+                ease: "easeOut",
+                delay: shouldReduceMotion ? 0 : 0.1,
+              }}
               className="text-[2.5rem] sm:text-[3.5rem] lg:text-[5rem] xl:text-7xl font-black text-white leading-[0.95] sm:leading-[0.9] lg:leading-[0.85] tracking-tighter mb-4 sm:mb-6"
             >
               Pay any bill.
               <br />
               <span
-                  className="relative text-[1.5rem] sm:text-[2.25rem] lg:text-[3.5rem] text-white"
-                  aria-label={typedText || phrases[phraseIndex]}
+                className="relative text-[1.5rem] sm:text-[2.25rem] lg:text-[3.5rem] text-white"
+                aria-label={typedText || phrases[phraseIndex]}
+              >
+                <span
+                  className="invisible pointer-events-none select-none"
+                  aria-hidden="true"
                 >
-                  <span className="invisible pointer-events-none select-none" aria-hidden="true">Khonapho Khonapho</span>
-                  <span className="absolute left-0 top-0 h-full w-full inline-flex items-center text-white">
-                    {stopped ? (
-                      <motion.span
-                        className="relative"
-                        initial={shouldReduceMotion ? false : { opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: shouldReduceMotion ? 0 : 0.5 }}
-                      >
-                        {typedText}
-                        <motion.span
-                          className="absolute -bottom-1 left-0 h-[3px] rounded-full bg-white/70"
-                          initial={{ width: "0%" }}
-                          animate={{ width: "100%" }}
-                          transition={{ duration: shouldReduceMotion ? 0 : 0.5, delay: shouldReduceMotion ? 0 : 0.3, ease: "easeOut" }}
-                          aria-hidden="true"
-                        />
-                      </motion.span>
-                    ) : (
-                      <>
-                        {typedText}
-                        {!shouldReduceMotion && <span className="ml-0.5 w-[2px] h-[0.85em] bg-white/90 animate-pulse inline-block" />}
-                      </>
-                    )}
-                  </span>
+                  Khonapho Khonapho
                 </span>
+                <span className="absolute left-0 top-0 h-full w-full inline-flex items-center text-white">
+                  {stopped ? (
+                    <motion.span
+                      className="relative"
+                      initial={shouldReduceMotion ? false : { opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: shouldReduceMotion ? 0 : 0.5 }}
+                    >
+                      {typedText}
+                      <motion.span
+                        className="absolute -bottom-1 left-0 h-[3px] rounded-full bg-white/70"
+                        initial={{ width: "0%" }}
+                        animate={{ width: "100%" }}
+                        transition={{
+                          duration: shouldReduceMotion ? 0 : 0.5,
+                          delay: shouldReduceMotion ? 0 : 0.3,
+                          ease: "easeOut",
+                        }}
+                        aria-hidden="true"
+                      />
+                    </motion.span>
+                  ) : (
+                    <>
+                      {typedText}
+                      {!shouldReduceMotion && (
+                        <span className="ml-0.5 w-[2px] h-[0.85em] bg-white/90 animate-pulse inline-block" />
+                      )}
+                    </>
+                  )}
+                </span>
+              </span>
             </motion.h1>
-
             <motion.p
               initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: shouldReduceMotion ? 0 : 0.6, ease: "easeOut", delay: shouldReduceMotion ? 0 : 0.2 }}
+              transition={{
+                duration: shouldReduceMotion ? 0 : 0.6,
+                ease: "easeOut",
+                delay: shouldReduceMotion ? 0 : 0.2,
+              }}
               className="text-sm sm:text-base lg:text-lg text-white/80 leading-relaxed mb-6 sm:mb-8 max-w-xl mx-auto lg:mx-0"
             >
-              Say goodbye to long queues and late fees. Pay utility, mobile, education, and insurance bills instantly from anywhere, anytime.
+              Say goodbye to long queues and late fees. Pay utility, mobile,
+              education, and insurance bills instantly from anywhere, anytime.
             </motion.p>
-
             <motion.div
               initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: shouldReduceMotion ? 0 : 0.6, ease: "easeOut", delay: shouldReduceMotion ? 0 : 0.3 }}
+              transition={{
+                duration: shouldReduceMotion ? 0 : 0.6,
+                ease: "easeOut",
+                delay: shouldReduceMotion ? 0 : 0.3,
+              }}
               className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start"
             >
               <a
                 href="#pay-now"
                 className="group inline-flex w-full sm:w-auto items-center justify-center gap-2 bg-white text-[#10B981] font-extrabold text-sm sm:text-base px-5 sm:px-8 py-3 sm:py-4 rounded-xl hover:bg-white/90 transition-all shadow-lg hover:-translate-y-0.5 active:translate-y-0"
               >
-                Pay a Bill Now <ChevronRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
+                Pay a Bill Now{" "}
+                <ChevronRight
+                  size={18}
+                  className="group-hover:translate-x-0.5 transition-transform"
+                />
               </a>
               <Link
                 to={ROUTE_PATHS.login}
@@ -163,32 +216,47 @@ export function HomeHero() {
                 Sign In
               </Link>
             </motion.div>
-
             <motion.div
               initial={shouldReduceMotion ? false : { opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: shouldReduceMotion ? 0 : 0.5, delay: shouldReduceMotion ? 0 : 0.45 }}
+              transition={{
+                duration: shouldReduceMotion ? 0 : 0.5,
+                delay: shouldReduceMotion ? 0 : 0.45,
+              }}
               className="mt-4 sm:mt-6 flex flex-col items-center lg:items-start gap-2"
             >
               <p className="text-[10px] sm:text-xs text-white/50 text-center lg:text-left">
                 No account needed to pay instantly
               </p>
               <div className="flex items-center gap-2 text-[10px] sm:text-xs text-white/60 font-medium">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white/40 shrink-0">
-                  <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white/40 shrink-0"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z"
+                    clipRule="evenodd"
+                  />
                 </svg>
-                Trusted by <span className="text-white font-bold">50,000+</span> customers
+                Trusted by <span className="text-white font-bold">50,000+</span>{" "}
+                customers
               </div>
               <p className="text-[9px] sm:text-[10px] font-semibold text-white/40 tracking-wide text-center lg:text-left">
                 &lt; 3s settlement · 256-bit encrypted · 24/7 support
               </p>
-
               {/* Marquee — horizontal scroll on mobile */}
               <div className="w-full pt-3 sm:pt-4">
                 <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
                   <div
                     className="flex gap-2 w-max"
-                    style={{ animation: shouldReduceMotion ? "none" : "marquee 22s linear infinite" }}
+                    style={{
+                      animation: shouldReduceMotion
+                        ? "none"
+                        : "marquee 22s linear infinite",
+                    }}
                   >
                     {[
                       { icon: visaBadge, label: "Visa" },
@@ -214,17 +282,30 @@ export function HomeHero() {
               </div>
             </motion.div>
           </div>
-
-          {/* ── Right: QuickPay card (hidden on mobile) ── */}
-          <div id="quick-pay-hero" className="hidden lg:block w-full bg-white/95 dark:bg-slate-800/95 rounded-[2rem] border border-white/20 dark:border-white/10 shadow-2xl backdrop-blur-md p-4 lg:p-5 flex flex-col gap-4">
+          {/*── Right: QuickPay card (hidden on mobile) ── */}
+          <div
+            id="quick-pay-hero"
+            className="hidden lg:block w-full bg-white/95 dark:bg-slate-800/95 rounded-[2rem] border border-white/20 dark:border-white/10 shadow-2xl backdrop-blur-md p-4 lg:p-5 flex flex-col gap-4"
+          >
             <div className="flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-[#10B981] flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-white">
-                    <path fillRule="evenodd" d="M14.615 1.595a.75.75 0 01.359.852L12.982 9.75h7.268a.75.75 0 01.548 1.262l-10.5 11.25a.75.75 0 01-1.272-.71l1.992-7.302H3.75a.75.75 0 01-.548-1.262l10.5-11.25a.75.75 0 01.913-.143z" clipRule="evenodd" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="w-4 h-4 text-white"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M14.615 1.595a.75.75 0 01.359.852L12.982 9.75h7.268a.75.75 0 01.548 1.262l-10.5 11.25a.75.75 0 01-1.272-.71l1.992-7.302H3.75a.75.75 0 01-.548-1.262l10.5-11.25a.75.75 0 01.913-.143z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </div>
-                <span className="font-black text-slate-900 dark:text-white text-sm tracking-tight">Quick Pay</span>
+                <span className="font-black text-slate-900 dark:text-white text-sm tracking-tight">
+                  Quick Pay
+                </span>
               </div>
               <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-400">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse inline-block" />
@@ -236,14 +317,19 @@ export function HomeHero() {
             </div>
           </div>
         </div>
-
       </motion.div>
-
       <motion.button
         initial={shouldReduceMotion ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: shouldReduceMotion ? 0 : 1.2, duration: shouldReduceMotion ? 0 : 0.8 }}
-        onClick={() => document.getElementById("pay-now")?.scrollIntoView({ behavior: shouldReduceMotion ? "auto" : "smooth" })}
+        transition={{
+          delay: shouldReduceMotion ? 0 : 1.2,
+          duration: shouldReduceMotion ? 0 : 0.8,
+        }}
+        onClick={() =>
+          document.getElementById("pay-now")?.scrollIntoView({
+            behavior: shouldReduceMotion ? "auto" : "smooth",
+          })
+        }
         type="button"
         className="absolute bottom-20 left-3/4 -translate-x-1/2 hidden lg:flex flex-col items-center gap-2 text-white/50 hover:text-white/90 text-xs font-medium tracking-[0.25em] uppercase transition-colors z-20 group"
         aria-label="Scroll to services"
@@ -254,11 +340,18 @@ export function HomeHero() {
         </div>
         <div className="w-px h-8 bg-gradient-to-b from-white/40 to-transparent group-hover:h-12 transition-all duration-500" />
       </motion.button>
-
       {/* Wave transition into next section */}
       <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none z-10 pointer-events-none">
-        <svg viewBox="0 0 1440 64" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full h-12 sm:h-16 block">
-          <path d="M0,32 C240,64 480,0 720,32 C960,64 1200,0 1440,32 L1440,64 L0,64 Z" fill="white" />
+        <svg
+          viewBox="0 0 1440 64"
+          xmlns="http://www.w3.org/2000/svg"
+          preserveAspectRatio="none"
+          className="w-full h-12 sm:h-16 block"
+        >
+          <path
+            d="M0,32 C240,64 480,0 720,32 C960,64 1200,0 1440,32 L1440,64 L0,64 Z"
+            fill="white"
+          />
         </svg>
       </div>
     </section>

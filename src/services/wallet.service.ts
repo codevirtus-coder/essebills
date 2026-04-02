@@ -37,12 +37,27 @@ export interface BankTopUpRequest {
   depositReference: string
 }
 
+// NOTE: Backend enum currently supports BANK_TRANSFER and WALLET_PAYMENT (online/gateway).
+export type WalletTopUpMethod = 'BANK_TRANSFER' | 'WALLET_PAYMENT'
+
+export interface WalletTopUpInitiateRequest {
+  amount: number
+  currencyCode: string
+  topUpMethod: WalletTopUpMethod
+}
+
+export interface WalletTopUpInitiateResponse {
+  success: boolean
+  topUp: BankTopUp
+}
+
 export interface BankTopUp {
   id: number
   currencyCode: string
   amount: number
   status: 'PENDING' | 'CONFIRMED' | 'REJECTED'
   depositReference?: string
+  topUpMethod?: WalletTopUpMethod
   rejectionReason?: string
   walletCreditRef?: string
   createdDate?: string
@@ -92,6 +107,14 @@ export async function getMyWalletHistory(
 // --------------------------------------------------------------------------
 // Bank Top-up Actions
 // --------------------------------------------------------------------------
+
+/** Initiate wallet top-up (ONLINE or BANK_TRANSFER) */
+export async function initiateWalletTopUp(request: WalletTopUpInitiateRequest): Promise<WalletTopUpInitiateResponse> {
+  return apiFetch<WalletTopUpInitiateResponse>(API_ENDPOINTS.wallet.topUps, {
+    method: 'POST',
+    body: request,
+  })
+}
 
 /** Get EseBills bank accounts for manual deposit */
 export async function getEseBillsAccounts(currencyCode?: string): Promise<EseBillsAccount[]> {

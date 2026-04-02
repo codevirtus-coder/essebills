@@ -285,6 +285,7 @@ export const API_ENDPOINTS = {
 
   // Wallet (user-facing top-up submissions)
   wallet: {
+    topUps: '/v1/wallet/top-ups',
     bankTopUps: '/v1/wallet/bank-top-ups',
   },
 

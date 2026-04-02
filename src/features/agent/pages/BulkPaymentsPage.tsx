@@ -98,6 +98,33 @@ export default function BulkPaymentsPage() {
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [currencies, setCurrencies] = useState<Currency[]>([]);
 
+  const loadReferenceData = useCallback(async () => {
+    // Keep this cheap on repeat calls.
+    if (products.length > 0 && currencies.length > 0 && categories.length > 0) return;
+    try {
+      const [prodData, catsData, currData] = await Promise.all([
+        getProducts({ size: 500 }),
+        getProductCategories(),
+        getCurrencies(),
+      ]);
+
+      const allProds = (prodData as PageResponse<Product>)?.content ?? [];
+      const parentIds = new Set(allProds.map((p: Product) => p.parentProductId).filter(Boolean));
+      setProducts(
+        allProds
+          .filter((p: Product) => p.status === 'ACTIVE' && !p.deleted)
+          .filter((p: Product) => !parentIds.has(p.id as number))
+      );
+      setCategories((catsData as ProductCategory[]) ?? []);
+      setCurrencies(((currData as PageResponse<Currency>)?.content ?? []).filter((c) => c.active !== false && !!c.code));
+    } catch (e) {
+      console.error('Failed to load products/currencies:', e);
+    }
+  }, [products.length, currencies.length, categories.length]);
+
+  // Preload reference data so dropdowns are populated even on the "Groups" tab.
+  useEffect(() => { void loadReferenceData(); }, [loadReferenceData]);
+
   const coerceGroups = (value: unknown): BulkPaymentGroup[] => {
     if (Array.isArray(value)) return value as BulkPaymentGroup[];
     if (value && typeof value === 'object') {
@@ -121,16 +148,7 @@ export default function BulkPaymentsPage() {
       } else if (activeSubTab === 'initiate') {
         const data = await getBulkPaymentGroups();
         setGroups(coerceGroups(data));
-        const [prodData, catsData, currData] = await Promise.all([
-          getProducts({ size: 500 }),
-          getProductCategories(),
-          getCurrencies(),
-        ]);
-        const allProds = prodData.content ?? [];
-        const parentIds = new Set(allProds.map((p: Product) => p.parentProductId).filter(Boolean));
-        setProducts(allProds.filter((p: Product) => !parentIds.has(p.id as number)));
-        setCategories(catsData);
-        setCurrencies((currData.content ?? []).filter((c) => c.active !== false));
+        await loadReferenceData();
       } else if (activeSubTab === 'schedules') {
         const data = await getBulkPaymentSchedules();
         setSchedules(data);
@@ -141,11 +159,11 @@ export default function BulkPaymentsPage() {
         setRequests(data);
       }
     } catch (error) {
-      toast.error('Failed to fetch data');
+      toast.error(error instanceof Error ? error.message : 'Failed to fetch data');
     } finally {
       setLoading(false);
     }
-  }, [activeSubTab]);
+  }, [activeSubTab, loadReferenceData]);
 
   useEffect(() => {
     fetchData();
@@ -168,6 +186,7 @@ export default function BulkPaymentsPage() {
   // Groups Logic
   // --------------------------------------------------------------------------
   const handleOpenGroupModal = (group: BulkPaymentGroup | null = null) => {
+    void loadReferenceData();
     setEditingGroup(group);
     const items: RecipientItem[] = group?.items ? group.items.map((item) => ({
       productId: (item as any).productId,
@@ -185,25 +204,33 @@ export default function BulkPaymentsPage() {
   };
 
   const handleAddGroupItem = () => {
-    setGroupItems([...groupItems, { productCode: '', recipientIdentifier: '', amount: 0, currencyCode: 'USD' }]);
+    setGroupItems((prev) => [...prev, { productCode: '', recipientIdentifier: '', amount: 0, currencyCode: 'USD' }]);
   };
 
   const handleRemoveGroupItem = (index: number) => {
-    const newErrors = { ...groupErrors };
-    delete newErrors[index];
-    setGroupErrors(newErrors);
-    setGroupItems(groupItems.filter((_, i) => i !== index));
+    setGroupErrors((prev) => {
+      if (!prev[index]) return prev;
+      const next = { ...prev };
+      delete next[index];
+      return next;
+    });
+    setGroupItems((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleUpdateGroupItem = (index: number, field: string, value: unknown) => {
-    const updated = [...groupItems];
-    updated[index] = { ...updated[index], [field]: value } as RecipientItem;
-    setGroupItems(updated);
-    if (groupErrors[index]) {
-      const newErrors = { ...groupErrors };
-      delete newErrors[index];
-      setGroupErrors(newErrors);
-    }
+    // Use functional updates so multiple onChange calls in one event (productId, productCode, etc)
+    // don't clobber each other due to React state batching.
+    setGroupItems((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value } as RecipientItem;
+      return updated;
+    });
+    setGroupErrors((prev) => {
+      if (!prev[index]) return prev;
+      const next = { ...prev };
+      delete next[index];
+      return next;
+    });
   };
 
   // CSV Import
@@ -326,7 +353,7 @@ export default function BulkPaymentsPage() {
 
     try {
       setLoading(true);
-      const itemsForBackend: BulkPaymentGroupItem[] = groupItems.map((item) => ({
+      const itemsForBackend: BulkItemDto[] = groupItems.map((item) => ({
         productCode: item.productCode,
         recipientIdentifier: item.recipientIdentifier,
         amount: item.amount,
@@ -344,7 +371,7 @@ export default function BulkPaymentsPage() {
       setEditingGroup(null);
       fetchData();
     } catch (error) {
-      toast.error('Failed to save group');
+      toast.error(error instanceof Error ? error.message : 'Failed to save group');
     } finally {
       setLoading(false);
     }
@@ -378,7 +405,7 @@ export default function BulkPaymentsPage() {
       setIsInitiateModalOpen(false);
       setActiveSubTab('history');
     } catch (error) {
-      toast.error('Failed to initiate bulk payment');
+      toast.error(error instanceof Error ? error.message : 'Failed to initiate bulk payment');
     } finally {
       setLoading(false);
     }
@@ -786,7 +813,7 @@ export default function BulkPaymentsPage() {
             toast.success('Schedule created');
             setIsScheduleModalOpen(false);
             fetchData();
-          } catch (e) { toast.error('Failed to create schedule'); }
+          } catch (e) { toast.error(e instanceof Error ? e.message : 'Failed to create schedule'); }
           finally { setLoading(false); }
         }} className="space-y-6">
           <div className="space-y-4">
