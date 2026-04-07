@@ -2,14 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Search, ArrowLeft, X, Zap, Clock, ChevronRight } from 'lucide-react';
 import { Icon } from '../../../components/ui/Icon';
-import econetLogo from '../../../assets/econet-logo.png';
-import netoneLogo from '../../../assets/netone-logo.png';
-import nyaradzoLogo from '../../../assets/nyaradzo-logo.jpg';
-import telecelLogo from '../../../assets/telecel-logo.jpg';
-import teloneLogo from '../../../assets/telone-logo.png';
-import zesaLogo from '../../../assets/zesa-logo.png';
-import zolLogo from '../../../assets/zol-logo.jpg';
-import { getProductLogoUrl, getProducts, getProductCategories, getProductVariants } from '../../../services/products.service';
+import { getProducts, getProductCategories, getProductVariants } from '../../../services/products.service';
 import type { Product, ProductCategory } from '../../../types/products';
 import { useNavigate } from 'react-router-dom';
 import { ROUTE_PATHS } from '../../../router/paths';
@@ -41,18 +34,6 @@ const ICON_BG: Record<string, string> = {
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function getBillerAssetLogo(biller: { name: string; categoryLabel?: string }): string | null {
-  const v = `${biller.name} ${biller.categoryLabel ?? ''}`.toLowerCase();
-  if (/(econet)/.test(v)) return econetLogo;
-  if (/(netone)/.test(v)) return netoneLogo;
-  if (/(nyaradzo)/.test(v)) return nyaradzoLogo;
-  if (/(telecel)/.test(v)) return telecelLogo;
-  if (/(telone)/.test(v)) return teloneLogo;
-  if (/(zesa|zetdc)/.test(v)) return zesaLogo;
-  if (/(zol)/.test(v)) return zolLogo;
-  return null;
-}
 
 function colorKey(label: string, key: string): string {
   const v = `${label} ${key}`.toLowerCase();
@@ -150,8 +131,6 @@ function ProductCard({ biller, glyph, focused, onClick, itemRef }: {
   const ck = colorKey(biller.categoryLabel, biller.categoryKey);
   const shownGlyph = (glyph ?? '').trim() || catEmoji(biller.categoryLabel);
   const showLucide = isLikelyIconName(shownGlyph);
-  const assetLogo = getBillerAssetLogo(biller);
-  const remoteLogoUrl = !assetLogo && biller.productId > 0 ? getProductLogoUrl(biller.productId) : null;
   return (
     <button
       ref={itemRef}
@@ -162,52 +141,12 @@ function ProductCard({ biller, glyph, focused, onClick, itemRef }: {
         transition-all duration-150 active:scale-[0.98] cursor-pointer hover:-translate-y-0.5
         ${focused ? 'bg-emerald-50 border border-emerald-200/70 ring-2 ring-emerald-400/60 ring-inset shadow-[0_4px_20px_rgb(16,185,129,0.15)]' : 'bg-slate-50 hover:bg-white hover:shadow-md border border-slate-200/50 hover:border-slate-200'}`}
     >
-      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white shadow-sm ring-1 ring-slate-200/70 flex items-center justify-center relative overflow-hidden">
-        <div className={`absolute inset-0 flex items-center justify-center ${ICON_BG[ck] ?? ICON_BG.utilities}`}>
-          {showLucide ? (
-            <Icon name={shownGlyph} size={20} className="text-current" aria-hidden="true" />
-          ) : (
-            <span className="text-lg sm:text-xl leading-none drop-shadow-sm">{shownGlyph}</span>
-          )}
-        </div>
-
-        {assetLogo ? (
-          <img
-            src={assetLogo}
-            alt={`${biller.name} logo`}
-            className="absolute inset-0 w-full h-full object-contain p-1 sm:p-1.5"
-            loading="lazy"
-            decoding="async"
-            onLoad={(e) => {
-              const fallback = e.currentTarget.previousElementSibling as HTMLElement | null;
-              if (fallback) fallback.style.display = 'none';
-            }}
-            onError={(e) => {
-              const target = e.currentTarget;
-              target.style.display = 'none';
-              const fallback = target.previousElementSibling as HTMLElement | null;
-              if (fallback) fallback.style.display = 'flex';
-            }}
-          />
-        ) : remoteLogoUrl ? (
-          <img
-            src={remoteLogoUrl}
-            alt={`${biller.name} logo`}
-            className="absolute inset-0 w-full h-full object-contain p-1 sm:p-1.5"
-            loading="lazy"
-            decoding="async"
-            onLoad={(e) => {
-              const fallback = e.currentTarget.previousElementSibling as HTMLElement | null;
-              if (fallback) fallback.style.display = 'none';
-            }}
-            onError={(e) => {
-              const target = e.currentTarget;
-              target.style.display = 'none';
-              const fallback = target.previousElementSibling as HTMLElement | null;
-              if (fallback) fallback.style.display = 'flex';
-            }}
-          />
-        ) : null}
+      <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center ${ICON_BG[ck] ?? ICON_BG.utilities}`}>
+        {showLucide ? (
+          <Icon name={shownGlyph} size={18} className="text-current" aria-hidden="true" />
+        ) : (
+          <span className="text-base sm:text-lg leading-none drop-shadow-sm">{shownGlyph}</span>
+        )}
       </div>
       <div className="flex flex-col items-center min-w-0">
         <p className={`text-[9px] sm:text-[10px] font-semibold text-center leading-tight line-clamp-2 transition-colors ${focused ? 'text-emerald-800' : 'text-slate-700'}`}>

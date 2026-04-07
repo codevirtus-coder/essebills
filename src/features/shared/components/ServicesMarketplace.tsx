@@ -30,17 +30,9 @@ import {
   getDonationCampaignsV1,
   type DonationCampaignV1,
 } from "../../../services/donationsV1.service";
-import econetLogo from "../../../assets/econet-logo.png";
-import netoneLogo from "../../../assets/netone-logo.png";
-import nyaradzoLogo from "../../../assets/nyaradzo-logo.jpg";
-import telecelLogo from "../../../assets/telecel-logo.jpg";
-import teloneLogo from "../../../assets/telone-logo.png";
-import zesaLogo from "../../../assets/zesa-logo.png";
-import zolLogo from "../../../assets/zol-logo.jpg";
 import {
   getCurrencies,
   getProductCategories,
-  getProductLogoUrl,
   getProducts,
   getProductsByCategory,
   getProductVariants,
@@ -125,21 +117,6 @@ const CATEGORY_COLORS: Record<string, { bg: string; icon: string }> = {
 
 function getColor(key: string) {
   return CATEGORY_COLORS[key] ?? CATEGORY_COLORS.utilities;
-}
-
-function getBillerAssetLogo(biller: {
-  name: string;
-  categoryLabel?: string;
-}): string | null {
-  const v = `${biller.name} ${biller.categoryLabel ?? ""}`.toLowerCase();
-  if (/(econet)/.test(v)) return econetLogo;
-  if (/(netone)/.test(v)) return netoneLogo;
-  if (/(nyaradzo)/.test(v)) return nyaradzoLogo;
-  if (/(telecel)/.test(v)) return telecelLogo;
-  if (/(telone)/.test(v)) return teloneLogo;
-  if (/(zesa|zetdc)/.test(v)) return zesaLogo;
-  if (/(zol)/.test(v)) return zolLogo;
-  return null;
 }
 
 async function fetchData(params: {
@@ -901,11 +878,6 @@ export function ServicesMarketplace({
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 pb-4">
                     {filtered.map((biller, idx) => {
                       const color = getColor(biller.categoryKey);
-                      const assetLogo = getBillerAssetLogo(biller);
-                      const remoteLogoUrl =
-                        !assetLogo && biller.productId > 0
-                          ? getProductLogoUrl(biller.productId)
-                          : null;
                       return (
                         <div
                           key={biller.id}
@@ -919,46 +891,10 @@ export function ServicesMarketplace({
 
                             <div className="absolute left-1/2 top-[58%] sm:top-[70%] -translate-x-1/2 -translate-y-1/2">
                               <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center bg-white/45 dark:bg-slate-700/25 shadow-sm ring-1 ring-white/50 dark:ring-white/10 relative overflow-hidden">
-                                {!assetLogo && (
-                                  <div className="absolute inset-0 flex items-center justify-center">
-                                    <CategoryIcon
-                                      categoryKey={biller.categoryKey}
-                                      className={`w-8 h-8 ${color.icon}`}
-                                    />
-                                  </div>
-                                )}
-
-                                {assetLogo ? (
-                                  <img
-                                    src={assetLogo}
-                                    alt={`${biller.name} logo`}
-                                    className="absolute inset-0 w-full h-full object-contain p-3 sm:p-3.5"
-                                    loading="lazy"
-                                    decoding="async"
-                                  />
-                                ) : remoteLogoUrl ? (
-                                  <img
-                                    src={remoteLogoUrl}
-                                    alt={`${biller.name} logo`}
-                                    className="absolute inset-0 w-full h-full object-contain p-3 sm:p-3.5"
-                                    loading="lazy"
-                                    decoding="async"
-                                    onLoad={(e) => {
-                                      const fallback = e.currentTarget
-                                        .previousElementSibling as HTMLElement | null;
-                                      if (fallback)
-                                        fallback.style.display = "none";
-                                    }}
-                                    onError={(e) => {
-                                      const target = e.currentTarget;
-                                      target.style.display = "none";
-                                      const fallback =
-                                        target.previousElementSibling as HTMLElement | null;
-                                      if (fallback)
-                                        fallback.style.display = "flex";
-                                    }}
-                                  />
-                                ) : null}
+                                <CategoryIcon
+                                  categoryKey={biller.categoryKey}
+                                  className={`w-8 h-8 ${color.icon}`}
+                                />
                               </div>
                             </div>
 
