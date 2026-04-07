@@ -10,8 +10,9 @@ import {
   AlertCircle,
   Loader2,
   FileText,
+  Building2,
 } from 'lucide-react';
-import { initiateWalletTopUp, uploadProofOfPayment, type BankTopUp } from '../../../services/wallet.service';
+import { initiateWalletTopUp, uploadProofOfPayment, getEseBillsAccounts, type BankTopUp, type EseBillsAccount } from '../../../services/wallet.service';
 import toast from 'react-hot-toast';
 
 interface WalletTopUpModalProps {
@@ -19,6 +20,9 @@ interface WalletTopUpModalProps {
   onClose: () => void;
   onSuccess: () => void;
 }
+
+const MIN_TOPUP_AMOUNT = 1.00
+const MAX_TOPUP_AMOUNT = 100000.00
 
 type Step = 'method' | 'bank' | 'online' | 'upload' | 'success';
 
@@ -29,6 +33,9 @@ export default function WalletTopUpModal({ isOpen, onClose, onSuccess }: WalletT
   const [currencyCode, setCurrencyCode] = useState('USD');
   const [createdTopUp, setCreatedTopUp] = useState<BankTopUp | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [bankAccounts, setBankAccounts] = useState<EseBillsAccount[]>([]);
+  const [selectedBankAccountId, setSelectedBankAccountId] = useState<number | null>(null);
+  const [loadingAccounts, setLoadingAccounts] = useState(false);
 
   const reset = () => {
     setStep('method');
@@ -37,6 +44,32 @@ export default function WalletTopUpModal({ isOpen, onClose, onSuccess }: WalletT
     setCurrencyCode('USD');
     setCreatedTopUp(null);
     setSelectedFile(null);
+    setSelectedBankAccountId(null);
+  };
+
+  const generateIdempotencyKey = () => {
+    return `TOPUP-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+  };
+
+  const loadBankAccounts = async (currency: string) => {
+    setLoadingAccounts(true);
+    try {
+      const accounts = await getEseBillsAccounts(currency);
+      setBankAccounts(accounts.filter(a => a.active));
+    } catch (e) {
+      console.error('Failed to load bank accounts', e);
+      setBankAccounts([]);
+    } finally {
+      setLoadingAccounts(false);
+    }
+  };
+
+  const validateAmount = (value: string): string | null => {
+    const num = parseFloat(value);
+    if (isNaN(num) || num <= 0) return 'Amount must be greater than zero';
+    if (num < MIN_TOPUP_AMOUNT) return `Minimum top-up amount is ${MIN_TOPUP_AMOUNT}`;
+    if (num > MAX_TOPUP_AMOUNT) return `Maximum top-up amount is ${MAX_TOPUP_AMOUNT.toLocaleString()}`;
+    return null;
   };
 
   useEffect(() => {
@@ -58,8 +91,17 @@ export default function WalletTopUpModal({ isOpen, onClose, onSuccess }: WalletT
   };
 
   const handleInitiateBankTransfer = async () => {
-    if (!amount || Number(amount) <= 0 || !currencyCode) {
-      toast.error('Please enter a valid amount and currency');
+    const amountError = validateAmount(amount);
+    if (amountError) {
+      toast.error(amountError);
+      return;
+    }
+    if (!selectedBankAccountId) {
+      toast.error('Please select a bank account');
+      return;
+    }
+    if (!currencyCode) {
+      toast.error('Please select a currency');
       return;
     }
 
@@ -69,6 +111,8 @@ export default function WalletTopUpModal({ isOpen, onClose, onSuccess }: WalletT
         amount: parseFloat(amount),
         currencyCode,
         topUpMethod: 'BANK_TRANSFER',
+        eseBillsAccountId: selectedBankAccountId,
+        idempotencyKey: generateIdempotencyKey(),
       });
       setCreatedTopUp(res.topUp);
       setStep('upload');
@@ -81,8 +125,13 @@ export default function WalletTopUpModal({ isOpen, onClose, onSuccess }: WalletT
   };
 
   const handleInitiateOnline = async () => {
-    if (!amount || Number(amount) <= 0 || !currencyCode) {
-      toast.error('Please enter a valid amount and currency');
+    const amountError = validateAmount(amount);
+    if (amountError) {
+      toast.error(amountError);
+      return;
+    }
+    if (!currencyCode) {
+      toast.error('Please select a currency');
       return;
     }
 
@@ -92,6 +141,8 @@ export default function WalletTopUpModal({ isOpen, onClose, onSuccess }: WalletT
         amount: parseFloat(amount),
         currencyCode,
         topUpMethod: 'WALLET_PAYMENT',
+        paymentMethodCode: 'PESEPAY',
+        idempotencyKey: generateIdempotencyKey(),
       });
 
       const redirectUrl =
@@ -196,6 +247,8 @@ export default function WalletTopUpModal({ isOpen, onClose, onSuccess }: WalletT
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="0.00"
+                    min={MIN_TOPUP_AMOUNT}
+                    max={MAX_TOPUP_AMOUNT}
                     className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-lg font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                   />
                 </div>
@@ -204,7 +257,11 @@ export default function WalletTopUpModal({ isOpen, onClose, onSuccess }: WalletT
                   <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Currency</label>
                   <select
                     value={currencyCode}
-                    onChange={(e) => setCurrencyCode(e.target.value)}
+                    onChange={(e) => {
+                      setCurrencyCode(e.target.value);
+                      setSelectedBankAccountId(null);
+                      loadBankAccounts(e.target.value);
+                    }}
                     className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                   >
                     <option value="USD">USD</option>
@@ -212,11 +269,38 @@ export default function WalletTopUpModal({ isOpen, onClose, onSuccess }: WalletT
                     <option value="ZWL">ZWL</option>
                   </select>
                 </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Bank Account</label>
+                  {loadingAccounts ? (
+                    <div className="flex items-center gap-2 text-sm text-slate-500 py-3">
+                      <Loader2 size={16} className="animate-spin" />
+                      Loading accounts...
+                    </div>
+                  ) : bankAccounts.length > 0 ? (
+                    <select
+                      value={selectedBankAccountId ?? ''}
+                      onChange={(e) => setSelectedBankAccountId(Number(e.target.value) || null)}
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                    >
+                      <option value="">Select bank account</option>
+                      {bankAccounts.map((account) => (
+                        <option key={account.id} value={account.id}>
+                          {account.bank} - {account.accountNumber} ({account.accountName})
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="text-sm text-amber-600 py-3 px-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                      No bank accounts available for {currencyCode}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <button
                 onClick={handleInitiateBankTransfer}
-                disabled={loading || !amount || Number(amount) <= 0}
+                disabled={loading || !amount || Number(amount) <= 0 || !selectedBankAccountId}
                 className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {loading ? <Loader2 className="animate-spin" size={16} /> : 'Generate Deposit Reference'}
@@ -238,6 +322,8 @@ export default function WalletTopUpModal({ isOpen, onClose, onSuccess }: WalletT
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="0.00"
+                    min={MIN_TOPUP_AMOUNT}
+                    max={MAX_TOPUP_AMOUNT}
                     className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-lg font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>

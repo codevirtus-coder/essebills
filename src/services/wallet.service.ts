@@ -44,6 +44,12 @@ export interface WalletTopUpInitiateRequest {
   amount: number
   currencyCode: string
   topUpMethod: WalletTopUpMethod
+  // For BANK_TRANSFER - required
+  eseBillsAccountId?: number
+  // For WALLET_PAYMENT - optional, e.g., 'PESEPAY', 'ECOCASH'
+  paymentMethodCode?: string
+  // Optional - for idempotency to prevent duplicate top-ups
+  idempotencyKey?: string
 }
 
 export interface WalletTopUpInitiateResponse {
