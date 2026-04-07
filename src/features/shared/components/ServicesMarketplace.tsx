@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import {
   AlertCircle,
   BookOpen,
@@ -19,11 +19,24 @@ import {
   Wifi,
   X,
   Zap,
-} from 'lucide-react';
-import { ROUTE_PATHS } from '../../../router/paths';
-import ProductVariantPicker from '../../landing/components/ProductVariantPicker';
-import { getActiveCampaigns, type DonationCampaign } from '../../../services/donations.service';
-import { getDonationCampaignsV1, type DonationCampaignV1 } from '../../../services/donationsV1.service';
+} from "lucide-react";
+import { ROUTE_PATHS } from "../../../router/paths";
+import ProductVariantPicker from "../../landing/components/ProductVariantPicker";
+import {
+  getActiveCampaigns,
+  type DonationCampaign,
+} from "../../../services/donations.service";
+import {
+  getDonationCampaignsV1,
+  type DonationCampaignV1,
+} from "../../../services/donationsV1.service";
+import econetLogo from "../../../assets/econet-logo.png";
+import netoneLogo from "../../../assets/netone-logo.png";
+import nyaradzoLogo from "../../../assets/nyaradzo-logo.jpg";
+import telecelLogo from "../../../assets/telecel-logo.jpg";
+import teloneLogo from "../../../assets/telone-logo.png";
+import zesaLogo from "../../../assets/zesa-logo.png";
+import zolLogo from "../../../assets/zol-logo.jpg";
 import {
   getCurrencies,
   getProductCategories,
@@ -31,44 +44,65 @@ import {
   getProducts,
   getProductsByCategory,
   getProductVariants,
-} from '../../../services/products.service';
-import type { Currency, Product, ProductCategory } from '../../../types/products';
+} from "../../../services/products.service";
+import type {
+  Currency,
+  Product,
+  ProductCategory,
+} from "../../../types/products";
 
-function inferCategory(name: string, code: string): { key: string; label: string } {
+function inferCategory(
+  name: string,
+  code: string,
+): { key: string; label: string } {
   const v = `${name} ${code}`.toLowerCase();
-  if (/(airtime|recharge|evd|topup|bundle)/.test(v)) return { key: 'airtime', label: 'Airtime & Bundles' };
-  if (/(internet|data)/.test(v)) return { key: 'internet', label: 'Internet & Data' };
-  if (/(school|tuition|fees|university|college|education)/.test(v)) return { key: 'education', label: 'Education' };
-  if (/(insurance|life|medical|health)/.test(v)) return { key: 'insurance', label: 'Insurance' };
-  if (/(fuel|petrol|diesel|gas)/.test(v)) return { key: 'fuel', label: 'Fuel' };
-  if (/(entertainment|tv|dstv|showmax|netflix|music)/.test(v)) return { key: 'entertainment', label: 'Entertainment' };
-  if (/(donat)/.test(v)) return { key: 'donations', label: 'Donations' };
-  if (/(esolution|solution|service desk|support|digital)/.test(v)) return { key: 'esolutions', label: 'eSolutions' };
-  if (/(other service|other services|other)/.test(v)) return { key: 'other', label: 'Other Services' };
-  if (/(lottery|loto|jackpot)/.test(v)) return { key: 'lottery', label: 'Lottery' };
-  return { key: 'utilities', label: 'Utilities' };
+  if (/(airtime|recharge|evd|topup|bundle)/.test(v))
+    return { key: "airtime", label: "Airtime & Bundles" };
+  if (/(internet|data)/.test(v))
+    return { key: "internet", label: "Internet & Data" };
+  if (/(school|tuition|fees|university|college|education)/.test(v))
+    return { key: "education", label: "Education" };
+  if (/(insurance|life|medical|health)/.test(v))
+    return { key: "insurance", label: "Insurance" };
+  if (/(fuel|petrol|diesel|gas)/.test(v)) return { key: "fuel", label: "Fuel" };
+  if (/(entertainment|tv|dstv|showmax|netflix|music)/.test(v))
+    return { key: "entertainment", label: "Entertainment" };
+  if (/(donat)/.test(v)) return { key: "donations", label: "Donations" };
+  if (/(esolution|solution|service desk|support|digital)/.test(v))
+    return { key: "esolutions", label: "eSolutions" };
+  if (/(other service|other services|other)/.test(v))
+    return { key: "other", label: "Other Services" };
+  if (/(lottery|loto|jackpot)/.test(v))
+    return { key: "lottery", label: "Lottery" };
+  return { key: "utilities", label: "Utilities" };
 }
 
-function CategoryIcon({ categoryKey, className = 'w-5 h-5' }: { categoryKey: string; className?: string }) {
+function CategoryIcon({
+  categoryKey,
+  className = "w-5 h-5",
+}: {
+  categoryKey: string;
+  className?: string;
+}) {
   switch (categoryKey.toLowerCase()) {
-    case 'airtime':
+    case "airtime":
       return <Smartphone className={className} />;
-    case 'internet':
+    case "internet":
       return <Wifi className={className} />;
-    case 'education':
+    case "education":
       return <BookOpen className={className} />;
-    case 'insurance':
+    case "insurance":
       return <ShieldCheck className={className} />;
-    case 'fuel':
+    case "fuel":
       return <Droplets className={className} />;
-    case 'entertainment':
+    case "entertainment":
       return <Tv className={className} />;
-    case 'donations':
+    case "donations":
       return <Heart className={className} />;
-    case 'esolutions':
-    case 'other':
+    case "esolutions":
+    case "other":
       return <Grid2x2 className={className} />;
-    case 'lottery':
+    case "lottery":
       return <Sparkles className={className} />;
     default:
       return <Zap className={className} />;
@@ -76,31 +110,49 @@ function CategoryIcon({ categoryKey, className = 'w-5 h-5' }: { categoryKey: str
 }
 
 const CATEGORY_COLORS: Record<string, { bg: string; icon: string }> = {
-  airtime: { bg: 'bg-blue-50', icon: 'text-blue-500' },
-  internet: { bg: 'bg-violet-50', icon: 'text-violet-500' },
-  education: { bg: 'bg-amber-50', icon: 'text-amber-500' },
-  insurance: { bg: 'bg-rose-50', icon: 'text-rose-500' },
-  fuel: { bg: 'bg-orange-50', icon: 'text-orange-500' },
-  entertainment: { bg: 'bg-sky-50', icon: 'text-sky-600' },
-  donations: { bg: 'bg-pink-50', icon: 'text-pink-500' },
-  esolutions: { bg: 'bg-indigo-50', icon: 'text-indigo-600' },
-  other: { bg: 'bg-slate-50', icon: 'text-slate-600' },
-  lottery: { bg: 'bg-purple-50', icon: 'text-purple-500' },
-  utilities: { bg: 'bg-emerald-50', icon: 'text-emerald-600' },
+  airtime: { bg: "bg-blue-50", icon: "text-blue-500" },
+  internet: { bg: "bg-violet-50", icon: "text-violet-500" },
+  education: { bg: "bg-amber-50", icon: "text-amber-500" },
+  insurance: { bg: "bg-rose-50", icon: "text-rose-500" },
+  fuel: { bg: "bg-orange-50", icon: "text-orange-500" },
+  entertainment: { bg: "bg-sky-50", icon: "text-sky-600" },
+  donations: { bg: "bg-pink-50", icon: "text-pink-500" },
+  esolutions: { bg: "bg-indigo-50", icon: "text-indigo-600" },
+  other: { bg: "bg-slate-50", icon: "text-slate-600" },
+  lottery: { bg: "bg-purple-50", icon: "text-purple-500" },
+  utilities: { bg: "bg-emerald-50", icon: "text-emerald-600" },
 };
 
 function getColor(key: string) {
   return CATEGORY_COLORS[key] ?? CATEGORY_COLORS.utilities;
 }
 
+function getBillerAssetLogo(biller: {
+  name: string;
+  categoryLabel?: string;
+}): string | null {
+  const v = `${biller.name} ${biller.categoryLabel ?? ""}`.toLowerCase();
+  if (/(econet)/.test(v)) return econetLogo;
+  if (/(netone)/.test(v)) return netoneLogo;
+  if (/(nyaradzo)/.test(v)) return nyaradzoLogo;
+  if (/(telecel)/.test(v)) return telecelLogo;
+  if (/(telone)/.test(v)) return teloneLogo;
+  if (/(zesa|zetdc)/.test(v)) return zesaLogo;
+  if (/(zol)/.test(v)) return zolLogo;
+  return null;
+}
+
 async function fetchData(params: {
   search?: string;
   categoryId?: string | number;
 }): Promise<{ products: Product[]; categories: ProductCategory[] }> {
-  const isDonationsOnly = params.categoryId === 'donations';
+  const isDonationsOnly = params.categoryId === "donations";
   const [productsPage, categories] = await Promise.all([
-    params.categoryId && params.categoryId !== 'all' && !isDonationsOnly
-      ? getProductsByCategory(params.categoryId, { size: 100, search: params.search })
+    params.categoryId && params.categoryId !== "all" && !isDonationsOnly
+      ? getProductsByCategory(params.categoryId, {
+          size: 100,
+          search: params.search,
+        })
       : getProducts({ size: 100, search: params.search }),
     getProductCategories(),
   ]);
@@ -154,16 +206,35 @@ export function ServicesMarketplace({
   const effectivePreviewRows =
     previewRows ?? (!onSelectProduct ? 2 : undefined);
 
-  const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [activeCategory, setActiveCategory] = useState<string>('all');
-  const [selectedCurrency, setSelectedCurrency] = useState('');
-  const [selectedBaseProduct, setSelectedBaseProduct] = useState<BillerCard | null>(null);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [selectedCurrency, setSelectedCurrency] = useState("");
+  const [selectedBaseProduct, setSelectedBaseProduct] =
+    useState<BillerCard | null>(null);
   const [isGridExpanded, setIsGridExpanded] = useState(false);
-  const [collapsedGridHeight, setCollapsedGridHeight] = useState<number | null>(null);
+  const [collapsedGridHeight, setCollapsedGridHeight] = useState<number | null>(
+    null,
+  );
   const [canExpandGrid, setCanExpandGrid] = useState(false);
   const gridViewportRef = useRef<HTMLDivElement | null>(null);
   const firstCardMeasureRef = useRef<HTMLDivElement | null>(null);
+  const [headerHostEl, setHeaderHostEl] = useState<HTMLElement | null>(null);
+  const [tabsHostEl, setTabsHostEl] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    setHeaderHostEl(
+      headerPortalId
+        ? (document.getElementById(headerPortalId) as HTMLElement | null)
+        : null,
+    );
+    setTabsHostEl(
+      tabsPortalId
+        ? (document.getElementById(tabsPortalId) as HTMLElement | null)
+        : null,
+    );
+  }, [headerPortalId, tabsPortalId]);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 300);
@@ -177,26 +248,41 @@ export function ServicesMarketplace({
   }, [effectivePreviewRows, activeCategory, debouncedSearch, selectedCurrency]);
 
   const { data, isLoading, isFetching, isError } = useQuery({
-    queryKey: ['services-marketplace-products', activeCategory, debouncedSearch],
-    queryFn: () => fetchData({ categoryId: activeCategory, search: debouncedSearch || undefined }),
+    queryKey: [
+      "services-marketplace-products",
+      activeCategory,
+      debouncedSearch,
+    ],
+    queryFn: () =>
+      fetchData({
+        categoryId: activeCategory,
+        search: debouncedSearch || undefined,
+      }),
     staleTime: 5 * 60 * 1000,
     placeholderData: (prev) => prev,
   });
 
   const { data: donationCampaignsData } = useQuery({
-    queryKey: ['donations-campaigns-unified'],
+    queryKey: ["donations-campaigns-unified"],
     queryFn: async () => {
-      const [v1, pub] = await Promise.allSettled([getDonationCampaignsV1(), getActiveCampaigns()]);
+      const [v1, pub] = await Promise.allSettled([
+        getDonationCampaignsV1(),
+        getActiveCampaigns(),
+      ]);
       return {
-        v1: v1.status === 'fulfilled' && Array.isArray(v1.value) ? v1.value : [],
-        pub: pub.status === 'fulfilled' && Array.isArray(pub.value) ? pub.value : [],
+        v1:
+          v1.status === "fulfilled" && Array.isArray(v1.value) ? v1.value : [],
+        pub:
+          pub.status === "fulfilled" && Array.isArray(pub.value)
+            ? pub.value
+            : [],
       };
     },
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: currenciesData } = useQuery({
-    queryKey: ['currencies', 'all'],
+    queryKey: ["currencies", "all"],
     queryFn: getCurrencies,
     staleTime: 10 * 60 * 1000,
   });
@@ -207,9 +293,9 @@ export function ServicesMarketplace({
     isLoading: isLoadingSelectedBaseVariants,
     isFetching: isFetchingSelectedBaseVariants,
   } = useQuery({
-    queryKey: ['services-marketplace-variants', selectedBaseId],
+    queryKey: ["services-marketplace-variants", selectedBaseId],
     queryFn: () => getProductVariants(selectedBaseId!),
-    enabled: typeof selectedBaseId === 'number' && selectedBaseId > 0,
+    enabled: typeof selectedBaseId === "number" && selectedBaseId > 0,
     staleTime: 60_000,
   });
 
@@ -220,14 +306,22 @@ export function ServicesMarketplace({
     const fromBackend = (data?.categories ?? [])
       .filter((c) => c.active !== false)
       .sort((a, b) => Number(a.sortOrder ?? 0) - Number(b.sortOrder ?? 0))
-      .map((c) => ({ key: String(c.id ?? c.name ?? ''), label: String(c.displayName ?? c.name ?? 'Services') }))
+      .map((c) => ({
+        key: String(c.id ?? c.name ?? ""),
+        label: String(c.displayName ?? c.name ?? "Services"),
+      }))
       .filter((t) => t.key.trim().length > 0);
 
-    const tabs: CategoryTab[] = [{ key: 'all', label: 'All Services' }, ...fromBackend];
+    const tabs: CategoryTab[] = [
+      { key: "all", label: "All Services" },
+      ...fromBackend,
+    ];
 
     // Only show Donations tab when we have at least one campaign available.
-    const donationsCount = (donationCampaignsData?.v1?.length ?? 0) + (donationCampaignsData?.pub?.length ?? 0);
-    if (donationsCount > 0) tabs.push({ key: 'donations', label: 'Donations' });
+    const donationsCount =
+      (donationCampaignsData?.v1?.length ?? 0) +
+      (donationCampaignsData?.pub?.length ?? 0);
+    if (donationsCount > 0) tabs.push({ key: "donations", label: "Donations" });
 
     // De-dup by key (backend sometimes returns duplicates across envs)
     const seen = new Set<string>();
@@ -236,23 +330,32 @@ export function ServicesMarketplace({
       seen.add(t.key);
       return true;
     });
-  }, [data?.categories, donationCampaignsData?.v1?.length, donationCampaignsData?.pub?.length]);
+  }, [
+    data?.categories,
+    donationCampaignsData?.v1?.length,
+    donationCampaignsData?.pub?.length,
+  ]);
 
   const billers = useMemo<BillerCard[]>(() => {
     const products = (data?.products ?? [])
       .filter((p) => p.deleted !== true)
-      .filter((p) => !p.status || p.status === 'ACTIVE')
+      .filter((p) => !p.status || p.status === "ACTIVE")
       .map((p) => {
-        const categoryLabel = String(p.category?.displayName ?? p.category?.name ?? '');
-        const inferred = inferCategory(categoryLabel || String(p.name ?? ''), String(p.code ?? ''));
+        const categoryLabel = String(
+          p.category?.displayName ?? p.category?.name ?? "",
+        );
+        const inferred = inferCategory(
+          categoryLabel || String(p.name ?? ""),
+          String(p.code ?? ""),
+        );
         const currencyCode = p.defaultCurrency?.code ?? undefined;
         const currencyName = p.defaultCurrency?.name ?? undefined;
 
         return {
-          id: `product-${String(p.id ?? '')}`,
+          id: `product-${String(p.id ?? "")}`,
           productId: Number(p.id ?? 0),
           productCategoryId: p.category?.id ?? undefined,
-          name: String(p.name ?? 'Service'),
+          name: String(p.name ?? "Service"),
           description: p.description ?? undefined,
           categoryKey: inferred.key,
           categoryLabel: categoryLabel || inferred.label,
@@ -263,31 +366,53 @@ export function ServicesMarketplace({
       })
       .filter((b) => b.productId > 0);
 
-    const donationCards: BillerCard[] =
-      [...(donationCampaignsData?.v1 ?? []), ...(donationCampaignsData?.pub ?? [])].map((c) => {
-        const name = String((c as DonationCampaignV1).name ?? (c as DonationCampaign).name ?? 'Donation');
-        const description = (c as DonationCampaignV1).description ?? (c as DonationCampaign).description ?? undefined;
-        const currencyCode = 'currencyCode' in c ? (c as DonationCampaign).currencyCode : undefined;
+    const donationCards: BillerCard[] = [
+      ...(donationCampaignsData?.v1 ?? []),
+      ...(donationCampaignsData?.pub ?? []),
+    ].map((c) => {
+      const name = String(
+        (c as DonationCampaignV1).name ??
+          (c as DonationCampaign).name ??
+          "Donation",
+      );
+      const description =
+        (c as DonationCampaignV1).description ??
+        (c as DonationCampaign).description ??
+        undefined;
+      const currencyCode =
+        "currencyCode" in c ? (c as DonationCampaign).currencyCode : undefined;
 
-        return {
-          id: `donation-${String((c as DonationCampaignV1).id ?? (c as DonationCampaign).id ?? name)}`,
-          productId: 0,
-          name,
-          description,
-          categoryKey: 'donations',
-          categoryLabel: 'Donations',
-          currencyCode,
-          minimumPurchaseAmount: Number((c as DonationCampaignV1).targetAmount ?? (c as DonationCampaign).targetAmount ?? 0) || undefined,
-          isDonationCampaign: true,
-        };
-      });
+      return {
+        id: `donation-${String((c as DonationCampaignV1).id ?? (c as DonationCampaign).id ?? name)}`,
+        productId: 0,
+        name,
+        description,
+        categoryKey: "donations",
+        categoryLabel: "Donations",
+        currencyCode,
+        minimumPurchaseAmount:
+          Number(
+            (c as DonationCampaignV1).targetAmount ??
+              (c as DonationCampaign).targetAmount ??
+              0,
+          ) || undefined,
+        isDonationCampaign: true,
+      };
+    });
 
     return [...products, ...donationCards];
   }, [data?.products, donationCampaignsData]);
 
-  const availableCurrencies = useMemo<Array<{ code: string; name: string }>>(() => {
-    const raw = currenciesData as { content?: Currency[] } | Currency[] | undefined;
-    const list: Currency[] = Array.isArray(raw) ? raw : (raw as { content?: Currency[] })?.content ?? [];
+  const availableCurrencies = useMemo<
+    Array<{ code: string; name: string }>
+  >(() => {
+    const raw = currenciesData as
+      | { content?: Currency[] }
+      | Currency[]
+      | undefined;
+    const list: Currency[] = Array.isArray(raw)
+      ? raw
+      : ((raw as { content?: Currency[] })?.content ?? []);
     return list
       .filter((c) => c.code && c.active !== false)
       .map((c) => ({ code: c.code!, name: c.name ?? c.code! }));
@@ -297,13 +422,18 @@ export function ServicesMarketplace({
     const searchLower = debouncedSearch.toLowerCase();
     return billers.filter((b) => {
       const matchesCat =
-        activeCategory === 'all' ||
-        (activeCategory === 'donations' ? !!b.isDonationCampaign : String(b.productCategoryId ?? '') === activeCategory);
-      const matchesCurrency = !selectedCurrency || !b.currencyCode || b.currencyCode === selectedCurrency;
+        activeCategory === "all" ||
+        (activeCategory === "donations"
+          ? !!b.isDonationCampaign
+          : String(b.productCategoryId ?? "") === activeCategory);
+      const matchesCurrency =
+        !selectedCurrency ||
+        !b.currencyCode ||
+        b.currencyCode === selectedCurrency;
       const matchesSearch =
         !searchLower ||
         b.name.toLowerCase().includes(searchLower) ||
-        (b.description ?? '').toLowerCase().includes(searchLower);
+        (b.description ?? "").toLowerCase().includes(searchLower);
       return matchesCat && matchesCurrency && matchesSearch;
     });
   }, [billers, activeCategory, selectedCurrency, debouncedSearch]);
@@ -332,7 +462,11 @@ export function ServicesMarketplace({
     const update = () => {
       const cardH = firstCard.getBoundingClientRect().height || 0;
       if (cardH <= 0) return;
-      const h = Math.round(cardH * effectivePreviewRows + gapPx * (effectivePreviewRows - 1) + bottomPadPx);
+      const h = Math.round(
+        cardH * effectivePreviewRows +
+          gapPx * (effectivePreviewRows - 1) +
+          bottomPadPx,
+      );
       setCollapsedGridHeight(h);
 
       // Whether the full content would overflow this collapsed height.
@@ -346,58 +480,75 @@ export function ServicesMarketplace({
 
     update();
 
-    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(update) : null;
+    const ro =
+      typeof ResizeObserver !== "undefined" ? new ResizeObserver(update) : null;
     if (ro) {
       ro.observe(firstCard);
       ro.observe(viewport);
     } else {
-      window.addEventListener('resize', update);
+      window.addEventListener("resize", update);
     }
 
     return () => {
       ro?.disconnect();
-      window.removeEventListener('resize', update);
+      window.removeEventListener("resize", update);
     };
-  }, [effectivePreviewRows, filtered.length, isGridExpanded, selectedBaseProduct]);
+  }, [
+    effectivePreviewRows,
+    filtered.length,
+    isGridExpanded,
+    selectedBaseProduct,
+  ]);
 
-  const proceedToCheckout = useCallback((biller: BillerCard) => {
-    if (onSelectProduct) {
-      onSelectProduct(biller);
-      return;
-    }
-    if (biller.isDonationCampaign && (!biller.productId || biller.productId <= 0)) {
-      navigate(`${ROUTE_PATHS.portalCustomer}/donations`);
-      return;
-    }
+  const proceedToCheckout = useCallback(
+    (biller: BillerCard) => {
+      if (onSelectProduct) {
+        onSelectProduct(biller);
+        return;
+      }
+      if (
+        biller.isDonationCampaign &&
+        (!biller.productId || biller.productId <= 0)
+      ) {
+        navigate(`${ROUTE_PATHS.portalCustomer}/donations`);
+        return;
+      }
 
-    const query = new URLSearchParams({
-      biller: biller.name,
-      account: '',
-      amount: '0',
-      productId: String(biller.productId),
-    });
-    if (biller.productCategoryId !== undefined) {
-      query.set('productCategoryId', String(biller.productCategoryId));
-    }
-    navigate(`${ROUTE_PATHS.checkout}?${query.toString()}`);
-  }, [navigate, onSelectProduct]);
+      const query = new URLSearchParams({
+        biller: biller.name,
+        account: "",
+        amount: "0",
+        productId: String(biller.productId),
+      });
+      if (biller.productCategoryId !== undefined) {
+        query.set("productCategoryId", String(biller.productCategoryId));
+      }
+      navigate(`${ROUTE_PATHS.checkout}?${query.toString()}`);
+    },
+    [navigate, onSelectProduct],
+  );
 
   // When a base product has variants (plans/bundles), we show the picker in-place (inside the marketplace)
   // instead of immediately navigating away to the /checkout page.
-  const openProduct = useCallback((biller: BillerCard) => {
-    if (biller.isDonationCampaign) {
-      proceedToCheckout(biller);
-      return;
-    }
-    if (!biller.productId || biller.productId <= 0) {
-      proceedToCheckout(biller);
-      return;
-    }
-    setSelectedBaseProduct(biller);
-  }, [proceedToCheckout]);
+  const openProduct = useCallback(
+    (biller: BillerCard) => {
+      if (biller.isDonationCampaign) {
+        proceedToCheckout(biller);
+        return;
+      }
+      if (!biller.productId || biller.productId <= 0) {
+        proceedToCheckout(biller);
+        return;
+      }
+      setSelectedBaseProduct(biller);
+    },
+    [proceedToCheckout],
+  );
 
-  const showVariantPicker = !!selectedBaseProduct && selectedBaseVariants.length > 0;
-  const isSelectedBaseVariantsBusy = isLoadingSelectedBaseVariants || isFetchingSelectedBaseVariants;
+  const showVariantPicker =
+    !!selectedBaseProduct && selectedBaseVariants.length > 0;
+  const isSelectedBaseVariantsBusy =
+    isLoadingSelectedBaseVariants || isFetchingSelectedBaseVariants;
 
   useEffect(() => {
     if (!selectedBaseProduct) return;
@@ -418,34 +569,42 @@ export function ServicesMarketplace({
     proceedToCheckout,
   ]);
 
-  const handleSelectVariant = useCallback((variant: Product) => {
-    if (!selectedBaseProduct) return;
+  const handleSelectVariant = useCallback(
+    (variant: Product) => {
+      if (!selectedBaseProduct) return;
 
-    const name = String(variant.name ?? selectedBaseProduct.name);
-    const code = String(variant.code ?? '');
-    const inferred = inferCategory(name, code);
+      const name = String(variant.name ?? selectedBaseProduct.name);
+      const code = String(variant.code ?? "");
+      const inferred = inferCategory(name, code);
 
-    const variantBiller: BillerCard = {
-      id: `product-${String(variant.id ?? name)}`,
-      productId: Number(variant.id ?? 0),
-      productCategoryId: variant.category?.id ?? selectedBaseProduct.productCategoryId,
-      name,
-      description: variant.description ?? selectedBaseProduct.description,
-      categoryKey: inferred.key || selectedBaseProduct.categoryKey,
-      categoryLabel: selectedBaseProduct.categoryLabel,
-      currencyCode: variant.defaultCurrency?.code ?? selectedBaseProduct.currencyCode,
-      currencyName: variant.defaultCurrency?.name ?? selectedBaseProduct.currencyName,
-      minimumPurchaseAmount: variant.minimumPurchaseAmount ?? selectedBaseProduct.minimumPurchaseAmount,
-    };
+      const variantBiller: BillerCard = {
+        id: `product-${String(variant.id ?? name)}`,
+        productId: Number(variant.id ?? 0),
+        productCategoryId:
+          variant.category?.id ?? selectedBaseProduct.productCategoryId,
+        name,
+        description: variant.description ?? selectedBaseProduct.description,
+        categoryKey: inferred.key || selectedBaseProduct.categoryKey,
+        categoryLabel: selectedBaseProduct.categoryLabel,
+        currencyCode:
+          variant.defaultCurrency?.code ?? selectedBaseProduct.currencyCode,
+        currencyName:
+          variant.defaultCurrency?.name ?? selectedBaseProduct.currencyName,
+        minimumPurchaseAmount:
+          variant.minimumPurchaseAmount ??
+          selectedBaseProduct.minimumPurchaseAmount,
+      };
 
-    setSelectedBaseProduct(null);
-    proceedToCheckout(variantBiller);
-  }, [proceedToCheckout, selectedBaseProduct]);
+      setSelectedBaseProduct(null);
+      proceedToCheckout(variantBiller);
+    },
+    [proceedToCheckout, selectedBaseProduct],
+  );
 
   const clearFilters = () => {
-    setSearch('');
-    setActiveCategory('all');
-    setSelectedCurrency('');
+    setSearch("");
+    setActiveCategory("all");
+    setSelectedCurrency("");
   };
 
   const headerContent = (
@@ -456,20 +615,30 @@ export function ServicesMarketplace({
         </h1>
       )}
 
-      <div className={`flex flex-col md:flex-row gap-4 items-start md:items-center justify-between ${liftSearch ? 'mb-2' : 'mb-6'}`}>
-        <div className={`relative flex-1 group ${embedded ? 'w-full' : 'max-w-3xl mx-auto'}`}>
+      <div
+        className={`flex flex-col md:flex-row gap-4 items-start md:items-center justify-between ${liftSearch ? "mb-2" : "mb-6"}`}
+      >
+        <div
+          className={`relative flex-1 group ${embedded ? "w-full" : "max-w-3xl mx-auto"}`}
+        >
           <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl blur opacity-10 group-hover:opacity-25 transition-opacity" />
-          <div className={`relative flex items-center border rounded-2xl shadow-sm backdrop-blur-xl transition-all ${embedded ? 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800' : 'bg-slate-800/80 border-white/10'}`}>
+          <div
+            className={`relative flex items-center border rounded-2xl shadow-sm backdrop-blur-xl transition-all ${embedded ? "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800" : "bg-slate-800/80 border-white/10"}`}
+          >
             <Search size={18} className="ml-4 text-slate-400" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search for a biller, school, or service..."
-              className={`w-full pl-3 pr-4 bg-transparent focus:outline-none font-medium ${isCompact ? 'py-3 text-[13px]' : 'py-4 text-sm'} ${embedded ? 'text-slate-900 dark:text-white placeholder-slate-400' : 'text-white placeholder-slate-500'}`}
+              className={`w-full pl-3 pr-4 bg-transparent focus:outline-none font-medium ${isCompact ? "py-3 text-[13px]" : "py-4 text-sm"} ${embedded ? "text-slate-900 dark:text-white placeholder-slate-400" : "text-white placeholder-slate-500"}`}
             />
             {search && (
-              <button type="button" onClick={() => setSearch('')} className="mr-4 text-slate-400 hover:text-slate-600 transition-colors">
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                className="mr-4 text-slate-400 hover:text-slate-600 transition-colors"
+              >
                 <X size={16} />
               </button>
             )}
@@ -478,16 +647,18 @@ export function ServicesMarketplace({
 
         {availableCurrencies.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap">
-            <span className={`text-slate-500 font-bold uppercase tracking-widest flex items-center gap-1 ${isCompact ? 'text-[9px]' : 'text-[10px]'}`}>
+            <span
+              className={`text-slate-500 font-bold uppercase tracking-widest flex items-center gap-1 ${isCompact ? "text-[9px]" : "text-[10px]"}`}
+            >
               <DollarSign size={10} /> Currency:
             </span>
             <button
               type="button"
-              onClick={() => setSelectedCurrency('')}
-              className={`px-3 py-1.5 rounded-lg font-bold border transition-all ${isCompact ? 'text-[9px]' : 'text-[10px]'} ${
+              onClick={() => setSelectedCurrency("")}
+              className={`px-3 py-1.5 rounded-lg font-bold border transition-all ${isCompact ? "text-[9px]" : "text-[10px]"} ${
                 !selectedCurrency
-                  ? 'bg-slate-900 text-white border-slate-900 shadow-lg'
-                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300'
+                  ? "bg-slate-900 text-white border-slate-900 shadow-lg"
+                  : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300"
               }`}
             >
               ALL
@@ -496,11 +667,13 @@ export function ServicesMarketplace({
               <button
                 key={c.code}
                 type="button"
-                onClick={() => setSelectedCurrency(selectedCurrency === c.code ? '' : c.code)}
-                className={`px-3 py-1.5 rounded-lg font-bold border transition-all ${isCompact ? 'text-[9px]' : 'text-[10px]'} ${
+                onClick={() =>
+                  setSelectedCurrency(selectedCurrency === c.code ? "" : c.code)
+                }
+                className={`px-3 py-1.5 rounded-lg font-bold border transition-all ${isCompact ? "text-[9px]" : "text-[10px]"} ${
                   selectedCurrency === c.code
-                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-lg'
-                    : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300'
+                    ? "bg-emerald-600 text-white border-emerald-600 shadow-lg"
+                    : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300"
                 }`}
               >
                 {c.code}
@@ -513,54 +686,80 @@ export function ServicesMarketplace({
   );
 
   const headerSection = (
-    <div className={`${embedded ? 'p-0' : `bg-slate-900 ${liftSearch ? 'pt-8 pb-14' : 'pt-16 pb-28'} px-4 sm:px-6 lg:px-8 relative overflow-hidden`}`}>
+    <div
+      className={`${embedded ? "p-0" : `bg-slate-900 ${liftSearch ? "pt-8 pb-14" : "pt-16 pb-28"} px-4 sm:px-6 lg:px-8 relative overflow-hidden`}`}
+    >
       {!embedded && (
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
       )}
-      <div className={`mx-auto relative z-10 ${embedded ? '' : 'max-w-5xl text-center'}`}>
+      <div
+        className={`mx-auto relative z-10 ${embedded ? "" : "max-w-5xl text-center"}`}
+      >
         {headerContent}
       </div>
     </div>
   );
 
   const portalHeaderSection = (
-    <div className={`relative z-10 ${embedded ? '' : 'max-w-5xl mx-auto text-center'}`}>
+    <div
+      className={`relative z-10 ${embedded ? "" : "max-w-5xl mx-auto text-center"}`}
+    >
       {headerContent}
     </div>
   );
 
-  const headerHost = headerPortalId && typeof document !== 'undefined' ? document.getElementById(headerPortalId) : null;
-  const headerNode = headerPortalId ? (headerHost ? createPortal(portalHeaderSection, headerHost) : headerSection) : headerSection;
+  const headerNode = headerPortalId
+    ? headerHostEl
+      ? createPortal(portalHeaderSection, headerHostEl)
+      : null
+    : headerSection;
 
   const tabsContent = (
     <div
-      className={`sticky ${embedded ? 'top-[-2rem]' : 'top-0'} z-30 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 ${
-        liftSearch && !embedded ? '-mx-8 -mt-8 px-8 pt-6 pb-4 rounded-t-[2.5rem]' : '-mx-4 px-4'
+      className={`sticky ${embedded ? "top-[-2rem]" : "top-0"} z-30 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 ${
+        liftSearch && !embedded
+          ? "-mx-8 -mt-8 px-8 pt-3 pb-3 sm:pt-4 sm:pb-3 rounded-t-[2.5rem]"
+          : "-mx-4 px-4"
       }`}
     >
-      <div className="flex gap-2 overflow-x-auto scrollbar-hide py-4 items-center">
+      <div className="flex gap-2 overflow-x-auto scrollbar-hide py-3 items-center">
         {isInitialLoading ? (
           <div className="flex gap-3 py-1">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="h-10 w-28 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse shrink-0" />
+              <div
+                key={i}
+                className="h-10 w-28 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse shrink-0"
+              />
             ))}
           </div>
         ) : (
           categoryTabs.map((tab) => {
-            const iconKey = tab.key === 'donations' ? 'donations' : inferCategory(tab.label, tab.label).key;
+            const iconKey =
+              tab.key === "donations"
+                ? "donations"
+                : inferCategory(tab.label, tab.label).key;
             return (
               <button
                 key={tab.key}
                 onClick={() => setActiveCategory(tab.key)}
-                className={`inline-flex items-center gap-2 whitespace-nowrap rounded-xl font-bold transition-all shrink-0 border-2 active:scale-95 ${isCompact ? 'px-4 py-2 text-[11px]' : 'px-5 py-2.5 text-xs'} ${
+                className={`inline-flex items-center gap-2 whitespace-nowrap rounded-xl font-bold transition-all shrink-0 border-2 active:scale-95 ${isCompact ? "px-4 py-2 text-[11px]" : "px-5 py-2.5 text-xs"} ${
                   activeCategory === tab.key
-                    ? 'bg-slate-900 dark:bg-slate-700 border-slate-900 dark:border-slate-700 text-white shadow-lg'
-                    : 'border-slate-100 dark:border-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-slate-900'
+                    ? "bg-slate-900 dark:bg-slate-700 border-slate-900 dark:border-slate-700 text-white shadow-lg"
+                    : "border-slate-100 dark:border-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-slate-900"
                 }`}
               >
-                {tab.key !== 'all' && (
-                  <span className={activeCategory === tab.key ? 'text-emerald-400' : 'text-slate-400'}>
-                    <CategoryIcon categoryKey={iconKey} className={isCompact ? 'w-3 h-3' : 'w-3.5 h-3.5'} />
+                {tab.key !== "all" && (
+                  <span
+                    className={
+                      activeCategory === tab.key
+                        ? "text-emerald-400"
+                        : "text-slate-400"
+                    }
+                  >
+                    <CategoryIcon
+                      categoryKey={iconKey}
+                      className={isCompact ? "w-3 h-3" : "w-3.5 h-3.5"}
+                    />
                   </span>
                 )}
                 {tab.label}
@@ -572,18 +771,22 @@ export function ServicesMarketplace({
     </div>
   );
 
-  const tabsHost = tabsPortalId && typeof document !== 'undefined' ? document.getElementById(tabsPortalId) : null;
-  const tabsNode = tabsPortalId ? (tabsHost ? createPortal(tabsContent, tabsHost) : tabsContent) : tabsContent;
+  const tabsNode = tabsPortalId
+    ? tabsHostEl
+      ? createPortal(tabsContent, tabsHostEl)
+      : null
+    : tabsContent;
 
   const activeCategoryLabel =
-    activeCategory === 'all'
-      ? 'All Services'
-      : activeCategory === 'donations'
-        ? 'Donations'
-        : categoryTabs.find((t) => t.key === activeCategory)?.label ?? 'Services';
+    activeCategory === "all"
+      ? "All Services"
+      : activeCategory === "donations"
+        ? "Donations"
+        : (categoryTabs.find((t) => t.key === activeCategory)?.label ??
+          "Services");
 
   return (
-    <div className={`space-y-8 ${embedded ? '' : 'min-h-screen bg-white'}`}>
+    <div className={`space-y-8 ${embedded ? "" : "min-h-screen bg-white"}`}>
       {headerNode}
       {tabsNode}
 
@@ -600,7 +803,7 @@ export function ServicesMarketplace({
                 variants={selectedBaseVariants}
                 onSelect={handleSelectVariant}
                 onBack={() => setSelectedBaseProduct(null)}
-                currencyCode={selectedBaseProduct.currencyCode ?? 'USD'}
+                currencyCode={selectedBaseProduct.currencyCode ?? "USD"}
                 compact={true}
               />
             ) : (
@@ -613,176 +816,245 @@ export function ServicesMarketplace({
 
         {!selectedBaseProduct && !isInitialLoading && !isError && (
           <div className="flex items-center justify-between flex-wrap gap-3">
-            <h2 className={`${isCompact ? 'text-base' : 'text-lg'} font-bold text-slate-900 dark:text-white`}>
+            <h2
+              className={`${isCompact ? "text-base" : "text-lg"} font-bold text-slate-900 dark:text-white`}
+            >
               {activeCategoryLabel}
             </h2>
-            <p className={`${isCompact ? 'text-[9px]' : 'text-[10px]'} text-slate-400 font-bold uppercase tracking-widest bg-slate-50 dark:bg-slate-900 px-3 py-1 rounded-full border border-slate-100 dark:border-slate-800`}>
+            <p
+              className={`${isCompact ? "text-[9px]" : "text-[10px]"} text-slate-400 font-bold uppercase tracking-widest bg-slate-50 dark:bg-slate-900 px-3 py-1 rounded-full border border-slate-100 dark:border-slate-800`}
+            >
               {filtered.length} Results
             </p>
           </div>
         )}
 
-        {!selectedBaseProduct && (isInitialLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {[...Array(12)].map((_, i) => (
-              <div key={i} className="rounded-2xl animate-pulse bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                <div className="aspect-[4/3] bg-slate-200 dark:bg-slate-700" />
-                <div className="p-4 space-y-3">
-                  <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded-full w-3/4" />
-                  <div className="h-10 bg-slate-200 dark:bg-slate-700 rounded-xl mt-2" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : isError ? (
-          <div className="h-[420px] sm:h-[500px] lg:h-[540px] xl:h-[560px] flex flex-col items-center justify-center text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl">
-            <AlertCircle size={40} className="text-red-400 mb-4" />
-            <p className="text-red-900 dark:text-red-400 font-bold">Could not load services</p>
-            <button onClick={() => window.location.reload()} className="mt-4 px-6 py-2 bg-red-600 text-white font-bold rounded-xl text-xs uppercase tracking-widest">
-              Retry
-            </button>
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="h-[420px] sm:h-[500px] lg:h-[540px] xl:h-[560px] flex flex-col items-center justify-center text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl">
-            <Search size={32} className="text-slate-300 mb-4" />
-            <p className="text-slate-800 dark:text-slate-200 font-bold">No services found</p>
-            {hasActiveFilters && (
-              <button onClick={clearFilters} className="mt-4 text-emerald-600 font-bold text-xs uppercase tracking-widest hover:underline">
-                Clear filters
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="relative">
-              {/* Fade on the bottom edge (only useful when we're clipping or using an internal scroll box). */}
-              {(!effectivePreviewRows || !isGridExpanded || embedded) && (
-                <div className="absolute inset-0 rounded-2xl sm:rounded-3xl pointer-events-none z-10 shadow-[inset_0_-48px_60px_-20px_rgba(255,255,255,1),inset_0_-48px_60px_-20px_rgba(248,250,252,1)] dark:shadow-[inset_0_-48px_60px_-20px_rgba(15,23,42,1)]" />
-              )}
-
-              <div
-                ref={gridViewportRef}
-                className={`pr-1 scrollbar-hide ${
-                  effectivePreviewRows
-                    ? (
-                      isGridExpanded
-                        ? (embedded
-                          ? 'h-[420px] sm:h-[500px] lg:h-[540px] xl:h-[560px] overflow-y-auto'
-                          : 'overflow-visible'
-                        )
-                        : 'overflow-hidden'
-                    )
-                    : 'h-[420px] sm:h-[500px] lg:h-[540px] xl:h-[560px] overflow-y-auto'
-                }`}
-                style={
-                  effectivePreviewRows && !isGridExpanded
-                    ? { height: collapsedGridHeight ?? 520 }
-                    : undefined
-                }
-              >
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 pb-4">
-                  {filtered.map((biller, idx) => {
-                    const color = getColor(biller.categoryKey);
-                    return (
-                      <div
-                        key={biller.id}
-                        ref={idx === 0 ? firstCardMeasureRef : undefined}
-                        className="group rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 dark:hover:border-emerald-500/40 hover:shadow-xl hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
-                        onClick={() => openProduct(biller)}
-                      >
-                      <div className={`relative aspect-[4/3] w-full overflow-hidden ${color.bg} dark:bg-slate-800`}>
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-transparent dark:from-white/10 pointer-events-none" />
-                        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white dark:from-slate-900 to-transparent pointer-events-none" />
-
-                        {biller.productId > 0 ? (
-                          <img
-                            src={getProductLogoUrl(biller.productId)}
-                            alt={biller.name}
-                            className="absolute inset-0 w-full h-full object-contain p-4 sm:p-5 transition-transform duration-500 group-hover:scale-110"
-                            onError={(e) => {
-                              const target = e.currentTarget;
-                              target.style.display = 'none';
-                              const fallback = target.nextElementSibling as HTMLElement | null;
-                              if (fallback) fallback.style.display = 'flex';
-                            }}
-                          />
-                        ) : null}
-
-                        <div className={`absolute inset-0 items-center justify-center ${biller.productId > 0 ? 'hidden' : 'flex'}`}>
-                          <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-white/80 dark:bg-slate-700/80 shadow-sm">
-                            <CategoryIcon categoryKey={biller.categoryKey} className={`w-7 h-7 ${color.icon}`} />
-                          </div>
-                        </div>
-
-                        <div className="absolute top-3 left-3">
-                          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg font-bold uppercase tracking-widest backdrop-blur-md ${isCompact ? 'text-[8px]' : 'text-[9px]'} ${color.bg} dark:bg-slate-900/80 ${color.icon}`}>
-                            <CategoryIcon categoryKey={biller.categoryKey} className={isCompact ? 'w-2 h-2' : 'w-2.5 h-2.5'} />
-                            {biller.categoryLabel}
-                          </span>
-                        </div>
-
-                        {biller.currencyCode && (
-                          <div className="absolute top-3 right-3">
-                            <span className={`inline-flex items-center px-2 py-1 rounded-lg font-black uppercase tracking-wider bg-emerald-600 text-white shadow-sm ${isCompact ? 'text-[8px]' : 'text-[9px]'}`}>
-                              {biller.currencyCode}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex flex-col flex-1 p-4 pt-3">
-                        <h3 className={`${isCompact ? 'text-[13px]' : 'text-sm'} font-bold text-slate-900 dark:text-white leading-tight line-clamp-2 mb-1 flex-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors`}>
-                          {biller.name}
-                        </h3>
-                      </div>
-
-                      <div className="px-4 pb-4 -mt-1">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openProduct(biller);
-                          }}
-                          className={`w-full flex items-center justify-center gap-1.5 rounded-xl font-bold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-700 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-600 group-hover:shadow-lg group-hover:shadow-emerald-500/25 transition-all duration-300 uppercase tracking-widest ${isCompact ? 'py-2 text-[9px]' : 'py-2.5 text-[10px]'}`}
-                        >
-                          Pay Now
-                          <ChevronRight size={12} />
-                        </button>
-                      </div>
-                    </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {effectivePreviewRows && canExpandGrid && (
-              <div className="flex justify-center">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const next = !isGridExpanded;
-                    setIsGridExpanded(next);
-                    if (!next) {
-                      // When collapsing, bring the user back to the top of the grid.
-                      requestAnimationFrame(() => {
-                        gridViewportRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-                        gridViewportRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                      });
-                    }
-                  }}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-black uppercase tracking-widest hover:border-slate-300 hover:shadow-sm transition-all"
+        {!selectedBaseProduct &&
+          (isInitialLoading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              {[...Array(12)].map((_, i) => (
+                <div
+                  key={i}
+                  className="rounded-2xl animate-pulse bg-slate-100 dark:bg-slate-800 overflow-hidden"
                 >
-                  {isGridExpanded ? 'View less' : 'View all'}
-                  <ChevronDown size={14} className={`text-slate-400 transition-transform ${isGridExpanded ? 'rotate-180' : ''}`} />
+                  <div className="aspect-[4/3] bg-slate-200 dark:bg-slate-700" />
+                  <div className="p-4 space-y-3">
+                    <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded-full w-3/4" />
+                    <div className="h-10 bg-slate-200 dark:bg-slate-700 rounded-xl mt-2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : isError ? (
+            <div className="h-[420px] sm:h-[500px] lg:h-[540px] xl:h-[560px] flex flex-col items-center justify-center text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl">
+              <AlertCircle size={40} className="text-red-400 mb-4" />
+              <p className="text-red-900 dark:text-red-400 font-bold">
+                Could not load services
+              </p>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-4 px-6 py-2 bg-red-600 text-white font-bold rounded-xl text-xs uppercase tracking-widest"
+              >
+                Retry
+              </button>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="h-[420px] sm:h-[500px] lg:h-[540px] xl:h-[560px] flex flex-col items-center justify-center text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl">
+              <Search size={32} className="text-slate-300 mb-4" />
+              <p className="text-slate-800 dark:text-slate-200 font-bold">
+                No services found
+              </p>
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="mt-4 text-emerald-600 font-bold text-xs uppercase tracking-widest hover:underline"
+                >
+                  Clear filters
                 </button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="relative">
+                {/* Fade on the bottom edge (only useful when we're clipping or using an internal scroll box). */}
+                {(!effectivePreviewRows || !isGridExpanded || embedded) && (
+                  <div className="absolute inset-0 rounded-2xl sm:rounded-3xl pointer-events-none z-10 shadow-[inset_0_-48px_60px_-20px_rgba(255,255,255,1),inset_0_-48px_60px_-20px_rgba(248,250,252,1)] dark:shadow-[inset_0_-48px_60px_-20px_rgba(15,23,42,1)]" />
+                )}
+
+                <div
+                  ref={gridViewportRef}
+                  className={`pr-1 scrollbar-hide ${
+                    effectivePreviewRows
+                      ? isGridExpanded
+                        ? embedded
+                          ? "h-[420px] sm:h-[500px] lg:h-[540px] xl:h-[560px] overflow-y-auto"
+                          : "overflow-visible"
+                        : "overflow-hidden"
+                      : "h-[420px] sm:h-[500px] lg:h-[540px] xl:h-[560px] overflow-y-auto"
+                  }`}
+                  style={
+                    effectivePreviewRows && !isGridExpanded
+                      ? { height: collapsedGridHeight ?? 520 }
+                      : undefined
+                  }
+                >
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 pb-4">
+                    {filtered.map((biller, idx) => {
+                      const color = getColor(biller.categoryKey);
+                      const assetLogo = getBillerAssetLogo(biller);
+                      const remoteLogoUrl =
+                        !assetLogo && biller.productId > 0
+                          ? getProductLogoUrl(biller.productId)
+                          : null;
+                      return (
+                        <div
+                          key={biller.id}
+                          ref={idx === 0 ? firstCardMeasureRef : undefined}
+                          className="group rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-[0_10px_30px_rgba(2,6,23,0.06)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.25)] hover:border-emerald-500/50 dark:hover:border-emerald-500/40 hover:shadow-[0_18px_45px_rgba(2,6,23,0.12)] dark:hover:shadow-[0_18px_45px_rgba(0,0,0,0.35)] hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
+                          onClick={() => openProduct(biller)}
+                        >
+                          <div className="relative aspect-[19/10] w-full overflow-hidden bg-white dark:bg-slate-800">
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-transparent dark:from-white/10 pointer-events-none" />
+                            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white dark:from-slate-900 to-transparent pointer-events-none" />
+
+                            <div className="absolute left-1/2 top-[58%] sm:top-[70%] -translate-x-1/2 -translate-y-1/2">
+                              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center bg-white/45 dark:bg-slate-700/25 shadow-sm ring-1 ring-white/50 dark:ring-white/10 relative overflow-hidden">
+                                {!assetLogo && (
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    <CategoryIcon
+                                      categoryKey={biller.categoryKey}
+                                      className={`w-8 h-8 ${color.icon}`}
+                                    />
+                                  </div>
+                                )}
+
+                                {assetLogo ? (
+                                  <img
+                                    src={assetLogo}
+                                    alt={`${biller.name} logo`}
+                                    className="absolute inset-0 w-full h-full object-contain p-3 sm:p-3.5"
+                                    loading="lazy"
+                                    decoding="async"
+                                  />
+                                ) : remoteLogoUrl ? (
+                                  <img
+                                    src={remoteLogoUrl}
+                                    alt={`${biller.name} logo`}
+                                    className="absolute inset-0 w-full h-full object-contain p-3 sm:p-3.5"
+                                    loading="lazy"
+                                    decoding="async"
+                                    onLoad={(e) => {
+                                      const fallback = e.currentTarget
+                                        .previousElementSibling as HTMLElement | null;
+                                      if (fallback)
+                                        fallback.style.display = "none";
+                                    }}
+                                    onError={(e) => {
+                                      const target = e.currentTarget;
+                                      target.style.display = "none";
+                                      const fallback =
+                                        target.previousElementSibling as HTMLElement | null;
+                                      if (fallback)
+                                        fallback.style.display = "flex";
+                                    }}
+                                  />
+                                ) : null}
+                              </div>
+                            </div>
+
+                            <div className="absolute top-3 left-3">
+                              <span
+                                className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg font-bold uppercase tracking-widest backdrop-blur-md border ${isCompact ? "text-[8px]" : "text-[9px]"} bg-white/90 dark:bg-slate-900/80 border-slate-200/60 dark:border-white/10 text-slate-700 dark:text-slate-200`}
+                              >
+                                <span className={color.icon}>
+                                  <CategoryIcon
+                                    categoryKey={biller.categoryKey}
+                                    className={
+                                      isCompact ? "w-2 h-2" : "w-2.5 h-2.5"
+                                    }
+                                  />
+                                </span>
+                                {biller.categoryLabel}
+                              </span>
+                            </div>
+
+                            {biller.currencyCode && (
+                              <div className="absolute top-3 right-3">
+                                <span
+                                  className={`inline-flex items-center px-2 py-1 rounded-lg font-black uppercase tracking-wider bg-emerald-600 text-white shadow-sm ${isCompact ? "text-[8px]" : "text-[9px]"}`}
+                                >
+                                  {biller.currencyCode}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex flex-col flex-1 p-4 pt-3">
+                            <h3
+                              className={`${isCompact ? "text-[13px]" : "text-sm"} font-bold text-slate-900 dark:text-white leading-tight line-clamp-2 mb-1 flex-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors`}
+                            >
+                              {biller.name}
+                            </h3>
+                          </div>
+
+                          <div className="px-4 pb-4 -mt-1">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openProduct(biller);
+                              }}
+                              className={`w-full flex items-center justify-center gap-1.5 rounded-xl font-bold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-700 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-600 group-hover:shadow-lg group-hover:shadow-emerald-500/25 transition-all duration-300 uppercase tracking-widest ${isCompact ? "py-2 text-[9px]" : "py-2.5 text-[10px]"}`}
+                            >
+                              Pay Now
+                              <ChevronRight size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
-            )}
-          </div>
-        ))}
+
+              {effectivePreviewRows && canExpandGrid && (
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = !isGridExpanded;
+                      setIsGridExpanded(next);
+                      if (!next) {
+                        // When collapsing, bring the user back to the top of the grid.
+                        requestAnimationFrame(() => {
+                          gridViewportRef.current?.scrollTo({
+                            top: 0,
+                            behavior: "smooth",
+                          });
+                          gridViewportRef.current?.scrollIntoView({
+                            behavior: "smooth",
+                            block: "start",
+                          });
+                        });
+                      }
+                    }}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-black uppercase tracking-widest hover:border-slate-300 hover:shadow-sm transition-all"
+                  >
+                    {isGridExpanded ? "View less" : "View all"}
+                    <ChevronDown
+                      size={14}
+                      className={`text-slate-400 transition-transform ${isGridExpanded ? "rotate-180" : ""}`}
+                    />
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
 
         {!selectedBaseProduct && isBusy && !isInitialLoading && (
-          <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-widest">Updating...</p>
+          <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-widest">
+            Updating...
+          </p>
         )}
       </div>
     </div>

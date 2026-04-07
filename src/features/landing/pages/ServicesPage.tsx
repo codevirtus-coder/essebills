@@ -9,7 +9,7 @@ export function ServicesPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* ── Hero header ────────────────────────────────────────────────────── */}
-      <div className="bg-slate-900 pt-16 pb-28 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      <div className="bg-slate-900 pt-16 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
 
         <div className="max-w-5xl mx-auto relative z-10 text-center">
@@ -34,12 +34,12 @@ export function ServicesPage() {
       </div>
 
       {/* ── Marketplace Content ─────────────────────────────────────────────── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 relative z-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-0 relative z-20">
         <div id="services-marketplace-tabs" />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 pb-20 relative z-20">
-        <div className="bg-white dark:bg-slate-950 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-2xl p-8 md:p-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-0 pb-20 relative z-20">
+        <div className="bg-white dark:bg-slate-950 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-2xl pt-0 px-6 pb-6 md:pt-1 md:px-8 md:pb-8">
           <ServicesMarketplace
             showTitle={false}
             liftSearch
