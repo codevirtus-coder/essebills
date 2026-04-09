@@ -10,6 +10,7 @@ import {
   History, Lock, LockOpen, ShieldCheck, ShieldOff, Flag, Building,
   Calendar, Filter, Search, ExternalLink, Copy, RotateCcw, XCircle,
   Heart, Globe, Droplets, Zap, Headphones, Network, Layers, Tag,
+  Bug, Link2,
   type LucideIcon, type LucideProps
 } from 'lucide-react'
 import * as LucideIcons from 'lucide-react'
@@ -150,6 +151,8 @@ const ICON_MAP: Record<string, LucideIcon> = {
   medical_services: ShieldCheck,
   no_accounts: ShieldOff,
   support_agent: Headphones,
+  bug_report: Bug,
+  link: Link2,
 }
 
 interface IconProps extends Omit<LucideProps, 'ref'> {

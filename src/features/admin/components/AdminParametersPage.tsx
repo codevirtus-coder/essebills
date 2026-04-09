@@ -12,6 +12,7 @@ import {
   deleteBank,
   deleteCountry,
   deleteCurrency,
+  deleteHoliday,
   deleteProductCategory,
   getPaginatedBanks,
   getAllHolidays,
@@ -311,7 +312,7 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
   const [isSyncing, setIsSyncing] = useState(false)
   
   const canEdit = module !== 'holidays'
-  const canDelete = module !== 'holidays'
+  const canDelete = true
 
   // ── Category sort order + drag state ───────────────────────────────────────
   const [sortedRows, setSortedRows] = useState<UnknownRecord[]>([])
@@ -509,6 +510,7 @@ const AdminParametersPage: React.FC<AdminParametersPageProps> = ({ module }) => 
       let action: Promise<any>
       if (module === 'currencies') action = deleteCurrency(id)
       else if (module === 'countries') action = deleteCountry(id)
+      else if (module === 'holidays') action = deleteHoliday(id)
       else if (module === 'banks') action = deleteBank(id)
       else if (module === 'productCategories') action = deleteProductCategory(id)
       else return

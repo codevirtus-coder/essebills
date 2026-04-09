@@ -40,6 +40,10 @@ export const ADMIN_ENDPOINTS = {
   products: {
     root: '/v1/products',
     byId: (productId: string | number) => `/v1/products/${productId}`,
+    requiredFieldsAll: '/v1/products/required-fields',
+    vendorBalance: '/v1/products/vendor-balance',
+    logoUrl: (productId: string | number) => `/v1/products/${productId}/logo-url`,
+    logo: (productId: string | number) => `/v1/products/${productId}/logo`,
   },
   productFields: {
     root: '/v1/product-fields',
@@ -67,6 +71,9 @@ export const ADMIN_ENDPOINTS = {
   },
   countryCurrencies: {
     root: '/v1/country-currencies',
+    all: '/v1/country-currencies/all',
+    allByCountry: (countryCode: string) => `/v1/country-currencies/all/${countryCode}`,
+    byId: (id: string | number) => `/v1/country-currencies/${id}`,
   },
   banks: {
     root: '/v1/banks',
@@ -74,12 +81,17 @@ export const ADMIN_ENDPOINTS = {
   },
   holidays: {
     root: '/v1/holidays',
+    byId: (id: string | number) => `/v1/holidays/${id}`,
   },
   esebillsAccounts: {
     root: '/v1/esebills-accounts',
+    all: '/v1/esebills-accounts/all',
+    default: '/v1/esebills-accounts/default',
+    search: '/v1/esebills-accounts/search',
     byId: (accountId: string | number) => `/v1/esebills-accounts/${accountId}`,
   },
   providers: {
+    root: '/v1/providers',
     enable: (provider: string) => `/v1/providers/${provider}/enable`,
     disable: (provider: string) => `/v1/providers/${provider}/disable`,
   },
@@ -135,8 +147,35 @@ export const ADMIN_ENDPOINTS = {
   otp: {
     verify: '/v1/otp/verify',
   },
+  adminBankTopUps: {
+    root: '/v1/admin/bank-top-ups',
+    proofOfPaymentUrl: (id: string | number) => `/v1/admin/bank-top-ups/${id}/proof-of-payment-url`,
+  },
+  esolutionsAdmin: {
+    balance: '/v1/admin/esolutions/balance',
+    balanceBy: (param: string) => `/v1/admin/esolutions/balance/${param}`,
+  },
+  esolutionsV2: {
+    catalog: '/api/v2/esolutions/catalog',
+    catalogByMerchant: (merchantCode: string) => `/api/v2/esolutions/catalog/merchant/${merchantCode}`,
+    productsByMerchant: (merchantCode: string) => `/api/v2/esolutions/products/merchant/${merchantCode}`,
+    balance: '/api/v2/esolutions/balance',
+    catalogSync: (merchantCode: string) => `/api/v2/esolutions/catalog/sync/${merchantCode}`,
+    resend: '/api/v2/esolutions/resend',
+    transaction: '/api/v2/esolutions/transaction',
+  },
   whatsapp: {
     sessions: '/v1/whatsapp/sessions',
     messages: '/v1/whatsapp/messages',
+    sessionsById: (id: string | number) => `/v1/whatsapp/sessions/${id}`,
+    messagesBySession: (sessionId: string | number) => `/v1/whatsapp/messages/by-session/${sessionId}`,
+    messagesByPhone: (phoneNumber: string) => `/v1/whatsapp/messages/by-phone/${phoneNumber}`,
+    webhook: '/v1/whatsapp/webhook',
+  },
+  sms: {
+    root: '/v1/sms',
+  },
+  test: {
+    email: '/v1/test/email',
   },
 } as const

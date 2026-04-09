@@ -1,0 +1,148 @@
+﻿[POST] /authenticate
+[POST] /authenticate/verify-otp
+/opn/v1/products/{productId}/variants
+[POST] /opn/v1/users/sign-up
+/v1/access-control/authorities{query}
+/v1/access-control/authorities/all
+[POST] /v1/access-control/group-authorities
+/v1/access-control/group-authorities/by-group/{groupId}{query}
+[POST] /v1/access-control/user-authorities
+/v1/access-control/user-authorities/by-user/{userId}{query}
+[POST] /v1/admin/agents/{agentId}/commission-rates
+[DELETE|PUT] /v1/admin/agents/{agentId}/commission-rates/{id}
+/v1/admin/bank-top-ups?{params}
+[POST] /v1/admin/bank-top-ups/{id}/confirm
+[POST] /v1/admin/bank-top-ups/{id}/reject
+/v1/admin/esolutions/balance
+/v1/admin/esolutions/catalog
+/v1/admin/esolutions/catalog/{merchantCode}
+[POST] /v1/admin/esolutions/merchants
+[DELETE|PUT] /v1/admin/esolutions/merchants/{id}
+[POST] /v1/admin/esolutions/sync
+[POST] /v1/admin/esolutions/sync/{merchantCode}
+/v1/agent/bank-accounts
+[POST] /v1/agent/bank-topups
+/v1/agent/bank-topups/{id}
+/v1/agent/commissions/balance
+[POST] /v1/agent/commissions/payout-request
+/v1/agent/commissions/rates
+/v1/agent/payments/{id}
+[POST] /v1/agent/payments/process
+/v1/agent/payments/products
+/v1/agent/payments/recent?limit={limit}
+[PUT] /v1/agent/profile
+/v1/agent/shop-details
+/v1/agent/wallet/balance/{currency}
+/v1/agent/wallet/balances
+/v1/agent/wallet/history?page={page}&size={size}
+/v1/analytics/agent/dashboard/{agentId}/stats
+/v1/analytics/biller/dashboard/{billerId}/summary
+/v1/analytics/donations/summary
+/v1/audits{query}
+/v1/audits/{id}
+/v1/audits/by-performer/period{query}
+[POST] /v1/auth/refresh
+[POST] /v1/banks
+[DELETE|PUT] /v1/banks/{bankId}
+/v1/biller/analytics/daily
+/v1/biller/analytics/top-products?limit={limit}
+/v1/biller/collections/{id}
+/v1/biller/collections/summary
+/v1/biller/products
+[PUT] /v1/biller/products/{productId}/status
+[PUT] /v1/biller/profile
+[PUT] /v1/biller/settings/notifications
+[PUT] /v1/biller/settings/settlement-bank
+/v1/biller/settlements/{id}
+/v1/biller/settlements/pending
+/v1/biller/settlements/summary
+[POST] /v1/bulk-payments/groups
+[DELETE|PUT] /v1/bulk-payments/groups/{id}
+[POST] /v1/bulk-payments/initiate
+/v1/bulk-payments/requests
+/v1/bulk-payments/requests/{id}
+[POST] /v1/bulk-payments/schedules
+[DELETE|PUT] /v1/bulk-payments/schedules/{id}
+[POST] /v1/countries
+[DELETE|PUT] /v1/countries/{id}
+[POST] /v1/currencies
+[DELETE|PUT] /v1/currencies/{currencyId}
+[POST] /v1/customer/payments/quick-pay
+[POST] /v1/customer/payments/validate
+/v1/customer/products/{productId}/validate
+/v1/customer/products/categories
+[PUT] /v1/customer/profile
+[POST] /v1/customer/saved-accounts
+[DELETE|PUT] /v1/customer/saved-accounts/{id}
+/v1/customer/transactions/{id}
+/v1/customer/transactions/statistics
+/v1/customer/wallet/balances
+[POST] /v1/donation-campaigns
+/v1/donation-campaigns?status=active
+[DELETE|PUT] /v1/donation-campaigns/{id}
+[PUT] /v1/donation-campaigns/{id}/status
+[POST] /v1/donation-categories
+[PUT] /v1/donation-categories/{id}
+/v1/donations/{id}
+[POST] /v1/donations/{id}/refund
+/v1/donations/by-campaign/{campaignId}?{qs}
+/v1/donations/top-campaigns?limit={limit}
+/v1/esebills-accounts
+/v1/esebills-accounts{query}
+[POST] /v1/groups
+[DELETE|PUT] /v1/groups/{groupId}
+/v1/holidays
+/v1/holidays?date=YYYY-MM-DD
+/v1/my-audits/period{query}
+/v1/notifications
+[DELETE] /v1/notifications/{id}
+[PATCH] /v1/notifications/{id}/read
+[PATCH] /v1/notifications/read-all
+/v1/opn/products/{productId}/availability
+[POST] /v1/opn/products/{productId}/pre-check
+[POST] /v1/otp/verify
+[POST] /v1/payment-transactions
+/v1/payment-transactions?{query}
+/v1/payment-transactions?search={encodeURIComponent(referenceNumber)}
+[DELETE] /v1/payment-transactions/{id}
+[POST] /v1/pesepay-integration-credentials
+[PUT] /v1/pesepay-integration-credentials/{data.id}
+[DELETE] /v1/pesepay-integration-credentials/{id}
+[POST] /v1/portal/product-payment
+[POST] /v1/portal/product-payment/repeat/{id}
+[POST] /v1/product-categories
+[DELETE|PUT] /v1/product-categories/{id}
+/v1/product-categories/all
+[PUT] /v1/product-categories/reorder
+[POST] /v1/product-payment
+/v1/product-payment/{transactionId}/status
+[POST] /v1/products
+/v1/products{query}
+[DELETE|PUT] /v1/products/{productId}
+/v1/products/{productId}/logo
+/v1/products/{productId}/required-fields
+/v1/products/by-category/{id}{query}
+/v1/query-customer-details?meterNumber={encodeURIComponent(meterNumber)}
+[POST] /v1/register/agent
+[POST] /v1/register/biller
+[POST] /v1/register/customer
+[POST] /v1/service-charges
+[DELETE|PUT] /v1/service-charges/{id}
+/v1/service-charges/applicable{group ? `?group=${group}` : ''}
+[POST] /v1/users
+/v1/users{query}
+[PUT] /v1/users/{userId}
+[PATCH] /v1/users/{userId}?status={status}
+[PATCH] /v1/users/{userId}/otp
+[POST] /v1/users/change-password
+[POST] /v1/users/forgot-password
+[POST] /v1/users/my-account
+/v1/users/profile
+[POST] /v1/users/reset-password
+[POST] /v1/users/update-password
+[POST] /v1/wallet/bank-top-ups
+/v1/wallet/bank-top-ups?page={page}&size={size}
+/v1/wallet/bank-top-ups{query}
+[POST] /v1/wallet/top-ups
+[POST] /v1/whatsapp/simulator/inbound
+/v1/whatsapp/simulator/responses?{query.toString()}

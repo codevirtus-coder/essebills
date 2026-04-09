@@ -39,3 +39,7 @@ export async function rejectTopUp(id: number, reason: string): Promise<AdminBank
     body: JSON.stringify({ reason }),
   })
 }
+
+export async function getProofOfPaymentUrl(id: number): Promise<unknown> {
+  return apiFetch<unknown>(API_ENDPOINTS.adminBankTopUps.proofOfPayment(id))
+}

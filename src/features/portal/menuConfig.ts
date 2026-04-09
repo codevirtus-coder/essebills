@@ -60,6 +60,7 @@ export const ADMIN_MENU: MenuSection[] = [
     items: [
       { id: "parametersCurrencies",  label: "Currencies",  icon: "currency_exchange" },
       { id: "parametersCountries",   label: "Countries",   icon: "public" },
+      { id: "parametersCountryCurrencies", label: "Country Currencies", icon: "link" },
       { id: "parametersBanks",       label: "Banks",       icon: "account_balance" },
       { id: "parametersHolidays",    label: "Holidays",    icon: "event" },
     ],
@@ -70,6 +71,7 @@ export const ADMIN_MENU: MenuSection[] = [
     items: [
       { id: "credentialsPesepay", label: "Pesepay",  icon: "vpn_key" },
       { id: "whatsapp",           label: "WhatsApp", icon: "mark_chat_read" },
+      { id: "diagnostics",        label: "Diagnostics", icon: "bug_report" },
     ],
   },
 ];

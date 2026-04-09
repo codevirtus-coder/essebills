@@ -5,11 +5,13 @@ import CRUDLayout, { type CRUDColumn } from '../../shared/components/CRUDLayout'
 import CRUDModal from '../../shared/components/CRUDModal';
 import {
   getAgentCommissionRates,
+  getAgentCommissionRateById,
   createAgentCommissionRate,
   updateAgentCommissionRate
 } from '../../../services/agentCommission.service';
 import {
   getAllServiceCharges,
+  getServiceChargeById,
   createServiceCharge,
   updateServiceCharge,
   deleteServiceCharge,
@@ -379,7 +381,17 @@ export default function Commissions() {
               }}
               addButtonText="Add Exception"
               actions={{
-                onEdit: (r) => { setEditingRate(r); setIsModalOpen(true); },
+                onEdit: async (r) => {
+                  try {
+                    if (!selectedAgentId || !r?.id) throw new Error('missing')
+                    const full = await getAgentCommissionRateById(selectedAgentId, r.id)
+                    setEditingRate(full)
+                  } catch {
+                    setEditingRate(r)
+                  } finally {
+                    setIsModalOpen(true)
+                  }
+                },
               }}
             />
           </div>
@@ -408,7 +420,17 @@ export default function Commissions() {
               }}
               addButtonText="Add Rate"
               actions={{
-                onEdit: (r) => { setEditingSc(r); setIsScModalOpen(true); },
+                onEdit: async (r) => {
+                  try {
+                    if (!r?.id) throw new Error('missing')
+                    const full = await getServiceChargeById(r.id)
+                    setEditingSc(full)
+                  } catch {
+                    setEditingSc(r)
+                  } finally {
+                    setIsScModalOpen(true)
+                  }
+                },
                 onDelete: (r) => r.id && handleDeleteSc(r.id),
               }}
             />

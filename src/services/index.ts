@@ -22,6 +22,11 @@ export * from './transactions.service'
 // Integrations Service
 export * from './integrations.service'
 
+// SMS + Diagnostics + System Lookups
+export * from './sms.service'
+export * from './diagnostics.service'
+export * from './systemLookups.service'
+
 // Access Control Service
 export * from './accessControl.service'
 
@@ -34,3 +39,4 @@ export * from './agentCommission.service'
 // Donations Service
 export * from './donations.service'
 export * from './donationsV1.service'
+export * from './donationsSwaggerCampaigns.service'

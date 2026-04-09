@@ -38,3 +38,8 @@ export async function updateServiceCharge(id: number, payload: Omit<ServiceCharg
 export async function deleteServiceCharge(id: number): Promise<void> {
   return apiFetch(API_ENDPOINTS.serviceCharges.byId(id), { method: 'DELETE' })
 }
+
+/** Admin: fetch a service charge rate by id */
+export async function getServiceChargeById(id: number): Promise<ServiceCharge> {
+  return apiFetch<ServiceCharge>(API_ENDPOINTS.serviceCharges.byId(id))
+}

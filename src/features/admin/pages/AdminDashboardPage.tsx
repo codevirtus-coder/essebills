@@ -9,6 +9,7 @@ import AdminUserGroupsPage from '../components/AdminUserGroupsPage'
 import AdminTransactionsPage from '../components/AdminTransactionsPage'
 import BulkPaymentsPage from '../../agent/pages/BulkPaymentsPage'
 import AdminParametersPage from '../components/AdminParametersPage'
+import AdminCountryCurrenciesPage from '../components/AdminCountryCurrenciesPage'
 import AdminStyledApiModulePage from '../components/AdminStyledApiModulePage'
 import Settings from '../components/Settings'
 import Commissions from '../components/Commissions'
@@ -16,19 +17,16 @@ import BankTopUps from '../components/BankTopUps'
 import Support from '../components/Support'
 import WhatsAppCenter from '../components/WhatsAppCenter'
 import Donations from '../components/Donations'
-import EsolutionsAdminPanel from '../components/EsolutionsAdminPanel'
+import AdminBankAccountsPage from '../components/AdminBankAccountsPage'
+import AdminProvidersPage from '../components/AdminProvidersPage'
+import AdminDiagnosticsPage from '../components/AdminDiagnosticsPage'
 import { NotificationsPage } from '../../../pages/NotificationsPage'
 import {
   createPesepayCredentials,
   getPaginatedPesepayCredentials,
   updatePesepayCredentials,
   deletePesepayCredentials,
-  getPaginatedEsebillsAccounts,
-  createEsebillsAccount,
-  updateEsebillsAccount,
-  deleteEsebillsAccount,
 } from '../services'
-import { getCurrencies } from '../../../services'
 import { ROUTE_PATHS } from '../../../router/paths'
 import '../styles/admin-dashboard.css'
 
@@ -83,6 +81,8 @@ export function AdminDashboardPage() {
         return <AdminUserGroupsPage />
       case 'whatsapp':
         return <WhatsAppCenter />
+      case 'diagnostics':
+        return <AdminDiagnosticsPage />
       case 'parametersCurrencies':
         return <AdminParametersPage module="currencies" />
       case 'parametersCountries':
@@ -91,6 +91,8 @@ export function AdminDashboardPage() {
         return <AdminParametersPage module="holidays" />
       case 'parametersBanks':
         return <AdminParametersPage module="banks" />
+      case 'parametersCountryCurrencies':
+        return <AdminCountryCurrenciesPage />
       case 'parametersProductCategories':
         return <AdminParametersPage module="productCategories" />
       case 'credentialsPesepay':
@@ -108,47 +110,9 @@ export function AdminDashboardPage() {
           />
         )
       case 'esebillsAccounts':
-        return (
-          <AdminStyledApiModulePage
-            key="esebillsAccounts"
-            title="EseBills Accounts"
-            description="Platform bank accounts used for settlement."
-            endpoint="/v1/esebills-accounts"
-            createEndpoint="/v1/esebills-accounts"
-            createData={createEsebillsAccount}
-            loadData={getPaginatedEsebillsAccounts}
-            tableMode="auto"
-            createMode="fields"
-            columns={[
-              { key: 'bank', label: 'Bank' },
-              { key: 'accountNumber', label: 'Account Number' },
-              { key: 'accountName', label: 'Account Name' },
-              { key: 'currency.code', label: 'Currency' },
-            ]}
-            createFields={[
-              { key: 'bank', label: 'Bank', type: 'text' },
-              { key: 'accountNumber', label: 'Account Number', type: 'text' },
-              { key: 'accountName', label: 'Account Name', type: 'text' },
-              {
-                key: 'currencyCode',
-                label: 'Currency',
-                type: 'select',
-                optionsLoader: async () => {
-                  const page = await getCurrencies()
-                  const list = Array.isArray(page?.content) ? page.content : []
-                  return list
-                    .filter((c) => c.active !== false && c.code)
-                    .map((c) => ({ label: String(c.code), value: String(c.code) }))
-                },
-              },
-            ]}
-            emptyLabel="EseBillsAccounts"
-            onUpdate={updateEsebillsAccount}
-            onDelete={deleteEsebillsAccount}
-          />
-        )
+        return <AdminBankAccountsPage />
       case 'providers':
-        return <EsolutionsAdminPanel />
+        return <AdminProvidersPage />
       case 'commissions':
         return <Commissions />
       case 'bankTopUps':

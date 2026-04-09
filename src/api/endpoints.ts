@@ -32,8 +32,16 @@ export const API_ENDPOINTS = {
     root: '/v1/products',
     byId: (productId: string | number) => `/v1/products/${productId}`,
     byCategory: (id: string | number) => `/v1/products/by-category/${id}`,
+    /** Global required-fields catalog (admin/ops). */
+    requiredFieldsAll: '/v1/products/required-fields',
     requiredFields: (productId: string | number) => `/v1/products/${productId}/required-fields`,
     uploadLogo: (productId: string | number) => `/v1/products/${productId}/logo`,
+    /** Admin: remove a logo from a product (DELETE). */
+    deleteLogo: (productId: string | number) => `/v1/products/${productId}/logo`,
+    /** Admin: vendor/provider balance snapshot (GET). */
+    vendorBalance: '/v1/products/vendor-balance',
+    /** Admin: resolve a product's logo URL (GET). */
+    logoUrl: (productId: string | number) => `/v1/products/${productId}/logo-url`,
     /** Public (no-auth) logo image stream — use directly as <img src> */
     logo: (productId: string | number) => `/opn/v1/products/${productId}/logo`,
     /** Public availability check — no auth required */
@@ -42,6 +50,8 @@ export const API_ENDPOINTS = {
     preCheck: (productId: string | number) => `/v1/opn/products/${productId}/pre-check`,
     /** Public variants list — returns active child products ordered by price asc */
     variants: (productId: string | number) => `/opn/v1/products/${productId}/variants`,
+    countryProducts: '/opn/v1/country/products',
+    countryProductsAll: '/opn/v1/country/products/all',
   },
 
   // Product Categories
@@ -64,6 +74,14 @@ export const API_ENDPOINTS = {
     byId: (id: string | number) => `/v1/countries/${id}`,
   },
 
+  // Country-Currency bindings (admin)
+  countryCurrencies: {
+    root: '/v1/country-currencies',
+    all: '/v1/country-currencies/all',
+    allByCountry: (countryCode: string) => `/v1/country-currencies/all/${countryCode}`,
+    byId: (id: string | number) => `/v1/country-currencies/${id}`,
+  },
+
   // Banks
   banks: {
     root: '/v1/banks',
@@ -73,11 +91,15 @@ export const API_ENDPOINTS = {
   // Holidays
   holidays: {
     root: '/v1/holidays',
+    byId: (id: string | number) => `/v1/holidays/${id}`,
   },
 
   // EseBills Accounts
   esebillsAccounts: {
     root: '/v1/esebills-accounts',
+    all: '/v1/esebills-accounts/all',
+    default: '/v1/esebills-accounts/default',
+    search: '/v1/esebills-accounts/search',
     byId: (accountId: string | number) => `/v1/esebills-accounts/${accountId}`,
   },
 
@@ -121,6 +143,7 @@ export const API_ENDPOINTS = {
       byId: (id: string | number) => `/v1/bulk-payments/requests/${id}`,
     },
     initiate: '/v1/bulk-payments/initiate',
+    initiateFromGroup: (groupId: string | number) => `/v1/bulk-payments/initiate/from-group/${groupId}`,
   },
 
   // Donations (Gateway spec: /v1/donations/*)
@@ -145,11 +168,17 @@ export const API_ENDPOINTS = {
     },
     userAuthorities: {
       root: '/v1/access-control/user-authorities',
+      bundled: '/v1/access-control/user-authorities/bundled',
       byUser: (userId: string | number) => `/v1/access-control/user-authorities/by-user/${userId}`,
+      byUserAll: (userId: string | number) => `/v1/access-control/user-authorities/by-user/${userId}/all`,
+      unassigned: (userId: string | number) => `/v1/access-control/user-authorities/unassigned/${userId}`,
     },
     groupAuthorities: {
       root: '/v1/access-control/group-authorities',
+      bundled: '/v1/access-control/group-authorities/bundled',
       byGroup: (groupId: string | number) => `/v1/access-control/group-authorities/by-group/${groupId}`,
+      byGroupAll: (groupId: string | number) => `/v1/access-control/group-authorities/by-group/${groupId}/all`,
+      unassigned: (groupId: string | number) => `/v1/access-control/group-authorities/unassigned/${groupId}`,
     },
   },
 
@@ -287,6 +316,10 @@ export const API_ENDPOINTS = {
   wallet: {
     topUps: '/v1/wallet/top-ups',
     bankTopUps: '/v1/wallet/bank-top-ups',
+    userBankTopUps: {
+      proofOfPayment: (id: string | number) => `/v1/user/bank-top-ups/${id}/proof-of-payment`,
+      proofOfPaymentUrl: (id: string | number) => `/v1/user/bank-top-ups/${id}/proof-of-payment-url`,
+    },
   },
 
   // Biller
@@ -365,9 +398,12 @@ export const API_ENDPOINTS = {
     },
     sessions: {
       root: '/v1/whatsapp/sessions',
+      byId: (id: string | number) => `/v1/whatsapp/sessions/${id}`,
     },
     messages: {
       root: '/v1/whatsapp/messages',
+      byPhone: (phoneNumber: string) => `/v1/whatsapp/messages/by-phone/${phoneNumber}`,
+      bySession: (sessionId: string | number) => `/v1/whatsapp/messages/by-session/${sessionId}`,
     },
   },
 
@@ -386,6 +422,13 @@ export const API_ENDPOINTS = {
   // Customer Details
   customerDetails: {
     fetch: '/v1/query-customer-details',
+  },
+
+  // Providers (admin/ops)
+  providers: {
+    root: '/v1/providers',
+    enable: (provider: string) => `/v1/providers/${provider}/enable`,
+    disable: (provider: string) => `/v1/providers/${provider}/disable`,
   },
 
   // Audits
@@ -453,6 +496,8 @@ export const API_ENDPOINTS = {
   // Donations
   donations: {
     root: '/v1/donations',
+    /** Alias for creating/processing a donation (POST). */
+    process: '/v1/donations',
     byId: (id: string | number) => `/v1/donations/${id}`,
     byCampaign: (campaignId: string | number) => `/v1/donations/by-campaign/${campaignId}`,
     byDonor: (donorId: string | number) => `/v1/donations/by-donor/${donorId}`,
@@ -477,12 +522,48 @@ export const API_ENDPOINTS = {
   // eSolutions Admin
   esolutionsAdmin: {
     balance: '/v1/admin/esolutions/balance',
+    balanceBy: (param: string) => `/v1/admin/esolutions/balance/${param}`,
     catalog: '/v1/admin/esolutions/catalog',
     catalogByMerchant: (merchantCode: string) => `/v1/admin/esolutions/catalog/${merchantCode}`,
     syncAll: '/v1/admin/esolutions/sync',
     syncMerchant: (merchantCode: string) => `/v1/admin/esolutions/sync/${merchantCode}`,
     merchants: '/v1/admin/esolutions/merchants',
     merchantById: (id: number) => `/v1/admin/esolutions/merchants/${id}`,
+  },
+
+  // eSolutions v2 (legacy endpoints)
+  esolutionsV2: {
+    catalog: '/api/v2/esolutions/catalog',
+    catalogByMerchant: (merchantCode: string) => `/api/v2/esolutions/catalog/merchant/${merchantCode}`,
+    productsByMerchant: (merchantCode: string) => `/api/v2/esolutions/products/merchant/${merchantCode}`,
+    balance: '/api/v2/esolutions/balance',
+    catalogSync: (merchantCode: string) => `/api/v2/esolutions/catalog/sync/${merchantCode}`,
+    resend: '/api/v2/esolutions/resend',
+    transaction: '/api/v2/esolutions/transaction',
+  },
+
+  // System lookups
+  system: {
+    banksByCode: '/system/v1/banks/by-code',
+    currenciesByCode: '/system/v1/currencies/by-code',
+  },
+
+  // SMS
+  sms: {
+    root: '/v1/sms',
+  },
+
+  // Test / Diagnostics
+  test: {
+    email: '/v1/test/email',
+  },
+
+  // Pesepay payments
+  pesepay: {
+    payments: {
+      updateTransaction: (paymentTransactionId: string | number) =>
+        `/v1/pesepay/payments/transactions/${paymentTransactionId}`,
+    },
   },
 } as const
 

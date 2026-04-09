@@ -125,6 +125,37 @@ export async function uploadProductLogo(productId: string | number, file: File):
   return multipartFetch(API_ENDPOINTS.products.uploadLogo(productId), form, { method: 'POST' })
 }
 
+/** Admin: delete a product logo. */
+export async function deleteProductLogo(productId: string | number): Promise<void> {
+  return apiFetch<void>(API_ENDPOINTS.products.deleteLogo(productId), { method: 'DELETE' })
+}
+
+/** Admin: resolve a product logo URL (often returns a map containing a URL). */
+export async function resolveProductLogoUrl(productId: string | number): Promise<Record<string, string>> {
+  return apiFetch<Record<string, string>>(API_ENDPOINTS.products.logoUrl(productId))
+}
+
+/** Admin: vendor/provider balance snapshot for a product code. */
+export async function getProductVendorBalance(productCode: string): Promise<unknown> {
+  const query = toQueryString({ productCode })
+  return apiFetch<unknown>(`${API_ENDPOINTS.products.vendorBalance}${query}`)
+}
+
+/** Admin: global required-fields catalogue. */
+export async function getAllRequiredProductFields(): Promise<ProductField[]> {
+  return apiFetch<ProductField[]>(API_ENDPOINTS.products.requiredFieldsAll)
+}
+
+/** Public: list products available in current country context. */
+export async function getCountryProducts(): Promise<PageResponse<Product>> {
+  return apiFetch<PageResponse<Product>>(API_ENDPOINTS.products.countryProducts)
+}
+
+/** Public: list all country products (admin/public ops). */
+export async function getCountryProductsAll(): Promise<PageResponse<Product>> {
+  return apiFetch<PageResponse<Product>>(API_ENDPOINTS.products.countryProductsAll)
+}
+
 
 /** Create a new product */
 export async function createProduct(product: Partial<Product>): Promise<Product> {

@@ -39,6 +39,14 @@ export async function updateAgentCommissionRate(
   })
 }
 
+/** Get a single commission rate record by id (admin). */
+export async function getAgentCommissionRateById(
+  agentId: string | number,
+  id: string | number,
+): Promise<UnknownRecord> {
+  return apiFetch(API_ENDPOINTS.agentCommission.rateById(agentId, id))
+}
+
 /** Delete a commission rate for an agent */
 export async function deleteAgentCommissionRate(
   agentId: string | number,

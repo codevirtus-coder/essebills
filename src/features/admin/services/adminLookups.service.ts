@@ -59,3 +59,23 @@ export async function createCountryCurrency(payload: { countryCode: string; curr
     body: payload,
   })
 }
+
+export async function getAllCountryCurrencies() {
+  return adminJsonFetch<Record<string, unknown>[]>(ADMIN_ENDPOINTS.countryCurrencies.all)
+}
+
+export async function getAllCountryCurrenciesByCountry(countryCode: string) {
+  return adminJsonFetch<Record<string, unknown>[]>(ADMIN_ENDPOINTS.countryCurrencies.allByCountry(countryCode))
+}
+
+export async function getCountryCurrencyById(id: string | number) {
+  return adminJsonFetch<Record<string, unknown>>(ADMIN_ENDPOINTS.countryCurrencies.byId(id))
+}
+
+export async function deleteAllCountryCurrenciesByCountry(countryCode: string) {
+  return adminVoidFetch(ADMIN_ENDPOINTS.countryCurrencies.allByCountry(countryCode), { method: 'DELETE' })
+}
+
+export async function deleteCountryCurrencyById(id: string | number) {
+  return adminVoidFetch(ADMIN_ENDPOINTS.countryCurrencies.byId(id), { method: 'DELETE' })
+}

@@ -1,0 +1,7 @@
+GET /opn/v1/products/{param}/logo
+GET /v1/portal/product-payment/transactions
+GET /v1/user/bank-top-ups/{param}/proof-of-payment-url
+GET /v1/whatsapp/webhook
+POST /v1/pesepay/payments/transactions/{param}
+POST /v1/user/bank-top-ups/{param}/proof-of-payment
+POST /v1/whatsapp/webhook

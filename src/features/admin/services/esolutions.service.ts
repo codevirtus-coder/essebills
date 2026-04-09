@@ -30,6 +30,10 @@ export async function getEsolutionsBalance(): Promise<Record<string, VendorBalan
   return apiFetch<Record<string, VendorBalanceSummary>>(API_ENDPOINTS.esolutionsAdmin.balance)
 }
 
+export async function getEsolutionsBalanceBy(param: string): Promise<VendorBalanceSummary> {
+  return apiFetch<VendorBalanceSummary>(API_ENDPOINTS.esolutionsAdmin.balanceBy(param))
+}
+
 export async function getEsolutionsCatalog(): Promise<EsolutionsCatalogItem[]> {
   return apiFetch<EsolutionsCatalogItem[]>(API_ENDPOINTS.esolutionsAdmin.catalog)
 }

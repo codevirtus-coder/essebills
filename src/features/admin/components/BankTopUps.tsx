@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { CheckCircle, XCircle, Clock, RefreshCw, Eye } from 'lucide-react'
+import toast from 'react-hot-toast'
 import CRUDLayout, { type CRUDColumn } from '../../shared/components/CRUDLayout'
 import CRUDModal from '../../shared/components/CRUDModal'
 import {
   listBankTopUps,
   confirmTopUp,
   rejectTopUp,
+  getProofOfPaymentUrl,
   type AdminBankTopUp,
 } from '../services/adminBankTopUps.service'
 
@@ -104,11 +106,13 @@ interface ViewModalProps {
   onClose: () => void
   onConfirm: () => void
   onReject: () => void
+  onViewProof: () => void
   confirmLoading: boolean
   rejectLoading: boolean
+  proofLoading: boolean
 }
 
-function ViewModal({ item, onClose, onConfirm, onReject, confirmLoading, rejectLoading }: ViewModalProps) {
+function ViewModal({ item, onClose, onConfirm, onReject, onViewProof, confirmLoading, rejectLoading, proofLoading }: ViewModalProps) {
   return (
     <CRUDModal isOpen={true} onClose={onClose} title="Bank Top-Up Details">
       <div className="space-y-6">
@@ -155,6 +159,15 @@ function ViewModal({ item, onClose, onConfirm, onReject, confirmLoading, rejectL
               Close
             </button>
             <button
+              onClick={onViewProof}
+              disabled={proofLoading}
+              className="flex-1 py-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
+              title="Open uploaded proof of payment"
+            >
+              <Eye size={16} />
+              Proof
+            </button>
+            <button
               onClick={onReject}
               disabled={rejectLoading}
               className="flex-1 py-3 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors disabled:opacity-50"
@@ -170,6 +183,25 @@ function ViewModal({ item, onClose, onConfirm, onReject, confirmLoading, rejectL
             </button>
           </div>
         )}
+        {item.status !== 'PENDING' && (
+          <div className="flex gap-3 pt-2">
+            <button
+              onClick={onClose}
+              className="flex-1 py-3 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+            >
+              Close
+            </button>
+            <button
+              onClick={onViewProof}
+              disabled={proofLoading}
+              className="flex-1 py-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
+              title="Open uploaded proof of payment"
+            >
+              <Eye size={16} />
+              Proof
+            </button>
+          </div>
+        )}
       </div>
     </CRUDModal>
   )
@@ -180,6 +212,7 @@ export default function BankTopUps() {
   const [page, setPage] = useState(0)
   const [viewItem, setViewItem] = useState<AdminBankTopUp | null>(null)
   const [rejectItem, setRejectItem] = useState<AdminBankTopUp | null>(null)
+  const [proofLoading, setProofLoading] = useState(false)
   const queryClient = useQueryClient()
 
   const { data, isLoading, refetch } = useQuery({
@@ -278,6 +311,34 @@ export default function BankTopUps() {
     },
   ]
 
+  const openProof = async (id: number) => {
+    try {
+      setProofLoading(true)
+      const res: any = await getProofOfPaymentUrl(id)
+      const url =
+        typeof res === 'string'
+          ? res
+          : typeof res?.url === 'string'
+            ? res.url
+            : typeof res?.proofOfPaymentUrl === 'string'
+              ? res.proofOfPaymentUrl
+              : res && typeof res === 'object'
+                ? (Object.values(res).find((v) => typeof v === 'string') as string | undefined)
+                : undefined
+
+      if (!url) {
+        toast.error('No proof-of-payment URL returned')
+        return
+      }
+
+      window.open(url, '_blank', 'noopener,noreferrer')
+    } catch (err: any) {
+      toast.error(err?.message ?? 'Failed to load proof-of-payment')
+    } finally {
+      setProofLoading(false)
+    }
+  }
+
   const StatusFilterComponent = (
     <div className="flex gap-1 p-1 bg-slate-100 rounded-xl w-fit">
       {STATUS_TABS.map((t) => (
@@ -337,8 +398,10 @@ export default function BankTopUps() {
           onClose={() => setViewItem(null)}
           onConfirm={() => confirmMutation.mutate(viewItem.id)}
           onReject={() => setRejectItem(viewItem)}
+          onViewProof={() => void openProof(viewItem.id)}
           confirmLoading={confirmMutation.isPending}
           rejectLoading={rejectMutation.isPending}
+          proofLoading={proofLoading}
         />
       )}
 

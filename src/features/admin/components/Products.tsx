@@ -15,7 +15,7 @@ import {
   getPaginatedProducts,
   updateProduct,
 } from "../services";
-import { getProductLogoUrl, uploadProductLogo } from "../../../services/products.service";
+import { deleteProductLogo, getAllRequiredProductFields, getProductLogoUrl, getProductVendorBalance, resolveProductLogoUrl, uploadProductLogo } from "../../../services/products.service";
 import CRUDLayout, { type CRUDColumn } from "../../shared/components/CRUDLayout";
 import CRUDModal from "../../shared/components/CRUDModal";
 import {
@@ -70,6 +70,15 @@ const Products: React.FC = () => {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const [isLogoWorking, setIsLogoWorking] = useState(false);
+
+  const [isVendorOpen, setIsVendorOpen] = useState(false);
+  const [vendorLoading, setVendorLoading] = useState(false);
+  const [vendorBalance, setVendorBalance] = useState<any>(null);
+
+  const [isRequiredOpen, setIsRequiredOpen] = useState(false);
+  const [requiredLoading, setRequiredLoading] = useState(false);
+  const [requiredFields, setRequiredFields] = useState<any[]>([]);
   const [status, setStatus] = useState<ProductStatus>("ACTIVE");
   const [parentProductId, setParentProductId] = useState<string>("");
   const [parentSearch, setParentSearch] = useState("");
@@ -243,6 +252,26 @@ const Products: React.FC = () => {
     setParentProductId(pid ? String(pid) : "");
     setParentSearch("");
     setIsModalOpen(true);
+
+    if (p.id) {
+      void (async () => {
+        try {
+          setIsLogoWorking(true)
+          const map = await resolveProductLogoUrl(p.id)
+          const resolved =
+            typeof (map as any)?.url === 'string'
+              ? (map as any).url
+              : typeof (map as any)?.logoUrl === 'string'
+                ? (map as any).logoUrl
+                : Object.values(map ?? {}).find((v) => typeof v === 'string')
+          if (typeof resolved === 'string' && resolved.trim()) setLogoPreview(resolved)
+        } catch {
+          // keep fallback opn/v1 logo URL
+        } finally {
+          setIsLogoWorking(false)
+        }
+      })()
+    }
   };
 
   const handleDelete = async (id: string | number) => {
@@ -438,6 +467,113 @@ const Products: React.FC = () => {
                       }}
                     />
                   </div>
+                  {editingProductId && (
+                    <div className="flex flex-wrap gap-2 pt-2">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          void (async () => {
+                            try {
+                              setIsLogoWorking(true)
+                              const map = await resolveProductLogoUrl(editingProductId)
+                              const resolved =
+                                typeof (map as any)?.url === 'string'
+                                  ? (map as any).url
+                                  : typeof (map as any)?.logoUrl === 'string'
+                                    ? (map as any).logoUrl
+                                    : Object.values(map ?? {}).find((v) => typeof v === 'string')
+                              if (typeof resolved === 'string' && resolved.trim()) {
+                                setLogoPreview(resolved)
+                                toast.success("Resolved logo URL")
+                              } else {
+                                toast.error("No logo URL returned")
+                              }
+                            } catch {
+                              toast.error("Failed to resolve logo URL")
+                            } finally {
+                              setIsLogoWorking(false)
+                            }
+                          })()
+                        }}
+                        disabled={isLogoWorking}
+                        className="px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+                      >
+                        Resolve URL
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          if (!window.confirm("Remove this product logo?")) return
+                          void (async () => {
+                            try {
+                              setIsLogoWorking(true)
+                              await deleteProductLogo(editingProductId)
+                              setLogoPreview(null)
+                              setLogoFile(null)
+                              setProductLogoFileName("")
+                              toast.success("Logo removed")
+                            } catch {
+                              toast.error("Failed to remove logo")
+                            } finally {
+                              setIsLogoWorking(false)
+                            }
+                          })()
+                        }}
+                        disabled={isLogoWorking}
+                        className="px-3 py-2 rounded-xl border border-red-200 bg-white text-xs font-bold text-red-700 hover:bg-red-50 disabled:opacity-50"
+                      >
+                        Remove Logo
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          const codeValue = code.trim().toUpperCase()
+                          if (!codeValue) return toast.error("Set product code first")
+                          void (async () => {
+                            try {
+                              setVendorLoading(true)
+                              const res = await getProductVendorBalance(codeValue)
+                              setVendorBalance(res)
+                              setIsVendorOpen(true)
+                            } catch {
+                              toast.error("Failed to fetch vendor balance")
+                            } finally {
+                              setVendorLoading(false)
+                            }
+                          })()
+                        }}
+                        disabled={vendorLoading}
+                        className="px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+                      >
+                        {vendorLoading ? "Loading…" : "Vendor Balance"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          void (async () => {
+                            try {
+                              setRequiredLoading(true)
+                              const list = await getAllRequiredProductFields()
+                              setRequiredFields(Array.isArray(list) ? list : [])
+                              setIsRequiredOpen(true)
+                            } catch {
+                              toast.error("Failed to load required fields")
+                            } finally {
+                              setRequiredLoading(false)
+                            }
+                          })()
+                        }}
+                        disabled={requiredLoading}
+                        className="px-3 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 disabled:opacity-50"
+                      >
+                        {requiredLoading ? "Loading…" : "Required Fields"}
+                      </button>
+                    </div>
+                  )}
                </div>
             </div>
             <div className="space-y-1.5">
@@ -447,6 +583,34 @@ const Products: React.FC = () => {
           </div>
         </div>
       </CRUDModal>
+
+      {isVendorOpen && (
+        <CRUDModal isOpen={true} onClose={() => setIsVendorOpen(false)} title="Vendor Balance">
+          <pre className="text-[11px] bg-slate-50 border border-slate-200 rounded-xl p-4 overflow-auto">
+            {JSON.stringify(vendorBalance, null, 2)}
+          </pre>
+        </CRUDModal>
+      )}
+
+      {isRequiredOpen && (
+        <CRUDModal
+          isOpen={true}
+          onClose={() => setIsRequiredOpen(false)}
+          title={`Required Fields (${requiredFields.length})`}
+        >
+          <div className="space-y-2 max-h-[420px] overflow-auto pr-1">
+            {requiredFields.map((f, idx) => (
+              <div key={idx} className="p-3 rounded-xl border border-slate-200 bg-white">
+                <p className="text-sm font-bold text-slate-900">
+                  {String((f as any).label ?? (f as any).name ?? (f as any).key ?? "Field")}
+                </p>
+                <p className="text-[10px] font-mono text-slate-500">{JSON.stringify(f)}</p>
+              </div>
+            ))}
+            {requiredFields.length === 0 && <p className="text-sm text-slate-500">No fields returned.</p>}
+          </div>
+        </CRUDModal>
+      )}
     </div>
   );
 };

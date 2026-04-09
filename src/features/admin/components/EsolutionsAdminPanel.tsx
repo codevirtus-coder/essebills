@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { RefreshCw, Wifi, WifiOff, ChevronDown, ChevronRight, RotateCcw, Search, Plus, Trash2, ToggleLeft, ToggleRight } from 'lucide-react'
 import {
   getEsolutionsBalance,
+  getEsolutionsBalanceBy,
   getEsolutionsCatalog,
   triggerEsolutionsSyncAll,
   triggerEsolutionsSyncMerchant,
@@ -13,6 +14,15 @@ import {
   type EsolutionsCatalogItem,
   type EsolutionsMerchant,
 } from '../services/esolutions.service'
+import {
+  getEsolutionsV2Catalog,
+  getEsolutionsV2CatalogByMerchant,
+  getEsolutionsV2ProductsByMerchant,
+  postEsolutionsV2Balance,
+  postEsolutionsV2CatalogSync,
+  postEsolutionsV2Resend,
+  postEsolutionsV2Transaction,
+} from '../services/esolutionsV2.service'
 import { toast } from 'react-hot-toast'
 
 const EsolutionsAdminPanel: React.FC = () => {
@@ -22,6 +32,16 @@ const EsolutionsAdminPanel: React.FC = () => {
   const [syncingMerchant, setSyncingMerchant] = useState<string | null>(null)
   const [newMerchantCode, setNewMerchantCode] = useState('')
   const [newMerchantName, setNewMerchantName] = useState('')
+
+  const [balanceKey, setBalanceKey] = useState('')
+  const [balanceByKey, setBalanceByKey] = useState<any>(null)
+  const [balanceByKeyLoading, setBalanceByKeyLoading] = useState(false)
+
+  const [v2Expanded, setV2Expanded] = useState(false)
+  const [v2MerchantCode, setV2MerchantCode] = useState('')
+  const [v2Body, setV2Body] = useState('{\n  \n}')
+  const [v2Result, setV2Result] = useState<any>(null)
+  const [v2Loading, setV2Loading] = useState(false)
 
   const { data: balance, isFetching: balanceFetching, refetch: refetchBalance } = useQuery({
     queryKey: ['esolutions-balance'],
@@ -108,6 +128,49 @@ const EsolutionsAdminPanel: React.FC = () => {
     })
   }
 
+  const runBalanceByKey = async () => {
+    const key = balanceKey.trim()
+    if (!key) return toast.error('Enter a balance key/param')
+    try {
+      setBalanceByKeyLoading(true)
+      const res = await getEsolutionsBalanceBy(key)
+      setBalanceByKey(res)
+      toast.success('Fetched balance')
+    } catch (err: any) {
+      setBalanceByKey(null)
+      toast.error(err?.message ?? 'Failed to fetch balance')
+    } finally {
+      setBalanceByKeyLoading(false)
+    }
+  }
+
+  const parseV2Body = (): Record<string, unknown> | null => {
+    try {
+      const trimmed = v2Body.trim()
+      if (!trimmed) return {}
+      const parsed = JSON.parse(trimmed)
+      if (parsed && typeof parsed === 'object') return parsed as Record<string, unknown>
+      return {}
+    } catch {
+      toast.error('Invalid JSON body')
+      return null
+    }
+  }
+
+  const runV2 = async (runner: () => Promise<unknown>) => {
+    try {
+      setV2Loading(true)
+      const res = await runner()
+      setV2Result(res)
+      toast.success('V2 call OK')
+    } catch (err: any) {
+      setV2Result(null)
+      toast.error(err?.message ?? 'V2 call failed')
+    } finally {
+      setV2Loading(false)
+    }
+  }
+
   const balanceEntries = balance ? Object.entries(balance) : []
   const isAnyBalanceOk = balanceEntries.some(([, b]) => b.responseCode === '00')
 
@@ -178,6 +241,41 @@ const EsolutionsAdminPanel: React.FC = () => {
             Refresh
           </button>
         </div>
+      </div>
+
+      {/* Balance by Key (Swagger: GET /v1/admin/esolutions/balance/{param}) */}
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div className="p-5 border-b border-slate-100">
+          <h2 className="text-base font-black text-slate-900">Balance by Key</h2>
+          <p className="text-xs text-slate-500 mt-0.5">Fetch a single balance record by param/key (for troubleshooting).</p>
+        </div>
+        <div className="p-5 flex items-end gap-3 flex-wrap">
+          <div className="flex-1 min-w-[180px]">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1">Key / Param</label>
+            <input
+              type="text"
+              placeholder="e.g. USD"
+              value={balanceKey}
+              onChange={(e) => setBalanceKey(e.target.value)}
+              className="w-full px-3 py-2 text-sm font-mono border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400"
+            />
+          </div>
+          <button
+            onClick={() => void runBalanceByKey()}
+            disabled={balanceByKeyLoading}
+            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-500 disabled:opacity-50 transition-all shrink-0"
+          >
+            <Search size={14} className={balanceByKeyLoading ? 'animate-pulse' : ''} />
+            Fetch
+          </button>
+        </div>
+        {balanceByKey && (
+          <div className="px-5 pb-5">
+            <pre className="text-[11px] bg-slate-50 border border-slate-200 rounded-xl p-4 overflow-auto">
+              {JSON.stringify(balanceByKey, null, 2)}
+            </pre>
+          </div>
+        )}
       </div>
 
       {/* Merchant Configuration */}
@@ -382,6 +480,124 @@ const EsolutionsAdminPanel: React.FC = () => {
             )
           })}
         </div>
+      </div>
+
+      {/* Legacy /api/v2 endpoints (Swagger uncovered) */}
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setV2Expanded((v) => !v)}
+          className="w-full p-5 border-b border-slate-100 flex items-center justify-between hover:bg-slate-50 transition-colors"
+        >
+          <div className="text-left">
+            <h2 className="text-base font-black text-slate-900">Legacy v2 Endpoints</h2>
+            <p className="text-xs text-slate-500 mt-0.5">Use only if you still rely on `/api/v2/esolutions/*` endpoints.</p>
+          </div>
+          {v2Expanded ? <ChevronDown size={18} className="text-slate-400" /> : <ChevronRight size={18} className="text-slate-400" />}
+        </button>
+
+        {v2Expanded && (
+          <div className="p-5 space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1">Merchant Code (optional)</label>
+                <input
+                  type="text"
+                  value={v2MerchantCode}
+                  onChange={(e) => setV2MerchantCode(e.target.value.toUpperCase())}
+                  placeholder="e.g. ZETDC"
+                  className="w-full px-3 py-2 text-sm font-mono border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1">JSON Body (for POST balance/resend/transaction)</label>
+                <textarea
+                  rows={6}
+                  value={v2Body}
+                  onChange={(e) => setV2Body(e.target.value)}
+                  className="w-full px-3 py-2 text-xs font-mono border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={v2Loading}
+                onClick={() => void runV2(() => getEsolutionsV2Catalog())}
+                className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold hover:bg-slate-50 disabled:opacity-50"
+              >
+                GET catalog
+              </button>
+              <button
+                type="button"
+                disabled={v2Loading || !v2MerchantCode.trim()}
+                onClick={() => void runV2(() => getEsolutionsV2CatalogByMerchant(v2MerchantCode.trim()))}
+                className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold hover:bg-slate-50 disabled:opacity-50"
+              >
+                GET catalog by merchant
+              </button>
+              <button
+                type="button"
+                disabled={v2Loading || !v2MerchantCode.trim()}
+                onClick={() => void runV2(() => getEsolutionsV2ProductsByMerchant(v2MerchantCode.trim()))}
+                className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold hover:bg-slate-50 disabled:opacity-50"
+              >
+                GET products by merchant
+              </button>
+              <button
+                type="button"
+                disabled={v2Loading}
+                onClick={() => {
+                  const body = parseV2Body()
+                  if (!body) return
+                  void runV2(() => postEsolutionsV2Balance(body))
+                }}
+                className="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 disabled:opacity-50"
+              >
+                POST balance
+              </button>
+              <button
+                type="button"
+                disabled={v2Loading || !v2MerchantCode.trim()}
+                onClick={() => void runV2(() => postEsolutionsV2CatalogSync(v2MerchantCode.trim()))}
+                className="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 disabled:opacity-50"
+              >
+                POST sync merchant
+              </button>
+              <button
+                type="button"
+                disabled={v2Loading}
+                onClick={() => {
+                  const body = parseV2Body()
+                  if (!body) return
+                  void runV2(() => postEsolutionsV2Resend(body))
+                }}
+                className="px-4 py-2 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-xs font-bold hover:bg-amber-100 disabled:opacity-50"
+              >
+                POST resend
+              </button>
+              <button
+                type="button"
+                disabled={v2Loading}
+                onClick={() => {
+                  const body = parseV2Body()
+                  if (!body) return
+                  void runV2(() => postEsolutionsV2Transaction(body))
+                }}
+                className="px-4 py-2 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-xs font-bold hover:bg-amber-100 disabled:opacity-50"
+              >
+                POST transaction
+              </button>
+            </div>
+
+            {v2Result !== null && (
+              <pre className="text-[11px] bg-slate-50 border border-slate-200 rounded-xl p-4 overflow-auto">
+                {JSON.stringify(v2Result, null, 2)}
+              </pre>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

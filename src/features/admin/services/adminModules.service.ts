@@ -37,9 +37,27 @@ export async function createHoliday(date: string) {
   })
 }
 
+export async function deleteHoliday(id: string | number) {
+  return adminVoidFetch(ADMIN_ENDPOINTS.holidays.byId(id), { method: 'DELETE' })
+}
+
 // EseBills Accounts
 export async function getPaginatedEsebillsAccounts(filters?: QueryFilters) {
   return adminJsonFetch<PageDto<UnknownRecord>>(ADMIN_ENDPOINTS.esebillsAccounts.root, { filters })
+}
+
+export async function getEsebillsAccountById(accountId: string | number) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.esebillsAccounts.byId(accountId))
+}
+
+export async function getDefaultEsebillsAccount() {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.esebillsAccounts.default)
+}
+
+export async function searchEsebillsAccount(args: { bank: string; accountNumber: string }) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.esebillsAccounts.search, {
+    filters: { bank: args.bank, accountNumber: args.accountNumber },
+  })
 }
 
 export async function createEsebillsAccount(payload: UnknownRecord) {
@@ -58,6 +76,11 @@ export async function updateEsebillsAccount(accountId: string | number, payload:
 
 export async function deleteEsebillsAccount(accountId: string | number) {
   return adminVoidFetch(ADMIN_ENDPOINTS.esebillsAccounts.byId(accountId), { method: 'DELETE' })
+}
+
+// Providers (ESOLUTIONS, ECONET_DIRECT, NETONE_DIRECT, ZESA_DIRECT)
+export async function getProviders() {
+  return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.providers.root)
 }
 
 // Providers (ESOLUTIONS, ECONET_DIRECT, NETONE_DIRECT, ZESA_DIRECT)
@@ -117,6 +140,10 @@ export async function updateAgentCommissionRate(
   })
 }
 
+export async function getAgentCommissionRateById(agentId: string | number, rateId: string | number) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.agentCommission.rateById(agentId, rateId))
+}
+
 // WhatsApp (via backend API spec)
 export async function getWhatsappSessions(filters?: QueryFilters) {
   return adminJsonFetch<PageDto<UnknownRecord>>(ADMIN_ENDPOINTS.whatsapp.sessions, { filters })
@@ -124,4 +151,16 @@ export async function getWhatsappSessions(filters?: QueryFilters) {
 
 export async function getWhatsappMessages(filters?: QueryFilters) {
   return adminJsonFetch<PageDto<UnknownRecord>>(ADMIN_ENDPOINTS.whatsapp.messages, { filters })
+}
+
+export async function getWhatsappSessionById(id: string | number) {
+  return adminJsonFetch<UnknownRecord>(ADMIN_ENDPOINTS.whatsapp.sessionsById(id))
+}
+
+export async function getWhatsappMessagesBySession(sessionId: string | number) {
+  return adminJsonFetch<UnknownRecord[]>(ADMIN_ENDPOINTS.whatsapp.messagesBySession(sessionId))
+}
+
+export async function getWhatsappMessagesByPhone(phoneNumber: string, filters?: QueryFilters) {
+  return adminJsonFetch<PageDto<UnknownRecord>>(ADMIN_ENDPOINTS.whatsapp.messagesByPhone(phoneNumber), { filters })
 }

@@ -251,7 +251,7 @@ export function QuickPaySelector({ onPick, catCols = 3, itemCols = 2 }: Selector
   const [searchInput, setSearchInput] = useState('');
   const debouncedSearch = useDebounce(searchInput, 50);
 
-  const { data: variants = [], isLoading: isVariantsLoading } = useQuery({
+  const { data: variants = [], isLoading: isVariantsLoading, isError: isVariantsError } = useQuery({
     queryKey: ['quickpay-variants', selectedBase?.productId],
     queryFn: () => getProductVariants(selectedBase!.productId),
     enabled: step === 'variants' && !!selectedBase?.productId,
@@ -280,6 +280,20 @@ export function QuickPaySelector({ onPick, catCols = 3, itemCols = 2 }: Selector
     setStep('variants');
     resetFocus();
   }
+
+  // If a service has no variants/plans, don't show an empty-state panel — just continue.
+  useEffect(() => {
+    if (step !== 'variants') return;
+    if (!selectedBase) return;
+    if (isVariantsLoading || isVariantsError) return;
+    if (variants.length > 0) return;
+
+    const chosen = selectedBase;
+    setSelectedBase(null);
+    setStep('products');
+    resetFocus();
+    onPick(chosen);
+  }, [isVariantsError, isVariantsLoading, onPick, resetFocus, selectedBase, step, variants.length]);
 
   function pickVariant(variant: Product) {
     if (!selectedBase) return;
@@ -482,17 +496,13 @@ export function QuickPaySelector({ onPick, catCols = 3, itemCols = 2 }: Selector
               <Zap size={22} />
               <p className="text-xs mt-2">Loading plans...</p>
             </div>
-          ) : variants.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 py-10 text-slate-400">
-              <p className="text-xs font-semibold text-slate-500">No plans found for this service.</p>
-              <button
-                type="button"
-                onClick={() => pickProduct(selectedBase)}
-                className="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold uppercase tracking-widest hover:bg-emerald-500 transition-colors"
-              >
-                Continue with {selectedBase.name}
-              </button>
+          ) : isVariantsError ? (
+            <div className="flex flex-col items-center gap-2 py-10 text-slate-300">
+              <Zap size={22} />
+              <p className="text-xs font-semibold">Could not load plans.</p>
             </div>
+          ) : variants.length === 0 ? (
+            <div className="py-10" aria-hidden="true" />
           ) : (
             <div className="px-1">
               <ProductVariantPicker

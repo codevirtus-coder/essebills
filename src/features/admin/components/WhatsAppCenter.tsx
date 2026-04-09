@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import CRUDLayout, { type CRUDColumn } from "../../shared/components/CRUDLayout";
-import { getWhatsappSessions, getWhatsappMessages } from "../services";
-import { MessageSquare, Smartphone, Clock, RefreshCw, Hash, FileText } from "lucide-react";
+import { getWhatsappSessions, getWhatsappMessages, getWhatsappMessagesByPhone, getWhatsappMessagesBySession, getWhatsappSessionById } from "../services";
+import { MessageSquare, Smartphone, Clock, RefreshCw, Hash, FileText, Search, Eye, X } from "lucide-react";
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -16,6 +16,10 @@ export default function WhatsAppCenter() {
   const [messages, setMessages] = useState<UnknownRecord[]>([]);
   const [isLoadingSessions, setIsLoadingSessions] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [selectedSessionId, setSelectedSessionId] = useState<string>('');
+  const [selectedSession, setSelectedSession] = useState<UnknownRecord | null>(null);
+  const [phoneFilter, setPhoneFilter] = useState('');
+  const [phonePage, setPhonePage] = useState(1);
 
   const loadSessions = useCallback(async () => {
     setIsLoadingSessions(true);
@@ -34,12 +38,46 @@ export default function WhatsAppCenter() {
     try {
       const page = await getWhatsappMessages({ size: 50 });
       setMessages(Array.isArray(page?.content) ? page.content : []);
+      setSelectedSessionId('');
+      setSelectedSession(null);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to load messages");
     } finally {
       setIsLoadingMessages(false);
     }
   }, []);
+
+  const loadMessagesBySession = useCallback(async (sessionId: string | number) => {
+    setIsLoadingMessages(true);
+    try {
+      const [session, list] = await Promise.all([
+        getWhatsappSessionById(sessionId),
+        getWhatsappMessagesBySession(sessionId),
+      ])
+      setSelectedSessionId(String(sessionId))
+      setSelectedSession(session)
+      setMessages(Array.isArray(list) ? list : [])
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to load session messages");
+    } finally {
+      setIsLoadingMessages(false);
+    }
+  }, [])
+
+  const loadMessagesByPhone = useCallback(async (phone: string, page = 1) => {
+    setIsLoadingMessages(true)
+    try {
+      const p = await getWhatsappMessagesByPhone(phone, { page: page - 1, size: 50 })
+      setMessages(Array.isArray(p?.content) ? p.content : [])
+      setSelectedSessionId('')
+      setSelectedSession(null)
+      setPhonePage(page)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to load phone messages");
+    } finally {
+      setIsLoadingMessages(false)
+    }
+  }, [])
 
   useEffect(() => {
     void loadSessions();
@@ -161,22 +199,85 @@ export default function WhatsAppCenter() {
             onPageChange={() => {}}
             onSizeChange={() => {}}
             searchable={false}
+            actions={{
+              onView: (s) => {
+                const id = (s as any)?.id
+                if (id === null || id === undefined) return
+                void loadMessagesBySession(id)
+              },
+              renderCustom: () => (
+                <button
+                  type="button"
+                  className="p-1.5 text-slate-400 hover:text-emerald-600 transition-colors"
+                  title="View messages"
+                >
+                  <Eye size={16} />
+                </button>
+              ),
+            }}
           />
         </div>
 
         <div className="space-y-4">
           <div className="flex items-center justify-between px-1">
             <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-              <MessageSquare size={16} /> Recent Messages
+              <MessageSquare size={16} /> {selectedSessionId ? `Session ${selectedSessionId}` : phoneFilter.trim() ? `Phone ${phoneFilter.trim()}` : 'Recent Messages'}
             </h3>
-            <button 
-              onClick={() => void loadMessages()} 
-              disabled={isLoadingMessages}
-              className="p-2 text-slate-400 hover:text-emerald-600 transition-colors disabled:opacity-50"
+            <div className="flex items-center gap-2">
+              {(selectedSessionId || phoneFilter.trim()) && (
+                <button
+                  onClick={() => {
+                    setPhoneFilter('')
+                    setPhonePage(1)
+                    void loadMessages()
+                  }}
+                  className="p-2 text-slate-400 hover:text-slate-700 transition-colors"
+                  title="Clear filter"
+                >
+                  <X size={16} />
+                </button>
+              )}
+              <button 
+                onClick={() => void loadMessages()} 
+                disabled={isLoadingMessages}
+                className="p-2 text-slate-400 hover:text-emerald-600 transition-colors disabled:opacity-50"
+                title="Refresh recent messages"
+              >
+                <RefreshCw size={16} className={isLoadingMessages ? "animate-spin" : ""} />
+              </button>
+            </div>
+          </div>
+
+          <div className="glass-card p-4 border-slate-200 dark:border-slate-800 flex items-center gap-2">
+            <Search size={16} className="text-slate-400" />
+            <input
+              value={phoneFilter}
+              onChange={(e) => setPhoneFilter(e.target.value)}
+              placeholder="Search messages by phone number…"
+              className="flex-1 bg-transparent outline-none text-sm font-semibold text-slate-700 dark:text-slate-200 placeholder:text-slate-400"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                const p = phoneFilter.trim()
+                if (!p) return
+                void loadMessagesByPhone(p, 1)
+              }}
+              disabled={!phoneFilter.trim() || isLoadingMessages}
+              className="px-3 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold uppercase tracking-widest disabled:opacity-50"
             >
-              <RefreshCw size={16} className={isLoadingMessages ? "animate-spin" : ""} />
+              Search
             </button>
           </div>
+
+          {selectedSession && (
+            <div className="px-1 text-xs text-slate-500 font-medium">
+              Session phone: <span className="font-mono text-slate-600">{getStr(selectedSession, 'phoneNumber')}</span>
+              {' · '}
+              Status: <span className="font-mono text-slate-600">{getStr(selectedSession, 'status')}</span>
+            </div>
+          )}
+
           <CRUDLayout
             title=""
             columns={messageColumns}
@@ -187,6 +288,27 @@ export default function WhatsAppCenter() {
             onSizeChange={() => {}}
             searchable={false}
           />
+
+          {phoneFilter.trim() && (
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => void loadMessagesByPhone(phoneFilter.trim(), Math.max(1, phonePage - 1))}
+                disabled={phonePage <= 1 || isLoadingMessages}
+                className="px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-600 disabled:opacity-50"
+              >
+                Prev
+              </button>
+              <button
+                type="button"
+                onClick={() => void loadMessagesByPhone(phoneFilter.trim(), phonePage + 1)}
+                disabled={isLoadingMessages}
+                className="px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-600 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
