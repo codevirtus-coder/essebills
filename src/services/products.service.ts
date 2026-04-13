@@ -5,7 +5,8 @@
 import { apiFetch, multipartFetch, toQueryString } from '../api/client'
 import { API_ENDPOINTS } from '../api/endpoints'
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim() ?? ''
+const RAW_API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim()
+const API_BASE_URL = RAW_API_BASE_URL ? RAW_API_BASE_URL.replace(/\/+$/, '') : ''
 
 /** Construct a public URL for a product logo (suitable for use as <img src>). */
 export function getProductLogoUrl(productId: number | string): string {

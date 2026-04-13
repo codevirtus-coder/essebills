@@ -1,7 +1,8 @@
 import axios, { AxiosInstance } from 'axios'
 import { getAccessToken } from '../features/auth/auth.storage'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:52525'
+const RAW_API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim()
+const API_BASE_URL = RAW_API_BASE_URL ? RAW_API_BASE_URL.replace(/\/+$/, '') : 'http://localhost:52525'
 
 function buildAxiosInstance(baseURL: string): AxiosInstance {
   const instance = axios.create({ baseURL, headers: { 'Content-Type': 'application/json' } })

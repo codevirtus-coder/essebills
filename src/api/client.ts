@@ -11,7 +11,9 @@ import { getAccessToken } from '../features/auth/auth.storage'
 // --------------------------------------------------------------------------
 
 // Use explicit API base URL when configured; otherwise use same-origin relative requests.
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() || undefined
+// Strip trailing slashes to avoid `//` when concatenating paths.
+const RAW_API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim()
+const API_BASE_URL = RAW_API_BASE_URL ? RAW_API_BASE_URL.replace(/\/+$/, '') : undefined
 
 // --------------------------------------------------------------------------
 // Error Handling
