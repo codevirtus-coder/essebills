@@ -26,6 +26,10 @@ import {
   getPaginatedPesepayCredentials,
   updatePesepayCredentials,
   deletePesepayCredentials,
+  getAllEsebills,
+  createEsebillsConfig,
+  updateEsebillsConfig,
+  deleteEsebillsConfig,
 } from '../services'
 import { ROUTE_PATHS } from '../../../router/paths'
 import '../styles/admin-dashboard.css'
@@ -95,6 +99,51 @@ export function AdminDashboardPage() {
         return <AdminCountryCurrenciesPage />
       case 'parametersProductCategories':
         return <AdminParametersPage module="productCategories" />
+      case 'parametersEsebills':
+        return (
+          <AdminStyledApiModulePage
+            key="parametersEsebills"
+            title="Esebills Configuration"
+            description="Manage eSebills vendor integration settings."
+            endpoint="/v1/esolutions"
+            loadData={getAllEsebills}
+            createData={createEsebillsConfig as (payload: Record<string, unknown>) => Promise<unknown>}
+            onUpdate={(id, payload) => updateEsebillsConfig(Number(id), payload as Parameters<typeof updateEsebillsConfig>[1])}
+            onDelete={(id) => deleteEsebillsConfig(Number(id))}
+            createMode="fields"
+            editMode="fields"
+            createFields={[
+              { key: 'vendorNumber', label: 'Vendor Number' },
+              { key: 'vendorTerminalId', label: 'Vendor Terminal ID' },
+              { key: 'username', label: 'Username' },
+              { key: 'password', label: 'Password' },
+              { key: 'merchantName', label: 'Merchant Name' },
+              { key: 'accountNumber', label: 'Account Number' },
+              { key: 'productName', label: 'Product Name' },
+              { key: 'currencyCode', label: 'Currency Code' },
+              { key: 'apiVersion', label: 'API Version' },
+            ]}
+            editFields={[
+              { key: 'vendorNumber', label: 'Vendor Number' },
+              { key: 'vendorTerminalId', label: 'Vendor Terminal ID' },
+              { key: 'username', label: 'Username' },
+              { key: 'password', label: 'Password' },
+              { key: 'merchantName', label: 'Merchant Name' },
+              { key: 'accountNumber', label: 'Account Number' },
+              { key: 'productName', label: 'Product Name' },
+              { key: 'currencyCode', label: 'Currency Code' },
+              { key: 'apiVersion', label: 'API Version' },
+            ]}
+            columns={[
+              { key: 'vendorNumber', label: 'Vendor Number' },
+              { key: 'username', label: 'Username' },
+              { key: 'merchantName', label: 'Merchant Name' },
+              { key: 'accountNumber', label: 'Account Number' },
+              { key: 'currencyCode', label: 'Currency' },
+              { key: 'apiVersion', label: 'API Version' },
+            ]}
+          />
+        )
       case 'credentialsPesepay':
         return (
           <AdminStyledApiModulePage

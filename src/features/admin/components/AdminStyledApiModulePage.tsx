@@ -20,10 +20,18 @@ interface AdminStyledApiModulePageProps {
   showEndpointLabel?: boolean
   tableMode?: 'credentials' | 'auto'
   createMode?: 'credentials' | 'json' | 'fields'
+  editMode?: 'credentials' | 'fields'
   createJsonTemplate?: UnknownRecord
   columns?: Array<{ key: string; label: string }>
   emptyLabel?: string
   createFields?: Array<{
+    key: string
+    label: string
+    type?: 'text' | 'number' | 'checkbox' | 'select'
+    optionsLoader?: () => Promise<Array<{ label: string; value: string | number }>>
+    options?: Array<{ label: string; value: string | number }>
+  }>
+  editFields?: Array<{
     key: string
     label: string
     type?: 'text' | 'number' | 'checkbox' | 'select'
@@ -61,10 +69,12 @@ const AdminStyledApiModulePage: React.FC<AdminStyledApiModulePageProps> = ({
   showCreateButton = true,
   tableMode = 'credentials',
   createMode = 'credentials',
+  editMode,
   createJsonTemplate = {},
   columns,
   emptyLabel,
   createFields = [],
+  editFields = [],
   onUpdate,
   onDelete,
 }) => {
@@ -82,6 +92,8 @@ const AdminStyledApiModulePage: React.FC<AdminStyledApiModulePageProps> = ({
   const [editIntegrationKey, setEditIntegrationKey] = useState('')
   const [editEncryptionKey, setEditEncryptionKey] = useState('')
   const [editActive, setEditActive] = useState(true)
+  const [editFieldValues, setEditFieldValues] = useState<Record<string, string | number | boolean>>({})
+  const [editFieldOptions, setEditFieldOptions] = useState<Record<string, Array<{ label: string; value: string | number }>>>({})
   const [payloadText, setPayloadText] = useState(
     JSON.stringify(createJsonTemplate, null, 2) || '{\n\n}',
   )
@@ -134,6 +146,34 @@ const AdminStyledApiModulePage: React.FC<AdminStyledApiModulePageProps> = ({
       mounted = false
     }
   }, [createFields, createMode, isCreateOpen])
+
+  React.useEffect(() => {
+    if (!isEditOpen || (editMode ?? createMode) !== 'fields') return
+
+    let mounted = true
+    const load = async () => {
+      const entries = editFields.filter((f) => f.type === 'select' && (f.optionsLoader || f.options))
+      if (!entries.length) return
+
+      const next: Record<string, Array<{ label: string; value: string | number }>> = {}
+      for (const field of entries) {
+        try {
+          if (field.options?.length) next[field.key] = field.options
+          else if (field.optionsLoader) next[field.key] = await field.optionsLoader()
+        } catch (e) {
+          next[field.key] = []
+        }
+      }
+
+      if (!mounted) return
+      setEditFieldOptions((prev) => ({ ...prev, ...next }))
+    }
+
+    void load()
+    return () => {
+      mounted = false
+    }
+  }, [editFields, editMode, createMode, isEditOpen])
 
   const columnKeys = useMemo(() => {
     if (columns?.length) {
@@ -265,11 +305,60 @@ const AdminStyledApiModulePage: React.FC<AdminStyledApiModulePageProps> = ({
     setEditIntegrationKey(resolveIntegrationKey(row))
     setEditEncryptionKey(resolveEncryptionKey(row))
     setEditActive(resolveActive(row))
+
+    if ((editMode ?? createMode) === 'fields' && editFields.length > 0) {
+      const values: Record<string, string | number | boolean> = {}
+      editFields.forEach((f) => {
+        const raw = row[f.key]
+        if (f.type === 'checkbox') {
+          values[f.key] = Boolean(raw)
+        } else if (f.type === 'number') {
+          values[f.key] = Number(raw) || 0
+        } else {
+          values[f.key] = String(raw ?? '')
+        }
+      })
+      setEditFieldValues(values)
+    }
+
     setIsEditOpen(true)
   }
 
   const handleUpdate = async () => {
     if (!onUpdate || editingId == null) return
+
+    const effectiveEditMode = editMode ?? createMode
+
+    if (effectiveEditMode === 'fields' && editFields.length > 0) {
+      const payload: UnknownRecord = {}
+      for (const field of editFields) {
+        const rawValue = editFieldValues[field.key]
+        if (field.type === 'checkbox') {
+          payload[field.key] = Boolean(rawValue)
+          continue
+        }
+        const textValue = String(rawValue ?? '').trim()
+        if (!textValue) {
+          toast.error(`${field.label} is required`)
+          return
+        }
+        payload[field.key] = field.type === 'number' ? Number(textValue) : textValue
+      }
+
+      try {
+        setIsUpdating(true)
+        await onUpdate(editingId, payload)
+        toast.success(`${title} updated`)
+        setIsEditOpen(false)
+        await loadRows()
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'Failed to update item')
+      } finally {
+        setIsUpdating(false)
+      }
+      return
+    }
+
     const trimmedIntegrationKey = editIntegrationKey.trim()
     const trimmedEncryptionKey = editEncryptionKey.trim()
     if (!trimmedIntegrationKey || !trimmedEncryptionKey) {
@@ -524,33 +613,79 @@ const AdminStyledApiModulePage: React.FC<AdminStyledApiModulePageProps> = ({
         submitLabel="Update Item"
       >
         <div className="space-y-5">
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Integration Key</label>
-            <input
-              value={editIntegrationKey}
-              onChange={(event) => setEditIntegrationKey(event.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-              placeholder="e.g. PK_LIVE_..."
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Encryption Key</label>
-            <input
-              value={editEncryptionKey}
-              onChange={(event) => setEditEncryptionKey(event.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-              placeholder="e.g. SK_LIVE_..."
-            />
-          </div>
-          <label className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={editActive}
-              onChange={(event) => setEditActive(event.target.checked)}
-              className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-            />
-            <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Set as Active Credentials</span>
-          </label>
+          {(editMode ?? createMode) === 'fields' && editFields.length > 0 ? (
+            editFields.map((field) => (
+              <div key={`edit-${field.key}`} className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">{field.label}</label>
+                {field.type === 'checkbox' ? (
+                  <div className="mt-1">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(editFieldValues[field.key])}
+                      onChange={(event) =>
+                        setEditFieldValues((prev) => ({ ...prev, [field.key]: event.target.checked }))
+                      }
+                      className="w-5 h-5 rounded border-slate-300 text-emerald-600"
+                    />
+                  </div>
+                ) : field.type === 'select' ? (
+                  <select
+                    value={String(editFieldValues[field.key] ?? '')}
+                    onChange={(event) =>
+                      setEditFieldValues((prev) => ({ ...prev, [field.key]: event.target.value }))
+                    }
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none"
+                  >
+                    <option value="">Select...</option>
+                    {(editFieldOptions[field.key] ?? []).map((opt) => (
+                      <option key={`edit-${field.key}-${String(opt.value)}`} value={String(opt.value)}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type={field.type === 'number' ? 'number' : 'text'}
+                    value={String(editFieldValues[field.key] ?? '')}
+                    onChange={(event) =>
+                      setEditFieldValues((prev) => ({ ...prev, [field.key]: event.target.value }))
+                    }
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  />
+                )}
+              </div>
+            ))
+          ) : (
+            <>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Integration Key</label>
+                <input
+                  value={editIntegrationKey}
+                  onChange={(event) => setEditIntegrationKey(event.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  placeholder="e.g. PK_LIVE_..."
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Encryption Key</label>
+                <input
+                  value={editEncryptionKey}
+                  onChange={(event) => setEditEncryptionKey(event.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  placeholder="e.g. SK_LIVE_..."
+                />
+              </div>
+              <label className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={editActive}
+                  onChange={(event) => setEditActive(event.target.checked)}
+                  className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                />
+                <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Set as Active Credentials</span>
+              </label>
+            </>
+          )}
         </div>
       </CRUDModal>
     </div>
