@@ -285,10 +285,10 @@ export function HomeHero() {
                   Quick Pay
                 </span>
               </div>
-              <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-400">
+              {/* <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-400">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse inline-block" />
                 Live · 24/7
-              </div>
+              </div> */}
             </div>
             <div className="flex-1 min-h-0">
               <QuickPay />
