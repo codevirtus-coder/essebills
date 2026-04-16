@@ -16,7 +16,7 @@ import telecashBadge from "../../../assets/telecash-badge.svg";
 import zimswitchBadge from "../../../assets/zimswitch-badge.svg";
 import visaBadge from "../../../assets/visa-badge.svg";
 import { ROUTE_PATHS } from "../../../router/paths";
-import { QuickPay } from "../../customer/components/QuickPay";
+import { HeroServiceFinder } from "../components/HeroServiceFinder";
 
 export function HomeHero() {
   const ref = useRef<HTMLElement>(null);
@@ -263,7 +263,7 @@ export function HomeHero() {
           {/*── Right: QuickPay card (hidden on mobile) ── */}
           <div
             id="quick-pay-hero"
-            className="hidden lg:block w-full bg-white/95 dark:bg-slate-800/95 rounded-[2rem] border border-white/20 dark:border-white/10 shadow-2xl backdrop-blur-md p-4 lg:p-5 flex flex-col gap-4"
+            className="hidden lg:block w-full bg-white rounded-[2rem] border border-white/30 shadow-2xl shadow-emerald-900/10 p-5 lg:p-6 flex flex-col gap-4"
           >
             <div className="flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
@@ -291,7 +291,7 @@ export function HomeHero() {
               </div> */}
             </div>
             <div className="flex-1 min-h-0">
-              <QuickPay />
+              <HeroServiceFinder />
             </div>
           </div>
         </div>

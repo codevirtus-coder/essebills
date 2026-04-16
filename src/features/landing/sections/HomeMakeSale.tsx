@@ -23,22 +23,21 @@ export function HomeMakeSale() {
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="max-w-2xl"
           >
-            <p className="text-[#10B981] text-xs sm:text-sm font-black uppercase tracking-[0.2em] mb-3 sm:mb-4">
+            {/* <p className="text-[#10B981] text-xs sm:text-sm font-black uppercase tracking-[0.2em] mb-3 sm:mb-4">
               Direct Payments
-            </p>
+            </p> */}
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white leading-tight">
-              Select a biller to{" "}
-              <span className="text-[#10B981]">pay now</span>
+              Select a biller to <span className="text-[#10B981]">pay now</span>
             </h2>
             <p className="text-slate-500 dark:text-slate-400 mt-2 sm:mt-3 text-sm sm:text-base">
               Browse all services, choose what you need, and pay instantly.
             </p>
           </motion.div>
 
-          <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 font-medium shrink-0">
+          {/* <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 font-medium shrink-0">
             <ShieldCheck size={14} className="text-[#10B981]" />
             Secured by EseBills
-          </div>
+          </div> */}
         </div>
 
         {/* Main panel */}
@@ -57,8 +56,14 @@ export function HomeMakeSale() {
         {/* Bottom trust row */}
         <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-400 dark:text-slate-500">
           {[
-            { icon: <Zap size={13} className="text-[#10B981]" />, text: "Instant processing" },
-            { icon: <ShieldCheck size={13} className="text-[#10B981]" />, text: "256-bit encrypted" },
+            {
+              icon: <Zap size={13} className="text-[#10B981]" />,
+              text: "Instant processing",
+            },
+            {
+              icon: <ShieldCheck size={13} className="text-[#10B981]" />,
+              text: "256-bit encrypted",
+            },
           ].map(({ icon, text }) => (
             <div key={text} className="flex items-center gap-1.5 font-medium">
               {icon}
