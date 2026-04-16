@@ -318,20 +318,6 @@ export function HomeHero() {
         </div>
         <div className="w-px h-8 bg-gradient-to-b from-white/40 to-transparent group-hover:h-12 transition-all duration-500" />
       </motion.button>
-      {/* Wave transition into next section */}
-      <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none z-10 pointer-events-none">
-        <svg
-          viewBox="0 0 1440 64"
-          xmlns="http://www.w3.org/2000/svg"
-          preserveAspectRatio="none"
-          className="w-full h-12 sm:h-16 block"
-        >
-          <path
-            d="M0,32 C240,64 480,0 720,32 C960,64 1200,0 1440,32 L1440,64 L0,64 Z"
-            fill="white"
-          />
-        </svg>
-      </div>
     </section>
   );
 }
