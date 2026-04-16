@@ -25,7 +25,9 @@ export function Navbar() {
     e.preventDefault();
     setMobileOpen(false);
     if (isHome) {
-      document.getElementById("pay-now")?.scrollIntoView({ behavior: "smooth" });
+      document
+        .getElementById("pay-now")
+        ?.scrollIntoView({ behavior: "smooth" });
     } else {
       navigate("/", { state: { scrollTo: "pay-now" } });
     }
@@ -72,7 +74,7 @@ export function Navbar() {
 
   return (
     <header
-      className={`sticky top-0 inset-x-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
         mobileOpen || scrolled || !isHome
           ? "bg-[#10B981]/95 backdrop-blur-md shadow-md"
           : "bg-transparent"
