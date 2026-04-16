@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useState } from "react";
+﻿import { Suspense, lazy, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useReducedMotion } from "framer-motion";
 import { HomeHero } from "../sections/HomeHero";
@@ -8,10 +8,16 @@ import { HomeForWho } from "../sections/HomeForWho";
 import { HomeBannerBreak } from "../sections/HomeBannerBreak";
 import { HomeHowItWorks } from "../sections/HomeHowItWorks";
 import { HomeFinalCTA } from "../sections/HomeFinalCTA";
-import { type IdleCallbackHandle, requestIdle, cancelIdle } from "../sections/homePageUtils";
+import {
+  type IdleCallbackHandle,
+  requestIdle,
+  cancelIdle,
+} from "../sections/homePageUtils";
 
 const ChatbotWidgetLazy = lazy(() =>
-  import("../components/ChatbotWidget").then((mod) => ({ default: mod.ChatbotWidget })),
+  import("../components/ChatbotWidget").then((mod) => ({
+    default: mod.ChatbotWidget,
+  })),
 );
 
 export function HomePage() {
@@ -41,7 +47,9 @@ export function HomePage() {
       window.removeEventListener("pointerdown", onFirstInteraction);
       window.removeEventListener("keydown", onFirstInteraction);
     };
-    window.addEventListener("pointerdown", onFirstInteraction, { passive: true });
+    window.addEventListener("pointerdown", onFirstInteraction, {
+      passive: true,
+    });
     window.addEventListener("keydown", onFirstInteraction);
     idleHandle = requestIdle(enable, 6000);
     return () => {
@@ -55,10 +63,10 @@ export function HomePage() {
     <main className="bg-white">
       <HomeHero />
       <HomeMakeSale />
-      <HomeOverview />
+      {/* <HomeOverview /> */}
       <HomeForWho />
-      <HomeBannerBreak />
-      <HomeHowItWorks />
+      {/* <HomeBannerBreak /> */}
+      {/* <HomeHowItWorks /> */}
       <HomeFinalCTA />
       <Suspense fallback={null}>
         {showChatbot && <ChatbotWidgetLazy />}

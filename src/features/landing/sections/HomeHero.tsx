@@ -267,7 +267,7 @@ export function HomeHero() {
           >
             <div className="flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-[#10B981] flex items-center justify-center">
+                {/* <div className="w-8 h-8 rounded-xl bg-[#10B981] flex items-center justify-center">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
@@ -280,10 +280,10 @@ export function HomeHero() {
                       clipRule="evenodd"
                     />
                   </svg>
-                </div>
-                <span className="font-black text-slate-900 dark:text-white text-sm tracking-tight">
+                </div> */}
+                {/* <span className="font-black text-slate-900 dark:text-white text-sm tracking-tight">
                   Quick Pay
-                </span>
+                </span> */}
               </div>
               {/* <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-400">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse inline-block" />
