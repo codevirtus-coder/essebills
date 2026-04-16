@@ -61,8 +61,7 @@ function toneFromLabel(label: string): CategoryTone {
   if (/(entertain|dstv|showmax|netflix|tv|music)/.test(v))
     return "entertainment";
   if (/(fuel|petrol|diesel|gas)/.test(v)) return "fuel";
-  if (/(utilit|electric|zesa|zetdc|water|council)/.test(v))
-    return "utilities";
+  if (/(utilit|electric|zesa|zetdc|water|council)/.test(v)) return "utilities";
   return "other";
 }
 
@@ -118,13 +117,9 @@ function toneVisual(tone: CategoryTone) {
 
 export function HeroServiceFinder() {
   const navigate = useNavigate();
-  const { categories, allProducts, countByCategory, isLoading } =
-    useQuickPayData();
+  const { allProducts } = useQuickPayData();
 
   const [query, setQuery] = useState("");
-  const [activeCategoryKey, setActiveCategoryKey] = useState<string | null>(
-    null,
-  );
   const [open, setOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -135,11 +130,8 @@ export function HeroServiceFinder() {
 
   const filteredProducts = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const base = activeCategoryKey
-      ? allProducts.filter((p) => p.categoryKey === activeCategoryKey)
-      : allProducts;
-    if (!q) return base;
-    return base
+    if (!q) return [];
+    return allProducts
       .map((p) => ({
         p,
         score: Math.min(
@@ -151,28 +143,10 @@ export function HeroServiceFinder() {
       .filter((x) => x.score < 9999)
       .sort((a, b) => a.score - b.score)
       .map((x) => x.p);
-  }, [activeCategoryKey, allProducts, query]);
-
-  const matchingCategories = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return [];
-    return categories
-      .map((c) => ({ c, score: rankMatch(c.label, q) }))
-      .filter((x) => x.score < 9999)
-      .sort((a, b) => a.score - b.score)
-      .map((x) => x.c)
-      .slice(0, 5);
-  }, [categories, query]);
+  }, [allProducts, query]);
 
   const suggestions = useMemo(
     () => [
-      ...matchingCategories.map((c) => ({
-        type: "category" as const,
-        id: `c-${c.key}`,
-        label: c.label,
-        tone: toneFromLabel(c.label),
-        categoryKey: c.key,
-      })),
       ...filteredProducts.slice(0, 10).map((p) => ({
         type: "product" as const,
         id: p.id,
@@ -181,17 +155,8 @@ export function HeroServiceFinder() {
         biller: p as BillerCard,
       })),
     ],
-    [filteredProducts, matchingCategories],
+    [filteredProducts],
   );
-
-  const featuredCategories = useMemo(() => categories.slice(0, 8), [categories]);
-
-  const categoryProducts = useMemo(() => {
-    if (!activeCategoryKey) return [];
-    return allProducts
-      .filter((p) => p.categoryKey === activeCategoryKey)
-      .slice(0, 6);
-  }, [activeCategoryKey, allProducts]);
 
   const handlePick = (b: BillerCard) => {
     const next = { productId: b.productId, productName: b.name };
@@ -211,29 +176,12 @@ export function HeroServiceFinder() {
     if (!open) setFocusedIndex(0);
   }, [open]);
 
-  const activeCategoryLabel = useMemo(() => {
-    if (!activeCategoryKey) return null;
-    const c = categories.find((x) => x.key === activeCategoryKey);
-    return c?.label ?? "Category";
-  }, [activeCategoryKey, categories]);
-
   return (
     <div className="flex flex-col h-full">
       <div className="space-y-4">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-[10px] font-black text-emerald-700/90 uppercase tracking-widest">
-              Quick Pay
-            </p>
-            <h3 className="mt-1 text-xl font-black text-slate-900 tracking-tight leading-tight">
-              Which service do you want to pay for?
-            </h3>
-          </div>
-          <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
-            Live 24/7
-          </div>
-        </div>
+        <h3 className="text-xl font-black text-slate-900 tracking-tight leading-tight">
+          Which service do you want to pay for?
+        </h3>
 
         <div className="relative">
           <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
@@ -269,30 +217,19 @@ export function HeroServiceFinder() {
                   e.preventDefault();
                   const s = suggestions[focusedIndex];
                   if (!s) return;
-                  if (s.type === "category") {
-                    setActiveCategoryKey(s.categoryKey);
-                    setQuery("");
-                    setOpen(false);
-                    inputRef.current?.blur();
-                    return;
-                  }
                   handlePick(s.biller);
                 }
               }}
-              placeholder={
-                activeCategoryLabel
-                  ? `Search in ${activeCategoryLabel}...`
-                  : "e.g. ZESA, Econet, DSTV..."
-              }
+              placeholder={"e.g. ZESA, Econet, DSTV..."}
               className={cn(
-                "w-full pl-11 pr-4 py-3 rounded-2xl border text-sm font-semibold outline-none transition-all shadow-sm",
+                "w-full pl-11 pr-4 py-5 rounded-md border text-sm font-semibold outline-none transition-all shadow-sm",
                 "bg-white border-slate-200",
                 "focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/10",
               )}
             />
           </div>
 
-          {open && (query.trim().length > 0 || suggestions.length > 0) && (
+          {open && query.trim().length > 0 && (
             <div className="absolute left-0 right-0 mt-2 bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden z-50">
               <div className="max-h-[320px] overflow-auto">
                 {suggestions.length === 0 ? (
@@ -306,12 +243,6 @@ export function HeroServiceFinder() {
                       type="button"
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => {
-                        if (s.type === "category") {
-                          setActiveCategoryKey(s.categoryKey);
-                          setQuery("");
-                          setOpen(false);
-                          return;
-                        }
                         handlePick(s.biller);
                       }}
                       className={cn(
@@ -326,9 +257,7 @@ export function HeroServiceFinder() {
                           {s.label}
                         </p>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-                          {s.type === "category"
-                            ? "Category"
-                            : (s.biller.categoryLabel ?? "Service")}
+                          {s.biller.categoryLabel ?? "Service"}
                           {s.type === "product" && s.biller.currencyCode
                             ? ` - ${s.biller.currencyCode}`
                             : ""}
@@ -366,10 +295,10 @@ export function HeroServiceFinder() {
               );
               if (b) handlePick(b);
             }}
-            className="w-full p-3 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 transition-colors flex items-center justify-between gap-3 shadow-sm"
+            className="w-full p-3 rounded-full border border-slate-200 bg-white hover:bg-slate-50 transition-colors flex items-center justify-between gap-3 shadow-sm"
           >
             <div className="min-w-0 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-700">
+              <div className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-700">
                 <Icon name="history" size={18} />
               </div>
               <div className="min-w-0">
@@ -385,102 +314,8 @@ export function HeroServiceFinder() {
           </button>
         )}
       </div>
-
-      <div className="mt-5 flex-1 min-h-0 flex flex-col">
-        <div className="flex items-center justify-between">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-            {activeCategoryLabel ? activeCategoryLabel : "Popular categories"}
-          </p>
-          {activeCategoryKey && (
-            <button
-              type="button"
-              onClick={() => setActiveCategoryKey(null)}
-              className="text-[10px] font-black text-emerald-700 uppercase tracking-widest hover:underline"
-            >
-              Clear
-            </button>
-          )}
-        </div>
-
-        {isLoading ? (
-          <div className="mt-3 grid grid-cols-4 gap-3">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-20 rounded-2xl bg-white/70 border border-white/30 animate-pulse"
-              />
-            ))}
-          </div>
-        ) : (
-          <>
-            {!activeCategoryKey && (
-              <div className="mt-3 grid grid-cols-4 gap-3">
-                {featuredCategories.map((c) => (
-                  <button
-                    key={c.key}
-                    type="button"
-                    onClick={() => {
-                      setActiveCategoryKey(c.key);
-                      setQuery("");
-                      setOpen(false);
-                    }}
-                    className="rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 transition-colors p-3 text-left shadow-sm"
-                  >
-                    <div
-                      className={cn(
-                        "w-10 h-10 rounded-2xl border flex items-center justify-center",
-                        toneVisual(toneFromLabel(c.label)).wrap,
-                      )}
-                    >
-                      <Icon
-                        name={toneVisual(toneFromLabel(c.label)).icon}
-                        size={18}
-                      />
-                    </div>
-                    <p className="mt-2 text-[11px] font-black text-slate-800 leading-tight line-clamp-2">
-                      {c.label}
-                    </p>
-                    <p className="text-[10px] text-slate-400 font-bold mt-1">
-                      {countByCategory[c.key] ?? 0}
-                    </p>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {activeCategoryKey && (
-              <div className="mt-3 space-y-2 overflow-auto pr-1">
-                {categoryProducts.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => handlePick(p)}
-                    className="w-full flex items-center justify-between gap-3 p-3 rounded-2xl bg-white border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold text-slate-900 truncate">
-                        {p.name}
-                      </p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-                        {p.currencyCode ?? "-"}
-                      </p>
-                    </div>
-                    <ChevronRight size={18} className="text-slate-300 shrink-0" />
-                  </button>
-                ))}
-                {categoryProducts.length === 0 && (
-                  <p className="text-sm text-slate-500 mt-4">
-                    No services in this category.
-                  </p>
-                )}
-              </div>
-            )}
-          </>
-        )}
-      </div>
     </div>
   );
 }
 
 export default HeroServiceFinder;
-

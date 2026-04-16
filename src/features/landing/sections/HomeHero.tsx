@@ -119,7 +119,7 @@ export function HomeHero() {
         style={{ y: shouldReduceMotion ? "0%" : contentY }}
         className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-8 sm:pt-32 sm:pb-12 md:pt-36 md:pb-6 w-full"
       >
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-14 items-start lg:items-center">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-14 items-start">
           {/* ── Left: Text content ── */}
           <div className="flex flex-col text-center lg:text-left">
             <motion.h1
