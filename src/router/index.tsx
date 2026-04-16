@@ -1,4 +1,8 @@
-import { createBrowserRouter, type RouteObject, Navigate } from "react-router-dom";
+import {
+  createBrowserRouter,
+  type RouteObject,
+  Navigate,
+} from "react-router-dom";
 import { MainLayout } from "../layouts/MainLayout";
 import { DashboardLayout } from "../layouts/DashboardLayout";
 import { HomePage } from "../features/landing/pages/HomePage";
@@ -84,7 +88,12 @@ const routes: RouteObject[] = [
       // Admin dashboard - uses DashboardLayout with group guard
       {
         path: "portal-admin",
-        element: <RequireAuth redirectTo={ROUTE_PATHS.login} allowedGroups={['ADMIN']} />,
+        element: (
+          <RequireAuth
+            redirectTo={ROUTE_PATHS.login}
+            allowedGroups={["ADMIN"]}
+          />
+        ),
         children: [
           {
             element: <DashboardLayout />,
@@ -108,7 +117,12 @@ const routes: RouteObject[] = [
       // Agent dashboard - uses DashboardLayout with group guard
       {
         path: "portal-agent",
-        element: <RequireAuth redirectTo={ROUTE_PATHS.login} allowedGroups={['AGENT']} />,
+        element: (
+          <RequireAuth
+            redirectTo={ROUTE_PATHS.login}
+            allowedGroups={["AGENT"]}
+          />
+        ),
         children: [
           {
             element: <DashboardLayout />,
@@ -132,7 +146,12 @@ const routes: RouteObject[] = [
       // Biller dashboard - uses DashboardLayout with group guard
       {
         path: "portal-biller",
-        element: <RequireAuth redirectTo={ROUTE_PATHS.login} allowedGroups={['BILLER']} />,
+        element: (
+          <RequireAuth
+            redirectTo={ROUTE_PATHS.login}
+            allowedGroups={["BILLER"]}
+          />
+        ),
         children: [
           {
             element: <DashboardLayout />,
@@ -156,7 +175,12 @@ const routes: RouteObject[] = [
       // Customer dashboard - uses DashboardLayout with group guard
       {
         path: "portal-customer",
-        element: <RequireAuth redirectTo={ROUTE_PATHS.login} allowedGroups={['CUSTOMER']} />,
+        element: (
+          <RequireAuth
+            redirectTo={ROUTE_PATHS.login}
+            allowedGroups={["CUSTOMER"]}
+          />
+        ),
         children: [
           {
             element: <DashboardLayout />,

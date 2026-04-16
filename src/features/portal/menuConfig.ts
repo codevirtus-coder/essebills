@@ -63,7 +63,7 @@ export const ADMIN_MENU: MenuSection[] = [
       { id: "parametersCountryCurrencies", label: "Country Currencies", icon: "link" },
       { id: "parametersBanks",       label: "Banks",       icon: "account_balance" },
       { id: "parametersHolidays",    label: "Holidays",    icon: "event" },
-      { id: "parametersEsebills",    label: "Esebills",    icon: "settings" },
+      { id: "parametersEsebills",    label: "eSolutions",  icon: "hub" },
     ],
   },
   {

@@ -103,8 +103,8 @@ export function AdminDashboardPage() {
         return (
           <AdminStyledApiModulePage
             key="parametersEsebills"
-            title="Esebills Configuration"
-            description="Manage eSebills vendor integration settings."
+            title="eSolutions Configuration"
+            description="Manage eSolutions vendor integration settings."
             endpoint="/v1/esolutions"
             loadData={getAllEsebills}
             createData={createEsebillsConfig as (payload: Record<string, unknown>) => Promise<unknown>}

@@ -1,6 +1,15 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { CheckCircle2, XCircle, Clock, Loader2, ShieldCheck, ArrowLeft, Home, Receipt } from "lucide-react";
+import {
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Loader2,
+  ShieldCheck,
+  ArrowLeft,
+  Home,
+  Receipt,
+} from "lucide-react";
 import { getPaymentStatus } from "../../../services/payments.service";
 import type { PaymentTransaction } from "../../../types/transactions";
 import esebillsLogo from "../../../assets/esebills_logo.png";
@@ -9,7 +18,7 @@ import { ROUTE_PATHS } from "../../../router/paths";
 type Phase = "polling" | "success" | "failed" | "timeout";
 
 const POLL_INTERVAL_MS = 3000;
-const MAX_POLLS = 80; // ~4 minutes
+const MAX_POLLS = 80;
 
 export function PaymentReturnPage() {
   const [searchParams] = useSearchParams();
@@ -47,13 +56,13 @@ export function PaymentReturnPage() {
           setPhase("success");
           return;
         }
-
         if (status === "SUCCESS" && !fulfilled) {
           // Paid but delivery still pending — keep polling briefly
         }
-
         // Terminal failure statuses
-        const terminal = ["FAILED", "CANCELLED", "ERROR", "REVERSED"].includes(status ?? "");
+        const terminal = ["FAILED", "CANCELLED", "ERROR", "REVERSED"].includes(
+          status ?? "",
+        );
         if (terminal) {
           stopPolling();
           setPhase("failed");
@@ -62,13 +71,11 @@ export function PaymentReturnPage() {
       } catch {
         // swallow — keep polling
       }
-
       if (pollCount.current >= MAX_POLLS) {
         stopPolling();
         setPhase("timeout");
       }
     };
-
     // Poll immediately then on interval
     void poll();
     intervalRef.current = setInterval(poll, POLL_INTERVAL_MS);
@@ -82,10 +89,12 @@ export function PaymentReturnPage() {
 
     const params = new URLSearchParams();
     if (tx.productName) params.set("biller", tx.productName);
-    if (typeof tx.productId === "number" && tx.productId > 0) params.set("productId", String(tx.productId));
+    if (typeof tx.productId === "number" && tx.productId > 0)
+      params.set("productId", String(tx.productId));
 
     // If the gateway sent back an amount, prefill it. Otherwise let checkout default.
-    if (typeof tx.amount === "number" && tx.amount > 0) params.set("amount", String(tx.amount));
+    if (typeof tx.amount === "number" && tx.amount > 0)
+      params.set("amount", String(tx.amount));
 
     const qs = params.toString();
     return qs ? `${ROUTE_PATHS.checkout}?${qs}` : ROUTE_PATHS.checkout;
@@ -96,7 +105,11 @@ export function PaymentReturnPage() {
       {/* Header */}
       <header className="h-16 flex items-center justify-between px-6 sm:px-10 border-b border-slate-200 bg-slate-900 text-white">
         <Link to={ROUTE_PATHS.home}>
-          <img src={esebillsLogo} alt="EseBills" className="h-12 w-auto brightness-0 invert" />
+          <img
+            src={esebillsLogo}
+            alt="EseBills"
+            className="h-12 w-auto brightness-0 invert"
+          />
         </Link>
         <div className="flex items-center gap-2 text-[10px] font-bold text-emerald-400 uppercase tracking-widest">
           <ShieldCheck size={16} />
@@ -107,27 +120,40 @@ export function PaymentReturnPage() {
       {/* Content */}
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="w-full max-w-md">
-
           {/* ── Polling ── */}
           {phase === "polling" && (
             <div className="bg-white rounded-[2rem] border border-slate-200 shadow-xl shadow-slate-200/50 p-10 text-center space-y-6">
               <div className="flex justify-center">
                 <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center">
-                  <Loader2 size={36} className="text-emerald-600 animate-spin" />
+                  <Loader2
+                    size={36}
+                    className="text-emerald-600 animate-spin"
+                  />
                 </div>
               </div>
               <div>
-                <h1 className="text-2xl font-black text-slate-900 tracking-tight">Checking Payment</h1>
+                <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+                  Checking Payment
+                </h1>
                 <p className="text-slate-500 text-sm mt-2">
-                  We're confirming your payment and delivering your product. This may take a moment.
+                  We're confirming your payment and delivering your product.
+                  This may take a moment.
                 </p>
               </div>
               {tx && (
                 <div className="bg-slate-50 rounded-2xl p-5 text-left space-y-2 border border-slate-100">
-                  <TxRow label="Status" value={<StatusBadge status={tx.paymentStatus} />} />
-                  {tx.productName && <TxRow label="Product" value={tx.productName} />}
+                  <TxRow
+                    label="Status"
+                    value={<StatusBadge status={tx.paymentStatus} />}
+                  />
+                  {tx.productName && (
+                    <TxRow label="Product" value={tx.productName} />
+                  )}
                   {(tx.totalAmount ?? tx.amount) != null && tx.currencyCode && (
-                    <TxRow label="Amount" value={`${tx.currencyCode} ${Number(tx.totalAmount ?? tx.amount).toFixed(2)}`} />
+                    <TxRow
+                      label="Amount"
+                      value={`${tx.currencyCode} ${Number(tx.totalAmount ?? tx.amount).toFixed(2)}`}
+                    />
                   )}
                 </div>
               )}
@@ -147,30 +173,61 @@ export function PaymentReturnPage() {
                 </div>
               </div>
               <div>
-                <h1 className="text-2xl font-black text-slate-900 tracking-tight">Payment Successful</h1>
+                <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+                  Payment Successful
+                </h1>
                 <p className="text-slate-500 text-sm mt-2">
-                  Your payment has been confirmed and your product has been delivered.
+                  Your payment has been confirmed and your product has been
+                  delivered.
                 </p>
               </div>
               {tx && (
                 <div className="bg-emerald-50/60 rounded-2xl p-5 text-left space-y-2 border border-emerald-100">
-                  {tx.productName && <TxRow label="Product" value={tx.productName} />}
+                  {tx.productName && (
+                    <TxRow label="Product" value={tx.productName} />
+                  )}
                   {(tx.totalAmount ?? tx.amount) != null && tx.currencyCode && (
-                    <TxRow label="Amount Paid" value={`${tx.currencyCode} ${Number(tx.totalAmount ?? tx.amount).toFixed(2)}`} />
+                    <TxRow
+                      label="Amount Paid"
+                      value={`${tx.currencyCode} ${Number(tx.totalAmount ?? tx.amount).toFixed(2)}`}
+                    />
                   )}
                   {tx.productReferenceNumber && (
-                    <TxRow label="Reference" value={<span className="font-mono text-xs">{tx.productReferenceNumber}</span>} />
+                    <TxRow
+                      label="Reference"
+                      value={
+                        <span className="font-mono text-xs">
+                          {tx.productReferenceNumber}
+                        </span>
+                      }
+                    />
                   )}
                   {tx.pesepayReferenceNumber && (
-                    <TxRow label="Pesepay Ref" value={<span className="font-mono text-xs">{tx.pesepayReferenceNumber}</span>} />
+                    <TxRow
+                      label="Pesepay Ref"
+                      value={
+                        <span className="font-mono text-xs">
+                          {tx.pesepayReferenceNumber}
+                        </span>
+                      }
+                    />
                   )}
                   {(tx as any).token && (
-                    <TxRow label="Token" value={<span className="font-mono text-base font-black text-emerald-700">{(tx as any).token}</span>} />
+                    <TxRow
+                      label="Token"
+                      value={
+                        <span className="font-mono text-base font-black text-emerald-700">
+                          {(tx as any).token}
+                        </span>
+                      }
+                    />
                   )}
                 </div>
               )}
               {tx?.productPaymentNotificationSms && (
-                <p className="text-xs text-slate-400">A confirmation SMS has been sent to your phone.</p>
+                <p className="text-xs text-slate-400">
+                  A confirmation SMS has been sent to your phone.
+                </p>
               )}
               <div className="flex gap-3">
                 <Link
@@ -201,7 +258,9 @@ export function PaymentReturnPage() {
               </div>
               <div>
                 <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-                  {phase === "timeout" ? "Still Processing" : "Payment Unsuccessful"}
+                  {phase === "timeout"
+                    ? "Still Processing"
+                    : "Payment Unsuccessful"}
                 </h1>
                 <p className="text-slate-500 text-sm mt-2">
                   {phase === "timeout"
@@ -213,10 +272,22 @@ export function PaymentReturnPage() {
               </div>
               {tx && (
                 <div className="bg-slate-50 rounded-2xl p-5 text-left space-y-2 border border-slate-100">
-                  <TxRow label="Status" value={<StatusBadge status={tx.paymentStatus} />} />
-                  {tx.productName && <TxRow label="Product" value={tx.productName} />}
+                  <TxRow
+                    label="Status"
+                    value={<StatusBadge status={tx.paymentStatus} />}
+                  />
+                  {tx.productName && (
+                    <TxRow label="Product" value={tx.productName} />
+                  )}
                   {tx.pesepayReferenceNumber && (
-                    <TxRow label="Reference" value={<span className="font-mono text-xs">{tx.pesepayReferenceNumber}</span>} />
+                    <TxRow
+                      label="Reference"
+                      value={
+                        <span className="font-mono text-xs">
+                          {tx.pesepayReferenceNumber}
+                        </span>
+                      }
+                    />
                   )}
                 </div>
               )}
@@ -242,14 +313,18 @@ export function PaymentReturnPage() {
           {!transactionId && phase === "failed" && (
             <div className="mt-4 text-center text-xs text-slate-400">
               No transaction ID found in the URL. Return to{" "}
-              <Link to={ROUTE_PATHS.home} className="underline text-slate-600">home</Link>.
+              <Link to={ROUTE_PATHS.home} className="underline text-slate-600">
+                home
+              </Link>
+              .
             </div>
           )}
         </div>
       </div>
 
       <footer className="py-4 text-center text-[10px] text-slate-400 font-medium">
-        © {new Date().getFullYear()} EseBills Payment Platform · All transactions are encrypted and secure.
+        © {new Date().getFullYear()} EseBills Payment Platform · All
+        transactions are encrypted and secure.
       </footer>
     </div>
   );
@@ -260,8 +335,12 @@ export function PaymentReturnPage() {
 function TxRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest shrink-0">{label}</span>
-      <span className="text-sm font-bold text-slate-900 text-right">{value}</span>
+      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest shrink-0">
+        {label}
+      </span>
+      <span className="text-sm font-bold text-slate-900 text-right">
+        {value}
+      </span>
     </div>
   );
 }
@@ -277,7 +356,9 @@ function StatusBadge({ status }: { status?: string }) {
   };
   const cls = styles[s] ?? "bg-slate-100 text-slate-500 border-slate-200";
   return (
-    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest border ${cls}`}>
+    <span
+      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest border ${cls}`}
+    >
       {s}
     </span>
   );

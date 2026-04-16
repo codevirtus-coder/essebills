@@ -3,10 +3,11 @@
 
 @theme {
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", "IBM Plex Mono", "Fira Code", Consolas, monospace;
+  --font-mono:
+    "JetBrains Mono", "IBM Plex Mono", "Fira Code", Consolas, monospace;
 
   /* ── Brand Colors ───────────────────────────────────────────────────────── */
-  --color-brand: #10B981;
+  --color-brand: #10b981;
   --color-brand-dark: #059669;
   --color-brand-darker: #047857;
   --color-brand-light: #34d399;
@@ -18,7 +19,7 @@
   --color-brand-text-inv: #ffffff;
 
   /* ── Semantic Aliases ───────────────────────────────────────────────────── */
-  --color-primary: #10B981;
+  --color-primary: #10b981;
   --color-primary-hover: #059669;
   --color-secondary: #c1d82f;
 
@@ -50,8 +51,10 @@
   /* ── Shadow Tokens ──────────────────────────────────────────────────────── */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-lg:
+    0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl:
+    0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
   --shadow-soft: 0 10px 30px rgb(15 23 42 / 8%);
   --shadow-brand: 0 10px 30px rgb(16 185 129 / 20%);
   --shadow-brand-lg: 0 20px 40px rgb(16 185 129 / 30%);
@@ -69,7 +72,8 @@
 :root {
   --nav-offset: 5rem;
   --font-family-base: "Plus Jakarta Sans", sans-serif;
-  --font-family-mono: "JetBrains Mono", "IBM Plex Mono", "Fira Code", Consolas, monospace;
+  --font-family-mono:
+    "JetBrains Mono", "IBM Plex Mono", "Fira Code", Consolas, monospace;
   --fw-regular: 400;
   --fw-medium: 500;
   --fw-semibold: 600;
@@ -84,7 +88,7 @@
   --fs-h1: clamp(2.4rem, 6vw, 3.8rem);
 
   /* ── Single source of truth for brand colors ────────────────────────────── */
-  --primary: #10B981;
+  --primary: #10b981;
   --primary-hover: #059669;
   --primary-darker: #047857;
   --secondary: #c1d82f;
@@ -129,7 +133,9 @@ body {
   letter-spacing: -0.01em;
   background-color: var(--color-bg);
   color: var(--color-text);
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 /* Global scrollbar hidden (keep scroll, hide bar) */
@@ -180,7 +186,9 @@ h6 {
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-sm);
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
 }
 
 html.dark .glass-card {
@@ -228,55 +236,129 @@ html.dark .glass-card {
 }
 
 /* ── Brand color utilities ─────────────────────────────────────────────────── */
-.bg-brand { background-color: var(--color-brand); }
-.bg-brand-dark { background-color: var(--color-brand-dark); }
-.text-brand { color: var(--color-brand); }
-.text-brand-dark { color: var(--color-brand-dark); }
-.border-brand { border-color: var(--color-brand); }
-.shadow-brand { box-shadow: var(--shadow-brand); }
-.shadow-brand-lg { box-shadow: var(--shadow-brand-lg); }
+.bg-brand {
+  background-color: var(--color-brand);
+}
+.bg-brand-dark {
+  background-color: var(--color-brand-dark);
+}
+.text-brand {
+  color: var(--color-brand);
+}
+.text-brand-dark {
+  color: var(--color-brand-dark);
+}
+.border-brand {
+  border-color: var(--color-brand);
+}
+.shadow-brand {
+  box-shadow: var(--shadow-brand);
+}
+.shadow-brand-lg {
+  box-shadow: var(--shadow-brand-lg);
+}
 
 /* ── Surface utilities (light) ─────────────────────────────────────────────── */
-.bg-surface { background-color: var(--color-surface); }
-.bg-background { background-color: var(--color-bg); }
-.bg-background-alt { background-color: var(--color-bg-alt); }
-.text-body { color: var(--color-text); }
-.text-muted { color: var(--color-text-muted); }
-.text-subtle { color: var(--color-text-subtle); }
-.border-default { border-color: var(--color-border); }
-.border-strong { border-color: var(--color-border-strong); }
+.bg-surface {
+  background-color: var(--color-surface);
+}
+.bg-background {
+  background-color: var(--color-bg);
+}
+.bg-background-alt {
+  background-color: var(--color-bg-alt);
+}
+.text-body {
+  color: var(--color-text);
+}
+.text-muted {
+  color: var(--color-text-muted);
+}
+.text-subtle {
+  color: var(--color-text-subtle);
+}
+.border-default {
+  border-color: var(--color-border);
+}
+.border-strong {
+  border-color: var(--color-border-strong);
+}
 
 /* ── Surface utilities (dark) ──────────────────────────────────────────────── */
-html.dark .bg-surface-dark { background-color: var(--color-surface-dark); }
-html.dark .bg-background-dark { background-color: var(--color-bg-dark); }
-html.dark .bg-background-alt-dark { background-color: var(--color-bg-alt-dark); }
-html.dark .text-body-dark { color: var(--color-text-dark); }
-html.dark .text-muted-dark { color: var(--color-text-muted-dark); }
-html.dark .text-subtle-dark { color: var(--color-text-subtle-dark); }
-html.dark .border-default-dark { border-color: var(--color-border-dark); }
-html.dark .border-strong-dark { border-color: var(--color-border-strong-dark); }
+html.dark .bg-surface-dark {
+  background-color: var(--color-surface-dark);
+}
+html.dark .bg-background-dark {
+  background-color: var(--color-bg-dark);
+}
+html.dark .bg-background-alt-dark {
+  background-color: var(--color-bg-alt-dark);
+}
+html.dark .text-body-dark {
+  color: var(--color-text-dark);
+}
+html.dark .text-muted-dark {
+  color: var(--color-text-muted-dark);
+}
+html.dark .text-subtle-dark {
+  color: var(--color-text-subtle-dark);
+}
+html.dark .border-default-dark {
+  border-color: var(--color-border-dark);
+}
+html.dark .border-strong-dark {
+  border-color: var(--color-border-strong-dark);
+}
 
 /* ── Animation keyframes ───────────────────────────────────────────────────── */
 @keyframes marquee {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.animate-fade-in { animation: fadeIn 0.25s ease forwards; }
-.animate-slide-up { animation: slideUp 0.25s ease forwards; }
-.animate-slide-down { animation: slideDown 0.25s ease forwards; }
+.animate-fade-in {
+  animation: fadeIn 0.25s ease forwards;
+}
+.animate-slide-up {
+  animation: slideUp 0.25s ease forwards;
+}
+.animate-slide-down {
+  animation: slideDown 0.25s ease forwards;
+}

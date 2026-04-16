@@ -186,8 +186,8 @@ export function HomeHero() {
               }}
               className="text-sm sm:text-base lg:text-lg text-white/80 leading-relaxed mb-6 sm:mb-8 max-w-xl mx-auto lg:mx-0"
             >
-              Say goodbye to long queues and late fees. Pay utility, mobile,
-              education, and insurance bills instantly from anywhere, anytime.
+              Pay utility, mobile, education, and insurance bills instantly from
+              anywhere, anytime.
             </motion.p>
             <motion.div
               initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
@@ -225,28 +225,6 @@ export function HomeHero() {
               }}
               className="mt-4 sm:mt-6 flex flex-col items-center lg:items-start gap-2"
             >
-              <p className="text-[10px] sm:text-xs text-white/50 text-center lg:text-left">
-                No account needed to pay instantly
-              </p>
-              <div className="flex items-center gap-2 text-[10px] sm:text-xs text-white/60 font-medium">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white/40 shrink-0"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                Trusted by <span className="text-white font-bold">50,000+</span>{" "}
-                customers
-              </div>
-              <p className="text-[9px] sm:text-[10px] font-semibold text-white/40 tracking-wide text-center lg:text-left">
-                &lt; 3s settlement · 256-bit encrypted · 24/7 support
-              </p>
               {/* Marquee — horizontal scroll on mobile */}
               <div className="w-full pt-3 sm:pt-4">
                 <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
