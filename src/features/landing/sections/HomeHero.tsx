@@ -252,7 +252,7 @@ export function HomeHero() {
                         alt={label + " badge"}
                         loading="lazy"
                         decoding="async"
-                        className="h-6 sm:h-8 w-auto object-contain shrink-0 opacity-70"
+                        className="h-6 sm:h-[3rem] w-auto object-contain shrink-0 opacity-70"
                       />
                     ))}
                   </div>
