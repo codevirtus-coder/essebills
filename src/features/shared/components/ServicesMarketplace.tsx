@@ -745,43 +745,14 @@ export function ServicesMarketplace({
                       </div>
                     </div>
 
-                    <div className="absolute top-3 left-3">
-                      <span
-                        className={`inline-flex items-center gap-1 px-2 py-1 ${radiusChip} font-bold uppercase tracking-widest backdrop-blur-md border ${isCompact ? "text-[8px]" : "text-[9px]"} bg-white/90 dark:bg-slate-900/80 border-slate-200/60 dark:border-white/10 text-slate-700 dark:text-slate-200`}
-                      >
-                        <span className={color.icon}>
-                          <CategoryIcon
-                            categoryKey={iconKey}
-                            className={isCompact ? "w-2 h-2" : "w-2.5 h-2.5"}
-                          />
-                        </span>
-                        <span className="max-w-[120px] truncate">
-                          {tab.label}
-                        </span>
-                      </span>
-                    </div>
                   </div>
 
-                  <div className="flex flex-col flex-1 p-4 pt-3">
+                  <div className="flex flex-col flex-1 p-4 pt-3 pb-6">
                     <h3
                       className={`${isCompact ? "text-[13px]" : "text-sm"} font-bold text-slate-900 dark:text-white leading-tight line-clamp-2 mb-1 flex-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors`}
                     >
                       {tab.label}
                     </h3>
-                  </div>
-
-                  <div className="px-4 pb-4 -mt-1">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveCategory(tab.key);
-                      }}
-                      className={`w-full flex items-center justify-center gap-1.5 ${radiusButton} font-bold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-700 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-600 group-hover:shadow-lg group-hover:shadow-emerald-500/25 transition-all duration-300 uppercase tracking-widest ${isCompact ? "py-2 text-[9px]" : "py-2.5 text-[10px]"}`}
-                    >
-                      View
-                      <ChevronRight size={12} />
-                    </button>
                   </div>
                 </div>
               );

@@ -139,7 +139,7 @@ export function Navbar() {
               </NavLink>
               <button
                 onClick={clearAuthSession}
-                className="text-sm font-semibold bg-white/15 border border-white/40 text-white px-4 py-2 rounded-lg hover:bg-white/25 transition-colors"
+                className="text-sm font-semibold bg-white/15 border border-white/40 text-white px-4 py-2 rounded-sm hover:bg-white/25 transition-colors"
               >
                 Logout
               </button>
