@@ -220,11 +220,9 @@ export function HeroServiceFinder() {
                   handlePick(s.biller);
                 }
               }}
-              placeholder={
-                "e.g. ZESA, Econet, DSTV..."
-              }
+              placeholder={"e.g. ZESA, Econet, DSTV..."}
               className={cn(
-                "w-full pl-11 pr-4 py-3.5 rounded-full border text-sm font-semibold outline-none transition-all shadow-sm",
+                "w-full pl-11 pr-4 py-3.5 rounded-sm border text-sm font-semibold outline-none transition-all shadow-sm",
                 "bg-white border-slate-200",
                 "focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/10",
               )}
@@ -297,7 +295,7 @@ export function HeroServiceFinder() {
               );
               if (b) handlePick(b);
             }}
-            className="w-full p-3 rounded-full border border-slate-200 bg-white hover:bg-slate-50 transition-colors flex items-center justify-between gap-3 shadow-sm"
+            className="w-full p-3 rounded-sm border border-slate-200 bg-white hover:bg-slate-50 transition-colors flex items-center justify-between gap-3 shadow-sm"
           >
             <div className="min-w-0 flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-700">
