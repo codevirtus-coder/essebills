@@ -19,14 +19,14 @@ export function HomeFinalCTA() {
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
           <Link
             to={ROUTE_PATHS.register}
-            className="group inline-flex items-center justify-center gap-2 bg-[#10B981] text-white font-bold text-sm sm:text-base px-7 sm:px-8 py-3.5 sm:py-4 rounded-2xl hover:bg-[#0ea472] transition-all shadow-lg shadow-[#10B981]/30"
+            className="group inline-flex items-center justify-center gap-2 bg-[#10B981] text-white font-bold text-sm sm:text-base px-7 sm:px-8 py-3.5 sm:py-4 rounded-sm hover:bg-[#0ea472] transition-all shadow-lg shadow-[#10B981]/30"
           >
             Create Account
             <ChevronRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
           </Link>
           <Link
             to={ROUTE_PATHS.loginAgent}
-            className="inline-flex items-center justify-center gap-2 bg-transparent text-white font-bold text-sm sm:text-base px-7 sm:px-8 py-3.5 sm:py-4 rounded-2xl border border-white/20 hover:bg-white/10 transition-all"
+            className="inline-flex items-center justify-center gap-2 bg-transparent text-white font-bold text-sm sm:text-base px-7 sm:px-8 py-3.5 sm:py-4 rounded-sm border border-white/20 hover:bg-white/10 transition-all"
           >
             <Store size={16} />
             Agent Portal

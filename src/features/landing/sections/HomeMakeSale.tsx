@@ -15,7 +15,7 @@ export function HomeMakeSale() {
 
       <div className="max-w-7xl mx-auto relative">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 sm:gap-6 mb-8 sm:mb-12">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 sm:gap-6 mb-2 sm:mb-3">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -43,36 +43,18 @@ export function HomeMakeSale() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.1 }}
           transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
-          className="bg-white dark:bg-slate-800 rounded-2xl sm:rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-2xl shadow-slate-200/60 dark:shadow-none overflow-hidden"
+          className=" dark:bg-slate-800 rounded-sm   overflow-hidden"
         >
-          <div className="p-4 md:p-6">
+          <div className="">
             <ServicesMarketplace
               embedded
               compact
               categoryUi="cards"
               hideProductsUntilCategory
+              radius="sm"
             />
           </div>
         </motion.div>
-
-        {/* Bottom trust row */}
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-400 dark:text-slate-500">
-          {[
-            {
-              icon: <Zap size={13} className="text-[#10B981]" />,
-              text: "Instant processing",
-            },
-            {
-              icon: <ShieldCheck size={13} className="text-[#10B981]" />,
-              text: "256-bit encrypted",
-            },
-          ].map(({ icon, text }) => (
-            <div key={text} className="flex items-center gap-1.5 font-medium">
-              {icon}
-              {text}
-            </div>
-          ))}
-        </div>
       </div>
     </section>
   );

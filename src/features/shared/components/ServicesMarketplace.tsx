@@ -163,6 +163,8 @@ interface ServicesMarketplaceProps {
   categoryUi?: "tabs" | "cards";
   /** When true, hides the products grid until the user selects a category or searches. */
   hideProductsUntilCategory?: boolean;
+  /** Controls border-radius for inputs/cards/buttons in this instance. */
+  radius?: "default" | "sm";
   /** When set, the products grid is collapsed to this many rows by default and can be expanded via "View all". */
   previewRows?: number;
   showTitle?: boolean;
@@ -177,6 +179,7 @@ export function ServicesMarketplace({
   compact = false,
   categoryUi = "tabs",
   hideProductsUntilCategory = false,
+  radius = "default",
   previewRows,
   showTitle = true,
   liftSearch = false,
@@ -188,6 +191,14 @@ export function ServicesMarketplace({
   const isCompact = compact;
   const effectivePreviewRows =
     previewRows ?? (!onSelectProduct ? 2 : undefined);
+
+  const radiusControl = radius === "sm" ? "rounded-sm" : "rounded-2xl";
+  const radiusCard = radius === "sm" ? "rounded-sm" : "rounded-2xl";
+  const radiusButton = radius === "sm" ? "rounded-sm" : "rounded-xl";
+  const radiusChip = radius === "sm" ? "rounded-sm" : "rounded-lg";
+  const radiusIcon = radius === "sm" ? "rounded-sm" : "rounded-full";
+  const radiusPanel =
+    radius === "sm" ? "rounded-sm" : "rounded-2xl sm:rounded-3xl";
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -605,33 +616,6 @@ export function ServicesMarketplace({
       <div
         className={`flex flex-col md:flex-row gap-4 items-start md:items-center justify-between ${liftSearch ? "mb-2" : "mb-6"}`}
       >
-        <div
-          className={`relative flex-1 group ${embedded ? "w-full" : "max-w-3xl mx-auto"}`}
-        >
-          <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl blur opacity-10 group-hover:opacity-25 transition-opacity" />
-          <div
-            className={`relative flex items-center border rounded-2xl shadow-sm backdrop-blur-xl transition-all ${embedded ? "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800" : "bg-slate-800/80 border-white/10"}`}
-          >
-            <Search size={18} className="ml-4 text-slate-400" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search for a biller, school, or service..."
-              className={`w-full pl-3 pr-4 bg-transparent focus:outline-none font-medium ${isCompact ? "py-3 text-[13px]" : "py-4 text-sm"} ${embedded ? "text-slate-900 dark:text-white placeholder-slate-400" : "text-white placeholder-slate-500"}`}
-            />
-            {search && (
-              <button
-                type="button"
-                onClick={() => setSearch("")}
-                className="mr-4 text-slate-400 hover:text-slate-600 transition-colors"
-              >
-                <X size={16} />
-              </button>
-            )}
-          </div>
-        </div>
-
         {availableCurrencies.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap">
             <span
@@ -642,7 +626,7 @@ export function ServicesMarketplace({
             <button
               type="button"
               onClick={() => setSelectedCurrency("")}
-              className={`px-3 py-1.5 rounded-lg font-bold border transition-all ${isCompact ? "text-[9px]" : "text-[10px]"} ${
+              className={`px-3 py-1.5 ${radiusChip} font-bold border transition-all ${isCompact ? "text-[9px]" : "text-[10px]"} ${
                 !selectedCurrency
                   ? "bg-slate-900 text-white border-slate-900 shadow-lg"
                   : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300"
@@ -657,7 +641,7 @@ export function ServicesMarketplace({
                 onClick={() =>
                   setSelectedCurrency(selectedCurrency === c.code ? "" : c.code)
                 }
-                className={`px-3 py-1.5 rounded-lg font-bold border transition-all ${isCompact ? "text-[9px]" : "text-[10px]"} ${
+                className={`px-3 py-1.5 ${radiusChip} font-bold border transition-all ${isCompact ? "text-[9px]" : "text-[10px]"} ${
                   selectedCurrency === c.code
                     ? "bg-emerald-600 text-white border-emerald-600 shadow-lg"
                     : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300"
@@ -709,12 +693,12 @@ export function ServicesMarketplace({
         }`}
       >
         <div className="flex items-center justify-between gap-3 mb-4">
-          <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+          {/* <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
             Browse by category
-          </p>
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+          </p> */}
+          {/* <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
             Pick one
-          </p>
+          </p> */}
         </div>
 
         {isInitialLoading ? (
@@ -722,7 +706,7 @@ export function ServicesMarketplace({
             {[...Array(12)].map((_, i) => (
               <div
                 key={i}
-                className="rounded-2xl animate-pulse bg-slate-100 dark:bg-slate-800 overflow-hidden"
+                className={`${radiusCard} animate-pulse bg-slate-100 dark:bg-slate-800 overflow-hidden`}
               >
                 <div className="aspect-[19/10] bg-slate-200 dark:bg-slate-700" />
                 <div className="p-4 space-y-3">
@@ -745,7 +729,7 @@ export function ServicesMarketplace({
               return (
                 <div
                   key={tab.key}
-                  className="group rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-[0_10px_30px_rgba(2,6,23,0.06)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.25)] hover:border-emerald-500/50 dark:hover:border-emerald-500/40 hover:shadow-[0_18px_45px_rgba(2,6,23,0.12)] dark:hover:shadow-[0_18px_45px_rgba(0,0,0,0.35)] hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
+                  className={`group ${radiusCard} bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-[0_10px_30px_rgba(2,6,23,0.06)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.25)] hover:border-emerald-500/50 dark:hover:border-emerald-500/40 hover:shadow-[0_18px_45px_rgba(2,6,23,0.12)] dark:hover:shadow-[0_18px_45px_rgba(0,0,0,0.35)] hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden`}
                   onClick={() => setActiveCategory(tab.key)}
                 >
                   <div className="relative aspect-[19/10] w-full overflow-hidden bg-white dark:bg-slate-800">
@@ -763,7 +747,7 @@ export function ServicesMarketplace({
 
                     <div className="absolute top-3 left-3">
                       <span
-                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg font-bold uppercase tracking-widest backdrop-blur-md border ${isCompact ? "text-[8px]" : "text-[9px]"} bg-white/90 dark:bg-slate-900/80 border-slate-200/60 dark:border-white/10 text-slate-700 dark:text-slate-200`}
+                        className={`inline-flex items-center gap-1 px-2 py-1 ${radiusChip} font-bold uppercase tracking-widest backdrop-blur-md border ${isCompact ? "text-[8px]" : "text-[9px]"} bg-white/90 dark:bg-slate-900/80 border-slate-200/60 dark:border-white/10 text-slate-700 dark:text-slate-200`}
                       >
                         <span className={color.icon}>
                           <CategoryIcon
@@ -771,7 +755,9 @@ export function ServicesMarketplace({
                             className={isCompact ? "w-2 h-2" : "w-2.5 h-2.5"}
                           />
                         </span>
-                        <span className="max-w-[120px] truncate">{tab.label}</span>
+                        <span className="max-w-[120px] truncate">
+                          {tab.label}
+                        </span>
                       </span>
                     </div>
                   </div>
@@ -791,7 +777,7 @@ export function ServicesMarketplace({
                         e.stopPropagation();
                         setActiveCategory(tab.key);
                       }}
-                      className={`w-full flex items-center justify-center gap-1.5 rounded-xl font-bold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-700 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-600 group-hover:shadow-lg group-hover:shadow-emerald-500/25 transition-all duration-300 uppercase tracking-widest ${isCompact ? "py-2 text-[9px]" : "py-2.5 text-[10px]"}`}
+                      className={`w-full flex items-center justify-center gap-1.5 ${radiusButton} font-bold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-700 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-600 group-hover:shadow-lg group-hover:shadow-emerald-500/25 transition-all duration-300 uppercase tracking-widest ${isCompact ? "py-2 text-[9px]" : "py-2.5 text-[10px]"}`}
                     >
                       View
                       <ChevronRight size={12} />
@@ -923,34 +909,38 @@ export function ServicesMarketplace({
           </div>
         )}
 
-        {!selectedBaseProduct && !isInitialLoading && !isError && !shouldHideGrid && (
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <h2
-              className={`${isCompact ? "text-base" : "text-lg"} font-bold text-slate-900 dark:text-white`}
-            >
-              {activeCategoryLabel}
-            </h2>
-            <div className="flex items-center gap-3">
-              {categoryUi === "cards" && (activeCategory !== "" || debouncedSearch) && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveCategory("");
-                      setSearch("");
-                    }}
-                    className={`${isCompact ? "text-[9px]" : "text-[10px]"} text-emerald-700 font-black uppercase tracking-widest hover:underline`}
-                  >
-                    Back to categories
-                  </button>
-                )}
-              <p
-                className={`${isCompact ? "text-[9px]" : "text-[10px]"} text-slate-400 font-bold uppercase tracking-widest bg-slate-50 dark:bg-slate-900 px-3 py-1 rounded-full border border-slate-100 dark:border-slate-800`}
+        {!selectedBaseProduct &&
+          !isInitialLoading &&
+          !isError &&
+          !shouldHideGrid && (
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <h2
+                className={`${isCompact ? "text-base" : "text-lg"} font-bold text-slate-900 dark:text-white`}
               >
-                {filtered.length} Results
-              </p>
+                {activeCategoryLabel}
+              </h2>
+              <div className="flex items-center gap-3">
+                {categoryUi === "cards" &&
+                  (activeCategory !== "" || debouncedSearch) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveCategory("");
+                        setSearch("");
+                      }}
+                      className={`${isCompact ? "text-[9px]" : "text-[10px]"} text-emerald-700 font-black uppercase tracking-widest hover:underline`}
+                    >
+                      Back to categories
+                    </button>
+                  )}
+                <p
+                  className={`${isCompact ? "text-[9px]" : "text-[10px]"} text-slate-400 font-bold uppercase tracking-widest bg-slate-50 dark:bg-slate-900 px-3 py-1 rounded-full border border-slate-100 dark:border-slate-800`}
+                >
+                  {filtered.length} Results
+                </p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
         {!selectedBaseProduct &&
           (shouldHideGrid ? null : isInitialLoading ? (
@@ -958,7 +948,7 @@ export function ServicesMarketplace({
               {[...Array(12)].map((_, i) => (
                 <div
                   key={i}
-                  className="rounded-2xl animate-pulse bg-slate-100 dark:bg-slate-800 overflow-hidden"
+                  className={`${radiusCard} animate-pulse bg-slate-100 dark:bg-slate-800 overflow-hidden`}
                 >
                   <div className="aspect-[4/3] bg-slate-200 dark:bg-slate-700" />
                   <div className="p-4 space-y-3">
@@ -969,20 +959,24 @@ export function ServicesMarketplace({
               ))}
             </div>
           ) : isError ? (
-            <div className="h-[420px] sm:h-[500px] lg:h-[540px] xl:h-[560px] flex flex-col items-center justify-center text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl">
+            <div
+              className={`h-[420px] sm:h-[500px] lg:h-[540px] xl:h-[560px] flex flex-col items-center justify-center text-center border-2 border-dashed border-slate-200 dark:border-slate-800 ${radiusPanel}`}
+            >
               <AlertCircle size={40} className="text-red-400 mb-4" />
               <p className="text-red-900 dark:text-red-400 font-bold">
                 Could not load services
               </p>
               <button
                 onClick={() => window.location.reload()}
-                className="mt-4 px-6 py-2 bg-red-600 text-white font-bold rounded-xl text-xs uppercase tracking-widest"
+                className={`mt-4 px-6 py-2 bg-red-600 text-white font-bold ${radiusButton} text-xs uppercase tracking-widest`}
               >
                 Retry
               </button>
             </div>
           ) : filtered.length === 0 ? (
-            <div className="h-[420px] sm:h-[500px] lg:h-[540px] xl:h-[560px] flex flex-col items-center justify-center text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl">
+            <div
+              className={`h-[420px] sm:h-[500px] lg:h-[540px] xl:h-[560px] flex flex-col items-center justify-center text-center border-2 border-dashed border-slate-200 dark:border-slate-800 ${radiusPanel}`}
+            >
               <Search size={32} className="text-slate-300 mb-4" />
               <p className="text-slate-800 dark:text-slate-200 font-bold">
                 No services found
@@ -1001,7 +995,9 @@ export function ServicesMarketplace({
               <div className="relative">
                 {/* Fade on the bottom edge (only useful when we're clipping or using an internal scroll box). */}
                 {(!effectivePreviewRows || !isGridExpanded || embedded) && (
-                  <div className="absolute inset-0 rounded-2xl sm:rounded-3xl pointer-events-none z-10 shadow-[inset_0_-48px_60px_-20px_rgba(255,255,255,1),inset_0_-48px_60px_-20px_rgba(248,250,252,1)] dark:shadow-[inset_0_-48px_60px_-20px_rgba(15,23,42,1)]" />
+                  <div
+                    className={`absolute inset-0 ${radiusPanel} pointer-events-none z-10 shadow-[inset_0_-48px_60px_-20px_rgba(255,255,255,1),inset_0_-48px_60px_-20px_rgba(248,250,252,1)] dark:shadow-[inset_0_-48px_60px_-20px_rgba(15,23,42,1)]`}
+                  />
                 )}
 
                 <div
@@ -1021,14 +1017,14 @@ export function ServicesMarketplace({
                       : undefined
                   }
                 >
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 pb-4">
+                  <div className="grid grid-cols-2 mt-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 pb-4">
                     {filtered.map((biller, idx) => {
                       const color = getColor(biller.categoryKey);
                       return (
                         <div
                           key={biller.id}
                           ref={idx === 0 ? firstCardMeasureRef : undefined}
-                          className="group rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-[0_10px_30px_rgba(2,6,23,0.06)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.25)] hover:border-emerald-500/50 dark:hover:border-emerald-500/40 hover:shadow-[0_18px_45px_rgba(2,6,23,0.12)] dark:hover:shadow-[0_18px_45px_rgba(0,0,0,0.35)] hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
+                          className={`group ${radiusCard} bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-[0_10px_30px_rgba(2,6,23,0.06)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.25)] hover:border-emerald-500/50 dark:hover:border-emerald-500/40 hover:shadow-[0_18px_45px_rgba(2,6,23,0.12)] dark:hover:shadow-[0_18px_45px_rgba(0,0,0,0.35)] hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden`}
                           onClick={() => openProduct(biller)}
                         >
                           <div className="relative aspect-[19/10] w-full overflow-hidden bg-white dark:bg-slate-800">
@@ -1036,7 +1032,9 @@ export function ServicesMarketplace({
                             <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white dark:from-slate-900 to-transparent pointer-events-none" />
 
                             <div className="absolute left-1/2 top-[58%] sm:top-[70%] -translate-x-1/2 -translate-y-1/2">
-                              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center bg-white/45 dark:bg-slate-700/25 shadow-sm ring-1 ring-white/50 dark:ring-white/10 relative overflow-hidden">
+                              <div
+                                className={`w-16 h-16 sm:w-20 sm:h-20 ${radiusIcon} flex items-center justify-center bg-white/45 dark:bg-slate-700/25 shadow-sm ring-1 ring-white/50 dark:ring-white/10 relative overflow-hidden`}
+                              >
                                 <CategoryIcon
                                   categoryKey={biller.categoryKey}
                                   className={`w-8 h-8 ${color.icon}`}
@@ -1045,8 +1043,9 @@ export function ServicesMarketplace({
                             </div>
 
                             <div className="absolute top-3 left-3">
-                              <span
-                                className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg font-bold uppercase tracking-widest backdrop-blur-md border ${isCompact ? "text-[8px]" : "text-[9px]"} bg-white/90 dark:bg-slate-900/80 border-slate-200/60 dark:border-white/10 text-slate-700 dark:text-slate-200`}
+                              {/* Categeory airtime*/}
+                              {/* <span
+                                className={`inline-flex items-center gap-1 px-2 py-1 ${radiusChip} font-bold uppercase tracking-widest backdrop-blur-md border ${isCompact ? "text-[8px]" : "text-[9px]"} bg-white/90 dark:bg-slate-900/80 border-slate-200/60 dark:border-white/10 text-slate-700 dark:text-slate-200`}
                               >
                                 <span className={color.icon}>
                                   <CategoryIcon
@@ -1057,13 +1056,13 @@ export function ServicesMarketplace({
                                   />
                                 </span>
                                 {biller.categoryLabel}
-                              </span>
+                              </span> */}
                             </div>
 
                             {biller.currencyCode && (
                               <div className="absolute top-3 right-3">
                                 <span
-                                  className={`inline-flex items-center px-2 py-1 rounded-lg font-black uppercase tracking-wider bg-emerald-600 text-white shadow-sm ${isCompact ? "text-[8px]" : "text-[9px]"}`}
+                                  className={`inline-flex items-center px-2 py-1 ${radiusChip} font-black uppercase tracking-wider bg-emerald-600 text-white shadow-sm ${isCompact ? "text-[8px]" : "text-[9px]"}`}
                                 >
                                   {biller.currencyCode}
                                 </span>
@@ -1079,19 +1078,19 @@ export function ServicesMarketplace({
                             </h3>
                           </div>
 
-                          <div className="px-4 pb-4 -mt-1">
+                          {/* <div className="px-4 pb-4 -mt-1">
                             <button
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 openProduct(biller);
                               }}
-                              className={`w-full flex items-center justify-center gap-1.5 rounded-xl font-bold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-700 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-600 group-hover:shadow-lg group-hover:shadow-emerald-500/25 transition-all duration-300 uppercase tracking-widest ${isCompact ? "py-2 text-[9px]" : "py-2.5 text-[10px]"}`}
+                              className={`w-full flex items-center justify-center gap-1.5 ${radiusButton} font-bold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-700 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-600 group-hover:shadow-lg group-hover:shadow-emerald-500/25 transition-all duration-300 uppercase tracking-widest ${isCompact ? "py-2 text-[9px]" : "py-2.5 text-[10px]"}`}
                             >
                               Pay Now
                               <ChevronRight size={12} />
                             </button>
-                          </div>
+                          </div> */}
                         </div>
                       );
                     })}
@@ -1120,7 +1119,7 @@ export function ServicesMarketplace({
                         });
                       }
                     }}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-black uppercase tracking-widest hover:border-slate-300 hover:shadow-sm transition-all"
+                    className={`inline-flex items-center gap-2 px-5 py-2.5 ${radiusButton} bg-white border border-slate-200 text-slate-700 text-xs font-black uppercase tracking-widest hover:border-slate-300 hover:shadow-sm transition-all`}
                   >
                     {isGridExpanded ? "View less" : "View all"}
                     <ChevronDown

@@ -201,7 +201,7 @@ export function HomeHero() {
             >
               <a
                 href="#pay-now"
-                className="group inline-flex w-full sm:w-auto items-center justify-center gap-2 bg-white text-[#10B981] font-extrabold text-sm sm:text-base px-5 sm:px-8 py-3 sm:py-4 rounded-xl hover:bg-white/90 transition-all shadow-lg hover:-translate-y-0.5 active:translate-y-0"
+                className="group inline-flex w-full sm:w-auto items-center justify-center gap-2 bg-white text-[#10B981] font-extrabold text-sm sm:text-base px-5 sm:px-8 py-3 sm:py-4 rounded-sm hover:bg-white/90 transition-all shadow-lg hover:-translate-y-0.5 active:translate-y-0"
               >
                 Pay a Bill Now{" "}
                 <ChevronRight
@@ -211,7 +211,7 @@ export function HomeHero() {
               </a>
               <Link
                 to={ROUTE_PATHS.login}
-                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 bg-transparent text-white font-bold text-sm sm:text-base px-5 sm:px-8 py-3 sm:py-4 rounded-xl border border-white/40 hover:bg-white/10 transition-all"
+                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 bg-transparent text-white font-bold text-sm sm:text-base px-5 sm:px-8 py-3 sm:py-4 rounded-sm border border-white/40 hover:bg-white/10 transition-all"
               >
                 Sign In
               </Link>
@@ -263,7 +263,7 @@ export function HomeHero() {
           {/*── Right: QuickPay card (hidden on mobile) ── */}
           <div
             id="quick-pay-hero"
-            className="hidden lg:block w-full bg-white rounded-[2rem] border border-white/30 shadow-2xl shadow-emerald-900/10 p-5 lg:p-6 flex flex-col gap-4"
+            className="hidden lg:block w-full bg-white rounded-sm border border-white/30 shadow-2xl shadow-emerald-900/10 p-5 lg:p-6 flex flex-col gap-4"
           >
             <div className="flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">

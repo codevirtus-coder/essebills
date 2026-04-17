@@ -262,9 +262,6 @@ export function HeroServiceFinder() {
         </h3>
 
         <div className="relative">
-          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-            Search service
-          </label>
           <div className="mt-2 relative">
             <Search
               size={16}
@@ -312,7 +309,7 @@ export function HeroServiceFinder() {
           </div>
 
           {open && query.trim().length > 0 && (
-            <div className="absolute left-0 right-0 mt-2 bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden z-50">
+            <div className="absolute left-0 right-0 mt-2 bg-white rounded-sm border border-slate-200 shadow-2xl overflow-hidden z-50">
               <div className="max-h-[320px] overflow-auto">
                 {suggestions.length === 0 ? (
                   <div className="px-4 py-6 text-sm text-slate-500">
@@ -392,7 +389,7 @@ export function HeroServiceFinder() {
                 </p>
               </div>
             </div>
-            <ChevronRight size={18} className="text-slate-300 shrink-0" />
+            {/* <ChevronRight size={18} className="text-slate-300 shrink-0" /> */}
           </button>
         )}
       </div>

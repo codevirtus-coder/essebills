@@ -69,7 +69,7 @@ export function HomeForWho() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.15 }}
               transition={{ duration: 0.5, ease: "easeOut", delay: i * 0.1 }}
-              className={`relative rounded-3xl p-7 sm:p-8 flex flex-col overflow-hidden ${
+              className={`relative rounded-sm p-7 sm:p-8 flex flex-col overflow-hidden ${
                 featured
                   ? "bg-[#10B981]/15 dark:bg-[#10B981]/10 border-2 border-[#10B981]/50 dark:border-[#10B981]/30 shadow-2xl shadow-[#10B981]/15"
                   : "bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
@@ -96,7 +96,7 @@ export function HomeForWho() {
               </ul>
               <Link
                 to={href}
-                className={`inline-flex items-center justify-center gap-2 font-bold text-sm px-5 py-3.5 rounded-2xl transition-all ${
+                className={`inline-flex items-center justify-center gap-2 font-bold text-sm px-5 py-3.5 rounded-sm transition-all ${
                   featured ? "bg-[#10B981] text-white hover:bg-[#0ea472] shadow-lg shadow-[#10B981]/20" : "bg-slate-900 dark:bg-slate-800 text-white hover:bg-slate-800 dark:hover:bg-slate-700 shadow-sm"
                 }`}
               >
