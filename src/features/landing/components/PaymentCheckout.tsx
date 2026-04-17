@@ -6,7 +6,6 @@ import {
   Zap,
   CreditCard,
   Smartphone,
-  Wallet,
   CheckCircle2,
   AlertCircle,
   Clock,
@@ -16,6 +15,8 @@ import {
 } from "lucide-react";
 import type { ProductPreCheckResult } from "../../../services/products.service";
 import esebillsLogo from "../../../assets/esebills_logo.png";
+import pesepayLogo from "../../../assets/pesepay-logo.svg";
+import eseWalletLogo from "../../../assets/esewallet_logo_tight-removebg-preview.png";
 import { ROUTE_PATHS } from "../../../router/paths";
 import type { ProductField } from "../../../types/products";
 
@@ -206,13 +207,13 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
       `}</style>
       {/* ── Navbar ────────────────────────────────────────────────────────── */}
       {!embedded && (
-        <header className="h-20 px-4 sm:px-8 border-b border-slate-200 bg-[#1CBD88] sticky top-0 z-50">
-          <div className="max-w-7xl flex items-center justify-start mx-auto h-full">
+        <header className="h-20 px-4 sm:px-8 border-b border-slate-200 bg-white sticky top-0 z-50">
+          <div className="max-w-6xl w-full flex items-center justify-center mx-auto h-full">
             <Link to={ROUTE_PATHS.home} className="flex items-center">
               <img
                 src={esebillsLogo}
                 alt="EseBills"
-                className="h-24 w-auto brightness-0 invert"
+                className="h-10 sm:h-12 w-auto"
               />
             </Link>
           </div>
@@ -220,7 +221,7 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
       )}
 
       <main
-        className={`${embedded ? "p-0" : "max-w-7xl mx-auto pt-6 px-4 sm:px-6"}`}
+        className={`${embedded ? "p-0" : "max-w-6xl w-full mx-auto pt-6 px-4 sm:px-6"}`}
       >
         <button
           onClick={onBack}
@@ -420,42 +421,31 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                   </h3>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <button
-                    onClick={() => setPaymentMethod("pesepay")}
-                    className={`p-4 rounded-sm border transition-all text-left relative group bg-white ${
-                      paymentMethod === "pesepay"
-                        ? "border-emerald-600 shadow-sm"
-                        : "border-slate-200 hover:border-slate-300"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 mb-3 relative z-10">
-                      <div
-                        className={`w-10 h-10 rounded-sm flex items-center justify-center transition-all ${
-                          paymentMethod === "pesepay"
-                            ? "bg-emerald-600 text-white"
-                            : "bg-slate-100 text-slate-500"
-                        }`}
-                      >
-                        <CreditCard size={20} />
-                      </div>
-                      <div>
-                        <p
-                          className={`text-sm font-black ${paymentMethod === "pesepay" ? "text-emerald-900" : "text-slate-900"}`}
-                        >
-                          PesePay Gateway
-                        </p>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                          EcoCash, OneMoney, Cards
-                        </p>
-                      </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  onClick={() => setPaymentMethod("pesepay")}
+                  className={`p-4 rounded-sm border transition-all text-left relative group bg-white ${
+                    paymentMethod === "pesepay"
+                      ? "border-emerald-600 shadow-sm"
+                      : "border-slate-200 hover:border-slate-300"
+                  }`}
+                >
+                  <span className="sr-only">PesePay Gateway</span>
+                  <div className="flex items-center justify-center h-12 relative z-10">
+                    <img
+                      src={pesepayLogo}
+                      alt="PesePay"
+                      className="h-8 w-auto object-contain"
+                      draggable={false}
+                      loading="lazy"
+                    />
+                  </div>
+                  {paymentMethod === "pesepay" && (
+                    <div className="absolute top-4 right-4 text-emerald-600">
+                      <CheckCircle2 size={18} />
                     </div>
-                    {paymentMethod === "pesepay" && (
-                      <div className="absolute top-4 right-4 text-emerald-600">
-                        <CheckCircle2 size={18} />
-                      </div>
-                    )}
-                  </button>
+                  )}
+                </button>
 
                   <button
                     onClick={handleSelectWallet}
@@ -465,26 +455,15 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                         : "border-slate-200 hover:border-slate-300"
                     } ${!isAuthenticated ? "opacity-60" : ""}`}
                   >
-                    <div className="flex items-center gap-4 mb-2 relative z-10">
-                      <div
-                        className={`w-10 h-10 rounded-sm flex items-center justify-center transition-all ${
-                          paymentMethod === "wallet"
-                            ? "bg-emerald-600 text-white"
-                            : "bg-slate-100 text-slate-500"
-                        }`}
-                      >
-                        <Wallet size={20} />
-                      </div>
-                      <div>
-                        <p
-                          className={`text-sm font-black ${paymentMethod === "wallet" ? "text-emerald-900" : "text-slate-900"}`}
-                        >
-                          EseWallet Balance
-                        </p>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                          Instant • No Fees
-                        </p>
-                      </div>
+                    <span className="sr-only">EseWallet Balance</span>
+                    <div className="flex items-center justify-center h-12 relative z-10">
+                      <img
+                        src={eseWalletLogo}
+                        alt="EseWallet"
+                        className="h-8 w-auto object-contain"
+                        draggable={false}
+                        loading="lazy"
+                      />
                     </div>
                     {!isAuthenticated && (
                       <p className="text-[10px] font-bold text-amber-600 relative z-10">
