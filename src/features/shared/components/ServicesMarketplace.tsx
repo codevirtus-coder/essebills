@@ -222,7 +222,7 @@ export function ServicesMarketplace({
   const radiusCard = radius === "sm" ? "rounded-sm" : "rounded-2xl";
   const radiusButton = radius === "sm" ? "rounded-sm" : "rounded-xl";
   const radiusChip = radius === "sm" ? "rounded-sm" : "rounded-lg";
-  const radiusIcon = radius === "sm" ? "rounded-sm" : "rounded-full";
+  const radiusIcon = "rounded-full";
   const radiusPanel =
     radius === "sm" ? "rounded-sm" : "rounded-2xl sm:rounded-3xl";
 
@@ -1029,13 +1029,14 @@ export function ServicesMarketplace({
                             <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-transparent dark:from-white/10 pointer-events-none" />
                             <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white dark:from-slate-900 to-transparent pointer-events-none" />
 
-                            <div className="absolute left-1/2 top-[58%] sm:top-[70%] -translate-x-1/2 -translate-y-1/2">
+                            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
                               <div
-                                className={`w-16 h-16 sm:w-20 sm:h-20 ${radiusIcon} flex items-center justify-center bg-white/45 dark:bg-slate-700/25 shadow-sm ring-1 ring-white/50 dark:ring-white/10 relative overflow-hidden`}
+                                className={`w-16 h-16 sm:w-20 sm:h-20 ${radiusIcon} flex items-center justify-center bg-[#1CBD88] shadow-lg shadow-[#1CBD88]/25 ring-1 ring-[#1CBD88]/25 dark:ring-[#1CBD88]/20 relative overflow-hidden`}
                               >
+                                <div className="absolute inset-0 bg-white/10 pointer-events-none" />
                                 <CategoryIcon
                                   categoryKey={biller.categoryKey}
-                                  className={`w-8 h-8 ${color.icon}`}
+                                  className="w-9 h-9 sm:w-10 sm:h-10 text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.22)]"
                                 />
                               </div>
                             </div>

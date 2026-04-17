@@ -48,9 +48,7 @@ export function HomeFAQ() {
     const q = search.trim().toLowerCase();
     if (!q) return faqs;
     return faqs.filter(
-      (f) =>
-        f.q.toLowerCase().includes(q) ||
-        f.a.toLowerCase().includes(q),
+      (f) => f.q.toLowerCase().includes(q) || f.a.toLowerCase().includes(q),
     );
   }, [faqs, search]);
 
@@ -73,7 +71,7 @@ export function HomeFAQ() {
 
           <div className="mt-7 sm:mt-8 max-w-3xl mx-auto">
             <div className="relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-sm blur opacity-10 group-hover:opacity-25 transition-opacity" />
+              <div className="absolute -inset-1 bg-gradient-to-r  rounded-sm blur opacity-10 group-hover:opacity-25 transition-opacity" />
               <div className="relative flex items-center border rounded-sm shadow-sm bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
                 <Search size={18} className="ml-4 text-slate-400" />
                 <input
@@ -118,7 +116,9 @@ export function HomeFAQ() {
                     type="button"
                     aria-expanded={isOpen}
                     aria-controls={aId}
-                    onClick={() => setOpenId((v) => (v === item.id ? null : item.id))}
+                    onClick={() =>
+                      setOpenId((v) => (v === item.id ? null : item.id))
+                    }
                     className="w-full flex items-center justify-between gap-4 text-left px-5 sm:px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-950 transition-colors"
                   >
                     <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
