@@ -201,7 +201,7 @@ export function HomeHero() {
             >
               <a
                 href="#pay-now"
-                className="group inline-flex w-full sm:w-auto items-center justify-center gap-2 bg-white text-[#10B981] font-extrabold text-sm sm:text-base px-5 sm:px-8 py-3 sm:py-4 rounded-sm hover:bg-white/90 transition-all shadow-lg hover:-translate-y-0.5 active:translate-y-0"
+                className="group inline-flex w-full sm:w-auto h-12 sm:h-14 items-center justify-center gap-2 bg-white text-[#10B981] font-extrabold text-sm sm:text-base px-5 sm:px-8 rounded-sm border border-transparent hover:bg-white/90 transition-all shadow-lg hover:-translate-y-0.5 active:translate-y-0 leading-none"
               >
                 Pay a Bill Now{" "}
                 <ChevronRight
@@ -211,7 +211,7 @@ export function HomeHero() {
               </a>
               <Link
                 to={ROUTE_PATHS.login}
-                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 bg-transparent text-white font-bold text-sm sm:text-base px-5 sm:px-8 py-3 sm:py-4 rounded-sm border border-white/40 hover:bg-white/10 transition-all"
+                className="inline-flex w-full sm:w-auto h-12 sm:h-14 items-center justify-center gap-2 bg-transparent text-white font-extrabold text-sm sm:text-base px-5 sm:px-8 rounded-sm border border-white/40 hover:bg-white/10 transition-all shadow-lg hover:-translate-y-0.5 active:translate-y-0 leading-none"
               >
                 Sign In
               </Link>
@@ -311,13 +311,7 @@ export function HomeHero() {
         type="button"
         className="absolute bottom-20 left-3/4 -translate-x-1/2 hidden lg:flex flex-col items-center gap-2 text-white/50 hover:text-white/90 text-xs font-medium tracking-[0.25em] uppercase transition-colors z-20 group"
         aria-label="Scroll to services"
-      >
-        {/* <div className="flex items-center gap-2">
-          <Mouse className="w-4 h-4" />
-          <span>Scroll</span>
-        </div> */}
-        <div className="w-px h-8 bg-gradient-to-b from-white/40 to-transparent group-hover:h-12 transition-all duration-500" />
-      </motion.button>
+      ></motion.button>
     </section>
   );
 }

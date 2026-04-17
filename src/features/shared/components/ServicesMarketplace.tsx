@@ -21,6 +21,11 @@ import {
   Zap,
 } from "lucide-react";
 import { ROUTE_PATHS } from "../../../router/paths";
+import utilityCategoryIconUrl from "../../../assets/utility-icon.svg";
+import airtimeCategoryIconUrl from "../../../assets/mobile-bundles-icons.svg";
+import insuranceCategoryIconUrl from "../../../assets/insuarance-icon.svg";
+import donationsCategoryIconUrl from "../../../assets/donations-icon.svg";
+import otherServicesCategoryIconUrl from "../../../assets/other-services-icons.svg";
 import ProductVariantPicker from "../../landing/components/ProductVariantPicker";
 import {
   getActiveCampaigns,
@@ -76,7 +81,28 @@ function CategoryIcon({
   categoryKey: string;
   className?: string;
 }) {
-  switch (categoryKey.toLowerCase()) {
+  const normalized = categoryKey.toLowerCase();
+  const iconAssetUrl: string | undefined =
+    {
+      utilities: utilityCategoryIconUrl,
+      airtime: airtimeCategoryIconUrl,
+      insurance: insuranceCategoryIconUrl,
+      donations: donationsCategoryIconUrl,
+      other: otherServicesCategoryIconUrl,
+    }[normalized] ?? undefined;
+
+  if (iconAssetUrl) {
+    return (
+      <img
+        src={iconAssetUrl}
+        alt=""
+        aria-hidden="true"
+        className={`block ${className} object-contain`}
+      />
+    );
+  }
+
+  switch (normalized) {
     case "airtime":
       return <Smartphone className={className} />;
     case "internet":
@@ -736,11 +762,12 @@ export function ServicesMarketplace({
                     <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-transparent dark:from-white/10 pointer-events-none" />
                     <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white dark:from-slate-900 to-transparent pointer-events-none" />
 
-                    <div className="absolute left-1/2 top-[58%] sm:top-[70%] -translate-x-1/2 -translate-y-1/2">
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center bg-white/45 dark:bg-slate-700/25 shadow-sm ring-1 ring-white/50 dark:ring-white/10 relative overflow-hidden">
+                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center bg-[#1CBD88] shadow-lg shadow-[#1CBD88]/25 ring-1 ring-[#1CBD88]/25 dark:ring-[#1CBD88]/20 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-white/10 pointer-events-none" />
                         <CategoryIcon
                           categoryKey={iconKey}
-                          className={`w-8 h-8 ${color.icon}`}
+                          className="w-9 h-9 sm:w-10 sm:h-10 text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.22)]"
                         />
                       </div>
                     </div>

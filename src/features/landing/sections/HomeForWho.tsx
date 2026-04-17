@@ -122,16 +122,6 @@ export function HomeForWho() {
                 {featured && (
                   <div className="absolute top-0 right-0 w-48 h-48 bg-[#10B981]/15 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
                 )}
-                <div
-                  className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full mb-5 self-start ${
-                    featured
-                      ? "bg-[#10B981]/15 dark:bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/20 dark:border-[#10B981]/30"
-                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
-                  }`}
-                >
-                  <Icon size={12} />
-                  {tag}
-                </div>
                 <h3 className="text-lg sm:text-xl font-black mb-3 text-slate-900 dark:text-white">
                   {title}
                 </h3>

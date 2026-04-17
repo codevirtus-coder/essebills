@@ -148,13 +148,13 @@ export function Navbar() {
             <>
               <Link
                 to={ROUTE_PATHS.login}
-                className="text-sm font-medium text-white/90 hover:text-white px-4 py-2 rounded-lg transition-colors"
+                className="inline-flex items-center justify-center h-10 text-sm font-semibold text-white px-4 lg:px-5 rounded-sm  transition-colors leading-none"
               >
                 Login
               </Link>
               <Link
                 to={ROUTE_PATHS.register}
-                className="text-sm font-semibold bg-white text-[#10B981] px-4 lg:px-5 py-2 rounded-lg hover:bg-white/90 transition-colors"
+                className="inline-flex items-center justify-center h-10 text-sm font-semibold bg-white text-[#10B981] px-4 lg:px-5 rounded-sm border border-transparent hover:bg-white/90 transition-colors leading-none"
               >
                 Get Started
               </Link>
