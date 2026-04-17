@@ -184,7 +184,7 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
 
   return (
     <div
-      className={`${embedded ? "" : "min-h-screen bg-[#f8fafc] pb-20"} font-sans text-slate-900 overflow-y-auto emerald-scrollbar`}
+      className={`${embedded ? "" : "min-h-screen bg-white pb-12"} font-sans text-slate-900 overflow-y-auto emerald-scrollbar`}
     >
       <style>{`
         .emerald-scrollbar {
@@ -206,13 +206,13 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
       `}</style>
       {/* ── Navbar ────────────────────────────────────────────────────────── */}
       {!embedded && (
-        <header className="h-20   px-4 sm:px-8 border-b border-slate-200 bg-[#1CBD88] text-white sticky top-0 z-50">
-          <div className="max-w-7xl flex items-center justify-between mx-auto">
+        <header className="h-16 px-4 sm:px-6 border-b border-slate-200 bg-white sticky top-0 z-50">
+          <div className="max-w-7xl flex items-center justify-between mx-auto h-full">
             <Link to={ROUTE_PATHS.home} className="flex items-center">
               <img
                 src={esebillsLogo}
                 alt="EseBills"
-                className="h-24 w-auto brightness-0 invert"
+                className="h-10 w-auto"
               />
             </Link>
           </div>
@@ -220,11 +220,11 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
       )}
 
       <main
-        className={`${embedded ? "p-0" : "max-w-7xl  mx-auto pt-8 px-4 sm:px-6"}`}
+        className={`${embedded ? "p-0" : "max-w-7xl mx-auto pt-6 px-4 sm:px-6"}`}
       >
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-900 transition-all mb-8 group"
+          className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-900 transition-all mb-5 group"
         >
           <ArrowLeft
             size={18}
@@ -233,27 +233,24 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
           {embedded ? "Back to Marketplace" : "Back to Bill Selection"}
         </button>
 
-        <div
-          className={`grid ${embedded ? "grid-cols-1 lg:grid-cols-[1fr_350px]" : "lg:grid-cols-[1fr_400px]"} gap-8 items-start`}
-        >
+        <div className="bg-white rounded-sm border border-slate-200 shadow-sm overflow-hidden">
+          <div
+            className={`grid ${embedded ? "grid-cols-1 lg:grid-cols-[1fr_350px]" : "grid-cols-1 lg:grid-cols-[1fr_400px]"} gap-0 items-start`}
+          >
           {/* ── Left Column: Details & Payment Methods ─────────────────────── */}
-          <div className="space-y-6">
-            <div className="bg-white rounded-[2rem] border border-slate-200 overflow-hidden shadow-xl shadow-slate-200/50">
-              <div className="p-8 border-b border-slate-100 bg-slate-50/50">
-                <div className="flex flex-wrap items-center justify-between gap-6">
-                  <div className="flex items-center gap-5">
-                    <div>
-                      <div className="flex items-center gap-3">
-                        <h2 className="text-2xl font-black tracking-tight text-slate-900">
-                          {billerName}
-                        </h2>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+          <div className="p-5 sm:p-6 space-y-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-lg sm:text-xl font-black tracking-tight text-slate-900">
+                  {billerName}
+                </h2>
+                <p className="mt-1 text-xs font-bold text-slate-500">
+                  {categoryLabel ?? "Bill Payment"}
+                </p>
               </div>
+            </div>
 
-              <div className="p-8 grid grid-cols-1 sm:grid-cols-2 gap-8 bg-white">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 {/* ── Dynamic product fields ─────────────────────────────── */}
                 {showFallbackField ? (
                   /* Fallback when no fields are defined for this product */
@@ -269,7 +266,7 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                         onChange={(e) => setFallbackAccount(e.target.value)}
                         onBlur={handleFieldBlur}
                         placeholder="Enter account or meter number"
-                        className="w-full px-0 py-1 bg-transparent border-0 border-b border-slate-200 focus:outline-none focus:border-emerald-500 text-xl font-black tracking-tight text-slate-900 transition-all placeholder:text-slate-300"
+                        className="w-full px-3 py-2 rounded-sm border border-slate-200 bg-white text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
                       />
                     </div>
                   </div>
@@ -303,12 +300,12 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                             field.hint ??
                             `Enter ${field.displayName ?? field.name}`
                           }
-                          className="w-full px-0 py-1 bg-transparent border-0 border-b border-slate-200 focus:outline-none focus:border-emerald-500 text-xl font-black tracking-tight text-slate-900 transition-all placeholder:text-slate-300 pr-6"
+                          className="w-full px-3 py-2 rounded-sm border border-slate-200 bg-white text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all pr-10"
                         />
                         {idx === 0 && isPreChecking && (
                           <Loader2
                             size={16}
-                            className="absolute right-0 top-2 text-slate-400 animate-spin"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 animate-spin"
                           />
                         )}
                       </div>
@@ -345,8 +342,8 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                       </span>
                     ) : null}
                   </label>
-                  <div className="flex items-baseline gap-1 border-b border-slate-200 focus-within:border-emerald-500 transition-all pb-1">
-                    <span className="text-xl font-black text-slate-400">
+                  <div className="flex items-center gap-2 rounded-sm border border-slate-200 bg-white px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-500/20 focus-within:border-emerald-500 transition-all">
+                    <span className="text-xs font-black text-slate-500">
                       {currencyCode}
                     </span>
                     <input
@@ -356,7 +353,7 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                       value={amountInput}
                       onChange={(e) => setAmountInput(e.target.value)}
                       placeholder="0.00"
-                      className="flex-1 px-0 py-0 bg-transparent border-0 focus:outline-none text-xl font-black tracking-tight text-slate-900 placeholder:text-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="flex-1 bg-transparent border-0 focus:outline-none text-sm font-semibold text-slate-900 placeholder:text-slate-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </div>
                   {amountError && (
@@ -377,7 +374,7 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                 </div>
 
                 {/* Notification Fields */}
-                <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
+                <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-200">
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
                       {paymentMethod === "ecocash_seamless" ? (
@@ -401,7 +398,7 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                           ? "e.g. 0771234567 (EcoCash)"
                           : "e.g. 0771234567"
                       }
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold transition-all"
+                      className="w-full px-3 py-2 rounded-sm border border-slate-200 bg-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
                     />
                     <p className="text-[9px] text-slate-400 mt-1">
                       {paymentMethod === "ecocash_seamless"
@@ -418,7 +415,7 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="your@email.com"
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold transition-all"
+                      className="w-full px-3 py-2 rounded-sm border border-slate-200 bg-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
                     />
                   </div>
                 </div>
@@ -428,8 +425,8 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                     Payment Date
                   </p>
                   <div className="flex items-center gap-2 text-slate-900">
-                    <Clock size={18} className="text-slate-400" />
-                    <p className="text-lg font-bold tracking-tight">
+                    <Clock size={16} className="text-slate-400" />
+                    <p className="text-sm font-semibold tracking-tight">
                       {new Date().toLocaleDateString("en-US", {
                         month: "long",
                         day: "numeric",
@@ -438,35 +435,33 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                     </p>
                   </div>
                 </div>
-                <div></div>
               </div>
-            </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-between px-2">
-                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">
+            <div className="pt-5 border-t border-slate-200 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">
                   Select Payment Method
                 </h3>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
                   onClick={() => setPaymentMethod("pesepay")}
-                  className={`p-6 rounded-3xl border-2 transition-all text-left relative overflow-hidden group ${
+                  className={`p-4 rounded-sm border transition-all text-left relative group bg-white ${
                     paymentMethod === "pesepay"
-                      ? "border-emerald-600 bg-emerald-50/50 shadow-xl shadow-emerald-600/10"
-                      : "border-slate-100 bg-white hover:border-slate-300"
+                      ? "border-emerald-600 shadow-sm"
+                      : "border-slate-200 hover:border-slate-300"
                   }`}
                 >
-                  <div className="flex items-center gap-4 mb-4 relative z-10">
+                  <div className="flex items-center gap-3 mb-3 relative z-10">
                     <div
-                      className={`w-12 h-12 rounded-sm flex items-center justify-center transition-all ${
+                      className={`w-10 h-10 rounded-sm flex items-center justify-center transition-all ${
                         paymentMethod === "pesepay"
-                          ? "bg-emerald-600 text-white scale-110 rotate-3"
-                          : "bg-slate-100 text-slate-400"
+                          ? "bg-emerald-600 text-white"
+                          : "bg-slate-100 text-slate-500"
                       }`}
                     >
-                      <CreditCard size={24} />
+                      <CreditCard size={20} />
                     </div>
                     <div>
                       <p
@@ -481,28 +476,28 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                   </div>
                   {paymentMethod === "pesepay" && (
                     <div className="absolute top-4 right-4 text-emerald-600">
-                      <CheckCircle2 size={24} />
+                      <CheckCircle2 size={18} />
                     </div>
                   )}
                 </button>
 
                 <button
                   onClick={handleSelectWallet}
-                  className={`p-6 rounded-3xl border-2 transition-all text-left relative overflow-hidden group ${
+                  className={`p-4 rounded-sm border transition-all text-left relative group bg-white ${
                     paymentMethod === "wallet"
-                      ? "border-emerald-600 bg-emerald-50/50 shadow-xl shadow-emerald-600/10"
-                      : "border-slate-100 bg-white hover:border-slate-300"
+                      ? "border-emerald-600 shadow-sm"
+                      : "border-slate-200 hover:border-slate-300"
                   } ${!isAuthenticated ? "opacity-60" : ""}`}
                 >
                   <div className="flex items-center gap-4 mb-2 relative z-10">
                     <div
-                      className={`w-12 h-12 rounded-sm flex items-center justify-center transition-all ${
+                      className={`w-10 h-10 rounded-sm flex items-center justify-center transition-all ${
                         paymentMethod === "wallet"
-                          ? "bg-emerald-600 text-white scale-110 rotate-3"
-                          : "bg-slate-100 text-slate-400"
+                          ? "bg-emerald-600 text-white"
+                          : "bg-slate-100 text-slate-500"
                       }`}
                     >
-                      <Wallet size={24} />
+                      <Wallet size={20} />
                     </div>
                     <div>
                       <p
@@ -530,7 +525,7 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                   )}
                   {paymentMethod === "wallet" && (
                     <div className="absolute top-4 right-4 text-emerald-600">
-                      <CheckCircle2 size={24} />
+                      <CheckCircle2 size={18} />
                     </div>
                   )}
                 </button>
@@ -539,51 +534,51 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
           </div>
 
           {/* ── Right Column: Order Summary ────────────────────────────────── */}
-          <aside className="sticky top-28">
-            <div className="bg-slate-900 rounded-sm p-8 text-white shadow-2xl shadow-slate-900/40">
-              <h3 className="text-lg font-black uppercase tracking-[0.2em] mb-8 text-emerald-400">
+          <aside className="p-5 sm:p-6 border-t lg:border-t-0 lg:border-l border-slate-200 bg-white">
+            <div className="space-y-4">
+              <h3 className="text-xs font-black uppercase tracking-widest text-slate-900">
                 Order Summary
               </h3>
 
-              <div className="space-y-6">
+              <div className="space-y-3">
                 <div className="flex justify-between items-center group">
-                  <span className="text-slate-400 font-bold group-hover:text-slate-300 transition-colors text-sm">
+                  <span className="text-slate-500 font-bold text-sm">
                     Base Amount
                   </span>
-                  <span className="font-black text-lg">
+                  <span className="font-black text-sm text-slate-900">
                     {currencyCode} {baseAmount.toFixed(2)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center group">
-                  <span className="text-slate-400 font-bold group-hover:text-slate-300 transition-colors text-sm">
+                  <span className="text-slate-500 font-bold text-sm">
                     Service Fee{" "}
                     {isWallet
                       ? ""
                       : `(${(serviceChargeRate * 100).toFixed(1)}%)`}
                   </span>
                   {isWallet ? (
-                    <span className="font-black text-sm text-emerald-400 uppercase tracking-widest">
+                    <span className="font-black text-[10px] text-emerald-700 uppercase tracking-widest">
                       No Fees
                     </span>
                   ) : (
-                    <span className="font-black text-lg text-emerald-400">
+                    <span className="font-black text-sm text-emerald-700">
                       +{currencyCode} {serviceFee.toFixed(2)}
                     </span>
                   )}
                 </div>
 
-                <div className="pt-8 mt-4 border-t border-white/10">
-                  <div className="flex justify-between items-end mb-8">
+                <div className="pt-5 mt-2 border-t border-slate-200">
+                  <div className="flex justify-between items-end mb-5">
                     <div>
                       <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">
                         Total to Pay
                       </p>
-                      <p className="text-sm text-emerald-500 font-bold">
+                      <p className="text-xs text-emerald-700 font-bold">
                         Incl. all taxes
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-4xl font-black tracking-tighter text-white">
+                      <p className="text-2xl sm:text-3xl font-black tracking-tighter text-slate-900">
                         {currencyCode} {totalAmount.toFixed(2)}
                       </p>
                     </div>
@@ -600,42 +595,43 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                       )
                     }
                     disabled={isLoading || !canPay}
-                    className="w-full bg-emerald-600 py-5 rounded-2xl font-black text-base uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-emerald-500 active:scale-[0.98] transition-all shadow-xl shadow-emerald-900/20 disabled:opacity-50 disabled:cursor-not-allowed group"
+                    className="w-full bg-emerald-600 py-3.5 rounded-sm font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-emerald-500 active:scale-[0.99] transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed group"
                   >
                     {isLoading ? (
-                      <div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+                      <div className="w-5 h-5 border-4 border-white/30 border-t-white rounded-full animate-spin" />
                     ) : (
                       <>
                         Pay Now
-                        <ChevronRight className="group-hover:translate-x-1 transition-transform" />
+                        <ChevronRight className="group-hover:translate-x-0.5 transition-transform" />
                       </>
                     )}
                   </button>
                 </div>
 
-                <div className="flex flex-col items-center gap-4 pt-6 border-t border-white/5">
+                <div className="flex items-center justify-center gap-2 pt-4 border-t border-slate-200">
                   <div className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
-                    <ShieldCheck size={16} className="text-emerald-500" />
+                    <ShieldCheck size={14} className="text-emerald-600" />
                     Secure Checkout
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="mt-6 px-4">
+            <div className="mt-4 px-0">
               <p className="text-[10px] text-slate-400 font-bold text-center leading-relaxed">
                 By clicking "Pay Now", you agree to EseBills{" "}
-                <Link to="#" className="text-slate-600 underline">
+                <Link to="#" className="text-slate-500 underline">
                   Terms of Service
                 </Link>{" "}
                 and{" "}
-                <Link to="#" className="text-slate-600 underline">
+                <Link to="#" className="text-slate-500 underline">
                   Privacy Policy
                 </Link>
                 .
               </p>
             </div>
           </aside>
+        </div>
         </div>
       </main>
     </div>
