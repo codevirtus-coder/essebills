@@ -7,7 +7,7 @@ import { HomeOverview } from "../sections/HomeOverview";
 import { HomeForWho } from "../sections/HomeForWho";
 import { HomeBannerBreak } from "../sections/HomeBannerBreak";
 import { HomeHowItWorks } from "../sections/HomeHowItWorks";
-import { HomeFinalCTA } from "../sections/HomeFinalCTA";
+import { HomeFAQ } from "../sections/HomeFAQ";
 import {
   type IdleCallbackHandle,
   requestIdle,
@@ -67,7 +67,7 @@ export function HomePage() {
       <HomeForWho />
       {/* <HomeBannerBreak /> */}
       {/* <HomeHowItWorks /> */}
-      <HomeFinalCTA />
+      <HomeFAQ />
       <Suspense fallback={null}>
         {showChatbot && <ChatbotWidgetLazy />}
       </Suspense>
