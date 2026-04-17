@@ -93,7 +93,7 @@ export function Navbar() {
           />
         </NavLink>
 
-        <nav className="hidden md:flex items-center gap-6 lg:gap-8">
+        {/* <nav className="hidden md:flex items-center gap-6 lg:gap-8">
           {navLinks.map((link) =>
             link.onClick ? (
               <a
@@ -121,7 +121,7 @@ export function Navbar() {
           >
             {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
           </button>
-        </nav>
+        </nav> */}
 
         <div className="hidden md:flex items-center gap-3">
           {authenticated ? (

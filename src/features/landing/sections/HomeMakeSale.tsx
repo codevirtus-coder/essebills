@@ -29,9 +29,6 @@ export function HomeMakeSale() {
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white leading-tight">
               Select a biller to <span className="text-[#10B981]">pay now</span>
             </h2>
-            <p className="text-slate-500 dark:text-slate-400 mt-2 sm:mt-3 text-sm sm:text-base">
-              Browse all services, choose what you need, and pay instantly.
-            </p>
           </motion.div>
 
           {/* <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 font-medium shrink-0">
