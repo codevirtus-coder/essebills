@@ -130,16 +130,17 @@ export function HomeHero() {
                 ease: "easeOut",
                 delay: shouldReduceMotion ? 0 : 0.1,
               }}
-              className="text-[2.5rem] sm:text-[3.5rem] lg:text-[5rem] xl:text-7xl font-black text-white leading-[0.95] sm:leading-[0.9] lg:leading-[0.85] tracking-tighter mb-4 sm:mb-6"
+              className="font-black text-white tracking-tighter mb-4 sm:mb-6"
             >
-              Pay any bill.
-              <br />
+              <span className="block text-[2.5rem] sm:text-[3rem] xl:text-[4rem] leading-[0.95] sm:leading-[0.92]">
+                Pay any bill.
+              </span>
               <span
-                className="relative text-[1.5rem] sm:text-[2.25rem] lg:text-[3.5rem] text-white"
+                className="relative block mt-2 sm:mt-3 text-[1.5rem] sm:text-[2.25rem] lg:text-[3.5rem] text-white leading-[1.05] whitespace-nowrap"
                 aria-label={typedText || phrases[phraseIndex]}
               >
                 <span
-                  className="invisible pointer-events-none select-none"
+                  className="invisible pointer-events-none select-none whitespace-nowrap"
                   aria-hidden="true"
                 >
                   Khonapho Khonapho
