@@ -121,8 +121,21 @@ export function HeroServiceFinder() {
 
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  const placeholderPhrases = useMemo(
+    () => ["ZESA", "ZOL", "Econet", "TelOne", "DSTV", "Nyaradzo"],
+    [],
+  );
+  const [placeholderText, setPlaceholderText] = useState(
+    placeholderPhrases[0].slice(0, 1),
+  );
+  const [placeholderPhraseIndex, setPlaceholderPhraseIndex] = useState(0);
+  const [placeholderCharIndex, setPlaceholderCharIndex] = useState(1);
+  const [placeholderDeleting, setPlaceholderDeleting] = useState(false);
 
   const [lastSelection, setLastSelection] = useState<LastSelection | null>(() =>
     readLast(),
@@ -176,6 +189,71 @@ export function HeroServiceFinder() {
     if (!open) setFocusedIndex(0);
   }, [open]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const apply = () => setReduceMotion(!!mql.matches);
+    apply();
+    mql.addEventListener?.("change", apply);
+    return () => mql.removeEventListener?.("change", apply);
+  }, []);
+
+  const shouldAnimatePlaceholder =
+    !reduceMotion && !isFocused && query.trim().length === 0;
+
+  useEffect(() => {
+    if (!shouldAnimatePlaceholder) return;
+    setPlaceholderPhraseIndex(0);
+    setPlaceholderCharIndex(0);
+    setPlaceholderDeleting(false);
+    setPlaceholderText("");
+  }, [shouldAnimatePlaceholder]);
+
+  useEffect(() => {
+    if (!shouldAnimatePlaceholder) {
+      setPlaceholderText("e.g. ZESA");
+      return;
+    }
+
+    const current = placeholderPhrases[placeholderPhraseIndex];
+    const isComplete = placeholderCharIndex === current.length;
+    const isEmpty = placeholderCharIndex === 0;
+
+    const typeDelay = placeholderDeleting ? 38 : 80;
+    const holdDelay = isComplete && !placeholderDeleting ? 850 : 0;
+    const resetDelay = isEmpty && placeholderDeleting ? 220 : 0;
+
+    const timeoutId = window.setTimeout(
+      () => {
+        if (isComplete && !placeholderDeleting) {
+          setPlaceholderDeleting(true);
+          return;
+        }
+
+        if (isEmpty && placeholderDeleting) {
+          setPlaceholderDeleting(false);
+          setPlaceholderPhraseIndex((i) => (i + 1) % placeholderPhrases.length);
+          return;
+        }
+
+        const nextIndex = placeholderDeleting
+          ? placeholderCharIndex - 1
+          : placeholderCharIndex + 1;
+        setPlaceholderCharIndex(nextIndex);
+        setPlaceholderText(current.slice(0, nextIndex));
+      },
+      holdDelay || resetDelay || typeDelay,
+    );
+
+    return () => window.clearTimeout(timeoutId);
+  }, [
+    placeholderCharIndex,
+    placeholderDeleting,
+    placeholderPhraseIndex,
+    placeholderPhrases,
+    shouldAnimatePlaceholder,
+  ]);
+
   return (
     <div className="flex flex-col h-full">
       <div className="space-y-4 shrink-0">
@@ -199,8 +277,12 @@ export function HeroServiceFinder() {
                 setQuery(e.target.value);
                 setOpen(true);
               }}
-              onFocus={() => setOpen(true)}
+              onFocus={() => {
+                setIsFocused(true);
+                setOpen(true);
+              }}
               onBlur={() => {
+                setIsFocused(false);
                 window.setTimeout(() => setOpen(false), 130);
               }}
               onKeyDown={(e) => {
@@ -220,7 +302,7 @@ export function HeroServiceFinder() {
                   handlePick(s.biller);
                 }
               }}
-              placeholder={"e.g. ZESA, Econet, DSTV..."}
+              placeholder={placeholderText}
               className={cn(
                 "w-full pl-11 pr-4 py-3.5 rounded-sm border text-sm font-semibold outline-none transition-all shadow-sm",
                 "bg-white border-slate-200",
