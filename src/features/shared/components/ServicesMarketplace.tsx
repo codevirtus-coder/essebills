@@ -747,9 +747,9 @@ export function ServicesMarketplace({
 
                   </div>
 
-                  <div className="flex flex-col flex-1 p-4 pt-3 pb-6">
+                  <div className="flex flex-col items-center text-center flex-1 p-4 pt-3 pb-6">
                     <h3
-                      className={`${isCompact ? "text-[13px]" : "text-sm"} font-bold text-slate-900 dark:text-white leading-tight line-clamp-2 mb-1 flex-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors`}
+                      className={`${isCompact ? "text-[13px]" : "text-sm"} w-full text-center font-bold text-slate-900 dark:text-white leading-tight line-clamp-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors`}
                     >
                       {tab.label}
                     </h3>
