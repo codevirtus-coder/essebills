@@ -206,13 +206,13 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
       `}</style>
       {/* ── Navbar ────────────────────────────────────────────────────────── */}
       {!embedded && (
-        <header className="h-16 px-4 sm:px-6 border-b border-slate-200 bg-white sticky top-0 z-50">
-          <div className="max-w-7xl flex items-center justify-between mx-auto h-full">
+        <header className="h-20 px-4 sm:px-8 border-b border-slate-200 bg-[#1CBD88] sticky top-0 z-50">
+          <div className="max-w-7xl flex items-center justify-start mx-auto h-full">
             <Link to={ROUTE_PATHS.home} className="flex items-center">
               <img
                 src={esebillsLogo}
                 alt="EseBills"
-                className="h-10 w-auto"
+                className="h-24 w-auto brightness-0 invert"
               />
             </Link>
           </div>
@@ -237,20 +237,20 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
           <div
             className={`grid ${embedded ? "grid-cols-1 lg:grid-cols-[1fr_350px]" : "grid-cols-1 lg:grid-cols-[1fr_400px]"} gap-0 items-start`}
           >
-          {/* ── Left Column: Details & Payment Methods ─────────────────────── */}
-          <div className="p-5 sm:p-6 space-y-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-lg sm:text-xl font-black tracking-tight text-slate-900">
-                  {billerName}
-                </h2>
-                <p className="mt-1 text-xs font-bold text-slate-500">
-                  {categoryLabel ?? "Bill Payment"}
-                </p>
+            {/* ── Left Column: Details & Payment Methods ─────────────────────── */}
+            <div className="p-5 sm:p-6 space-y-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-lg sm:text-xl font-black tracking-tight text-slate-900">
+                    {billerName}
+                  </h2>
+                  <p className="mt-1 text-xs font-bold text-slate-500">
+                    {categoryLabel ?? "Bill Payment"}
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 {/* ── Dynamic product fields ─────────────────────────────── */}
                 {showFallbackField ? (
                   /* Fallback when no fields are defined for this product */
@@ -364,17 +364,9 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                 </div>
 
                 {/* Transaction type */}
-                <div className="sm:col-span-2">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
-                    Transaction Type
-                  </p>
-                  <p className="text-sm font-bold text-slate-600">
-                    {categoryLabel ?? "Bill Payment"}
-                  </p>
-                </div>
 
                 {/* Notification Fields */}
-                <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-200">
+                <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-slate-200">
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
                       {paymentMethod === "ecocash_seamless" ? (
@@ -419,219 +411,196 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
                     />
                   </div>
                 </div>
+              </div>
 
-                <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
-                    Payment Date
-                  </p>
-                  <div className="flex items-center gap-2 text-slate-900">
-                    <Clock size={16} className="text-slate-400" />
-                    <p className="text-sm font-semibold tracking-tight">
-                      {new Date().toLocaleDateString("en-US", {
-                        month: "long",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                    </p>
-                  </div>
+              <div className="pt-5  border-slate-200 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">
+                    Select Payment Method
+                  </h3>
                 </div>
-              </div>
 
-            <div className="pt-5 border-t border-slate-200 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">
-                  Select Payment Method
-                </h3>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <button
-                  onClick={() => setPaymentMethod("pesepay")}
-                  className={`p-4 rounded-sm border transition-all text-left relative group bg-white ${
-                    paymentMethod === "pesepay"
-                      ? "border-emerald-600 shadow-sm"
-                      : "border-slate-200 hover:border-slate-300"
-                  }`}
-                >
-                  <div className="flex items-center gap-3 mb-3 relative z-10">
-                    <div
-                      className={`w-10 h-10 rounded-sm flex items-center justify-center transition-all ${
-                        paymentMethod === "pesepay"
-                          ? "bg-emerald-600 text-white"
-                          : "bg-slate-100 text-slate-500"
-                      }`}
-                    >
-                      <CreditCard size={20} />
-                    </div>
-                    <div>
-                      <p
-                        className={`text-sm font-black ${paymentMethod === "pesepay" ? "text-emerald-900" : "text-slate-900"}`}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setPaymentMethod("pesepay")}
+                    className={`p-4 rounded-sm border transition-all text-left relative group bg-white ${
+                      paymentMethod === "pesepay"
+                        ? "border-emerald-600 shadow-sm"
+                        : "border-slate-200 hover:border-slate-300"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 mb-3 relative z-10">
+                      <div
+                        className={`w-10 h-10 rounded-sm flex items-center justify-center transition-all ${
+                          paymentMethod === "pesepay"
+                            ? "bg-emerald-600 text-white"
+                            : "bg-slate-100 text-slate-500"
+                        }`}
                       >
-                        PesePay Gateway
-                      </p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                        EcoCash, OneMoney, Cards
-                      </p>
+                        <CreditCard size={20} />
+                      </div>
+                      <div>
+                        <p
+                          className={`text-sm font-black ${paymentMethod === "pesepay" ? "text-emerald-900" : "text-slate-900"}`}
+                        >
+                          PesePay Gateway
+                        </p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                          EcoCash, OneMoney, Cards
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  {paymentMethod === "pesepay" && (
-                    <div className="absolute top-4 right-4 text-emerald-600">
-                      <CheckCircle2 size={18} />
-                    </div>
-                  )}
-                </button>
-
-                <button
-                  onClick={handleSelectWallet}
-                  className={`p-4 rounded-sm border transition-all text-left relative group bg-white ${
-                    paymentMethod === "wallet"
-                      ? "border-emerald-600 shadow-sm"
-                      : "border-slate-200 hover:border-slate-300"
-                  } ${!isAuthenticated ? "opacity-60" : ""}`}
-                >
-                  <div className="flex items-center gap-4 mb-2 relative z-10">
-                    <div
-                      className={`w-10 h-10 rounded-sm flex items-center justify-center transition-all ${
-                        paymentMethod === "wallet"
-                          ? "bg-emerald-600 text-white"
-                          : "bg-slate-100 text-slate-500"
-                      }`}
-                    >
-                      <Wallet size={20} />
-                    </div>
-                    <div>
-                      <p
-                        className={`text-sm font-black ${paymentMethod === "wallet" ? "text-emerald-900" : "text-slate-900"}`}
-                      >
-                        EseWallet Balance
-                      </p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                        Instant • No Fees
-                      </p>
-                    </div>
-                  </div>
-                  {!isAuthenticated && (
-                    <p className="text-[10px] font-bold text-amber-600 relative z-10">
-                      Login required to use wallet
-                    </p>
-                  )}
-                  {isAuthenticated && walletBalance !== undefined && (
-                    <p
-                      className={`text-[10px] font-bold relative z-10 ${walletInsufficient ? "text-rose-500" : "text-emerald-600"}`}
-                    >
-                      Balance: {currencyCode} {walletBalance.toFixed(2)}
-                      {walletInsufficient && " — Insufficient funds"}
-                    </p>
-                  )}
-                  {paymentMethod === "wallet" && (
-                    <div className="absolute top-4 right-4 text-emerald-600">
-                      <CheckCircle2 size={18} />
-                    </div>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* ── Right Column: Order Summary ────────────────────────────────── */}
-          <aside className="p-5 sm:p-6 border-t lg:border-t-0 lg:border-l border-slate-200 bg-white">
-            <div className="space-y-4">
-              <h3 className="text-xs font-black uppercase tracking-widest text-slate-900">
-                Order Summary
-              </h3>
-
-              <div className="space-y-3">
-                <div className="flex justify-between items-center group">
-                  <span className="text-slate-500 font-bold text-sm">
-                    Base Amount
-                  </span>
-                  <span className="font-black text-sm text-slate-900">
-                    {currencyCode} {baseAmount.toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center group">
-                  <span className="text-slate-500 font-bold text-sm">
-                    Service Fee{" "}
-                    {isWallet
-                      ? ""
-                      : `(${(serviceChargeRate * 100).toFixed(1)}%)`}
-                  </span>
-                  {isWallet ? (
-                    <span className="font-black text-[10px] text-emerald-700 uppercase tracking-widest">
-                      No Fees
-                    </span>
-                  ) : (
-                    <span className="font-black text-sm text-emerald-700">
-                      +{currencyCode} {serviceFee.toFixed(2)}
-                    </span>
-                  )}
-                </div>
-
-                <div className="pt-5 mt-2 border-t border-slate-200">
-                  <div className="flex justify-between items-end mb-5">
-                    <div>
-                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">
-                        Total to Pay
-                      </p>
-                      <p className="text-xs text-emerald-700 font-bold">
-                        Incl. all taxes
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl sm:text-3xl font-black tracking-tighter text-slate-900">
-                        {currencyCode} {totalAmount.toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
+                    {paymentMethod === "pesepay" && (
+                      <div className="absolute top-4 right-4 text-emerald-600">
+                        <CheckCircle2 size={18} />
+                      </div>
+                    )}
+                  </button>
 
                   <button
-                    onClick={() =>
-                      onConfirm(
-                        paymentMethod,
-                        email,
-                        phone,
-                        effectiveRequiredFields,
-                        baseAmount,
-                      )
-                    }
-                    disabled={isLoading || !canPay}
-                    className="w-full bg-emerald-600 py-3.5 rounded-sm font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-emerald-500 active:scale-[0.99] transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed group"
+                    onClick={handleSelectWallet}
+                    className={`p-4 rounded-sm border transition-all text-left relative group bg-white ${
+                      paymentMethod === "wallet"
+                        ? "border-emerald-600 shadow-sm"
+                        : "border-slate-200 hover:border-slate-300"
+                    } ${!isAuthenticated ? "opacity-60" : ""}`}
                   >
-                    {isLoading ? (
-                      <div className="w-5 h-5 border-4 border-white/30 border-t-white rounded-full animate-spin" />
-                    ) : (
-                      <>
-                        Pay Now
-                        <ChevronRight className="group-hover:translate-x-0.5 transition-transform" />
-                      </>
+                    <div className="flex items-center gap-4 mb-2 relative z-10">
+                      <div
+                        className={`w-10 h-10 rounded-sm flex items-center justify-center transition-all ${
+                          paymentMethod === "wallet"
+                            ? "bg-emerald-600 text-white"
+                            : "bg-slate-100 text-slate-500"
+                        }`}
+                      >
+                        <Wallet size={20} />
+                      </div>
+                      <div>
+                        <p
+                          className={`text-sm font-black ${paymentMethod === "wallet" ? "text-emerald-900" : "text-slate-900"}`}
+                        >
+                          EseWallet Balance
+                        </p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                          Instant • No Fees
+                        </p>
+                      </div>
+                    </div>
+                    {!isAuthenticated && (
+                      <p className="text-[10px] font-bold text-amber-600 relative z-10">
+                        Login required to use wallet
+                      </p>
+                    )}
+                    {isAuthenticated && walletBalance !== undefined && (
+                      <p
+                        className={`text-[10px] font-bold relative z-10 ${walletInsufficient ? "text-rose-500" : "text-emerald-600"}`}
+                      >
+                        Balance: {currencyCode} {walletBalance.toFixed(2)}
+                        {walletInsufficient && " — Insufficient funds"}
+                      </p>
+                    )}
+                    {paymentMethod === "wallet" && (
+                      <div className="absolute top-4 right-4 text-emerald-600">
+                        <CheckCircle2 size={18} />
+                      </div>
                     )}
                   </button>
                 </div>
-
-                <div className="flex items-center justify-center gap-2 pt-4 border-t border-slate-200">
-                  <div className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
-                    <ShieldCheck size={14} className="text-emerald-600" />
-                    Secure Checkout
-                  </div>
-                </div>
               </div>
             </div>
 
-            <div className="mt-4 px-0">
-              <p className="text-[10px] text-slate-400 font-bold text-center leading-relaxed">
-                By clicking "Pay Now", you agree to EseBills{" "}
-                <Link to="#" className="text-slate-500 underline">
-                  Terms of Service
-                </Link>{" "}
-                and{" "}
-                <Link to="#" className="text-slate-500 underline">
-                  Privacy Policy
-                </Link>
-                .
-              </p>
-            </div>
-          </aside>
-        </div>
+            {/* ── Right Column: Order Summary ────────────────────────────────── */}
+            <aside className="p-5 sm:p-6 border-t lg:border-t-0  border-slate-200 bg-white">
+              <div className="space-y-4">
+                <h3 className="text-xs font-black uppercase tracking-widest text-slate-900">
+                  Order Summary
+                </h3>
+
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center group">
+                    <span className="text-slate-500 font-bold text-sm">
+                      Base Amount
+                    </span>
+                    <span className="font-black text-sm text-slate-900">
+                      {currencyCode} {baseAmount.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center group">
+                    <span className="text-slate-500 font-bold text-sm">
+                      Service Fee{" "}
+                      {isWallet
+                        ? ""
+                        : `(${(serviceChargeRate * 100).toFixed(1)}%)`}
+                    </span>
+                    {isWallet ? (
+                      <span className="font-black text-[10px] text-emerald-700 uppercase tracking-widest">
+                        No Fees
+                      </span>
+                    ) : (
+                      <span className="font-black text-sm text-emerald-700">
+                        +{currencyCode} {serviceFee.toFixed(2)}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="pt-5 mt-2 border-t border-slate-200">
+                    <div className="flex justify-between items-end mb-5">
+                      <div>
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">
+                          Total to Pay
+                        </p>
+                        <p className="text-xs text-emerald-700 font-bold">
+                          Incl. all taxes
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl sm:text-3xl font-black tracking-tighter text-slate-900">
+                          {currencyCode} {totalAmount.toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() =>
+                        onConfirm(
+                          paymentMethod,
+                          email,
+                          phone,
+                          effectiveRequiredFields,
+                          baseAmount,
+                        )
+                      }
+                      disabled={isLoading || !canPay}
+                      className="w-full bg-emerald-600 py-3.5 rounded-sm font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-emerald-500 active:scale-[0.99] transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed group"
+                    >
+                      {isLoading ? (
+                        <div className="w-5 h-5 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        <>
+                          Pay Now
+                          <ChevronRight className="group-hover:translate-x-0.5 transition-transform" />
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 px-0">
+                <p className="text-[10px] text-slate-400 font-bold text-center leading-relaxed">
+                  By clicking "Pay Now", you agree to EseBills{" "}
+                  <Link to="#" className="text-slate-500 underline">
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link to="#" className="text-slate-500 underline">
+                    Privacy Policy
+                  </Link>
+                  .
+                </p>
+              </div>
+            </aside>
+          </div>
         </div>
       </main>
     </div>
