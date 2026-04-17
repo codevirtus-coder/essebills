@@ -49,7 +49,12 @@ export function HomeMakeSale() {
           className="bg-white dark:bg-slate-800 rounded-2xl sm:rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-2xl shadow-slate-200/60 dark:shadow-none overflow-hidden"
         >
           <div className="p-4 md:p-6">
-            <ServicesMarketplace embedded compact />
+            <ServicesMarketplace
+              embedded
+              compact
+              categoryUi="cards"
+              hideProductsUntilCategory
+            />
           </div>
         </motion.div>
 

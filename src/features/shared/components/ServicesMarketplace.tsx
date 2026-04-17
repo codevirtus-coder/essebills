@@ -159,6 +159,10 @@ interface ServicesMarketplaceProps {
   embedded?: boolean;
   /** Slightly smaller typography for tight/embedded layouts (eg: Home "Direct Payments" section). */
   compact?: boolean;
+  /** Category selector layout. Defaults to tab pills. */
+  categoryUi?: "tabs" | "cards";
+  /** When true, hides the products grid until the user selects a category or searches. */
+  hideProductsUntilCategory?: boolean;
   /** When set, the products grid is collapsed to this many rows by default and can be expanded via "View all". */
   previewRows?: number;
   showTitle?: boolean;
@@ -171,6 +175,8 @@ interface ServicesMarketplaceProps {
 export function ServicesMarketplace({
   embedded = false,
   compact = false,
+  categoryUi = "tabs",
+  hideProductsUntilCategory = false,
   previewRows,
   showTitle = true,
   liftSearch = false,
@@ -185,7 +191,9 @@ export function ServicesMarketplace({
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [activeCategory, setActiveCategory] = useState<string>(() =>
+    hideProductsUntilCategory && categoryUi === "cards" ? "" : "all",
+  );
   const [selectedCurrency, setSelectedCurrency] = useState("");
   const [selectedBaseProduct, setSelectedBaseProduct] =
     useState<BillerCard | null>(null);
@@ -580,7 +588,9 @@ export function ServicesMarketplace({
 
   const clearFilters = () => {
     setSearch("");
-    setActiveCategory("all");
+    setActiveCategory(
+      hideProductsUntilCategory && categoryUi === "cards" ? "" : "all",
+    );
     setSelectedCurrency("");
   };
 
@@ -691,76 +701,198 @@ export function ServicesMarketplace({
       : null
     : headerSection;
 
-  const tabsContent = (
-    <div
-      className={`sticky ${embedded ? "top-[-2rem]" : "top-0"} z-30 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 ${
-        liftSearch && !embedded
-          ? "-mx-8 -mt-8 px-8 pt-3 pb-3 sm:pt-4 sm:pb-3 rounded-t-[2.5rem]"
-          : "-mx-4 px-4"
-      }`}
-    >
-      <div className="flex gap-2 overflow-x-auto scrollbar-hide py-3 items-center">
+  const categoriesContent =
+    categoryUi === "cards" ? (
+      <div
+        className={`${liftSearch && !embedded ? "-mx-8 -mt-6 px-8 pb-3" : "-mx-4 px-4"} ${
+          embedded ? "" : "pt-2"
+        }`}
+      >
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+            Browse by category
+          </p>
+          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+            Pick one
+          </p>
+        </div>
+
         {isInitialLoading ? (
-          <div className="flex gap-3 py-1">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            {[...Array(12)].map((_, i) => (
               <div
                 key={i}
-                className="h-10 w-28 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse shrink-0"
-              />
+                className="rounded-2xl animate-pulse bg-slate-100 dark:bg-slate-800 overflow-hidden"
+              >
+                <div className="aspect-[19/10] bg-slate-200 dark:bg-slate-700" />
+                <div className="p-4 space-y-3">
+                  <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded-full w-2/3" />
+                  <div className="h-10 bg-slate-200 dark:bg-slate-700 rounded-xl mt-2" />
+                </div>
+              </div>
             ))}
           </div>
         ) : (
-          categoryTabs.map((tab) => {
-            const iconKey =
-              tab.key === "donations"
-                ? "donations"
-                : inferCategory(tab.label, tab.label).key;
-            return (
-              <button
-                key={tab.key}
-                onClick={() => setActiveCategory(tab.key)}
-                className={`inline-flex items-center gap-2 whitespace-nowrap rounded-xl font-bold transition-all shrink-0 border-2 active:scale-95 ${isCompact ? "px-4 py-2 text-[11px]" : "px-5 py-2.5 text-xs"} ${
-                  activeCategory === tab.key
-                    ? "bg-slate-900 dark:bg-slate-700 border-slate-900 dark:border-slate-700 text-white shadow-lg"
-                    : "border-slate-100 dark:border-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-slate-900"
-                }`}
-              >
-                {tab.key !== "all" && (
-                  <span
-                    className={
-                      activeCategory === tab.key
-                        ? "text-emerald-400"
-                        : "text-slate-400"
-                    }
-                  >
-                    <CategoryIcon
-                      categoryKey={iconKey}
-                      className={isCompact ? "w-3 h-3" : "w-3.5 h-3.5"}
-                    />
-                  </span>
-                )}
-                {tab.label}
-              </button>
-            );
-          })
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            {categoryTabs.map((tab) => {
+              const iconKey =
+                tab.key === "all"
+                  ? "other"
+                  : tab.key === "donations"
+                    ? "donations"
+                    : inferCategory(tab.label, tab.label).key;
+              const color = getColor(iconKey);
+              return (
+                <div
+                  key={tab.key}
+                  className="group rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-[0_10px_30px_rgba(2,6,23,0.06)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.25)] hover:border-emerald-500/50 dark:hover:border-emerald-500/40 hover:shadow-[0_18px_45px_rgba(2,6,23,0.12)] dark:hover:shadow-[0_18px_45px_rgba(0,0,0,0.35)] hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
+                  onClick={() => setActiveCategory(tab.key)}
+                >
+                  <div className="relative aspect-[19/10] w-full overflow-hidden bg-white dark:bg-slate-800">
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-transparent dark:from-white/10 pointer-events-none" />
+                    <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white dark:from-slate-900 to-transparent pointer-events-none" />
+
+                    <div className="absolute left-1/2 top-[58%] sm:top-[70%] -translate-x-1/2 -translate-y-1/2">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center bg-white/45 dark:bg-slate-700/25 shadow-sm ring-1 ring-white/50 dark:ring-white/10 relative overflow-hidden">
+                        <CategoryIcon
+                          categoryKey={iconKey}
+                          className={`w-8 h-8 ${color.icon}`}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="absolute top-3 left-3">
+                      <span
+                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg font-bold uppercase tracking-widest backdrop-blur-md border ${isCompact ? "text-[8px]" : "text-[9px]"} bg-white/90 dark:bg-slate-900/80 border-slate-200/60 dark:border-white/10 text-slate-700 dark:text-slate-200`}
+                      >
+                        <span className={color.icon}>
+                          <CategoryIcon
+                            categoryKey={iconKey}
+                            className={isCompact ? "w-2 h-2" : "w-2.5 h-2.5"}
+                          />
+                        </span>
+                        <span className="max-w-[120px] truncate">{tab.label}</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col flex-1 p-4 pt-3">
+                    <h3
+                      className={`${isCompact ? "text-[13px]" : "text-sm"} font-bold text-slate-900 dark:text-white leading-tight line-clamp-2 mb-1 flex-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors`}
+                    >
+                      {tab.label}
+                    </h3>
+                  </div>
+
+                  <div className="px-4 pb-4 -mt-1">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveCategory(tab.key);
+                      }}
+                      className={`w-full flex items-center justify-center gap-1.5 rounded-xl font-bold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-700 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-600 group-hover:shadow-lg group-hover:shadow-emerald-500/25 transition-all duration-300 uppercase tracking-widest ${isCompact ? "py-2 text-[9px]" : "py-2.5 text-[10px]"}`}
+                    >
+                      View
+                      <ChevronRight size={12} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
-    </div>
-  );
+    ) : (
+      <div
+        className={`sticky ${embedded ? "top-[-2rem]" : "top-0"} z-30 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 ${
+          liftSearch && !embedded
+            ? "-mx-8 -mt-8 px-8 pt-3 pb-3 sm:pt-4 sm:pb-3 rounded-t-[2.5rem]"
+            : "-mx-4 px-4"
+        }`}
+      >
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide py-3 items-center">
+          {isInitialLoading ? (
+            <div className="flex gap-3 py-1">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div
+                  key={i}
+                  className="h-10 w-28 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse shrink-0"
+                />
+              ))}
+            </div>
+          ) : (
+            categoryTabs.map((tab) => {
+              const iconKey =
+                tab.key === "donations"
+                  ? "donations"
+                  : inferCategory(tab.label, tab.label).key;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveCategory(tab.key)}
+                  className={`inline-flex items-center gap-2 whitespace-nowrap rounded-xl font-bold transition-all shrink-0 border-2 active:scale-95 ${isCompact ? "px-4 py-2 text-[11px]" : "px-5 py-2.5 text-xs"} ${
+                    activeCategory === tab.key
+                      ? "bg-slate-900 dark:bg-slate-700 border-slate-900 dark:border-slate-700 text-white shadow-lg"
+                      : "border-slate-100 dark:border-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-slate-900"
+                  }`}
+                >
+                  {tab.key !== "all" && (
+                    <span
+                      className={
+                        activeCategory === tab.key
+                          ? "text-emerald-400"
+                          : "text-slate-400"
+                      }
+                    >
+                      <CategoryIcon
+                        categoryKey={iconKey}
+                        className={isCompact ? "w-3 h-3" : "w-3.5 h-3.5"}
+                      />
+                    </span>
+                  )}
+                  {tab.label}
+                </button>
+              );
+            })
+          )}
+        </div>
+      </div>
+    );
+
+  const shouldShowCategoryCards =
+    categoryUi === "cards" && !debouncedSearch && activeCategory === "";
 
   const tabsNode = tabsPortalId
     ? tabsHostEl
-      ? createPortal(tabsContent, tabsHostEl)
+      ? createPortal(
+          categoryUi === "cards"
+            ? shouldShowCategoryCards
+              ? categoriesContent
+              : null
+            : categoriesContent,
+          tabsHostEl,
+        )
       : null
-    : tabsContent;
+    : categoryUi === "cards"
+      ? shouldShowCategoryCards
+        ? categoriesContent
+        : null
+      : categoriesContent;
 
   const activeCategoryLabel =
-    activeCategory === "all"
+    activeCategory === "" || activeCategory === "all"
       ? "All Services"
       : activeCategory === "donations"
         ? "Donations"
         : (categoryTabs.find((t) => t.key === activeCategory)?.label ??
           "Services");
+
+  const shouldHideGrid =
+    hideProductsUntilCategory &&
+    categoryUi === "cards" &&
+    !debouncedSearch &&
+    activeCategory === "";
 
   return (
     <div className={`space-y-8 ${embedded ? "" : "min-h-screen bg-white"}`}>
@@ -791,23 +923,37 @@ export function ServicesMarketplace({
           </div>
         )}
 
-        {!selectedBaseProduct && !isInitialLoading && !isError && (
+        {!selectedBaseProduct && !isInitialLoading && !isError && !shouldHideGrid && (
           <div className="flex items-center justify-between flex-wrap gap-3">
             <h2
               className={`${isCompact ? "text-base" : "text-lg"} font-bold text-slate-900 dark:text-white`}
             >
               {activeCategoryLabel}
             </h2>
-            <p
-              className={`${isCompact ? "text-[9px]" : "text-[10px]"} text-slate-400 font-bold uppercase tracking-widest bg-slate-50 dark:bg-slate-900 px-3 py-1 rounded-full border border-slate-100 dark:border-slate-800`}
-            >
-              {filtered.length} Results
-            </p>
+            <div className="flex items-center gap-3">
+              {categoryUi === "cards" && (activeCategory !== "" || debouncedSearch) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveCategory("");
+                      setSearch("");
+                    }}
+                    className={`${isCompact ? "text-[9px]" : "text-[10px]"} text-emerald-700 font-black uppercase tracking-widest hover:underline`}
+                  >
+                    Back to categories
+                  </button>
+                )}
+              <p
+                className={`${isCompact ? "text-[9px]" : "text-[10px]"} text-slate-400 font-bold uppercase tracking-widest bg-slate-50 dark:bg-slate-900 px-3 py-1 rounded-full border border-slate-100 dark:border-slate-800`}
+              >
+                {filtered.length} Results
+              </p>
+            </div>
           </div>
         )}
 
         {!selectedBaseProduct &&
-          (isInitialLoading ? (
+          (shouldHideGrid ? null : isInitialLoading ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {[...Array(12)].map((_, i) => (
                 <div

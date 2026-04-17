@@ -312,10 +312,10 @@ export function HomeHero() {
         className="absolute bottom-20 left-3/4 -translate-x-1/2 hidden lg:flex flex-col items-center gap-2 text-white/50 hover:text-white/90 text-xs font-medium tracking-[0.25em] uppercase transition-colors z-20 group"
         aria-label="Scroll to services"
       >
-        <div className="flex items-center gap-2">
+        {/* <div className="flex items-center gap-2">
           <Mouse className="w-4 h-4" />
           <span>Scroll</span>
-        </div>
+        </div> */}
         <div className="w-px h-8 bg-gradient-to-b from-white/40 to-transparent group-hover:h-12 transition-all duration-500" />
       </motion.button>
     </section>

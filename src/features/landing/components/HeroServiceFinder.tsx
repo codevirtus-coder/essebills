@@ -178,7 +178,7 @@ export function HeroServiceFinder() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="space-y-4">
+      <div className="space-y-4 shrink-0">
         <h3 className="text-xl font-black text-slate-900 tracking-tight leading-tight">
           Which service do you want to pay for?
         </h3>
@@ -220,9 +220,11 @@ export function HeroServiceFinder() {
                   handlePick(s.biller);
                 }
               }}
-              placeholder={"e.g. ZESA, Econet, DSTV..."}
+              placeholder={
+                "e.g. ZESA, Econet, DSTV..."
+              }
               className={cn(
-                "w-full pl-11 pr-4 py-5 rounded-md border text-sm font-semibold outline-none transition-all shadow-sm",
+                "w-full pl-11 pr-4 py-3.5 rounded-full border text-sm font-semibold outline-none transition-all shadow-sm",
                 "bg-white border-slate-200",
                 "focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/10",
               )}
